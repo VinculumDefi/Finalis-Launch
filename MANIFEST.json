@@ -1,0 +1,38 @@
+{
+  "name": "vinculum-finalis-cosmos-hub-clean-room",
+  "label": "RED-TEAM / NON-PRODUCTION",
+  "verdict": "CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW",
+  "produced": "2026-07-29",
+  "file_count": 25,
+  "files": [
+    "cosmos_hub_coda/COSMOS_HUB_FEASIBILITY_REPORT.md",
+    "cosmos_hub_coda/COSMOS_HUB_OFFICIAL_EVIDENCE.json",
+    "cosmos_hub_coda/COSMOS_HUB_BUILD_AND_TEST_REPORT.md",
+    "cosmos_hub_coda/COSMOS_HUB_SOURCE_MANIFEST.json",
+    "cosmos_hub_coda/COSMOS_HUB_REQUIREMENT_MATRIX.csv",
+    "cosmos_hub_coda/COSMOS_HUB_THREAT_MODEL.md",
+    "cosmos-hub-vault/Cargo.toml",
+    "cosmos-hub-vault/Makefile",
+    "cosmos-hub-vault/README.md",
+    "cosmos-hub-vault/RED_TEAM_NOTES.md",
+    "cosmos-hub-vault/contracts/vault/Cargo.toml",
+    "cosmos-hub-vault/contracts/vault/src/bin/schema.rs",
+    "cosmos-hub-vault/contracts/vault/src/contract.rs",
+    "cosmos-hub-vault/contracts/vault/src/error.rs",
+    "cosmos-hub-vault/contracts/vault/src/lib.rs",
+    "cosmos-hub-vault/contracts/vault/src/msg.rs",
+    "cosmos-hub-vault/contracts/vault/src/state.rs",
+    "cosmos-hub-vault/contracts/vault/tests/integration.rs",
+    "cosmos-hub-proof-adapter/README.md",
+    "cosmos-hub-proof-adapter/index.js",
+    "cosmos-hub-proof-adapter/package.json",
+    "cosmos-hub-proof-adapter/test.js",
+    "base44-simulation/CosmosHubCandidate.jsx",
+    "base44-simulation/cosmosCandidateData.js",
+    "README.txt"
+  ],
+  "test_results": {
+    "proof_adapter": "22/22 passed (Node v20.20.2)",
+    "rust_vault": "not compiled (no Rust toolchain in build environment)"
+  }
+}

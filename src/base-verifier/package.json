@@ -1,0 +1,11 @@
+{
+  "name": "vf-base-verifier",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vinculum Finalis Base-Side Verification & Minting Contract — chain-agnostic canonical verifier",
+  "scripts": {
+    "test": "node tests/verifier.test.js"
+  },
+  "dependencies": {}
+}

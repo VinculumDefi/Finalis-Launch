@@ -1,0 +1,111 @@
+{
+  "manifest": "COSMOS_HUB_SOURCE_MANIFEST",
+  "author": "Base44 CODA (clean-room, re-executed with implementation)",
+  "date": "2026-07-28",
+  "subject_environment": "Cosmos Hub (cosmoshub-4) live mainnet",
+  "verdict": "CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW",
+  "status": "RED-TEAM / NON-PRODUCTION. No production code compiled for the on-chain Rust workspace. The off-chain Node adapter was compiled and tested (22/22).",
+
+  "governing_source": {
+    "file_name": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx",
+    "revision": "Revision 6",
+    "revision_date": "2026-07-28",
+    "sha256": "5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9",
+    "read_in_full": true,
+    "authority": "sole governing statement of required protocol behavior (VF-DOC-001)"
+  },
+
+  "implementation_packages": {
+    "cosmos-hub-vault": {
+      "path_on_disk": "src/cosmos-hub-vault/",
+      "zip_path": "cosmos-hub-vault/",
+      "language": "Rust/CosmWasm 2.1",
+      "compiled": false,
+      "tested": false,
+      "reason": "no rustc/cargo/cosmwasm-check in Base44 sandbox (verified)",
+      "files": ["Cargo.toml", "README.md", "RED_TEAM_NOTES.md", "Makefile", "contracts/vault/Cargo.toml", "contracts/vault/src/lib.rs", "contracts/vault/src/contract.rs", "contracts/vault/src/msg.rs", "contracts/vault/src/state.rs", "contracts/vault/src/error.rs", "contracts/vault/src/bin/schema.rs", "contracts/vault/tests/integration.rs"],
+      "compile_test_commands": "cargo test --workspace --release; cargo build --release --target wasm32-unknown-unknown --lib; docker run --rm -v \"$PWD/target/wasm32-unknown-unknown/release:/code\" cosmwasm/rust-optimizer:0.16.0",
+      "immutability_design": "admin=\"\" + no migrate entry + no sudo entry (verified immutable vs all in-protocol actors incl. governance against wasmd v0.60.7)"
+    },
+    "cosmos-hub-proof-adapter": {
+      "path_on_disk": "src/cosmos-hub-proof-adapter/",
+      "zip_path": "cosmos-hub-proof-adapter/",
+      "language": "Node.js (plain JS, no deps)",
+      "compiled": true,
+      "tested": true,
+      "test_result": "22/22 passed, exit 0 (Node v20.20.2)",
+      "files": ["package.json", "README.md", "index.js", "test.js"],
+      "covers": ["VF-XCH-011 normalizer", "CometBFT finality gate", "ICS-23 existence-proof skeleton", "Section 5.2.3 pending-attempt state machine"]
+    },
+    "base44-simulation": {
+      "path_on_disk": "src/pages/CosmosHubCandidate.jsx + src/lib/cosmosCandidateData.js",
+      "zip_path": "base44-simulation/",
+      "language": "React/JS",
+      "compiled": "n/a (Base44 app preview)",
+      "status": "NON-PRODUCTION simulation view routed at /cosmos-hub-candidate; does not alter production logic"
+    }
+  },
+
+  "cosmos_hub_registry_entry": {
+    "registry_row": 479,
+    "symbol": "ATOM",
+    "environment": "Cosmos",
+    "identifier": "NATIVE — no EVM contract",
+    "class": "S3",
+    "pricing_identifier": "cosmos",
+    "approved_input_asset": "native ATOM (uatom, 6 decimals)",
+    "verified_via": "cosmos/chain-registry cosmoshub/chain.json + assetlist.json"
+  },
+
+  "tagged_source_commits": {
+    "CosmWasm/wasmd@v0.60.7": "edb607cbec61170ea89ba386d7fdb382a87bbea3",
+    "cosmos/gaia@v27.5.0": "d089f568a9ef2f4d5e6d5660cb128782f4d1b2c0",
+    "cosmos/cosmos-sdk@v0.53.4": "908df9d4e2e07c2cd923d7b35f18b1e008c5106c",
+    "cometbft/cometbft@v0.38.23": "feb2aea4dc271d612129afc958cb844713ec792b",
+    "cosmos/ibc-go@v10.7.0": "40c9dbe397c8bb385dc03cd2cfc8e36c4023a2ba"
+  },
+
+  "c2_source_evidence": {
+    "wasmd_commit": "edb607cbec61170ea89ba386d7fdb382a87bbea3",
+    "files": [
+      "x/wasm/keeper/authz_policy.go:22-23 — DefaultAuthorizationPolicy.CanModifyContract = admin != nil && admin.Equals(actor)",
+      "x/wasm/keeper/authz_policy.go:66-67 — GovAuthorizationPolicy.CanModifyContract = return true",
+      "x/wasm/keeper/keeper.go:476 — migrate gates on authZ.CanModifyContract(contractInfo.AdminAddr(), caller)",
+      "x/wasm/keeper/keeper.go:512 — migrate calls the contract's own migrate entry point",
+      "x/wasm/keeper/keeper.go:618,636 — Sudo calls the contract's own sudo entry point",
+      "x/wasm/keeper/keeper.go:747,753 — setContractAdmin gates on authZ.CanModifyContract(contractInfo.AdminAddr(), caller)",
+      "x/wasm/keeper/msg_server.go:420-428 — selectAuthorizationPolicy: authority -> gov policy, else default"
+    ]
+  },
+
+  "live_evidence": [
+    { "claim": "chain_id cosmoshub-4", "source": "chain-registry + 3 live LCD node_info", "verified": true },
+    { "claim": "base denom uatom (ATOM, 6 decimals)", "source": "chain-registry assetlist", "verified": true },
+    { "claim": "CosmWasm active on cosmoshub-4 (code_id 1, non-gov creator)", "source": "GET /cosmwasm/wasm/v1/code on rest.lavenderfive.com", "verified": true },
+    { "claim": "CometBFT 0.38.22 on live nodes (registry expects v0.38.23)", "source": "3 live LCD node_info app_version", "verified": true, "note": "reconcile vs live node (C6)" }
+  ],
+
+  "pending_evidence": [
+    "C1 authoritative live code_upload_access (needs gRPC/CLI egress)",
+    "C3 full Base-side ICS-23 validator-set/header commitment",
+    "C4b fixed Cosmos Hub Dev Fund destination address (deferred per Section 8.2)",
+    "C5 live tx-validity verification of Cosmos Hub finality + pending-attempt criteria",
+    "C6 exact version pins against a live node (0.38.22 vs 0.38.23)",
+    "C7 pinned local Gaia/wasmd Rust test reproduction"
+  ],
+
+  "compiler_settings": { "vault": "Rust/CosmWasm 2.1 (NOT run)", "adapter": "Node v20.20.2 (run)" },
+  "dependency_versions": { "status": "pinned in RED_TEAM_NOTES.md; verify against live node (C6)" },
+  "file_hashes_of_compiled_artifacts": null,
+  "test_commands": { "adapter": "node cosmos-hub-proof-adapter/test.js", "vault": "cargo test --workspace --release" },
+  "test_results": { "adapter": "22/22 passed, exit 0", "vault": "not executed (no Rust toolchain)" },
+
+  "zip_package": {
+    "name": "vinculum-finalis-cosmos-hub-clean-room.zip",
+    "path": "public/vinculum-finalis-cosmos-hub-clean-room.zip",
+    "format": "ZIP (STORE/no-compression), produced by a pure-Node archiver (no external deps)",
+    "contents": "all source files, dependency manifests, evidence artifacts, test reports, and the Base44 simulation source"
+  },
+
+  "next_action": "Run C1 (gRPC/CLI params) + C6 (version pins) in an environment with Cosmos Hub node egress; reproduce the Rust suite under the pinned toolchain (C7); build the full ICS-23 verifier (C3); provision the fixed Dev Fund address (C4b)."
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vf-xrpl-lock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vinculum Finalis native XRPL Commitment Vault Lock — Escrow-based source-chain implementation",
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "node tests/escrow.test.js",
+    "lint": "echo 'Lint requires xrpl toolchain — not available in Base44 environment'",
+    "deploy": "echo 'Deployment requires XRPL CLI and funded account — see migrations/deploy-guide.md'"
+  },
+  "dependencies": {
+    "xrpl": "^3.0.0"
+  },
+  "devDependencies": {}
+}

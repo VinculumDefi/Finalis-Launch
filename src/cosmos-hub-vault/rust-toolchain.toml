@@ -1,0 +1,7 @@
+[toolchain]
+# Pinned for reproducible red-team builds (PHASE 2). The wasm32-unknown-unknown target and the
+# rustfmt + clippy components are required.
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

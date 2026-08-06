@@ -1,0 +1,29 @@
+[workspace]
+members = ["contracts/vault"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+# Pinned to versions that exist on crates.io and form a coherent cosmwasm 2.1.x set (PHASE 2).
+# NOTE: cw-storage-plus "=2.0.2" was yanked; the only available 2.x release is 2.0.0.
+[workspace.dependencies]
+cosmwasm-std = { version = "=2.1.3" }
+cw-storage-plus = { version = "=2.0.0" }
+cw2 = { version = "=2.0.0" }
+schemars = "0.8"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+cosmwasm-schema = { version = "=2.1.3" }
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+codegen-units = 1
+panic = "abort"
+overflow-checks = true

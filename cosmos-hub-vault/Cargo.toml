@@ -1,0 +1,27 @@
+[workspace]
+members = ["contracts/vault"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[workspace.dependencies]
+cosmwasm-std = { version = "=2.1.3" }
+cw-storage-plus = { version = "=2.0.2" }
+cw2 = { version = "=2.0.0" }
+schemars = { version = "0.8.21" }
+thiserror = { version = "1.0.63" }
+serde = { version = "1.0.203", features = ["derive"] }
+cosmwasm-schema = { version = "=2.1.3" }
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+codegen-units = 1
+panic = "abort"
+overflow-checks = true

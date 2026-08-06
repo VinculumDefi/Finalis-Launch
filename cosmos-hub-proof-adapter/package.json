@@ -1,0 +1,11 @@
+{
+  "name": "cosmos-hub-proof-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RED-TEAM / NON-PRODUCTION CometBFT/ICS-23 proof normalizer and verifier for the Vinculum Finalis Cosmos Hub Commitment Vault (VF-XCH-011, Section 5.2.3).",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  }
+}

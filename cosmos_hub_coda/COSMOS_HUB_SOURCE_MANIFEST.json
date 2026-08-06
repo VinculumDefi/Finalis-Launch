@@ -1,0 +1,69 @@
+{
+  "manifest": "COSMOS_HUB_SOURCE_MANIFEST",
+  "author": "Base44 CODA (clean-room, re-executed with governing .docx)",
+  "date": "2026-07-28",
+  "subject_environment": "Cosmos Hub (cosmoshub-4) live mainnet",
+  "status": "NO PRODUCTION CODE COMPILED OR TESTED. This manifest records evidence sources only. No compiler settings, file hashes of compiled artifacts, or test results are present because no build or test was executed (verdict not FEASIBLE NOW; see COSMOS_HUB_BUILD_AND_TEST_REPORT.md).",
+
+  "governing_source": {
+    "file_name": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx",
+    "revision": "Revision 6",
+    "revision_date": "2026-07-28",
+    "sha256": "5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9",
+    "bytes": 152710,
+    "read_in_full": true,
+    "authority": "sole governing statement of required protocol behavior (Section 0.1, VF-DOC-001)"
+  },
+
+  "clean_room_implementation_aids_used": {
+    "governing_requirements": { "file": "Vinculum_Finalis_Governing_Requirements.json", "bytes": 130995, "sha256": "(per package manifest)", "records": 209, "usage": "exact governing text for the requirement matrix" },
+    "protocol_constants": { "file": "Vinculum_Finalis_Protocol_Constants.json", "bytes": 15316, "sha256": "(per package manifest)", "usage": "durations, multipliers, fees, 17 environments, formulas" },
+    "approved_asset_registry": { "file": "Vinculum_Finalis_Approved_Asset_Registry.json", "bytes": 280313, "sha256": "be990bcde43db5e07ac9b935f93f5c14c8225275a591b22885eff7ab2eb95446", "records": 1001, "usage": "Cosmos Hub entry located at registry row 479" },
+    "acceptance_workbook": { "file": "Vinculum_Finalis_Base44_Acceptance_Workbook.xlsx", "bytes": 56241, "sha256": "8e12563f8828151916ef0c707317b82cb1f9ec8cd861c84c7da13276a49bc3a5", "usage": "cross-reference (209 reqs; 59 tests; 17 envs; Cosmos Blocked Rows = 1)" },
+    "package_source_manifest": { "file": "Vinculum_Finalis_Base44_Source_Manifest.json", "bytes": 4087, "sha256": "(self)", "usage": "package provenance" }
+  },
+
+  "cosmos_hub_registry_entry": {
+    "registry_row": 479,
+    "symbol": "ATOM",
+    "asset_name": "Cosmos Hub",
+    "environment": "Cosmos",
+    "contract_or_native_identifier": "NATIVE — no EVM contract",
+    "class": "S3",
+    "pricing_identifier": "cosmos",
+    "approved_input_asset": "native ATOM (S3, 1.0x multiplier)",
+    "canonical_base_denom_note": "Exact base denom (standard: uatom) not in registry; to confirm against live chain (C4a)."
+  },
+
+  "external_evidence_sources": {
+    "gaia_releases": { "url": "https://github.com/cosmos/gaia/releases", "latest_tag_observed": "v27.5.0", "latest_tag_date": "2026-06-26", "note": "Release-availability; running mainnet commit NOT confirmed against a live node." },
+    "gaia_v275_upgrade_proposal": { "proposal_id": 1044, "title": "Gaia v27.5.0 Upgrade", "result": "Passed (99.93% YES)", "source_urls": ["https://cosmos.explorers.guru/proposal/1044", "https://cosmos.valopers.com/proposals/1044"], "note": "Indirect (explorer governance record)." },
+    "cosmwasm_hub_integration": { "proposal_id": 25, "result": "Accepted", "source_url": "https://forum.cosmos.network/t/proposal-25-accepted-cosmwasm-on-cosmos-hub/3629", "note": "Establishes CosmWasm module presence on the Hub." },
+    "permissionless_cosmwasm_proposal": { "proposal_id": 1007, "title": "Enable Permissionless CosmWasm Smart Contract Deployment on Cosmos Hub", "result": "Passed", "source_url": "https://forum.cosmos.network/t/proposal-1007-passed-enable-permissionless-cosmwasm-smart-contract-deployment-on-cosmos-hub/15904", "note": "Proposal passage is NOT a live on-chain param read; current code_upload_access / instantiate_default_permission remain UNVERIFIED (C1)." },
+    "permissioned_cosmwasm_history": { "source_url": "https://polkachu.com/gov_proposals/6256", "note": "Documents the historical permissioned (whitelist) state." },
+    "gaia_v276_testnet": { "source_urls": ["https://forum.cosmos.network/t/advance-notice-gaia-v27-6-cosmwasm-updates/17184", "https://x.com/CosmosEcosystem/status/2080285738143506434"], "note": "v27.6 CosmWasm updates are on the public TESTNET, not mainnet. Mainnet param state corresponds to v27.5.0." },
+    "privileged_contracts_concept": { "source_url": "https://medium.com/@ethan.frey/what-are-privileged-contracts-193958998ca2", "note": "Ethan Frey on governance authority; ambiguous re empty-admin contracts. Pertains to immutability crux C2." },
+    "sudo_entry_point": { "source_url": "https://docs.archway.io/developers/smart-contracts/sudo-execution", "note": "General CosmWasm sudo behavior; must be verified against tagged wasmd source for Gaia v27.5.0 (C2)." },
+    "cosmos_sdk": { "url": "https://github.com/cosmos/cosmos-sdk", "note": "Deployed SDK version on mainnet UNVERIFIED against a live node (C6)." },
+    "cosmos_mainnet_chainid": { "url": "https://github.com/cosmos/mainnet", "chain_id": "cosmoshub-4", "note": "Indirect." },
+    "ics23_cometbft": { "note": "CometBFT instant finality on commit; ICS-23 existence/non-existence proofs against the AppHash. Public specification referenced for the conditional proof-path design (C3). Exact ABCI++ non-membership support for the deployed version not verified." }
+  },
+
+  "compiler_settings": null,
+  "dependency_versions": {
+    "status": "UNVERIFIED against a live node (C6)",
+    "required_pinned_when_feasible": ["Gaia commit", "Cosmos SDK version", "wasmd version", "wasmvm version", "CometBFT version", "IBC-Go version", "ICS-23 version", "Rust toolchain", "cosmwasm optimizer/checker"]
+  },
+  "file_hashes_of_compiled_artifacts": null,
+  "test_commands": null,
+  "test_results": null,
+
+  "deferred_workspaces": [
+    { "path": "cosmos-hub-vault/", "status": "NOT GENERATED — verdict not FEASIBLE NOW (CODA Section 7)" },
+    { "path": "cosmos-hub-proof-adapter/", "status": "NOT GENERATED — depends on C3 proof-path build" },
+    { "path": "updated Base44 simulation source", "status": "NOT GENERATED — implementation gate not passed" },
+    { "path": "review ZIP", "status": "NOT GENERATED — environment provides no archive/attachment mechanism" }
+  ],
+
+  "next_action": "Run the live on-chain param gate (C1) and the no-admin/no-sudo source verification (C2) in an environment with direct cosmoshub-4 LCD/RPC access and the tagged Gaia v27.5.0/wasmd source; on success, build the proof path (C3) and verify the Cosmos Hub finality + pending-attempt criteria (C5), then generate the pinned Rust/CosmWasm workspace."
+}

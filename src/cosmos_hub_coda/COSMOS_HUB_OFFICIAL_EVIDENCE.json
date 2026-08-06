@@ -1,0 +1,97 @@
+{
+  "report": "COSMOS_HUB_OFFICIAL_EVIDENCE",
+  "author": "Base44 CODA (clean-room, re-executed with implementation)",
+  "date": "2026-07-28",
+  "subject_environment": "Cosmos Hub (cosmoshub-4) live mainnet",
+  "authority": {
+    "governing_source": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx",
+    "revision": "Revision 6",
+    "revision_date": "2026-07-28",
+    "sha256": "5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9",
+    "read_in_full": true,
+    "sole_governing_expression": "VF-DOC-001 (Section 0.1)"
+  },
+  "verdict": "CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW",
+  "three_state_classification": {
+    "implemented_and_tested": ["off-chain proof-adapter: normalizer, finality gate, ICS-23 skeleton, pending-attempt state machine (22/22 unit tests, Node v20.20.2, exit 0)"],
+    "implemented_not_compiled_or_tested": ["cosmos-hub-vault Rust/CosmWasm workspace (source complete; no rustc/cargo in Base44 sandbox; commands provided)"],
+    "evidence_still_pending": ["C1 authoritative live code_upload_access (needs gRPC/CLI)", "live-node version reconciliation 0.38.22 vs 0.38.23", "full production ICS-23 validator-set/header commitment (C3)", "Cosmos Hub finality + pending-attempt verified against live tx-validity model (C5)", "exact version pins vs live node (C6)", "pinned local Gaia/wasmd Rust test reproduction (C7)"],
+    "production_deployment_inputs_still_pending": ["fixed Cosmos Hub Dev Fund destination address (C4b, deferred per Section 8.2)"]
+  },
+  "c1_chain_registry_verified": {
+    "chain_json_url": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/chain.json",
+    "queried_at": "2026-07-28T23:47:42Z",
+    "chain_id": "cosmoshub-4",
+    "bech32_prefix": "cosmos",
+    "base_fee_denom": "uatom",
+    "git_repo": "https://github.com/cosmos/gaia",
+    "consensus": { "type": "cometbft", "version": "v0.38.23" },
+    "assetlist_url": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/assetlist.json",
+    "asset": { "symbol": "ATOM", "name": "Cosmos Hub Atom", "base": "uatom", "display": "atom", "denom_units": [{"denom":"uatom","exponent":0},{"denom":"atom","exponent":6}] },
+    "registry_row_479": { "symbol": "ATOM", "environment": "Cosmos", "identifier": "NATIVE — no EVM contract", "class": "S3", "pricing_identifier": "cosmos" }
+  },
+  "c1_live_node_confirmation": {
+    "endpoints": [
+      { "base": "https://cosmos.rpc.uquad.org:443", "ts": "2026-07-28T23:47:42.752Z", "node_info_status": 200, "chain_id": "cosmoshub-4", "app_version": "0.38.22" },
+      { "base": "https://rest.cosmoshub-main.ccvalidators.com:443", "ts": "2026-07-28T23:47:43.641Z", "node_info_status": 200, "chain_id": "cosmoshub-4", "app_version": "0.38.22" },
+      { "base": "https://rest.lavenderfive.com:443/cosmoshub", "ts": "2026-07-28T23:47:45.350Z", "node_info_status": 200, "chain_id": "cosmoshub-4", "app_version": "0.38.22" }
+    ],
+    "cometbft_version_note": "Live nodes report 0.38.22; chain-registry expects v0.38.23. Reconcile against a live node (C6).",
+    "cosmwasm_active": {
+      "query": "GET /cosmwasm/wasm/v1/code?pagination.limit=5 on https://rest.lavenderfive.com:443/cosmoshub",
+      "status": 200,
+      "first_code": { "code_id": "1", "creator": "cosmos1559zgk3mxm00qtr0zu2x5n4rh5vw704qaqj6ap", "data_hash": "624562D70D0010BE49CF9A834F21A0929CAEF09432DD770E7B9AE0D28AA9783A" },
+      "creator_is_non_gov": true,
+      "interpretation": "Consistent with a non-NOBODY upload policy; not a substitute for the authoritative params value."
+    }
+  },
+  "c1_permissionless_params_direct_query_pending": {
+    "rest_params_route": [
+      { "base": "https://cosmos.rpc.uquad.org:443", "cosmwasm_route_status": 404, "cosmos_route_status": 501 },
+      { "base": "https://rest.cosmoshub-main.ccvalidators.com:443", "cosmwasm_route_status": 501, "cosmos_route_status": 429 },
+      { "base": "https://rest.lavenderfive.com:443/cosmoshub", "cosmwasm_route_status": 501, "cosmos_route_status": 501 }
+    ],
+    "lcd_scan_24_endpoints": "no LCD exposes the params REST route (404/501/TLS errors)",
+    "abci_query_30_rpcs": "no RPC returned a .value (DNS/egress-limited to github/mintscan/cosmos.directory; cosmoshub node providers ENOTFOUND)",
+    "status": "DIRECT QUERY PENDING — environment egress limitation, NOT a negative result (per CODA guidance: 404/501 for one REST route is not negative). Authoritative value needs gRPC/CLI in an environment with Cosmos Hub node egress.",
+    "raw_errors_sample": ["getaddrinfo ENOTFOUND api.cosmoshub.polkachu.com", "connect EHOSTUNREACH 141.95.202.13:443", "unable to get local issuer certificate", "501 Not Implemented {code:12}"]
+  },
+  "c2_immutability_resolved": {
+    "wasmd_tag": "v0.60.7",
+    "wasmd_commit": "edb607cbec61170ea89ba386d7fdb382a87bbea3",
+    "source_files": [
+      { "file": "x/wasm/keeper/authz_policy.go", "lines": "22-23", "evidence": "DefaultAuthorizationPolicy.CanModifyContract = admin != nil && admin.Equals(actor)" },
+      { "file": "x/wasm/keeper/authz_policy.go", "lines": "66-67", "evidence": "GovAuthorizationPolicy.CanModifyContract = return true (governance authorized to ATTEMPT migrate/admin-change)" },
+      { "file": "x/wasm/keeper/keeper.go", "lines": "476", "evidence": "migrate gates on authZ.CanModifyContract(contractInfo.AdminAddr(), caller)" },
+      { "file": "x/wasm/keeper/keeper.go", "lines": "512", "evidence": "migrate calls the contract's own migrate entry point" },
+      { "file": "x/wasm/keeper/keeper.go", "lines": "618,636", "evidence": "Sudo calls the contract's own sudo entry point" },
+      { "file": "x/wasm/keeper/keeper.go", "lines": "747,753", "evidence": "setContractAdmin gates on authZ.CanModifyContract(contractInfo.AdminAddr(), caller)" },
+      { "file": "x/wasm/keeper/msg_server.go", "lines": "49-67", "evidence": "InstantiateContract: admin optional; admin empty when msg.Admin==''" },
+      { "file": "x/wasm/keeper/msg_server.go", "lines": "420-428", "evidence": "selectAuthorizationPolicy: authority -> gov policy, else default" }
+    ],
+    "conclusion": "A contract with admin=\"\" and NO migrate/sudo entry is code- and state-immutable against all in-protocol actors including governance; migrate/sudo require the contract's own entry which this contract does not expose. Only a chain-level governance software upgrade (hard-fork) can alter it — out of scope per VF-XCH-017. Bank balance requires the contract's own Execute; this contract transfers only the fixed fee, never principal pre-maturity.",
+    "design_constraint": "The deployed contract MUST expose no migrate and no sudo entry (enforced structurally in cosmos-hub-vault/src/lib.rs)."
+  },
+  "c5_pending_attempt_defined": {
+    "spec_section": "5.2.3",
+    "cosmos_hub_criteria": ["finalized success", "finalized failure", "objective invalidation by finalized source-account sequence consumption (analogous to the Stellar criterion)", "genuine finite chain-native validity bound (only if documented against the live Cosmos SDK tx format; default Cosmos SDK tx has no mempool TTL)"],
+    "never_clears": ["elapsed time", "mempool disappearance", "not-seen-within-a-window", "application-local timers"],
+    "implemented_and_tested": "cosmos-hub-proof-adapter PendingAttempt/PendingRegistry; 22/22 unit tests passed."
+  },
+  "resolved_commits": {
+    "wasmd_v0.60.7": "edb607cbec61170ea89ba386d7fdb382a87bbea3",
+    "gaia_v27.5.0": "d089f568a9ef2f4d5e6d5660cb128782f4d1b2c0",
+    "cosmos_sdk_v0.53.4": "908df9d4e2e07c2cd923d7b35f18b1e008c5106c",
+    "cometbft_v0.38.23": "feb2aea4dc271d612129afc958cb844713ec792b",
+    "ibc_go_v10.7.0": "40c9dbe397c8bb385dc03cd2cfc8e36c4023a2ba"
+  },
+  "test_results": {
+    "cosmos_hub_proof_adapter": { "engine": "Node v20.20.2", "command": "node cosmos-hub-proof-adapter/test.js", "total": 22, "passed": 22, "failed": 0, "exit_code": 0, "executed_in_environment": true },
+    "cosmos_hub_vault_rust": { "engine": "Rust/CosmWasm", "command": "cargo test --workspace --release", "total": null, "passed": null, "failed": null, "executed_in_environment": false, "reason": "no rustc/cargo/cosmwasm-check in Base44 sandbox (verified: 'rustc: not found', 'cargo: not found')" }
+  },
+  "environment_limitations": [
+    "Sandbox DNS does not resolve cosmoshub node-provider hostnames (polkachu, chainlayer, panicvalidators, etc.); github.com, raw.githubusercontent.com, cosmos.directory, mintscan DO resolve.",
+    "No Rust/Go toolchain (rustc/cargo/cosmwasm-check/go not found); Node v20.20.2 available.",
+    "These are environment limitations, not evidence that Cosmos Hub is unavailable or infeasible (per user guidance)."
+  ]
+}

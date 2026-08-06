@@ -1,0 +1,102 @@
+{
+  "report": "COSMOS_HUB_OFFICIAL_EVIDENCE",
+  "author": "Base44 CODA (clean-room, re-executed with governing .docx)",
+  "date": "2026-07-28",
+  "subject_environment": "Cosmos Hub (cosmoshub-4) live mainnet",
+  "authority": {
+    "governing_source": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx",
+    "revision": "Revision 6",
+    "revision_date": "2026-07-28",
+    "sha256": "5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9",
+    "read_in_full": true,
+    "sole_governing_expression": "VF-DOC-001 (Section 0.1)"
+  },
+  "clean_room_package_files_read": [
+    { "file": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx", "bytes": 152710, "status": "read in full (sole governing specification)" },
+    { "file": "Vinculum_Finalis_Base44_CODA_Cosmos_Hub_Prompt.md", "bytes": 15528, "status": "read (task charter)" },
+    { "file": "Vinculum_Finalis_Governing_Requirements.json", "bytes": 130995, "status": "read (209 requirement records, exact governing text)" },
+    { "file": "Vinculum_Finalis_Protocol_Constants.json", "bytes": 15316, "status": "read (durations, multipliers, fees, environments, formulas)" },
+    { "file": "Vinculum_Finalis_Approved_Asset_Registry.json", "bytes": 280313, "status": "read; Cosmos Hub entry located at registry row 479" },
+    { "file": "Vinculum_Finalis_Base44_Source_Manifest.json", "bytes": 4087, "status": "read (package provenance)" },
+    { "file": "Vinculum_Finalis_Base44_Acceptance_Workbook.xlsx", "bytes": 56241, "status": "inspected (7 sheets; 209 reqs; 59 tests; 17 envs; 1001 entries; Cosmos Blocked Rows = 1)" },
+    { "file": "Vinculum_Finalis_Base44_Implementation_Brief.md", "bytes": 11303, "status": "read (Phase 1 prototype scope)" },
+    { "file": "Vinculum_Finalis_Base44_Screen_and_State_Specification.md", "bytes": 6690, "status": "read (screen/state inventory)" },
+    { "file": "Vinculum_Finalis_Base44_Phase_1_Build_Prompt.md", "bytes": 4611, "status": "read (Phase 1 build instructions)" }
+  ],
+  "governing_findings_from_master_spec_relevant_to_cosmos_hub": {
+    "cosmos_hub_is_supported_environment": "Section 11.1 / Protocol Constants list exactly 17 environments incl. 'Cosmos' (1 registry entry).",
+    "cosmos_hub_registry_entry": {
+      "registry_row": 479,
+      "symbol": "ATOM",
+      "asset_name": "Cosmos Hub",
+      "environment": "Cosmos",
+      "contract_or_native_identifier": "NATIVE — no EVM contract",
+      "class": "S3",
+      "pricing_identifier": "cosmos",
+      "approved_input_asset": "native ATOM (S3, 1.0x multiplier)",
+      "note": "Exact canonical base denom (e.g. uatom) not stated in the registry; standard Cosmos knowledge; to be confirmed against the live chain (C4a)."
+    },
+    "chain_equivalent_principle_governing": {
+      "VF-XCH-017": "The selected architecture must document its trust assumptions and demonstrate equivalent required outcomes, security, and economic performance using the selected chain-native mechanism; it need not resemble an EVM contract. It may not introduce a person with discretionary power to approve, alter, redirect, or reverse issuance.",
+      "VF-EXT-001": "A design is judged by equivalent required outcomes, security, and economic performance rather than resemblance to an EVM contract."
+    },
+    "three_use_allowance_confirmed_for_persistent_state": {
+      "VF-COM-006": "A selected source mechanism capable of atomically maintaining persistent per-identity allowance state permits exactly three successful qualifying Trust-Building Handshakes per bound identity.",
+      "applies_to_cosmos_hub": "A CosmWasm contract maintains persistent on-chain state keyed by source account -> Cosmos Hub qualifies for THREE-use."
+    },
+    "handshake_identity_account_model": {
+      "VF-COM-005": "For an account-model mechanism it is the source environment combined with the source account.",
+      "cosmos_hub_identity": "(cosmoshub-4, source_account)"
+    },
+    "cosmos_hub_criteria_undefined_in_spec": {
+      "section": "5.2.3 Objective pending-attempt disposition",
+      "exact_text": "Mechanism-specific objective invalidation is: finalized same-nonce replacement or cancellation on EVM; recent-blockhash expiry or finalized durable-nonce advancement on Solana; a finalized conflicting input spend on a UTXO-family chain, with no invented automatic cancellation; finite LastLedgerSequence passage on XRP Ledger; and finite time-bound passage or finalized source-account sequence consumption on Stellar. Cosmos Hub criteria remain undefined pending the required chain-native feasibility analysis. A transaction with no terminal disposition and no objective invalidation remains pending.",
+      "implication": "Cosmos Hub finality (VF-XCH-006/007) and pending-attempt invalidation (VF-COM-007/008, VF-VER-003/004) are UNSATISFIED at the spec level until this feasibility analysis defines them and they are verified live (C5)."
+    },
+    "dev_fund_destination_deferred": {
+      "section": "8.2 Evidence and deferred addresses",
+      "VF-FEE-004": "Each of the 17 supported environments has one fixed and immutable Dev Fund destination.",
+      "VF-FEE-009": "Missing, zero, guessed, or substitute Dev Fund addresses cannot complete a deployment package.",
+      "implication": "Cosmos Hub Dev Fund address is a named unverified production input (C4b), not invented here."
+    },
+    "non_refundable_fee_settled": {
+      "VF-COM-015": "A fee actually and irreversibly transferred to the fixed Dev Fund destination is permanently non-refundable, even if the source transaction is later rejected as unrecognized or over-limit.",
+      "VF-FEE-011": "A fee actually and irreversibly transferred to the configured Dev Fund destination remains permanently non-refundable ... No discretionary refund mechanism exists."
+    }
+  },
+  "live_endpoint_attempts": [
+    { "url": "https://api.cosmoshub.polkachu.com/cosmos/base/tendermint/v1beta1/node_info", "result": "DNS resolution failed" },
+    { "url": "https://lcd.cosmoshub.interbloc.org/cosmos/base/tendermint/v1beta1/node_info", "result": "DNS resolution failed" },
+    { "url": "https://api.cosmoshub.polkachu.com/cosmwasm/wasm/v1/params", "result": "DNS resolution failed" },
+    { "url": "https://rest.cosmos.directory/cosmoshub/cosmos/base/tendermint/v1beta1/node_info", "result": "website not supported by fetch tool" },
+    { "url": "https://rest.cosmos.directory/cosmoshub/cosmwasm/wasm/v1/params", "result": "website not supported by fetch tool" },
+    { "url": "https://rest.cosmos.directory/cosmoshub/cosmos/params/v1beta1/params?subspace=wasm&key=uploadAccess", "result": "website not supported by fetch tool" },
+    { "url": "https://cosmoshub-rest.publicnode.com/cosmos/base/tendermint/v1beta1/node_info", "result": "empty html / no usable payload" },
+    { "url": "https://rpc.cosmoshub-4.publicnode.com/status", "result": "TLS error" }
+  ],
+  "indirect_evidence": [
+    { "claim": "CosmWasm is enabled on the Cosmos Hub", "source_url": "https://forum.cosmos.network/t/proposal-25-accepted-cosmwasm-on-cosmos-hub/3629", "confidence": "indirect (governance record)", "note": "Establishes module presence; not current param values." },
+    { "claim": "CosmWasm was initially permissioned (whitelist required)", "source_url": "https://polkachu.com/gov_proposals/6256", "confidence": "indirect", "note": "Historical permissioned state." },
+    { "claim": "Permissionless CosmWasm deployment proposal #1007 passed", "source_url": "https://forum.cosmos.network/t/proposal-1007-passed-enable-permissionless-cosmwasm-smart-contract-deployment-on-cosmos-hub/15904", "confidence": "indirect (proposal-passage)", "note": "Proposal passage is NOT a live on-chain param read; CODA prompt states it is insufficient alone. Current code_upload_access/instantiate_default_permission remain UNVERIFIED." },
+    { "claim": "Cosmos Hub mainnet runs Gaia v27.5.0", "source_urls": ["https://cosmos.explorers.guru/proposal/1044", "https://cosmos.valopers.com/proposals/1044"], "confidence": "indirect (explorer governance record)", "note": "Upgrade #1044 passed 99.93% YES; running commit not confirmed against a live node." },
+    { "claim": "Latest Gaia release is v27.5.0", "source_url": "https://github.com/cosmos/gaia/releases", "confidence": "indirect" },
+    { "claim": "Gaia v27.6 CosmWasm updates are testnet-only, not mainnet", "source_urls": ["https://forum.cosmos.network/t/advance-notice-gaia-v27-6-cosmwasm-updates/17184", "https://x.com/CosmosEcosystem/status/2080285738143506434"], "confidence": "indirect" },
+    { "claim": "Governance can act as authority/admin over CosmWasm contracts in some configurations", "source_url": "https://medium.com/@ethan.frey/what-are-privileged-contracts-193958998ca2", "confidence": "indirect (concept article)", "note": "Ambiguous re empty-admin contracts; the immutability crux (C2)." },
+    { "claim": "CosmWasm sudo is a privileged entry point invocable only by trusted native modules", "source_url": "https://docs.archway.io/developers/smart-contracts/sudo-execution", "confidence": "indirect (general CosmWasm behavior)", "note": "Supports conditional that a no-sudo-handler contract is not alterable via sudo; must be verified against tagged wasmd source for Gaia v27.5.0 (C2)." },
+    { "claim": "Cosmos Hub chain ID is cosmoshub-4", "source_url": "https://github.com/cosmos/mainnet", "confidence": "indirect" }
+  ],
+  "unresolved_live_facts": [
+    "Exact running Gaia commit hash (not confirmed against a live node)",
+    "Exact SDK / wasmd / wasmvm / CometBFT / IBC-Go / ICS-23 versions of the running mainnet",
+    "Current on-chain value of code_upload_access (permissionless vs whitelisted)",
+    "Current on-chain value of instantiate_default_permission",
+    "Whether an ordinary user can currently upload and instantiate without governance/allowlist",
+    "Whether an empty-admin instance can be created and whether wasmd enforces no migration/admin-change on it",
+    "Whether MsgSudoContract or any gov-authority wasm message can affect a no-sudo-handler contract",
+    "Exact canonical native base denom for ATOM on cosmoshub-4 (standard: uatom) - to confirm live",
+    "Whether the deployed Cosmos SDK tx format has any genuine finite validity bound / TTL by default",
+    "Exact CometBFT finality semantics and ABCI++ non-existence proof support for the deployed Gaia version"
+  ],
+  "verdict": "CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW",
+  "verdict_basis": "A plausible no-admin CosmWasm vault holding native ATOM exists and the governing text confirms chain-equivalence and three-use allowance, but the mandatory live on-chain param gate could not be completed in this environment, the no-admin/no-sudo immutability crux is unverified against tagged wasmd source, the proof path is unbuilt, the Cosmos Hub Dev Fund address is a deferred external input, and the Master Specification itself flags Cosmos Hub finality and pending-attempt criteria as undefined pending this feasibility analysis. Per CODA Section 6/7 no production code was generated."
+}
