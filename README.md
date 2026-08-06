@@ -1,77 +1,111 @@
-# Base44 Project
+# Vinculum Finalis
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+> **The authoritative engineering repository for the Vinculum Finalis Protocol.**
+>
+> Vinculum Finalis is a next-generation digital asset protocol engineered to provide deterministic issuance, immutable protocol governance, verifiable asset provenance, and secure cross-network interoperability. This repository serves as the primary engineering workspace for the protocol's implementation, documentation, architecture, testing, and technical review.
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+---
 
-## Prerequisites
+## Repository Status
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
+**Current Development Phase:** Revision 7 Candidate (Pre-Deployment)
 
-See the [Base44 CLI docs](https://docs.base44.com/developers/references/cli/get-started/overview) if you want to run Base44 commands directly.
+This repository contains active engineering work and should be considered under development. Nothing contained herein should be interpreted as production-ready until the protocol has successfully completed engineering review, security validation, and formal release.
 
-## Run Locally
+---
 
-Run the full local development environment from the project root:
+# Governing Documentation
 
-```bash
-base44 dev
+The **Vinculum Finalis Master Specification** is the governing technical document for this repository.
+
+All protocol implementation, architecture, testing, and engineering decisions should be traceable to the current approved revision of the Master Specification.
+
+Supporting documents—including architecture, traceability matrices, engineering reviews, and implementation notes—exist to support and verify the requirements established by the Master Specification.
+
+---
+
+# Repository Structure
+
+```
+base44/                     Original BASE44 generated implementation
+base-contracts/             Corrected contract implementation and test harness
+base44-simulation/          Simulation and validation components
+
+cosmos-hub-vault/
+cosmos-hub-proof-adapter/
+cosmos_hub_coda/
+
+src/                        Primary application source
+public/                     Public assets
+scripts/                    Build and utility scripts
+
+docs/                       Project documentation (recommended structure)
 ```
 
-`base44 dev` starts the local Base44 development backend and, when this app is configured for it, also starts the frontend dev server for you. Use the frontend URL printed by the command.
+---
 
-For example, when the Base44 project config includes a `serveCommand`, `base44 dev` can launch the frontend too:
+# Engineering Principles
 
-```json5
-{
-  "site": {
-    "serveCommand": "npm run dev"
-  }
-}
-```
+Development of Vinculum Finalis follows these guiding principles:
 
-In a Base44 project this lives in `base44/config.jsonc`.
+- Specification-driven engineering
+- Deterministic protocol behavior
+- Security-first implementation
+- Complete requirement traceability
+- Independent technical review
+- Reproducible testing
+- Transparent engineering decisions
 
-## Run Only The Frontend
+---
 
-If you only want to work on the frontend against the hosted Base44 backend, run:
+# Repository Contents
 
-```bash
-npm run dev
-```
+This repository includes:
 
-Open the local URL printed by Vite.
+- Application source code
+- Original BASE44 implementation
+- Corrected contract implementation
+- Automated contract test harness
+- Architecture documentation
+- Requirement traceability artifacts
+- Engineering review documentation
+- Deployment planning materials
 
-## Use The Hosted Backend
+Original BASE44 artifacts are intentionally retained where appropriate to preserve implementation provenance and provide historical traceability.
 
-For frontend-only development, create or update `.env.local` in the project root:
+---
 
-```bash
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=https://your-app.base44.app
-```
+# Development Workflow
 
-`VITE_BASE44_APP_ID` identifies the Base44 app.
+Engineering changes are introduced as discrete, reviewable commits.
 
-`VITE_BASE44_APP_BASE_URL` tells the Base44 Vite plugin where to send local `/api` requests. Point it at your deployed Base44 app URL when you want the local frontend to use the hosted backend.
+Where practical:
 
-When you use `base44 dev`, the command injects the local Base44 values for you, so `.env.local` is mainly needed for frontend-only workflows.
+- Original implementations are preserved.
+- Corrected implementations are maintained separately.
+- Significant engineering decisions are documented.
+- Changes remain traceable to protocol requirements.
 
-## Publish Your Changes
+---
 
-After pushing your changes to git, open the Base44 dashboard and publish the app:
+# Current Milestones
 
-```bash
-base44 dashboard open
-```
+Completed:
 
-## Docs & Support
+- Initial Git repository established
+- BASE44 project imported
+- Corrected Base contract implementation integrated
+- Initial engineering documentation committed
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+In Progress:
 
-Base44 CLI command reference: [https://docs.base44.com/developers/references/cli/commands/introduction](https://docs.base44.com/developers/references/cli/commands/introduction)
+- Revision 7 protocol completion
+- Documentation organization
+- Engineering review reconciliation
+- Launch readiness validation
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+---
+
+# License
+
+Licensing terms are under evaluation and will be published prior to production release.
