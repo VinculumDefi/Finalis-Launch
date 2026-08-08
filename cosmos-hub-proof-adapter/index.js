@@ -70,9 +70,14 @@ function normalizeLockEvent(raw) {
   if (raw.output_token && !['VCLM', 'CHONX'].includes(String(raw.output_token).toUpperCase())) {
     errors.push(`invalid output_token: ${raw.output_token}`);
   }
-  // 6. CHONX requires activation receipt at creation (VF-COM-025)
-  if (String(raw.output_token).toUpperCase() === 'CHONX' && raw.chonx_activation_receipt !== true) {
-    errors.push('CHONX selected without activation receipt at creation (VF-COM-025)');
+  // 6. CHONX requires a valid causal activation receipt at creation (VF-COM-025). The contract emits
+  //    chonx_activation_receipt as a STRING: a non-empty receipt for CHONX, or "not_applicable" for
+  //    VCLM. A genuine contract event must pass the normalizer unchanged (defect 6).
+  if (String(raw.output_token).toUpperCase() === 'CHONX') {
+    const r = String(raw.chonx_activation_receipt);
+    if (r === '' || r === 'not_applicable') {
+      errors.push('CHONX selected without a valid activation receipt at creation (VF-COM-025)');
+    }
   }
   // 7. fee routed to the fixed destination (VF-FEE-001/006)
   if (raw.fee_destination && raw.fee_transfer_evidence && raw.fee_destination !== raw.fee_transfer_evidence) {

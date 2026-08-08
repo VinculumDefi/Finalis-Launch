@@ -16,8 +16,17 @@ async function deploySystem() {
   const chonx = await Token.deploy("Chonx", "CHONX", CHONX_HARD_CAP);
   const synthToken = await Token.deploy("Synth", "SYNTH", SYNTH_HARD_CAP);
 
+  // CL-01: the price publisher key is immutable and set at construction.
+  const pricePublisher = (await ethers.getSigners())[9];
+  const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+
   const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
-  const verifier = await Verifier.deploy(await vclm.getAddress(), await chonx.getAddress());
+  const verifier = await Verifier.deploy(
+    await vclm.getAddress(),
+    await chonx.getAddress(),
+    pricePublisher.address,
+    launchTs
+  );
 
   const Synth = await ethers.getContractFactory("VinculumFinalisSynth");
   const synth = await Synth.deploy(
@@ -45,10 +54,10 @@ async function deploySystem() {
   await synthToken.initialize(await verifier.getAddress(), ZERO);
 
   // VF-DEP-001: deployment ceremony — configure, then close it permanently.
-  await verifier.configureDevFund("base", deployer.address);
+  await verifier.configureDevFund("base", "devfund.source.address");
   await verifier.finalize();
 
-  return { deployer, vclm, chonx, synthToken, verifier, synth, stake, launchTimestamp };
+  return { deployer, vclm, chonx, synthToken, verifier, synth, stake, launchTimestamp, pricePublisher };
 }
 
 module.exports = { deploySystem, VCLM_HARD_CAP, CHONX_HARD_CAP, SYNTH_HARD_CAP };

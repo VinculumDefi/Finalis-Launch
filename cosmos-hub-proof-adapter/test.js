@@ -42,7 +42,7 @@ function baseEvent() {
     fee_transfer_evidence: 'cosmos1devfund',
     handshake_identity: '(cosmoshub-4, cosmos1alice)',
     handshake_allowance_count: '1',
-    chonx_activation_receipt: false,
+    chonx_activation_receipt: 'not_applicable',
   };
 }
 
@@ -89,20 +89,86 @@ test('normalizer: zero fee rejected (VF-COM-013)', () => {
 });
 
 test('normalizer: CHONX without activation receipt rejected (VF-COM-025)', () => {
-  const e = baseEvent(); e.output_token = 'CHONX'; e.chonx_activation_receipt = false;
+  const e = baseEvent(); e.output_token = 'CHONX'; e.chonx_activation_receipt = 'not_applicable';
   const r = normalizeLockEvent(e);
   assert.ok(!r.ok);
   assert.ok(r.errors.some(x => x.includes('CHONX')));
 });
 
 test('normalizer: CHONX with activation receipt accepted', () => {
-  const e = baseEvent(); e.output_token = 'CHONX'; e.chonx_activation_receipt = true;
+  const e = baseEvent(); e.output_token = 'CHONX'; e.chonx_activation_receipt = 'activation:block:900000';
   const r = normalizeLockEvent(e);
   assert.ok(r.ok, JSON.stringify(r.errors));
 });
 
 test('normalizer: fee destination != fee-transfer evidence rejected (VF-FEE-001/006)', () => {
   const e = baseEvent(); e.fee_transfer_evidence = 'cosmos1other';
+  const r = normalizeLockEvent(e);
+  assert.ok(!r.ok);
+  assert.ok(r.errors.some(x => x.includes('fee_destination != fee_transfer_evidence')));
+});
+
+// ---------- Real contract-event -> normalizer round-trip (PHASE 3, defect 6) ----------
+// These events mirror the EXACT attributes the compiled Rust contract emits (contract.rs
+// commit_vault_lock event), proving a genuine contract event passes the normalizer unchanged.
+function contractVclmEvent() {
+  const alice = 'cosmos190vqdjtlpcq27xslcveglfmr4ynfwg7gqmchsn';
+  const fixture = 'cosmos13cnmjwh69nn6ycjz8t3zlmkpx276lq4gpnylud';
+  return {
+    source_environment: 'cosmoshub-4',
+    lock_id: 'lock-rt-1',
+    canonical_asset: 'uatom',
+    source_account: alice,
+    gross_amount: '12000000',
+    fee_amount: '600000',
+    principal_amount: '11400000',
+    verified_gross_usd_micro: '12000000',
+    duration_secs: '2592000',
+    creation_time_secs: '1700000000',
+    maturity_time_secs: '1702592000',
+    base_recipient: '0x6a3c13a4f44c36016e2711a43581d543c96da121',
+    release_destination: alice,
+    output_token: 'VCLM',
+    fee_destination: fixture,
+    fee_transfer_evidence: fixture,
+    handshake_identity: '(cosmoshub-4, ' + alice + ')',
+    handshake_allowance_count: '0',
+    chonx_activation_receipt: 'not_applicable',
+  };
+}
+test('round-trip: genuine VCLM contract event passes normalizer', () => {
+  const r = normalizeLockEvent(contractVclmEvent());
+  assert.ok(r.ok, JSON.stringify(r.errors));
+  assert.strictEqual(r.facts.chonx_activation_receipt, 'not_applicable');
+  assert.strictEqual(r.facts.fee_transfer_evidence, r.facts.fee_destination);
+});
+test('round-trip: genuine CHONX contract event passes normalizer', () => {
+  const e = contractVclmEvent();
+  e.output_token = 'CHONX';
+  e.chonx_activation_receipt = 'activation:block:1699999000';
+  e.lock_id = 'lock-rt-chonx';
+  const r = normalizeLockEvent(e);
+  assert.ok(r.ok, JSON.stringify(r.errors));
+  assert.strictEqual(r.facts.chonx_activation_receipt, 'activation:block:1699999000');
+});
+test('round-trip: CHONX contract event with not_applicable receipt rejected (substituted field)', () => {
+  const e = contractVclmEvent();
+  e.output_token = 'CHONX';
+  e.chonx_activation_receipt = 'not_applicable';
+  const r = normalizeLockEvent(e);
+  assert.ok(!r.ok);
+  assert.ok(r.errors.some(x => x.includes('CHONX')));
+});
+test('round-trip: malformed event (missing fee_transfer_evidence) rejected', () => {
+  const e = contractVclmEvent();
+  delete e.fee_transfer_evidence;
+  const r = normalizeLockEvent(e);
+  assert.ok(!r.ok);
+  assert.ok(r.errors.some(x => x.includes('fee_transfer_evidence')));
+});
+test('round-trip: substituted fee_transfer_evidence (mismatched destination) rejected', () => {
+  const e = contractVclmEvent();
+  e.fee_transfer_evidence = 'cosmos1someoneelse';
   const r = normalizeLockEvent(e);
   assert.ok(!r.ok);
   assert.ok(r.errors.some(x => x.includes('fee_destination != fee_transfer_evidence')));

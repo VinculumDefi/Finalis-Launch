@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryMsg",
+  "oneOf": [
+    {
+      "description": "Full immutable lock record (VF-XCH-011 fields) by lock_id.",
+      "type": "object",
+      "required": [
+        "lock"
+      ],
+      "properties": {
+        "lock": {
+          "type": "object",
+          "required": [
+            "lock_id"
+          ],
+          "properties": {
+            "lock_id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Contract configuration (Dev Fund destination, source environment, native denom).",
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Remaining Handshake allowance for a bound identity (account) (VF-COM-006/007).",
+      "type": "object",
+      "required": [
+        "handshake_allowance"
+      ],
+      "properties": {
+        "handshake_allowance": {
+          "type": "object",
+          "required": [
+            "identity"
+          ],
+          "properties": {
+            "identity": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Whether a lock's principal has been released (VF-PRI-002 single-release).",
+      "type": "object",
+      "required": [
+        "is_released"
+      ],
+      "properties": {
+        "is_released": {
+          "type": "object",
+          "required": [
+            "lock_id"
+          ],
+          "properties": {
+            "lock_id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

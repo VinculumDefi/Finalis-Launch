@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteMsg",
+  "oneOf": [
+    {
+      "description": "Create a Commitment Vault Lock. Funds sent with this message are the gross amount. The contract atomically routes the rounded fee to the fixed Dev Fund and retains the principal until maturity, releasing it once to the bound release destination.",
+      "type": "object",
+      "required": [
+        "commit_vault_lock"
+      ],
+      "properties": {
+        "commit_vault_lock": {
+          "type": "object",
+          "required": [
+            "base_recipient",
+            "chonx_activation_receipt",
+            "duration_secs",
+            "lock_id",
+            "output_token",
+            "release_destination",
+            "verified_gross_usd_micro"
+          ],
+          "properties": {
+            "base_recipient": {
+              "description": "Authorized Base-chain (EVM) recipient, bound at creation (VF-ARC-006). May differ from sender.",
+              "type": "string"
+            },
+            "chonx_activation_receipt": {
+              "description": "Causal CHONX activation receipt (VF-COM-025). Required (non-empty, not \"not_applicable\") for CHONX output; ignored for VCLM (the contract records \"not_applicable\"). Verified off-chain by the proof path — no administrator is involved (defect 7).",
+              "type": "string"
+            },
+            "duration_secs": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "lock_id": {
+              "description": "Unique Commitment Vault Lock identifier, globally unique per (env, lock_id) (VF-XCH-013).",
+              "type": "string"
+            },
+            "output_token": {
+              "$ref": "#/definitions/OutputToken"
+            },
+            "release_destination": {
+              "description": "Destination on the Cosmos Hub to which principal is released at maturity (bound at creation).",
+              "type": "string"
+            },
+            "verified_gross_usd_micro": {
+              "description": "Verified Gross USD value of the gross amount, in micro-USD, at lock creation (VF-XCH-011).",
+              "type": "integer",
+              "format": "uint128",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Release matured principal to the bound release destination. Permissionless; depends on no Base/price/relayer/admin (VF-PRI-002..006, VF-SEC-006). Callable by anyone; principal is always sent to the release_destination bound at creation (VF-PRI-003).",
+      "type": "object",
+      "required": [
+        "release_principal"
+      ],
+      "properties": {
+        "release_principal": {
+          "type": "object",
+          "required": [
+            "lock_id"
+          ],
+          "properties": {
+            "lock_id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "OutputToken": {
+      "type": "string",
+      "enum": [
+        "VCLM",
+        "CHONX"
+      ]
+    }
+  }
+}

@@ -158,7 +158,7 @@ describe("CL-02 · Verifier: deployment ceremony closes irreversibly", function 
   it("configureDevFund is unreachable after finalization", async function () {
     const { verifier, deployer } = await deploySystem();
     await expect(
-      verifier.configureDevFund("base", deployer.address)
+      verifier.configureDevFund("base", "devfund.source.address")
     ).to.be.revertedWith("VF-DEP-003: configuration finalized");
   });
 
@@ -191,7 +191,9 @@ describe("CL-02 · Verifier: deployment ceremony closes irreversibly", function 
     const v = await ethers.getContractFactory("VinculumFinalisVerifier");
     const a = await Token.deploy("A", "A", 1n);
     const b = await Token.deploy("B", "B", 1n);
-    const fresh = await v.deploy(await a.getAddress(), await b.getAddress());
+    const pp = (await ethers.getSigners())[9];
+    const ts = (await ethers.provider.getBlock("latest")).timestamp;
+    const fresh = await v.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts);
     await expect(
       fresh.registerChainVerifier("base", ZERO)
     ).to.be.revertedWith("VF-DEP-002: zero chain verifier");
@@ -228,7 +230,9 @@ describe("VF-DEP-001 · issuance inactive until finalization", function () {
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
     const a = await Token.deploy("A", "A", 10n ** 30n);
     const b = await Token.deploy("B", "B", 10n ** 30n);
-    const fresh = await V.deploy(await a.getAddress(), await b.getAddress());
+    const pp = (await ethers.getSigners())[9];
+    const ts = (await ethers.provider.getBlock("latest")).timestamp;
+    const fresh = await V.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts);
     expect(await fresh.configurationFinalized()).to.equal(false);
   });
 });

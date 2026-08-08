@@ -219,6 +219,68 @@ contract VinculumFinalisVerifier {
     // contract that cannot be patched after deployment (VF-IMM-006).
     bool public configurationFinalized;
 
+    // ===== CL-01 / VF-ORC-007: signed and batched price records =====
+    //
+    // The Base valuation path accepts ONLY a signed, batched price record for
+    // the exact approved asset identity. No caller-supplied USD value is
+    // accepted anywhere in this contract.
+    //
+    // VF-SEC-005: a relayer or price-batch submitter obtains no authority.
+    // Anyone may deliver a batch; only a signature from the immutable
+    // publisher key makes it valid. The submitter is a courier, not a source.
+
+    struct PriceRecord {
+        uint256 priceUsdMicro;   // USD per WHOLE unit, 6-decimal micro
+        uint64  fetchTimestamp;  // when the price process observed it
+        uint64  runId;           // scheduled run that produced it
+        bool    available;       // VF-ORC-005: false = no usable valuation
+    }
+
+    address public immutable pricePublisher;
+    uint256 public immutable launchTimestamp;   // VF-ORC-013 emission origin
+    uint64  public latestPriceRunId;
+
+    // CL-39 / VF-IMM-006: bound how far a single batch may advance the run
+    // watermark. Without this, one batch signed with a near-maximum runId
+    // would set the watermark beyond any reachable future value and freeze
+    // price updates permanently, with no repair path. At two scheduled runs
+    // per day (VF-ORC-001) this tolerates roughly 500 days of missed runs.
+    uint64 private constant MAX_RUN_ADVANCE = 1000;
+
+    // CL-37 / Revision 7 decision (2026-08-07):
+    //
+    // A price record is valid where the elapsed time since its publication
+    // timestamp does not exceed 48 hours — four scheduled publication
+    // intervals at the twice-daily cadence of VF-ORC-001.
+    //
+    // Resolves the tension between VF-ORC-008 (a record remains applicable
+    // until the next scheduled run) and VF-IMM-005 (failure of an external
+    // dependency must prevent unsafe new issuance). Issuance fails closed on
+    // stale data; Commitment Vault principal release is unaffected, because
+    // release executes on the source chain and never depends on Base pricing.
+    //
+    // Age is measured from the SIGNED fetchTimestamp, not from the block in
+    // which the batch was submitted. A delayed batch must not reset its own
+    // clock and arrive fresh.
+    uint256 private constant MAX_PRICE_RECORD_AGE = 48 hours;
+    mapping(bytes32 => PriceRecord) public priceRecords;
+
+    // ===== CL-11 / VF-COM-006: handshake allowance per environment =====
+    //
+    // The allowance is a property of the SELECTED SOURCE MECHANISM, not an
+    // assertion in the proof package. A mechanism that can atomically maintain
+    // persistent per-identity allowance state permits exactly three qualifying
+    // handshakes per identity; one that cannot permits exactly one.
+    //
+    // Registered during the deployment ceremony alongside the chain verifier.
+    // 0 means unregistered, and an unregistered environment cannot be used.
+    mapping(string => uint8) public handshakeAllowanceByEnvironment;
+
+    event HandshakeAllowanceRegistered(string environmentId, uint8 allowance);
+
+    event PriceBatchAccepted(uint64 indexed runId, uint256 assetCount, uint64 fetchTimestamp);
+    event AssetMarkedUnavailable(bytes32 indexed canonicalAssetId, uint64 runId);
+
     // VF-XCH-013: replay protection — keccak256(env, lockId) => consumed
     mapping(bytes32 => bool) public consumedLocks;
 
@@ -241,6 +303,13 @@ contract VinculumFinalisVerifier {
     mapping(bytes32 => uint256) public racCredits;
     mapping(bytes32 => uint256) public racEpoch;
 
+    // CL-06 / VF-RAC-004: Epoch Reward Basis is the SUM of credits assigned to
+    // an epoch. Maintained as a RUNNING TOTAL, incremented as each credit is
+    // recorded. Deliberately not derived by iterating credits at read time:
+    // that is the unbounded-loop mistake CL-09 exists to correct, and it would
+    // brick permanently once credit count outgrew the block gas limit.
+    mapping(uint256 => uint256) public epochRewardBasis;
+
     // BASE-QNORM: immutable asset-precision table
     // keccak256(environmentId, canonicalAssetId) => AssetPrecisionEntry
     mapping(bytes32 => AssetPrecisionEntry) public assetPrecisionTable;
@@ -251,7 +320,11 @@ contract VinculumFinalisVerifier {
 
     // Dev Fund destinations (VF-FEE-004) — PENDING_DEPLOYMENT until provisioned
     // environmentId => devFundAddress
-    mapping(string => address) public devFundDestinations;
+    // CL-12: fees route on the SOURCE chain, so a Dev Fund destination is a
+    // source-chain address — a string, not an EVM address. Stored verbatim for
+    // inspection, plus a hash for constant-gas comparison.
+    mapping(string => string)  public devFundDestinations;
+    mapping(string => bytes32) public devFundDestinationHashes;
 
     // Token contracts (BASE-TOK)
     IERC20 public vclmToken;
@@ -281,7 +354,7 @@ contract VinculumFinalisVerifier {
 
     event ChonxActivated(uint256 activationBlock);
 
-    event DevFundConfigured(string environmentId, address devFundDestination);
+    event DevFundConfigured(string environmentId, string devFundDestination);
     event ChainVerifierRegistered(string environmentId, address verifier);
     event DeploymentFinalized();
 
@@ -304,10 +377,147 @@ contract VinculumFinalisVerifier {
 
     // ===== Constructor =====
 
-    constructor(address _vclmToken, address _chonxToken) {
+    constructor(
+        address _vclmToken,
+        address _chonxToken,
+        address _pricePublisher,
+        uint256 _launchTimestamp
+    ) {
+        require(_pricePublisher != address(0), "VF-DEP-002: zero price publisher");
+        require(_launchTimestamp > 0, "VF-DEP-002: launchTimestamp not set");
         deployer = msg.sender;
         vclmToken = IERC20(_vclmToken);
         chonxToken = IERC20(_chonxToken);
+        pricePublisher = _pricePublisher;
+        launchTimestamp = _launchTimestamp;
+    }
+
+    // ===== CL-01 / VF-ORC-007: price batch intake =====
+
+    /// @notice Delivers a signed, batched price record set from a scheduled run.
+    /// @dev Callable by ANYONE. VF-SEC-005: the submitter obtains no authority;
+    ///      validity rests entirely on the publisher signature. VF-ORC-008: runs
+    ///      are strictly ordered. A price of zero marks the asset unavailable
+    ///      (VF-ORC-005) rather than substituting a value (VF-ORC-004).
+    function submitPriceBatch(
+        uint64 runId,
+        bytes32[] calldata canonicalAssetIds,
+        uint256[] calldata pricesUsdMicro,
+        uint64 fetchTimestamp,
+        bytes calldata publisherSignature
+    ) external {
+        require(canonicalAssetIds.length == pricesUsdMicro.length, "VF-ORC: length mismatch");
+        require(canonicalAssetIds.length > 0, "VF-ORC: empty batch");
+        require(runId > latestPriceRunId, "VF-ORC-008: run not newer");
+        // CL-39: a permanent brick must not be one signature away.
+        require(runId <= latestPriceRunId + MAX_RUN_ADVANCE, "CL-39: run advance too large");
+        require(fetchTimestamp <= block.timestamp, "VF-ORC: future fetch timestamp");
+
+        // Domain-bound: a signature cannot be replayed to another chain or
+        // another deployment of this contract.
+        bytes32 digest = keccak256(
+            abi.encode(
+                block.chainid,
+                address(this),
+                runId,
+                keccak256(abi.encodePacked(canonicalAssetIds)),
+                keccak256(abi.encodePacked(pricesUsdMicro)),
+                fetchTimestamp
+            )
+        );
+        require(
+            _recoverSigner(_ethSignedMessageHash(digest), publisherSignature) == pricePublisher,
+            "VF-ORC-007: bad publisher signature"
+        );
+
+        for (uint256 i = 0; i < canonicalAssetIds.length; i++) {
+            bool ok = pricesUsdMicro[i] > 0;
+            priceRecords[canonicalAssetIds[i]] = PriceRecord({
+                priceUsdMicro: pricesUsdMicro[i],
+                fetchTimestamp: fetchTimestamp,
+                runId: runId,
+                available: ok
+            });
+            if (!ok) emit AssetMarkedUnavailable(canonicalAssetIds[i], runId);
+        }
+
+        latestPriceRunId = runId;
+        emit PriceBatchAccepted(runId, canonicalAssetIds.length, fetchTimestamp);
+    }
+
+    function _ethSignedMessageHash(bytes32 h) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", h));
+    }
+
+    function _recoverSigner(bytes32 digest, bytes memory sig) internal pure returns (address) {
+        require(sig.length == 65, "VF-ORC-007: bad signature length");
+        bytes32 r; bytes32 sv; uint8 v;
+        assembly {
+            r  := mload(add(sig, 32))
+            sv := mload(add(sig, 64))
+            v  := byte(0, mload(add(sig, 96)))
+        }
+        if (v < 27) v += 27;
+        require(v == 27 || v == 28, "VF-ORC-007: bad signature v");
+        require(
+            uint256(sv) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+            "VF-ORC-007: malleable signature"
+        );
+        address signer = ecrecover(digest, v, r, sv);
+        require(signer != address(0), "VF-ORC-007: bad signature");
+        return signer;
+    }
+
+    /// @notice The asset's decimals, from the immutable registry.
+    /// @dev CL-41: precision is a DIVISOR in every USD derivation. Taking it
+    ///      from the proof package let a caller understate decimals and inflate
+    ///      the resulting credit by 10^(true - declared). Same class as CL-01:
+    ///      a quantity that determines issuance must never be caller-supplied.
+    function _registeredPrecision(ProofPackage calldata pkg) internal view returns (uint256) {
+        bytes32 key = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));
+        AssetPrecisionEntry storage e = assetPrecisionTable[key];
+        require(e.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
+        return uint256(e.decimals);
+    }
+
+    /// @notice Verified Gross USD Value from the accepted reference price.
+    /// @dev VF-ORC-007/012. Never caller-supplied.
+    function _verifiedGrossUsdMicro(ProofPackage calldata pkg)
+        internal view returns (uint256)
+    {
+        PriceRecord storage pr = priceRecords[pkg.canonicalAssetId];
+        require(pr.available, "VF-ORC-005: no usable valuation for asset");
+        // CL-37: exactly 48 hours remains valid; 48 hours plus one second does not.
+        require(
+            block.timestamp - uint256(pr.fetchTimestamp) <= MAX_PRICE_RECORD_AGE,
+            "CL-37: price record stale"
+        );
+        // CL-40: the protocol's USD bounds (HANDSHAKE_USD_MIN etc.) are
+        // 18-decimal, while published prices are 6-decimal micro-USD.
+        // Scale by 1e12 to land in the units the rest of the contract uses.
+        // CL-41: divisor from the registry, never from the package.
+        return (pkg.grossAmountSmallestUnits * pr.priceUsdMicro * 1e12)
+               / (10 ** _registeredPrecision(pkg));
+    }
+
+    /// @notice Whether an asset currently has a usable valuation.
+    /// @dev CL-37. Available AND within the maximum record age. Exposed so
+    ///      operators and the UI can observe fail-closed state directly
+    ///      rather than inferring it from a reverted transaction.
+    function hasUsableValuation(bytes32 canonicalAssetId) external view returns (bool) {
+        PriceRecord storage pr = priceRecords[canonicalAssetId];
+        if (!pr.available) return false;
+        return block.timestamp - uint256(pr.fetchTimestamp) <= MAX_PRICE_RECORD_AGE;
+    }
+
+    /// @notice Days since launch, derived from the Valuation Timestamp.
+    /// @dev VF-ORC-011/013. Never caller-supplied.
+    function _daysSinceLaunch(ProofPackage calldata pkg)
+        internal view returns (uint256)
+    {
+        require(pkg.valuationTimestamp >= launchTimestamp, "VF-ORC-011: valuation precedes launch");
+        require(pkg.valuationTimestamp <= block.timestamp, "VF-ORC-011: valuation in future");
+        return (pkg.valuationTimestamp - launchTimestamp) / 1 days;
     }
 
     // ===== Configuration — deployment ceremony only (VF-DEP-001/006) =====
@@ -325,6 +535,19 @@ contract VinculumFinalisVerifier {
         uint8 custodyClass,
         uint8 custodyPath
     ) external onlyDuringDeployment {
+        // CL-42 / VF-SEC-003: an unrecognized custody class must not fall
+        // through to a valid economic multiplier. _computeIssuance selects
+        // S1/S2/S3 by ternary, so any unlisted value would silently receive
+        // the S3 multiplier. Registration is immutable after finalization
+        // (VF-IMM-006), so a misregistration here is permanent.
+        require(custodyClass >= 1 && custodyClass <= 3, "VF-SEC-003: custody class must be 1, 2 or 3");
+        require(custodyPath <= 1, "VF-SEC-003: custody path must be 0 or 1");
+
+        // CL-43: precision is an exponent in every USD derivation. Values the
+        // arithmetic cannot execute would register an asset into a permanently
+        // unusable state with no post-deployment correction path.
+        require(decimals <= 18, "VF-REG: precision exceeds 18");
+
         bytes32 key = keccak256(abi.encodePacked(environmentId, canonicalAssetId));
         assetPrecisionTable[key] = AssetPrecisionEntry({
             canonicalAssetId: canonicalAssetId,
@@ -342,8 +565,23 @@ contract VinculumFinalisVerifier {
         emit ChainVerifierRegistered(environmentId, verifier);
     }
 
-    function configureDevFund(string calldata environmentId, address devFundDestination) external onlyDuringDeployment {
-        require(devFundDestination != address(0), "VF: zero dev fund");
+    /// @notice Registers the handshake allowance for a source environment.
+    /// @dev CL-11 / VF-COM-006. Exactly 1 or exactly 3 — the specification
+    ///      admits no other value. Deployment ceremony only.
+    function registerHandshakeAllowance(string calldata environmentId, uint8 allowance)
+        external onlyDuringDeployment
+    {
+        require(allowance == 1 || allowance == 3, "VF-COM-006: allowance must be 1 or 3");
+        handshakeAllowanceByEnvironment[environmentId] = allowance;
+        emit HandshakeAllowanceRegistered(environmentId, allowance);
+    }
+
+    /// @dev VF-FEE-009: missing, zero, guessed or substitute Dev Fund addresses
+    ///      cannot complete a deployment package. An empty destination is rejected
+    ///      here rather than discovered at issuance time.
+    function configureDevFund(string calldata environmentId, string calldata devFundDestination) external onlyDuringDeployment {
+        require(bytes(devFundDestination).length > 0, "VF-FEE-009: empty dev fund destination");
+        devFundDestinationHashes[environmentId] = keccak256(bytes(devFundDestination));
         devFundDestinations[environmentId] = devFundDestination;
         emit DevFundConfigured(environmentId, devFundDestination);
     }
@@ -375,9 +613,10 @@ contract VinculumFinalisVerifier {
     /// @dev Can be called independently of verifyAndMint(). Persists RAC even if
     ///      issuance later fails (VF-FEE-011). Idempotent — reverts if RAC already recorded.
     function recordFeeAndRac(
-        ProofPackage calldata pkg,
-        uint256 verifiedGrossUsdMicro
+        ProofPackage calldata pkg
     ) external onlyWhenFinalized {
+        // CL-01 / VF-ORC-007: derived from the signed price record, never supplied.
+        uint256 verifiedGrossUsdMicro = _verifiedGrossUsdMicro(pkg);
         // VF-RAC-001: RAC exact-once
         require(!recordedRacs[pkg.racIdentity], "VF-RAC-001: RAC already recorded");
 
@@ -414,11 +653,19 @@ contract VinculumFinalisVerifier {
         // VF-SUP-012: At zero VCLM capacity, fees still reach Dev Fund but no RAC.
         recordedRacs[pkg.racIdentity] = true;
         if (cumulativeVclmIssued < VCLM_HARD_CAP) {
-            uint256 feeUsd = (verifiedGrossUsdMicro * fee) / gross;
+            // CL-30 / VF-ORC-012: the SAME accepted reference price determines
+            // both Verified Gross USD Value and Verified USD Fee Value.
+            // Deriving the fee proportionally would introduce a second rounding.
+            PriceRecord storage pr = priceRecords[pkg.canonicalAssetId];
+            uint256 feeUsd = (pkg.actualFeeAmountSmallestUnits * pr.priceUsdMicro * 1e12)
+                             / (10 ** _registeredPrecision(pkg));   // CL-41
             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
-            uint256 epoch = block.timestamp / EPOCH_DURATION_SECS;
+            // CL-05 / §10.2: epochs are launch-relative and 1-indexed.
+            uint256 epoch = ((block.timestamp - launchTimestamp) / EPOCH_DURATION_SECS) + 1;
             racCredits[pkg.racIdentity] = racCredit;
             racEpoch[pkg.racIdentity] = epoch;
+            // CL-06 / VF-RAC-004: accumulate into the epoch's Reward Basis.
+            epochRewardBasis[epoch] += racCredit;
             emit RacCreditRecorded(pkg.racIdentity, racCredit, epoch);
         }
     }
@@ -428,14 +675,16 @@ contract VinculumFinalisVerifier {
     /// @notice Phase 2: Verifies a normalized proof package and mints tokens if valid.
     /// @dev Call recordFeeAndRac() first to persist RAC independently of issuance outcome.
     /// @param pkg The normalized ProofPackage from any source environment.
-    /// @param verifiedGrossUsdMicro The verified gross USD value (18-decimal fixed-point).
-    /// @param daysSinceLaunch Days since protocol launch (for emission decay).
     /// @return success Whether verification succeeded and tokens were minted.
     function verifyAndMint(
-        ProofPackage calldata pkg,
-        uint256 verifiedGrossUsdMicro,
-        uint256 daysSinceLaunch
+        ProofPackage calldata pkg
     ) external onlyWhenFinalized returns (bool success) {
+        // CL-01 / CL-10 — the two quantities that determine how many tokens
+        // are minted are DERIVED here, not accepted from the caller.
+        //   VF-ORC-007: gross USD comes from the signed price record.
+        //   VF-ORC-011/013: emission rate comes from the Valuation Timestamp.
+        uint256 verifiedGrossUsdMicro = _verifiedGrossUsdMicro(pkg);
+        uint256 daysSinceLaunch = _daysSinceLaunch(pkg);
         bytes32 lockIdHash = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId));
 
         // Step 1: Replay protection (VF-XCH-013)
@@ -482,15 +731,24 @@ contract VinculumFinalisVerifier {
             require(pkg.chonxActivationReceipt.length > 0, "VF-COM-025: missing activation receipt");
         }
 
-        // Step 8: Handshake allowance (VF-COM-006/007)
-        // Source-enforced environments (EVM, Solana) trust the source counter.
-        // Base-enforced environments (UTXO, XRPL, Stellar) consume here.
-        bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
-        // The handshakeAllowanceCount in the package determines enforcement.
-        // For Base-enforced (allowanceCount == 1), check and consume.
-        if (pkg.handshakeAllowanceCount == 1) {
+        // Step 8: Handshake allowance (VF-COM-006/007/008)
+        //
+        // CL-11: the allowance comes from the environment registry, NEVER from
+        // pkg.handshakeAllowanceCount. That field is caller-controlled and is
+        // deliberately ignored; a caller cannot widen its own allowance by
+        // asserting a larger number, nor skip the check by asserting a value
+        // the old code did not branch on.
+        //
+        // VF-COM-008: a failed attempt consumes no allowance. The increment
+        // below occurs inside the same transaction as every remaining check,
+        // so any later revert unwinds it.
+        if (isHandshake) {
+            uint8 allowance = handshakeAllowanceByEnvironment[pkg.sourceEnvironmentId];
+            require(allowance > 0, "VF-COM-006: environment allowance not registered");
+
+            bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
             require(
-                handshakeUsage[handshakeKey] < pkg.handshakeAllowanceCount,
+                handshakeUsage[handshakeKey] < allowance,
                 "VF-COM-007: handshake allowance exhausted"
             );
             handshakeUsage[handshakeKey] += 1;
@@ -499,9 +757,34 @@ contract VinculumFinalisVerifier {
         // Step 9: Base recipient (VF-ARC-006)
         require(pkg.baseRecipient != address(0), "VF-ARC-006: zero base recipient");
 
-        // Step 10: Dev Fund destination (VF-FEE-009)
-        // In production: require(devFundDestinations[pkg.sourceEnvironmentId] != address(0), "VF-FEE-009");
-        // In simulation: skip (deployment pending)
+        // Step 10: Dev Fund destination (VF-FEE-006/008/009)
+        //
+        // CL-12, Revision 7 scope decision (2026-08-07):
+        //
+        // Revision 7 validates that the Dev Fund destination named in the proof
+        // package MATCHES the destination registered during the deployment
+        // ceremony. That is VF-FEE-006 — no user, relayer, implementer or
+        // external message may substitute another fee destination.
+        //
+        // Independent cryptographic verification that the transfer actually
+        // occurred on the source chain (VF-FEE-007) is DELIBERATELY OUT OF
+        // SCOPE for Revision 7. It requires the chain verifier to understand
+        // transfer evidence in addition to lock evidence, which expands the
+        // IChainVerifier trust boundary. It is reserved for the chain-verifier
+        // work tracked under CL-27. This is a conscious deferral, recorded so
+        // it is not mistaken for an oversight.
+        bytes32 registeredDevFund = devFundDestinationHashes[pkg.sourceEnvironmentId];
+        require(registeredDevFund != bytes32(0), "VF-FEE-009: dev fund not configured");
+        require(
+            keccak256(bytes(pkg.devFundDestination)) == registeredDevFund,
+            "VF-FEE-006: dev fund destination substituted"
+        );
+
+        // VF-FEE-008/009: fee-routing evidence must exist and must be bound to
+        // the same Commitment Vault Lock as the principal evidence. Full
+        // evidence validation is deferred with VF-FEE-007 above; a zero or
+        // absent evidence hash is rejected here regardless.
+        require(pkg.feeTransferEvidence != bytes32(0), "VF-FEE-008: missing fee transfer evidence");
 
         // Step 11: Source finality + fact cross-check (VF-XCH-006/010/011)
         IChainVerifier verifier = chainVerifiers[pkg.sourceEnvironmentId];

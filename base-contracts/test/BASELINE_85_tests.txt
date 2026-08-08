@@ -1,0 +1,85 @@
+    ✔ CHONX weight is exactly twice VCLM at equal amount and duration
+    ✔ CL-01: issuance is impossible without a published price
+    ✔ CL-11: the caller's asserted allowance count is ignored entirely
+    ✔ CL-37: issuance fails closed once the price is stale
+    ✔ SYNTH weight is exactly four times VCLM at equal amount and duration
+    ✔ Stake exposes no authority address (CL-29)
+    ✔ Synth burn targets are immutable
+    ✔ Synth setTokenContracts no longer exists
+    ✔ Synth setVerifier no longer exists
+    ✔ VCLM weight at 30d is amount x 1.0 x 1.0
+    ✔ VF-COM-006: rejects any allowance other than 1 or 3
+    ✔ VF-COM-007: a one-use mechanism permits exactly one, rejects the second
+    ✔ VF-COM-007: a three-use mechanism permits exactly three, rejects the fourth
+    ✔ VF-COM-008: a rejected attempt consumes no allowance
+    ✔ VF-DEP-002: a zero chain verifier cannot be registered
+    ✔ VF-DEP-002: a zero price publisher cannot be constructed
+    ✔ VF-FEE-006: a substituted destination is rejected
+    ✔ VF-FEE-008: missing fee transfer evidence is rejected
+    ✔ VF-FEE-009: an empty destination cannot be registered at all
+    ✔ VF-FEE-009: an unconfigured environment cannot issue
+    ✔ VF-ORC-005: a zero price marks the asset unavailable rather than substituting one
+    ✔ VF-ORC-008: a run must be newer than the last accepted run
+    ✔ VF-SEC-005: any address may submit; the submitter gains no authority
+    ✔ VF-STK-004: stake has no CHONX minting privilege
+    ✔ VF-STK-004: the reward is newly minted VCLM, raising total supply
+    ✔ VF-STK-015: an epoch with no stakers allocates nothing
+    ✔ VF-XCH-006: an unfinalized source event is rejected
+    ✔ VF-XCH-011: a package contradicting the source facts is rejected
+    ✔ a fresh record has a usable valuation
+    ✔ a new batch restores usability after staleness
+    ✔ a signature cannot be replayed against a different deployment
+    ✔ a staker is paid through closeEpoch, allocateEpoch and claim
+    ✔ a valid handshake mints VCLM
+    ✔ accepts a batch signed by the price publisher
+    ✔ accepts an advance at the permitted boundary
+    ✔ age is measured from the signed fetch timestamp, not from submission
+    ✔ allowance cannot be changed by a stranger during the ceremony
+    ✔ allowance cannot be registered after finalization
+    ✔ allowance is per identity, not global
+    ✔ an asset never priced has no usable valuation
+    ✔ an empty destination is rejected even if the registry were empty
+    ✔ an epoch with no credits has a zero basis and pays nothing
+    ✔ an unavailable asset is never usable regardless of age
+    ✔ an unregistered environment reports zero
+    ✔ closeEpoch reads the basis instead of leaving it zero
+    ✔ configureDevFund is unreachable after finalization
+    ✔ credits accumulate additively within one epoch
+    ✔ deployer address is zeroed - authority irreversibly terminated
+    ✔ deploys every contract in the system
+    ✔ duration 120d multiplier is 2x
+    ✔ duration 30d multiplier is 1x
+    ✔ duration 60d multiplier is 1.4x
+    ✔ duration 90d multiplier is 1.75x
+    ✔ finalize() cannot be called twice
+    ✔ finalized flag is independently verifiable on-chain (VF-DEP-007)
+    ✔ finalized flag is publicly readable (VF-DEP-007)
+    ✔ initialize() cannot be called twice
+    ✔ is no longer usable past 48 hours
+    ✔ no address can seize minting after finalization
+    ✔ no attacker can install a chain verifier that validates forged locks
+    ✔ no function can change the price publisher
+    ✔ normal consecutive runs are unaffected
+    ✔ queueExtension reverts once the position has expired
+    ✔ recordFeeAndRac no longer accepts a caller USD value
+    ✔ registerAssetPrecision is unreachable after finalization
+    ✔ registerChainVerifier is unreachable after finalization
+    ✔ registers a one-use mechanism
+    ✔ registers a three-use mechanism
+    ✔ rejects a batch signed by anyone else
+    ✔ rejects a run near the uint64 maximum
+    ✔ rejects a tampered price with a valid signature over different data
+    ✔ rejects an advance one beyond the permitted window
+    ✔ remains usable just inside 48 hours
+    ✔ setMinter no longer exists
+    ✔ stake contract is an authorized VCLM minter
+    ✔ the arbitrary-issuance parameter no longer exists
+    ✔ the original deployer has no residual minting power
+    ✔ the package field is no longer consulted anywhere in enforcement
+    ✔ the registered destination is accepted
+    ✔ the verifier accumulates a running per-epoch reward basis
+    ✔ the window advances with the watermark, so long gaps stay recoverable
+    ✔ tokens report their configured hard caps
+    ✔ verifier deployer is zeroed - authority terminated (VF-DEP-006)
+    ✔ verifier is also an authorized VCLM minter
+    ✔ verifyAndMint reverts before the ceremony is closed

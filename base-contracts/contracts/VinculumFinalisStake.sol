@@ -53,6 +53,8 @@ interface IVerifier {
     function cumulativeVclmIssued() external view returns (uint256);
     function racCredits(bytes32 racIdentity) external view returns (uint256);
     function racEpoch(bytes32 racIdentity) external view returns (uint256);
+    // CL-06 / VF-RAC-004
+    function epochRewardBasis(uint256 epochN) external view returns (uint256);
 }
 
 interface IStakeToken {
@@ -135,6 +137,28 @@ contract VinculumFinalisStake {
 
     mapping(uint256 => Epoch) public epochs;
 
+    // ===== CL-09: bounded epoch accounting via a difference array =====
+    //
+    // A position qualifies for a CONTIGUOUS RANGE of epochs: those N where
+    // start <= T0+(N-1)E and end >= T0+(N+1)E. Rather than iterating every
+    // position at close time (which grows without bound and eventually bricks
+    // the reward system permanently, with no repair path under VF-IMM-006),
+    // each position records its weight at the first epoch it qualifies for and
+    // withdraws it at the first epoch it no longer does.
+    //
+    // VF-STK-010 forces epochs to close chronologically, which is exactly the
+    // property that lets a running accumulator advance in O(1) per epoch.
+    mapping(uint256 => uint256) public weightAddedAt;
+    mapping(uint256 => uint256) public weightRemovedAt;
+    uint256 public runningQualifyingWeight;
+    uint256 public lastClosedEpoch;
+
+    // Each position's registered qualifying range, so a later mutation can
+    // undo precisely what was recorded rather than recomputing it.
+    mapping(uint256 => uint256) public posFirstEpoch;
+    mapping(uint256 => uint256) public posLastEpoch;
+    mapping(uint256 => uint256) public posRegisteredWeight;
+
     // VF-STK-016: Claimable VCLM accumulates and never expires
     mapping(address => uint256) public claimableVclm;
 
@@ -200,6 +224,9 @@ contract VinculumFinalisStake {
             withdrawn: false
         });
 
+        // CL-09: record this position's weight across its qualifying range.
+        _registerWeight(id, _getWeight(positions[id]), start, start + durationSecs);
+
         emit PositionCreated(id, msg.sender, token, amount, durationSecs);
         return id;
     }
@@ -235,6 +262,10 @@ contract VinculumFinalisStake {
         require(pos.queuedExtensionBps > 0, "VFS: no queued extension");
         require(block.timestamp >= pos.endTimestamp, "VFS: not matured");
 
+        // CL-09: the extension changes both start and end, so the previously
+        // registered range is cancelled in full and re-registered.
+        _unregisterWeight(positionId);
+
         // VF-STK-022: Queued term begins at scheduled end of current
         pos.startTimestamp = pos.endTimestamp;
         pos.durationSecs = pos.queuedExtensionSecs;
@@ -242,6 +273,8 @@ contract VinculumFinalisStake {
         pos.multiplierBps = pos.queuedExtensionBps;
         pos.queuedExtensionBps = 0;
         pos.queuedExtensionSecs = 0;
+        _registerWeight(positionId, _getWeight(pos), pos.startTimestamp, pos.endTimestamp);
+
         emit PositionExtended(positionId, pos.endTimestamp);
     }
 
@@ -259,6 +292,12 @@ contract VinculumFinalisStake {
         // VF-STK-025: Without queued extension, position inactive at maturity
 
         pos.withdrawn = true;
+
+        // CL-09: cancel any contribution from the first epoch not yet closed.
+        // Epochs already closed keep the weight they were closed with, which
+        // is what VF-STK-020 requires — withdrawal does not erase entitlement
+        // already earned.
+        _cancelFutureWeight(positionId);
 
         // Return staked tokens (VF-STK-030: immediately withdrawable at terminal state)
         IStakeToken stakeToken = pos.token == 0 ? vclmToken : (pos.token == 1 ? chonxToken : synthToken);
@@ -283,16 +322,24 @@ contract VinculumFinalisStake {
             require(epochs[epochN - 1].closed, "VF-STK-010: chronological order");
         }
 
-        // VF-RAC-004: Epoch Reward Basis = sum of RAC credits in this epoch
-        // In production, this reads from the verifier's RAC storage.
-        // Here we compute totalWeight for proportional allocation.
+        // CL-06 / VF-RAC-004: Epoch Reward Basis is the sum of RAC credits
+        // assigned to this epoch. Read from the Verifier's running total.
+        // Previously this line did not exist, so rewardBasis stayed zero and
+        // allocateEpoch always took the zero-eligible branch — no staker could
+        // ever be paid.
+        ep.rewardBasis = verifier.epochRewardBasis(epochN);
 
-        ep.totalWeight = 0;
-        for (uint256 i = 0; i < nextPositionId; i++) {
-            Position storage pos = positions[i];
-            if (!pos.withdrawn && _qualifiesForEpoch(pos, epochN)) {
-                ep.totalWeight += _getWeight(pos);
-            }
+        // CL-09: O(1). The running accumulator advances by this epoch's
+        // deltas rather than iterating every position ever created.
+        // VF-STK-010's chronological requirement is what makes this sound:
+        // epoch N-1 is always closed before N, so the accumulator is always
+        // current when read.
+        require(epochN == lastClosedEpoch + 1, "VF-STK-010: chronological order");
+        runningQualifyingWeight =
+            runningQualifyingWeight + weightAddedAt[epochN] - weightRemovedAt[epochN];
+        lastClosedEpoch = epochN;
+        ep.totalWeight = runningQualifyingWeight;
+        {
         }
 
         ep.closed = true;
@@ -422,6 +469,77 @@ contract VinculumFinalisStake {
 
     // VF-STK-011: Position beginning after epoch start does not qualify for N
     // VF-STK-012: Position expiring before end of N+1 does not qualify for N
+    // CL-09: first epoch N with start <= T0+(N-1)E  ->  N = ceil((start-T0)/E)+1
+    function _firstQualifyingEpoch(uint256 start) internal view returns (uint256) {
+        if (start <= launchTimestamp) return 1;
+        uint256 d = start - launchTimestamp;
+        uint256 n = d / EPOCH_DURATION_SECS;
+        if (d % EPOCH_DURATION_SECS != 0) n += 1;   // ceil
+        return n + 1;
+    }
+
+    // CL-09: last epoch N with end >= T0+(N+1)E  ->  N = floor((end-T0)/E)-1
+    function _lastQualifyingEpoch(uint256 end) internal view returns (uint256) {
+        if (end <= launchTimestamp) return 0;
+        uint256 n = (end - launchTimestamp) / EPOCH_DURATION_SECS;
+        if (n == 0) return 0;
+        return n - 1;
+    }
+
+    /// @dev Registers a position's weight across its qualifying epoch range.
+    function _registerWeight(uint256 id, uint256 weight, uint256 start, uint256 end) internal {
+        uint256 first = _firstQualifyingEpoch(start);
+        uint256 last = _lastQualifyingEpoch(end);
+        posRegisteredWeight[id] = weight;
+        if (last < first || weight == 0) {
+            posFirstEpoch[id] = 0;
+            posLastEpoch[id] = 0;
+            return;   // qualifies for no epoch at all
+        }
+        posFirstEpoch[id] = first;
+        posLastEpoch[id] = last;
+        weightAddedAt[first] += weight;
+        weightRemovedAt[last + 1] += weight;
+    }
+
+    /// @dev Removes a previously registered range in full. Used before
+    ///      re-registering on extension.
+    function _unregisterWeight(uint256 id) internal {
+        uint256 first = posFirstEpoch[id];
+        if (first == 0) { posRegisteredWeight[id] = 0; return; }
+        uint256 last = posLastEpoch[id];
+        uint256 w = posRegisteredWeight[id];
+        weightAddedAt[first] -= w;
+        weightRemovedAt[last + 1] -= w;
+        posFirstEpoch[id] = 0;
+        posLastEpoch[id] = 0;
+        posRegisteredWeight[id] = 0;
+    }
+
+    /// @dev Cancels a position's contribution from the first epoch not yet
+    ///      closed. Used for terminal-state early withdrawal, where epochs
+    ///      already closed must keep the weight they were closed with.
+    function _cancelFutureWeight(uint256 id) internal {
+        uint256 first = posFirstEpoch[id];
+        if (first == 0) return;
+        uint256 last = posLastEpoch[id];
+        uint256 w = posRegisteredWeight[id];
+        uint256 cutoff = lastClosedEpoch + 1;
+        if (cutoff <= first) {
+            // Nothing of it has been counted yet: remove the whole range.
+            weightAddedAt[first] -= w;
+            weightRemovedAt[last + 1] -= w;
+        } else if (cutoff <= last) {
+            // Partly counted: move the removal boundary earlier.
+            weightRemovedAt[cutoff] += w;
+            weightRemovedAt[last + 1] -= w;
+        }
+        // cutoff > last: already fully expired, nothing to cancel.
+        posFirstEpoch[id] = 0;
+        posLastEpoch[id] = 0;
+        posRegisteredWeight[id] = 0;
+    }
+
     function _qualifiesForEpoch(Position storage pos, uint256 epochN) internal view returns (bool) {
         // CL-22: epochs are 1-indexed; epoch 0 does not exist.
         require(epochN >= 1, "VF-STK-011: epoch numbering begins at 1");
