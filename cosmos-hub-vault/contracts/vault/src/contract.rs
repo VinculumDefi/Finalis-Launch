@@ -4,28 +4,31 @@
 //! final state commit reverts the fee transfer, the lock store, and the allowance increment together.
 
 use cosmwasm_std::{
-    coins, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
-    Timestamp, Uint128,
+    coins, to_binary, BankMsg, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
+    Uint128,
 };
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{
     ConfigResponse, ExecuteMsg, HandshakeAllowanceResponse, InstantiateMsg, IsReleasedResponse,
-    LockResponse, OutputToken, QueryMsg, DURATION_HANDSHAKE, FEE_BPS_HANDSHAKE, FEE_BPS_STANDARD,
-    HANDSHAKE_ALLOWANCE, HANDSHAKE_USD_MAX_MICRO, HANDSHAKE_USD_MIN_MICRO, NATIVE_BASE_DENOM,
-    NON_PRODUCTION_DEV_FUND_FIXTURE, PERMITTED_DURATIONS_SECS, STANDARD_USD_MIN_MICRO,
+    LockResponse, OutputToken, QueryMsg, BASE_RECIPIENT_LEN, DURATION_HANDSHAKE, FEE_BPS_HANDSHAKE,
+    FEE_BPS_STANDARD, HANDSHAKE_ALLOWANCE, HANDSHAKE_USD_MAX_MICRO, HANDSHAKE_USD_MIN_MICRO,
+    NATIVE_BASE_DENOM, NON_PRODUCTION_DEV_FUND_FIXTURE, PERMITTED_DURATIONS_SECS,
+    STANDARD_USD_MIN_MICRO,
 };
-use crate::state::{AllowanceCounter, CHONX_ACTIVATED, CONFIG, HANDSHAKE_USED, LOCKS, Config, Lock};
+use crate::state::{Config, Lock, CONFIG, HANDSHAKE_USED, LOCKS};
 
 pub const CONTRACT_NAME: &str = "vf-cosmos-hub-vault";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Source environment identifier bound into every lock (VF-XCH-011), verified live = cosmoshub-4.
 pub const SOURCE_ENVIRONMENT: &str = "cosmoshub-4";
+const NOT_APPLICABLE: &str = "not_applicable";
+const MAX_LOCK_ID_LEN: usize = 128;
 
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
@@ -34,24 +37,25 @@ pub fn instantiate(
         .api
         .addr_validate(&msg.dev_fund_address)
         .map_err(|e| ContractError::InvalidAddress(e.to_string()))?;
-    // The non-production fixture is permitted at prototype stage (VF-DEP-008). The deployment gate
-    // (VF-FEE-009) must reject it on mainnet.
+    // VF-DEP-008 / VF-FEE-009 + defect 8: the known non-production fixture is rejected on
+    // cosmoshub-4 mainnet. On any other chain (local devnet / testnet) it is accepted so the
+    // non-production prototype can run.
     let is_fixture = dev_fund.as_str() == NON_PRODUCTION_DEV_FUND_FIXTURE;
+    if is_fixture && env.block.chain_id == SOURCE_ENVIRONMENT {
+        return Err(ContractError::NonProductionFixture);
+    }
     let cfg = Config {
         dev_fund_address: dev_fund,
-        bech32_prefix: msg.bech32_prefix,
         source_environment: SOURCE_ENVIRONMENT.to_string(),
         native_base_denom: NATIVE_BASE_DENOM.to_string(),
     };
     CONFIG.save(deps.storage, &cfg)?;
-    // CHONX is not active at launch (VF-TOK-002/003); activates at 10M cumulative lifetime VCLM issuance
-    // off-chain, with a causal activation receipt communicated via the proof path (VF-COM-025).
-    CHONX_ACTIVATED.save(deps.storage, &false)?;
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("source_environment", SOURCE_ENVIRONMENT)
         .add_attribute("native_base_denom", NATIVE_BASE_DENOM)
-        .add_attribute("dev_fund_is_non_production_fixture", is_fixture.to_string()))
+        .add_attribute("dev_fund_is_non_production_fixture", is_fixture.to_string())
+        .add_attribute("chain_id", env.block.chain_id))
 }
 
 pub fn execute(
@@ -68,6 +72,7 @@ pub fn execute(
             output_token,
             verified_gross_usd_micro,
             lock_id,
+            chonx_activation_receipt,
         } => commit_vault_lock(
             deps,
             env,
@@ -78,6 +83,7 @@ pub fn execute(
             output_token,
             verified_gross_usd_micro,
             lock_id,
+            chonx_activation_receipt,
         ),
         ExecuteMsg::ReleasePrincipal { lock_id } => release_principal(deps, env, lock_id),
     }
@@ -94,6 +100,7 @@ fn commit_vault_lock(
     output_token: OutputToken,
     verified_gross_usd_micro: u128,
     lock_id: String,
+    chonx_activation_receipt: String,
 ) -> Result<Response, ContractError> {
     let cfg = CONFIG.load(deps.storage)?;
 
@@ -127,6 +134,7 @@ fn commit_vault_lock(
     }
 
     // VF-COM-011: fee = floor(gross * bps / 10000). VF-COM-012: principal = gross - rounded fee.
+    // defect 11: checked arithmetic — no unwrap().
     let is_handshake = duration_secs == DURATION_HANDSHAKE;
     let bps: u128 = if is_handshake {
         FEE_BPS_HANDSHAKE.into()
@@ -134,8 +142,13 @@ fn commit_vault_lock(
         FEE_BPS_STANDARD.into()
     };
     let gross_u128 = gross.u128();
-    let fee_u128 = gross_u128.checked_mul(bps).unwrap() / 10_000u128;
-    let principal_u128 = gross_u128.checked_sub(fee_u128).unwrap();
+    let fee_u128 = gross_u128
+        .checked_mul(bps)
+        .ok_or(ContractError::ArithmeticOverflow)?
+        / 10_000u128;
+    let principal_u128 = gross_u128
+        .checked_sub(fee_u128)
+        .ok_or(ContractError::ArithmeticOverflow)?;
     // VF-COM-013: reject zero fee or zero principal before assets move.
     if fee_u128 == 0 || principal_u128 == 0 {
         return Err(ContractError::ZeroFeeOrPrincipal);
@@ -143,13 +156,16 @@ fn commit_vault_lock(
 
     // VF-COM-003/009: value bounds (Verified Gross USD Value, micro-USD).
     if is_handshake {
-        if verified_gross_usd_micro < HANDSHAKE_USD_MIN_MICRO
-            || verified_gross_usd_micro > HANDSHAKE_USD_MAX_MICRO
+        if !(HANDSHAKE_USD_MIN_MICRO..=HANDSHAKE_USD_MAX_MICRO).contains(&verified_gross_usd_micro)
         {
-            return Err(ContractError::HandshakeValueOutOfRange(verified_gross_usd_micro));
+            return Err(ContractError::HandshakeValueOutOfRange(
+                verified_gross_usd_micro,
+            ));
         }
     } else if verified_gross_usd_micro < STANDARD_USD_MIN_MICRO {
-        return Err(ContractError::StandardBelowMinimum(verified_gross_usd_micro));
+        return Err(ContractError::StandardBelowMinimum(
+            verified_gross_usd_micro,
+        ));
     }
 
     // VF-COM-006/007: three-use Handshake allowance for persistent-state mechanism (CosmWasm).
@@ -163,20 +179,28 @@ fn commit_vault_lock(
         }
     }
 
-    // VF-COM-025: CHONX output requires activation at creation (causal receipt).
-    let chonx_activated = CHONX_ACTIVATED.load(deps.storage)?;
-    if output_token == OutputToken::Chonx && !chonx_activated {
-        return Err(ContractError::ChonxNotActivated);
-    }
+    // defect 7 + VF-COM-025: CHONX output requires a causal activation receipt at creation. The
+    // receipt is bound as an immutable fact and verified off-chain by the proof path; the contract
+    // requires it non-empty (and not the VCLM placeholder) for CHONX. No administrator is involved.
+    let chonx_receipt = match output_token {
+        OutputToken::Chonx => {
+            let r = chonx_activation_receipt.trim();
+            if r.is_empty() || r == NOT_APPLICABLE {
+                return Err(ContractError::ChonxNotActivated);
+            }
+            chonx_activation_receipt.clone()
+        }
+        OutputToken::Vclm => NOT_APPLICABLE.to_string(),
+    };
 
-    // VF-ARC-006: bind nonzero authorized Base recipient + release destination at creation.
+    // VF-ARC-006 + defect 10: bind nonzero authorized Base recipient (EVM canonical format) and
+    // release destination (cosmos bech32) at creation.
+    validate_base_recipient(&base_recipient)?;
     let release_addr = deps
         .api
         .addr_validate(&release_destination)
         .map_err(|e| ContractError::InvalidAddress(e.to_string()))?;
-    if base_recipient.trim().is_empty() {
-        return Err(ContractError::InvalidAddress("base_recipient empty".to_string()));
-    }
+    validate_lock_id(&lock_id)?;
 
     // VF-XCH-013: lock_id globally unique per (source_environment, lock_id).
     if LOCKS.has(deps.storage, &lock_id) {
@@ -184,7 +208,9 @@ fn commit_vault_lock(
     }
 
     let creation = env.block.time.seconds();
-    let maturity = creation.checked_add(duration_secs).unwrap();
+    let maturity = creation
+        .checked_add(duration_secs)
+        .ok_or(ContractError::ArithmeticOverflow)?;
     let lock = Lock {
         lock_id: lock_id.clone(),
         source_environment: cfg.source_environment.clone(),
@@ -200,12 +226,12 @@ fn commit_vault_lock(
         base_recipient: base_recipient.clone(),
         release_destination: release_addr.clone(),
         output_token,
-        chonx_activated_at_creation: chonx_activated,
+        chonx_activation_receipt: chonx_receipt,
         released: false,
     };
 
-    // Atomic state transition (VF-ARC-004, VF-SEC-002): fee routing + lock store + allowance increment
-    // all commit together or revert together on any error.
+    // Atomic state transition (VF-ARC-004, VF-SEC-002): fee routing + lock store + allowance
+    // increment all commit together or revert together on any error.
     let fee_msg = BankMsg::Send {
         to_address: cfg.dev_fund_address.to_string(),
         amount: coins(fee_u128, &cfg.native_base_denom),
@@ -215,7 +241,10 @@ fn commit_vault_lock(
         let mut c = HANDSHAKE_USED
             .may_load(deps.storage, &info.sender)?
             .unwrap_or_default();
-        c.used += 1;
+        c.used = c
+            .used
+            .checked_add(1)
+            .ok_or(ContractError::ArithmeticOverflow)?;
         HANDSHAKE_USED.save(deps.storage, &info.sender, &c)?;
     }
 
@@ -231,32 +260,39 @@ fn commit_vault_lock(
         .add_attribute("gross_amount", lock.gross_amount)
         .add_attribute("fee_amount", lock.fee_amount)
         .add_attribute("principal_amount", lock.principal_amount)
-        .add_attribute("verified_gross_usd_micro", lock.verified_gross_usd_micro.to_string())
+        .add_attribute(
+            "verified_gross_usd_micro",
+            lock.verified_gross_usd_micro.to_string(),
+        )
         .add_attribute("duration_secs", lock.duration_secs.to_string())
         .add_attribute("creation_time_secs", lock.creation_time_secs.to_string())
         .add_attribute("maturity_time_secs", lock.maturity_time_secs.to_string())
         .add_attribute("base_recipient", &lock.base_recipient)
         .add_attribute("release_destination", lock.release_destination.as_str())
-        .add_attribute("output_token", match lock.output_token {
-            OutputToken::Vclm => "VCLM",
-            OutputToken::Chonx => "CHONX",
-        })
-        .add_attribute("chonx_activated_at_creation", lock.chonx_activated_at_creation.to_string())
+        .add_attribute(
+            "output_token",
+            match lock.output_token {
+                OutputToken::Vclm => "VCLM",
+                OutputToken::Chonx => "CHONX",
+            },
+        )
+        .add_attribute("chonx_activation_receipt", &lock.chonx_activation_receipt)
         .add_attribute(
             "handshake_identity",
-            format!("({}, {})", lock.source_environment, lock.source_account.as_str()),
+            format!(
+                "({}, {})",
+                lock.source_environment,
+                lock.source_account.as_str()
+            ),
         )
         .add_attribute("handshake_allowance_count", used_now.to_string())
-        .add_attribute("fee_destination", cfg.dev_fund_address.as_str());
+        .add_attribute("fee_destination", cfg.dev_fund_address.as_str())
+        .add_attribute("fee_transfer_evidence", cfg.dev_fund_address.as_str());
 
     Ok(Response::new().add_message(fee_msg).add_event(evt))
 }
 
-fn release_principal(
-    deps: DepsMut,
-    env: Env,
-    lock_id: String,
-) -> Result<Response, ContractError> {
+fn release_principal(deps: DepsMut, env: Env, lock_id: String) -> Result<Response, ContractError> {
     let mut lock = LOCKS
         .load(deps.storage, &lock_id)
         .map_err(|_| ContractError::LockNotFound(lock_id.clone()))?;
@@ -293,8 +329,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Config {} => {
             let c = CONFIG.load(deps.storage)?;
             to_binary(&ConfigResponse {
-                dev_fund_address: c.dev_fund_address,
-                bech32_prefix: c.bech32_prefix,
+                dev_fund_address: c.dev_fund_address.to_string(),
                 source_environment: c.source_environment,
                 native_base_denom: c.native_base_denom,
             })
@@ -337,11 +372,29 @@ fn lock_to_response(l: &Lock) -> LockResponse {
         base_recipient: l.base_recipient.clone(),
         release_destination: l.release_destination.to_string(),
         output_token: l.output_token,
-        chonx_activated_at_creation: l.chonx_activated_at_creation,
+        chonx_activation_receipt: l.chonx_activation_receipt.clone(),
         released: l.released,
     }
 }
 
-// Silence unused-import warnings for symbols reserved for future proof-path hooks.
-#[allow(dead_code)]
-fn _reserved(_t: Timestamp) {}
+/// Canonical Base-chain (EVM) recipient validation: `0x` + 40 hex chars (defect 10).
+pub fn validate_base_recipient(s: &str) -> Result<(), ContractError> {
+    if s.len() != BASE_RECIPIENT_LEN
+        || !s.starts_with("0x")
+        || !s[2..].chars().all(|c| c.is_ascii_hexdigit())
+    {
+        return Err(ContractError::InvalidBaseRecipient(s.to_string()));
+    }
+    Ok(())
+}
+
+/// Canonical lock_id validation: non-empty, bounded length, no control or whitespace chars (defect 10).
+pub fn validate_lock_id(s: &str) -> Result<(), ContractError> {
+    if s.is_empty() || s.len() > MAX_LOCK_ID_LEN {
+        return Err(ContractError::InvalidLockId(s.to_string()));
+    }
+    if s.chars().any(|c| c.is_control() || c.is_whitespace()) {
+        return Err(ContractError::InvalidLockId(s.to_string()));
+    }
+    Ok(())
+}

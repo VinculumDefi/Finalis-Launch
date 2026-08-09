@@ -14,12 +14,19 @@
 //!   The only remaining alter path is a chain-level software upgrade (hard-fork equivalent), which is
 //!   out of scope under VF-XCH-017 (chain-equivalent outcome principle).
 
+#![allow(deprecated)] // cosmwasm-std 2.1.3 deprecates to_binary/from_binary/mock_info in favor of
+                      // to_json_binary/from_json/message_info, which were added later; allow the
+                      // stable names so the crate compiles under `-D warnings`.
+
 pub mod contract;
 pub mod error;
 pub mod msg;
 pub mod state;
 
-use cosmwasm_std::{entry_point, Binary, Deps, Env, MessageInfo, Response, StdResult};
+#[cfg(test)]
+mod tests;
+
+use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 #[entry_point]
@@ -48,6 +55,3 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 // NOTE: no `migrate` and no `sudo` entry point is exposed by design. See crate docs above.
-
-#[cfg(test)]
-mod tests;

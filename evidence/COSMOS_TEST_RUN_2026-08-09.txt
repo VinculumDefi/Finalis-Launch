@@ -1,0 +1,66 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.97s
+     Running unittests src\lib.rs (target\debug\deps\vf_cosmos_hub_vault-0c3f19b3436c5d44.exe)
+
+running 45 tests
+test tests::boundary_handshake_immediately_above_105_rejected ... ok
+test tests::boundary_handshake_immediately_below_095_rejected ... ok
+test tests::adjacent_unpermitted_durations_rejected ... ok
+test tests::boundary_handshake_inclusive_at_105 ... ok
+test tests::boundary_handshake_inclusive_at_095 ... ok
+test tests::boundary_standard_immediately_below_10_rejected ... ok
+test tests::boundary_standard_inclusive_at_10 ... ok
+test tests::chonx_before_activation_rejected ... ok
+test tests::chonx_with_not_applicable_receipt_rejected ... ok
+test tests::configuration_immutable_no_setter ... ok
+test tests::all_16_permitted_durations_accepted ... ok
+test tests::chonx_with_receipt_accepted ... ok
+test tests::distinct_identities_get_their_own_allowance ... ok
+test tests::duplicate_lock_id_rejected ... ok
+test tests::exact_fee_transfer_to_immutable_fixture_destination ... ok
+test tests::exact_principal_amount_released ... ok
+test tests::failed_attempt_consumes_no_allowance ... ok
+test tests::exactly_once_release ... ok
+test tests::fee_floor_rounding_2_5pct_handshake ... ok
+test tests::fee_floor_rounding_5pct ... ok
+test tests::handshake_allowance_query_for_unused_identity ... ok
+test tests::later_activation_never_cures_earlier_invalid_lock ... ok
+test tests::mainnet_accepts_real_dev_fund_address ... ok
+test tests::mainnet_rejects_non_production_fixture ... ok
+test tests::lock_record_binds_all_immutable_facts ... ok
+test tests::malformed_base_recipient_no_prefix_rejected ... ok
+test tests::malformed_base_recipient_wrong_length_rejected ... ok
+test tests::malformed_lock_id_empty_rejected ... ok
+test tests::malformed_lock_id_whitespace_rejected ... ok
+test tests::multiple_denoms_rejected ... ok
+test tests::negative_out_of_range_handshake_below_095_rejected ... ok
+test tests::no_alternate_fee_destination ... ok
+test tests::negative_out_of_range_handshake_above_105_rejected ... ok
+test tests::no_funds_rejected ... ok
+test tests::overflow_max_value_rejected_without_panic ... ok
+test tests::permissionless_release_at_maturity_by_any_sender ... ok
+test tests::positive_handshake_succeeds_and_consumes_allowance ... ok
+test tests::positive_three_handshakes_then_fourth_rejected_atomically ... ok
+test tests::validation_helpers_directly ... ok
+test tests::principal_retained_before_maturity ... ok
+test tests::release_independent_of_external_services ... ok
+test tests::wrong_denom_rejected ... ok
+test tests::vclm_creation_succeeds ... ok
+test tests::zero_amount_rejected ... ok
+test tests::zero_fee_rejected ... ok
+
+test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src\bin\schema.rs (target\debug\deps\schema-31d2bc6e3d6d1073.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vf_cosmos_hub_vault
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+rustc 1.97.1 (8bab26f4f 2026-07-14)
+cargo 1.97.1 (c980f4866 2026-06-30)

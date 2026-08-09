@@ -38,21 +38,29 @@ pub enum ContractError {
     #[error("lock not found: {0}")]
     LockNotFound(String),
 
-    #[error("lock not yet mature: maturity at block time {maturity}, now {now} (VF-COM-016/VF-PRI-006)")]
+    #[error(
+        "lock not yet mature: maturity at block time {maturity}, now {now} (VF-COM-016/VF-PRI-006)"
+    )]
     NotMature { maturity: u64, now: u64 },
 
     #[error("principal already released for lock {0} (VF-PRI-002 single release)")]
     AlreadyReleased(String),
 
-    #[error("invalid bech32 address: {0}")]
+    #[error("invalid bech32 release destination: {0}")]
     InvalidAddress(String),
 
-    #[error("dev fund address is the non-production fixture and cannot be used on mainnet (VF-FEE-009/VF-DEP-008)")]
+    #[error("invalid Base recipient (expected 0x + 40 hex): {0}")]
+    InvalidBaseRecipient(String),
+
+    #[error("invalid lock identifier: {0}")]
+    InvalidLockId(String),
+
+    #[error("dev fund address is the non-production fixture and cannot be used on cosmoshub-4 (VF-FEE-009/VF-DEP-008)")]
     NonProductionFixture,
 
     #[error("CHONX not activated at creation; later activation cannot cure (VF-COM-025)")]
     ChonxNotActivated,
 
-    #[error("unauthorized: {0}")]
-    Unauthorized(String),
+    #[error("arithmetic overflow (VF-SEC-002)")]
+    ArithmeticOverflow,
 }

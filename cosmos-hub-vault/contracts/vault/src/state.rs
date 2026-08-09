@@ -10,12 +10,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::msg::OutputToken;
 
-/// Immutable contract configuration, set once at instantiation (VF-DEP-001).
+/// Immutable contract configuration, set once at instantiation (VF-DEP-001). No configurable bech32
+/// prefix is stored — address validation uses the chain's own bech32 HRP (defect 9).
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Config {
     /// Fixed, immutable Dev Fund destination (bech32). NON-PRODUCTION fixture until deployment gate.
     pub dev_fund_address: Addr,
-    pub bech32_prefix: String,
     /// Source environment identifier, bound into every lock's immutable facts (VF-XCH-011).
     pub source_environment: String,
     /// Canonical native base denom (uatom).
@@ -26,6 +26,8 @@ pub const CONFIG: Item<Config> = Item::new("config");
 
 /// A Commitment Vault Lock record. Every field is bound at creation and never mutated thereafter
 /// (VF-ARC-005). `released` is the only field that transitions, exactly once (VF-PRI-002).
+/// `chonx_activation_receipt` is the causal CHONX activation receipt for CHONX outputs, or
+/// "not_applicable" for VCLM outputs (defect 7 / VF-COM-025).
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Lock {
     pub lock_id: String,
@@ -43,7 +45,7 @@ pub struct Lock {
     pub base_recipient: String,
     pub release_destination: Addr,
     pub output_token: OutputToken,
-    pub chonx_activated_at_creation: bool,
+    pub chonx_activation_receipt: String,
     pub released: bool,
 }
 
@@ -58,8 +60,3 @@ pub struct AllowanceCounter {
 }
 
 pub const HANDSHAKE_USED: Map<&Addr, AllowanceCounter> = Map::new("hs_used");
-
-/// CHONX activation flag (off-chain-set proof of activation at creation, VF-COM-025).
-/// In a non-production prototype this is a simple boolean set at instantiation time to model the
-/// causal activation receipt; the production design receives activation evidence via the proof path.
-pub const CHONX_ACTIVATED: Item<bool> = Item::new("chonx_activated");

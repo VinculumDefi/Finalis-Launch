@@ -15,9 +15,9 @@ cw2 = { workspace = true }
 schemars = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
+cosmwasm-schema = { workspace = true }
 
 [dev-dependencies]
-cw-multi-test = { version = "=2.1.1", features = ["cosmwasm_2_1"] }
 cosmwasm-std = { workspace = true, features = ["staking"] }
 
 [[bin]]
@@ -26,4 +26,4 @@ path = "src/bin/schema.rs"
 
 [features]
 default = []
-# library-only marker; never expose migrate/sudo entry points
+# library-only marker; never expose migrate/sudo entry points (C2 immutability crux).
