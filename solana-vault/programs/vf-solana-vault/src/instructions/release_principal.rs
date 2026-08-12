@@ -75,15 +75,18 @@ pub fn handler_native(
     // Transfer principal from lock_record PDA to release_destination.
     let bump = [lock_record.bump];
     let signer_seeds: &[&[u8]] = &[SEED_LOCK, &_lock_id_hash, &bump];
+    // Named binding: PDA signer seeds must outlive the CPI call (E0716).
+    let signer_seeds_arr = [signer_seeds];
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.system_program.to_account_info(),
         system_program::Transfer {
             from: lock_record.to_account_info(),
             to: ctx.accounts.release_destination.to_account_info(),
         },
-        &[signer_seeds],
+        &signer_seeds_arr,
     );
-    system_program::transfer(cpi_ctx, principal)?;
+    let principal_u64 = u64::try_from(principal).map_err(|_| ErrorCode::MathOverflow)?;
+    system_program::transfer(cpi_ctx, principal_u64)?;
 
     // VF-PRI-002: Mark as released (single-release flag).
     lock_record.released = true;
@@ -171,6 +174,8 @@ pub fn handler_spl(
     // Transfer principal tokens from vault to release destination's token account.
     let bump = [lock_record.bump];
     let signer_seeds: &[&[u8]] = &[SEED_LOCK, &_lock_id_hash, &bump];
+    // Named binding: PDA signer seeds must outlive the CPI call (E0716).
+    let signer_seeds_arr = [signer_seeds];
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         SplTransfer {
@@ -178,9 +183,10 @@ pub fn handler_spl(
             to: ctx.accounts.release_token_account.to_account_info(),
             authority: lock_record.to_account_info(),
         },
-        &[signer_seeds],
+        &signer_seeds_arr,
     );
-    token::transfer(cpi_ctx, principal)?;
+    let principal_u64 = u64::try_from(principal).map_err(|_| ErrorCode::MathOverflow)?;
+    token::transfer(cpi_ctx, principal_u64)?;
 
     // VF-PRI-002: Mark as released.
     lock_record.released = true;

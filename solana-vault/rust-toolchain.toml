@@ -1,5 +1,0 @@
-[toolchain]
-channel = "1.18.0"
-components = ["rustfmt", "clippy"]
-profile = "minimal"
-targets = ["bpfel-unknown-unknown"]

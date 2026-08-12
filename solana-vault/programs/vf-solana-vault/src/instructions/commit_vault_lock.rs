@@ -220,6 +220,11 @@ pub fn handler_native(
 
     // --- Asset transfers (atomic — revert if any fails) ---
 
+    // Narrow to the chain-native transfer width BEFORE any asset moves.
+    // An unrepresentable amount is rejected, never truncated, never panicked.
+    let gross_u64 = u64::try_from(params.gross_amount).map_err(|_| ErrorCode::MathOverflow)?;
+    let fee_u64 = u64::try_from(fee).map_err(|_| ErrorCode::MathOverflow)?;
+
     // 1. Transfer gross from signer to lock_record PDA.
     let gross_cpi = CpiContext::new(
         ctx.accounts.system_program.to_account_info(),
@@ -228,20 +233,22 @@ pub fn handler_native(
             to: ctx.accounts.lock_record.to_account_info(),
         },
     );
-    system_program::transfer(gross_cpi, params.gross_amount)?;
+    system_program::transfer(gross_cpi, gross_u64)?;
 
     // 2. Transfer fee from lock_record PDA to dev_fund.
     let bump = [ctx.bumps.lock_record];
     let signer_seeds: &[&[u8]] = &[SEED_LOCK, &params.lock_id_hash, &bump];
+    // Named binding: PDA signer seeds must outlive the CPI call (E0716).
+    let signer_seeds_arr = [signer_seeds];
     let fee_cpi = CpiContext::new_with_signer(
         ctx.accounts.system_program.to_account_info(),
         system_program::Transfer {
             from: ctx.accounts.lock_record.to_account_info(),
             to: ctx.accounts.dev_fund.to_account_info(),
         },
-        &[signer_seeds],
+        &signer_seeds_arr,
     );
-    system_program::transfer(fee_cpi, fee)?;
+    system_program::transfer(fee_cpi, fee_u64)?;
 
     // --- Write lock record (VF-XCH-011 immutable facts) ---
     write_lock_record(
@@ -368,6 +375,10 @@ pub fn handler_spl(
 
     // --- Asset transfers (atomic) ---
 
+    // Narrow to the chain-native transfer width BEFORE any asset moves.
+    let gross_u64 = u64::try_from(params.gross_amount).map_err(|_| ErrorCode::MathOverflow)?;
+    let fee_u64 = u64::try_from(fee).map_err(|_| ErrorCode::MathOverflow)?;
+
     // 1. Transfer gross tokens from source to vault.
     let gross_cpi = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -377,11 +388,13 @@ pub fn handler_spl(
             authority: ctx.accounts.signer.to_account_info(),
         },
     );
-    token::transfer(gross_cpi, params.gross_amount)?;
+    token::transfer(gross_cpi, gross_u64)?;
 
     // 2. Transfer fee tokens from vault to dev_fund (signed by lock_record PDA).
     let bump = [ctx.bumps.lock_record];
     let signer_seeds: &[&[u8]] = &[SEED_LOCK, &params.lock_id_hash, &bump];
+    // Named binding: PDA signer seeds must outlive the CPI call (E0716).
+    let signer_seeds_arr = [signer_seeds];
     let fee_cpi = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         SplTransfer {
@@ -389,9 +402,9 @@ pub fn handler_spl(
             to: ctx.accounts.dev_fund_token_account.to_account_info(),
             authority: ctx.accounts.lock_record.to_account_info(),
         },
-        &[signer_seeds],
+        &signer_seeds_arr,
     );
-    token::transfer(fee_cpi, fee)?;
+    token::transfer(fee_cpi, fee_u64)?;
 
     // --- Write lock record (VF-XCH-011 immutable facts) ---
     write_lock_record(
