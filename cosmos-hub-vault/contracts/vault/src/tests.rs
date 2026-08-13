@@ -322,13 +322,59 @@ fn boundary_standard_immediately_below_10_rejected() {
 
 #[test]
 fn all_16_permitted_durations_accepted() {
+    // Rev 6 §5.1, transcribed from the specification table — NOT read from the
+    // implementation. VF-COM-001: only these durations are permitted.
+    // Spec hash 5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9.
+    const SPEC_5_1_DURATIONS_SECS: [u64; 16] = [
+        3600,               // 1 hour   — Trust-Building Handshake
+        7 * 86_400,         // 7 days
+        30 * 86_400,        // 30 days
+        60 * 86_400,        // 60 days
+        90 * 86_400,        // 90 days
+        180 * 86_400,       // 180 days
+        365 * 86_400,       // 365 days
+        730 * 86_400,       // 730 days
+        1_095 * 86_400,     // 1,095 days
+        1_460 * 86_400,     // 1,460 days
+        1_825 * 86_400,     // 1,825 days
+        2_190 * 86_400,     // 2,190 days
+        2_555 * 86_400,     // 2,555 days
+        2_920 * 86_400,     // 2,920 days
+        3_285 * 86_400,     // 3,285 days
+        3_650 * 86_400,     // 3,650 days
+    ];
+
+    // VF-COM-001/002: the implementation's table must equal §5.1 exactly —
+    // no missing entries, no additions, no duplicates.
+    assert_eq!(
+        PERMITTED_DURATIONS_SECS.len(),
+        16,
+        "implementation table must hold exactly 16 entries, found {}",
+        PERMITTED_DURATIONS_SECS.len()
+    );
+
+    for &d in SPEC_5_1_DURATIONS_SECS.iter() {
+        assert!(
+            PERMITTED_DURATIONS_SECS.contains(&d),
+            "§5.1 duration {}s ({} days) is missing from the implementation table",
+            d,
+            d / 86_400
+        );
+    }
+
+    for &d in PERMITTED_DURATIONS_SECS.iter() {
+        assert!(
+            SPEC_5_1_DURATIONS_SECS.contains(&d),
+            "implementation permits {}s ({} days), which §5.1 does not",
+            d,
+            d / 86_400
+        );
+    }
+
+    // Every §5.1 duration must be accepted through the production commit path.
     let mut deps = fresh!();
-    for (i, &d) in PERMITTED_DURATIONS_SECS.iter().enumerate() {
-        let usd = if d == D1H {
-            1_000_000u128
-        } else {
-            10_000_000u128
-        };
+    for (i, &d) in SPEC_5_1_DURATIONS_SECS.iter().enumerate() {
+        let usd = if d == D1H { 1_000_000u128 } else { 10_000_000u128 };
         let r = commit(
             deps.as_mut(),
             env_at(T0),
@@ -341,9 +387,36 @@ fn all_16_permitted_durations_accepted() {
         );
         assert!(
             r.is_ok(),
-            "duration {d}s should be permitted: {:?}",
+            "§5.1 duration {}s ({} days) must be permitted: {:?}",
+            d,
+            d / 86_400,
             r.err()
         );
+    }
+}
+
+#[test]
+fn durations_outside_section_5_1_rejected() {
+    // Regression guard for CL-74. Each value below was accepted by the
+    // implementation's table while absent from Rev 6 §5.1.
+    let mut deps = fresh!();
+    let cases: [(u64, &str); 3] = [
+        (14 * 86_400, "14 days — not in §5.1"),
+        (120 * 86_400, "120 days — §10.1 staking term, not a §5.1 lock duration"),
+        (2_592 * 86_400, "2,592 days — seconds-value transposed into a days slot"),
+    ];
+    for (i, (d, why)) in cases.iter().enumerate() {
+        let r = commit(
+            deps.as_mut(),
+            env_at(T0),
+            ALICE,
+            *d,
+            10_000_000u128,
+            &format!("cl74n{i}"),
+            OutputToken::Vclm,
+            "",
+        );
+        assert!(r.is_err(), "{}s must be rejected — {}", d, why);
     }
 }
 

@@ -22,24 +22,33 @@ pub const DURATION_HANDSHAKE: u64 = 3600;
 pub const DURATION_MIN_STANDARD: u64 = 7 * 86_400;
 pub const DURATION_MAX_STANDARD: u64 = 3650 * 86_400;
 
-/// All 16 permitted durations (seconds). Any other duration is rejected (VF-COM-001/002).
+/// The 16 permitted durations (seconds), transcribed from Revision 6 Section 5.1.
+/// Any other duration is rejected (VF-COM-001/002).
+///
+/// Governing source SHA-256: 5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9
+///
+/// Every entry is written as an explicit day count multiplied by 86,400. Year-based
+/// arithmetic (`n * 365 * 86_400`) is deliberately not used: Section 5.1 is stated in
+/// days, and a year multiplier invites the reader to supply a duration the table does
+/// not contain. Asserted against Section 5.1 in `tests::all_16_permitted_durations_accepted`,
+/// which compares this table to the specification in both directions (CL-74).
 pub const PERMITTED_DURATIONS_SECS: &[u64] = &[
-    3600,              // 1h (Trust-Building Handshake only; VF-COM-003)
-    7 * 86_400,        // 7d
-    14 * 86_400,       // 14d
-    30 * 86_400,       // 30d
-    60 * 86_400,       // 60d
-    90 * 86_400,       // 90d
-    120 * 86_400,      // 120d
-    180 * 86_400,      // 180d
-    365 * 86_400,      // 1y
-    2 * 365 * 86_400,  // 2y
-    3 * 365 * 86_400,  // 3y
-    5 * 365 * 86_400,  // 5y
-    7 * 365 * 86_400,  // 7y
-    10 * 365 * 86_400, // 10y
-    2592 * 86_400,     // 2592d (~7.1y)
-    3650 * 86_400,     // 3650d (10y, max)
+    3_600,             // 1 hour     — Trust-Building Handshake only (VF-COM-003)
+    7 * 86_400,        // 7 days
+    30 * 86_400,       // 30 days
+    60 * 86_400,       // 60 days
+    90 * 86_400,       // 90 days
+    180 * 86_400,      // 180 days
+    365 * 86_400,      // 365 days
+    730 * 86_400,      // 730 days
+    1_095 * 86_400,    // 1,095 days
+    1_460 * 86_400,    // 1,460 days
+    1_825 * 86_400,    // 1,825 days
+    2_190 * 86_400,    // 2,190 days
+    2_555 * 86_400,    // 2,555 days
+    2_920 * 86_400,    // 2,920 days
+    3_285 * 86_400,    // 3,285 days
+    3_650 * 86_400,    // 3,650 days — maximum
 ];
 
 /// Fee basis points per duration class (Protocol Constants, §5.2/5.3).
