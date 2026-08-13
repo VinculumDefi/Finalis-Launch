@@ -13,7 +13,7 @@ pub mod state;
 use instructions::*;
 use state::CommitVaultLockParams;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("2oQy57MWn8xmFBP1g4xi7cXdzTtut7UbdqNmVEzubUfH");
 
 #[program]
 pub mod vf_solana_vault {
