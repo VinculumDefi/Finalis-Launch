@@ -217,34 +217,6 @@ describe("BaseSameChainVerifier — accepts genuine locks", function () {
   });
 });
 
-describe("BaseSameChainVerifier — released locks", function () {
-
-  // OPERATOR REVIEW: this behavior is an implementation judgement, not a
-  // transcribed requirement. See BaseSameChainVerifier.verifyFinality.
-  it("refuses a lock whose principal has already been released", async function () {
-    const s = await deployAll();
-    const { lockId, record } = await createLock(s, "released", HOUR, 10n**18n);
-
-    await ethers.provider.send("evm_increaseTime", [Number(HOUR)]);
-    await ethers.provider.send("evm_mine", []);
-
-    const lock = await ethers.getContractAt("CommitmentLock", record.lockContract);
-    await lock.release();
-
-    const proof = encodeLockProof({
-      lockId, gross: record.grossAmount, fee: record.feeAmount,
-      principal: record.principalAmount, duration: record.durationSecs,
-      creation: record.creationTime, maturity: record.maturityTime,
-    });
-
-    await expect(
-      s.baseVerifier.verifyFinality(proof, encodeFinalityProof())
-    ).to.be.revertedWithCustomError(s.baseVerifier, "PrincipalAlreadyReleased");
-
-    expect(await s.baseVerifier.lockIsVerifiable(lockId)).to.equal(false);
-  });
-});
-
 describe("BaseSameChainVerifier — construction", function () {
 
   it("refuses a zero vault address", async function () {

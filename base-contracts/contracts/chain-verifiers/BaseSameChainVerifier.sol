@@ -32,6 +32,12 @@
 //   No relayer, attestor, oracle, quorum, or administrator is trusted, and none
 //   can influence the result (VF-XCH-012, VF-XCH-017).
 //
+// SCOPE. This contract adds no rule the specification does not state. Release
+// state is deliberately NOT consulted: Rev 6 Section 3.2 orders issuance before
+// maturity and release after it, and VF-XCH-013 replay protection belongs to
+// the consumer (consumedLocks). Unstated rules in immutable contracts are a
+// liability.
+//
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
 // =============================================================================
@@ -63,13 +69,11 @@ interface IBaseVaultReader {
     }
 
     function getLock(bytes32 lockId) external view returns (LockRecord memory);
-    function isReleased(bytes32 lockId) external view returns (bool);
 }
 
 contract BaseSameChainVerifier is IChainVerifier {
 
     error LockNotFound(bytes32 lockId);
-    error PrincipalAlreadyReleased(bytes32 lockId);
     error ZeroAddress();
 
     string public constant ENVIRONMENT_ID = "base";
@@ -102,16 +106,6 @@ contract BaseSameChainVerifier is IChainVerifier {
 
         IBaseVaultReader.LockRecord memory r = vault.getLock(lockId);
         if (!r.exists) revert LockNotFound(lockId);
-
-        // A released lock's principal has already returned to its owner.
-        // Issuing against it would create supply backed by nothing.
-        //
-        // OPERATOR REVIEW REQUIRED: this check is a judgement made during
-        // implementation, not a transcription of an existing requirement.
-        // VF-XCH-013 prevents a lock authorizing issuance twice; it does not
-        // address a lock that has been released before issuance is claimed.
-        // Confirm or reverse it deliberately.
-        if (vault.isReleased(lockId)) revert PrincipalAlreadyReleased(lockId);
 
         // The most recent hash the EVM makes available. Derived, never supplied.
         return (true, blockhash(block.number - 1), block.number - 1);
@@ -152,7 +146,7 @@ contract BaseSameChainVerifier is IChainVerifier {
     ///         observe verifiability directly rather than inferring it from a
     ///         reverted transaction.
     function lockIsVerifiable(bytes32 lockId) external view returns (bool) {
-        return vault.getLock(lockId).exists && !vault.isReleased(lockId);
+        return vault.getLock(lockId).exists;
     }
 
     /// @dev Decodes the full lock tuple to preserve the shared encoding, then
