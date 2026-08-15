@@ -1,21 +1,60 @@
 // =============================================================================
-// EvmChainVerifier — EVM Family Per-Environment Finality Verifier (Section O)
+// EvmChainVerifier — Remote EVM Family Finality Verifier (Section O)
 //
-// Handles: Ethereum (PoS finalized), BNB (FFF), Avalanche (Snowman),
-//          Polygon (Heimdall v2), Arbitrum (Optimistic), Base (same-chain),
-//          Optimism (OP Stack).
+// STATUS: NOT IMPLEMENTED — FAILS CLOSED
 //
-// Lock Event Proof encoding (ABI-encoded tuple):
-//   (bytes32 lockId, uint256 grossAmount, uint256 feeAmount, uint256 principalAmount,
-//    uint256 durationSecs, uint256 creationTimestamp, uint256 maturityTimestamp)
+// Handles (when implemented): Ethereum, BNB, Avalanche, Polygon, Arbitrum,
+//                             Optimism. SIX environments, all remote.
 //
-// Finality Proof encoding (ABI-encoded tuple):
-//   (bytes32 blockHash, uint256 blockHeight, uint8 finalityStatus,
-//    uint256 confirmations, bool l1Finalized, bool challengePeriodPassed)
+// BASE IS NO LONGER HANDLED HERE. Base is the same-chain environment and has a
+// working implementation in BaseSameChainVerifier, which reads lock facts from
+// VinculumFinalisBaseVault storage. The former `sameChain` branch of this
+// contract returned the caller's own block hash and height without reading
+// anything, and is deleted rather than carried forward.
 //
-// Finality status codes:
-//   0=PENDING, 1=FINALIZED, 2=ACCEPTED, 3=CHECKPOINT_VERIFIED,
-//   4=L1_FINALIZED, 5=CHALLENGE_PERIOD_PASSED, 6=SAME_CHAIN
+// This contract previously decoded a caller-supplied finality assertion and
+// tested its fields. The per-chain vocabulary below was correct; the values it
+// tested were supplied by the party requesting issuance. See CL-76, CL-80, and
+// base-contracts/test/10_cl76_forged_package.test.cjs.
+//
+// Per the fail-closed policy, a security-critical component may exist only as
+// (1) fully implemented and evidenced, or (2) explicitly non-operational.
+//
+// REQUIRED FOR IMPLEMENTATION (Section O, Verifier Completion Standard §3)
+//   For each environment, a mechanism establishing that the referenced block is
+//   final under that chain's own consensus AND that the lock event occurred
+//   within it — without trusting the caller. Either an on-Base light client, or
+//   a verified message from a proof protocol whose trust assumptions are
+//   documented under §3.7. BaseSameChainVerifier is the reference for what a
+//   completed verifier looks like at this seam.
+//
+// RETAINED DOMAIN FACTS — the finality rule per environment. This vocabulary is
+// correct and is the specification for the future implementation; only the
+// means of establishing these conditions was absent.
+//
+//   Ethereum   — "PoS finalized":  block finalized under Casper FFG.
+//   BNB        — "FFF":            confirmations >= the configured minimum
+//                                  under BNB Fast Finality.
+//   Avalanche  — "Snowman":        block accepted (or finalized) under Snowman
+//                                  consensus.
+//   Polygon    — "Heimdall v2":    the containing block covered by a verified
+//                                  Heimdall checkpoint.
+//   Arbitrum   — "Optimistic":     L1-finalized, or the challenge period
+//                                  elapsed without a successful challenge.
+//   Optimism   — "OP Stack":       as Arbitrum; challengePeriodBlocks applies.
+//
+//   Finality status codes used by the former encoding:
+//     0=PENDING, 1=FINALIZED, 2=ACCEPTED, 3=CHECKPOINT_VERIFIED,
+//     4=L1_FINALIZED, 5=CHALLENGE_PERIOD_PASSED, 6=SAME_CHAIN
+//
+//   Lock Event Proof encoding (shared across environments):
+//     (bytes32 lockId, uint256 grossAmount, uint256 feeAmount,
+//      uint256 principalAmount, uint256 durationSecs,
+//      uint256 creationTimestamp, uint256 maturityTimestamp)
+//
+//   Finality Proof encoding (former):
+//     (bytes32 blockHash, uint256 blockHeight, uint8 finalityStatus,
+//      uint256 confirmations, bool l1Finalized, bool challengePeriodPassed)
 //
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
@@ -26,84 +65,43 @@ pragma solidity 0.8.19;
 import "../interfaces/IChainVerifier.sol";
 
 contract EvmChainVerifier is IChainVerifier {
-    uint8 constant PENDING = 0;
-    uint8 constant FINALIZED = 1;
-    uint8 constant ACCEPTED = 2;
-    uint8 constant CHECKPOINT_VERIFIED = 3;
-    uint8 constant L1_FINALIZED = 4;
-    uint8 constant CHALLENGE_PERIOD_PASSED = 5;
-    uint8 constant SAME_CHAIN = 6;
+
+    /// @notice Thrown on every call. This verifier has no production
+    ///         verification mechanism and must not be relied upon.
+    error VerifierNotImplemented(string environmentFamily);
 
     string public environmentId;
     string public finalityModel;
     uint256 public minConfirmations;
     uint256 public challengePeriodBlocks;
-    bool public sameChain;
 
+    /// @dev `sameChain` is deliberately absent. Base is served by
+    ///      BaseSameChainVerifier; no environment reaching this contract is
+    ///      same-chain, and no configuration should suggest otherwise.
     constructor(
         string memory _environmentId,
         string memory _finalityModel,
         uint256 _minConfirmations,
-        uint256 _challengePeriodBlocks,
-        bool _sameChain
+        uint256 _challengePeriodBlocks
     ) {
         environmentId = _environmentId;
         finalityModel = _finalityModel;
         minConfirmations = _minConfirmations;
         challengePeriodBlocks = _challengePeriodBlocks;
-        sameChain = _sameChain;
     }
 
     function verifyFinality(
-        bytes calldata lockEventProof,
-        bytes calldata sourceFinalityProof
-    ) external view override returns (bool finalized, bytes32 sourceBlockHash, uint256 sourceBlockHeight) {
-        (bytes32 blockHash, uint256 blockHeight, uint8 status, uint256 confirmations, bool l1Finalized, bool challengePassed)
-            = abi.decode(sourceFinalityProof, (bytes32, uint256, uint8, uint256, bool, bool));
-
-        // Base (same-chain): RESOLVED_SAME_CHAIN — no cross-chain verification needed
-        if (sameChain) {
-            return (true, blockHash, blockHeight);
-        }
-
-        // Ethereum: PoS finalized
-        if (keccak256(bytes(finalityModel)) == keccak256("PoS finalized")) {
-            require(status == FINALIZED, "VF-XCH-006: Ethereum PoS not finalized");
-        }
-
-        // BNB: Fast Finality (FFF)
-        else if (keccak256(bytes(finalityModel)) == keccak256("FFF")) {
-            require(confirmations >= minConfirmations, "VF-XCH-006: BNB FFF insufficient confirmations");
-        }
-
-        // Avalanche: Snowman — accepted block
-        else if (keccak256(bytes(finalityModel)) == keccak256("Snowman")) {
-            require(status == ACCEPTED || status == FINALIZED, "VF-XCH-006: Avalanche not accepted");
-        }
-
-        // Polygon: Heimdall v2 checkpoint
-        else if (keccak256(bytes(finalityModel)) == keccak256("Heimdall v2")) {
-            require(status == CHECKPOINT_VERIFIED, "VF-XCH-006: Polygon checkpoint not verified");
-        }
-
-        // Arbitrum / Optimism: Optimistic rollup
-        else if (keccak256(bytes(finalityModel)) == keccak256("Optimistic") || keccak256(bytes(finalityModel)) == keccak256("OP Stack")) {
-            require(
-                status == L1_FINALIZED || status == CHALLENGE_PERIOD_PASSED || l1Finalized || challengePassed,
-                "VF-XCH-006: L2 not finalized"
-            );
-        }
-
-        return (true, blockHash, blockHeight);
+        bytes calldata,
+        bytes calldata
+    ) external view override returns (bool, bytes32, uint256) {
+        revert VerifierNotImplemented("evm-remote");
     }
 
     function extractFacts(
-        bytes calldata lockEventProof
-    ) external pure override returns (
-        bytes32 lockId, uint256 grossAmount, uint256 feeAmount,
-        uint256 principalAmount, uint256 durationSecs,
-        uint256 creationTimestamp, uint256 maturityTimestamp
+        bytes calldata
+    ) external view override returns (
+        bytes32, uint256, uint256, uint256, uint256, uint256, uint256
     ) {
-        return abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256));
+        revert VerifierNotImplemented("evm-remote");
     }
 }
