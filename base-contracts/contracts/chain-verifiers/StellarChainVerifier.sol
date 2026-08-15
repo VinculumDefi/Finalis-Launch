@@ -1,14 +1,19 @@
 // =============================================================================
 // StellarChainVerifier — Stellar Finality Verifier (Section O)
 //
-// Finality: SCP closed (transaction in a ledger closed by SCP consensus).
+// STATUS: NOT IMPLEMENTED — FAILS CLOSED
 //
-// Lock Event Proof encoding (ABI-encoded tuple):
-//   (bytes32 lockId, uint256 grossAmount, uint256 feeAmount, uint256 principalAmount,
-//    uint256 durationSecs, uint256 creationTimestamp, uint256 maturityTimestamp)
+// This contract previously accepted a caller-supplied `closed` flag and
+// returned finalized=true without verifying the ledger or the lock event.
+// See CL-76 and base-contracts/test/10_cl76_forged_package.test.cjs.
 //
-// Finality Proof encoding (ABI-encoded tuple):
-//   (bytes32 ledgerHash, uint256 ledgerSequence, bool closed)
+// REQUIRED FOR IMPLEMENTATION (Section O):
+//   Verification that the referenced ledger was closed by SCP consensus and
+//   contains the lock transaction — established without trusting the caller.
+//
+// Retained domain facts for the future implementation:
+//   Finality: SCP closed (transaction in a ledger closed by SCP consensus).
+//   Finality Proof encoding: (bytes32 ledgerHash, uint256 ledgerSequence, bool closed)
 //
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
@@ -19,24 +24,20 @@ pragma solidity 0.8.19;
 import "../interfaces/IChainVerifier.sol";
 
 contract StellarChainVerifier is IChainVerifier {
-    function verifyFinality(
-        bytes calldata lockEventProof,
-        bytes calldata sourceFinalityProof
-    ) external view override returns (bool finalized, bytes32 sourceBlockHash, uint256 sourceBlockHeight) {
-        (bytes32 ledgerHash, uint256 ledgerSequence, bool closed)
-            = abi.decode(sourceFinalityProof, (bytes32, uint256, bool));
+    error VerifierNotImplemented(string environmentFamily);
 
-        require(closed, "VF-XCH-006: Stellar ledger not SCP-closed");
-        return (true, ledgerHash, ledgerSequence);
+    function verifyFinality(
+        bytes calldata,
+        bytes calldata
+    ) external view override returns (bool, bytes32, uint256) {
+        revert VerifierNotImplemented("stellar");
     }
 
     function extractFacts(
-        bytes calldata lockEventProof
+        bytes calldata
     ) external pure override returns (
-        bytes32 lockId, uint256 grossAmount, uint256 feeAmount,
-        uint256 principalAmount, uint256 durationSecs,
-        uint256 creationTimestamp, uint256 maturityTimestamp
+        bytes32, uint256, uint256, uint256, uint256, uint256, uint256
     ) {
-        return abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256));
+        revert VerifierNotImplemented("stellar");
     }
 }
