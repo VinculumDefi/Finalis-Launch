@@ -8,7 +8,16 @@
 // based on sourceEnvironmentId.
 //
 // VF-XCH-006/010: verifyFinality — objective chain-native finality check.
-// VF-XCH-011:     extractFacts  — independent fact extraction from raw proof.
+// VF-XCH-011:     extractFacts  — independent fact extraction.
+//
+// MUTABILITY NOTE (CL-81). extractFacts was previously declared `pure`. A pure
+// function cannot read storage and cannot call another contract, so no
+// implementation could establish anything beyond decoding its own argument —
+// the interface made caller-trust mandatory rather than merely convenient.
+// It is `view` so that a verifier may consult chain state where chain state is
+// the authoritative source, as it is for the same-chain (Base) environment.
+// Overriding with a more restrictive mutability remains permitted, so
+// implementations that genuinely decode only may still declare themselves pure.
 //
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
@@ -38,7 +47,7 @@ interface IChainVerifier {
     /// @return maturityTimestamp Maturity timestamp.
     function extractFacts(
         bytes calldata lockEventProof
-    ) external pure returns (
+    ) external view returns (
         bytes32 lockId,
         uint256 grossAmount,
         uint256 feeAmount,
