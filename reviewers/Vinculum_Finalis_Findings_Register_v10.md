@@ -1,15 +1,19 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v6 · 2026-08-13
+## Reviewer column: CLAUDE · v10 · 2026-08-15
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
-**Supersedes:** Register v5 (2026-08-12 evening). v4 was never committed to the repository and remains superseded; see Corrections to v4.
+**Supersedes:** Register v9 (2026-08-13). v10 records the CL-76 exploit test result, the fail-closed remediation, three reviewer-error corrections, and three new findings., v6 (2026-08-13) and v5 (2026-08-12 evening). v4 was never committed to the repository and remains superseded; see Corrections to v4.
 
 **Method change since v2.** Every status below is now backed by a compiled contract and an executed test, not by reading. Toolchain: Hardhat 2.22.17, solc 0.8.19, optimizer 200 runs, `viaIR: true`.
 
 **Scope change since v3.** v3 covered the Base/Solidity layer only; Solana and Cosmos were listed as not reviewed. v4 adds the Solana vault (CL-55 through CL-61) and closes the Cosmos test-results request.
 
 **Scope change since v4.** v4 recorded the Solana build session. v5 records the first whole-program read of the Solana vault — every source file examined as a system rather than at the sites the compiler complained about. Ten findings, CL-63 through CL-73. **Three of them mean the program cannot perform its function at all.** One fix applied and verified (CL-72, commit `33941da`).
+
+**Scope change since v7.** v8 records **CL-76**, a Critical affecting all seventeen environments, found by reading the five chain-verifier contracts and their consumer. It also corrects the environment accounting against §11.1 of the specification, which does not match what the handoff documents have been carrying. The CLTV question that opened the session is answered — not as originally framed.
+
+**Scope change since v6.** No new code was examined. v7 records three things: a reviewer error in the Session Handoff Brief corrected, **Appendix A's disposition rule rewritten** after its wholesale-inclusion instruction was found to be wrong, and **A6 and A10's corollary verified directly against the Revision 6 document** rather than resting on the register's own assertion. It also records a standing instruction from the operator that changes how findings may be verified. No finding changed severity.
 
 **Scope change since v5.** v5 recorded the first whole-program read of the Solana vault. v6 records a **test-vector provenance audit** — the first examination of whether the passing tests are entitled to be believed. It produced the project's first cleanly arbitrated fix (CL-74, commit `7bd2db6`), one downgrade after a reviewer error (CL-75), and one reframing (CL-69 is protocol-wide, not Solana-specific).
 
@@ -49,7 +53,39 @@ A finding is marked Resolved only where a named test asserts it. **Four Solana f
 - CL-75's remedy is **two changes that must not be conflated**: correct Cosmos's scale to 18-decimal, and correct the name "micro" protocol-wide. Renaming Cosmos to match the wrong convention would propagate the error.
 - Documentation correction is scheduled **after** code freeze, not before. See Documentation Debt.
 
-**The next single task**, if no other direction is given: continue the provenance audit. Thirty-eight Cosmos tests unexamined, and all 116 Base tests unexamined. The specific sweep is mechanical — find every test that iterates a constant the implementation owns.
+**Standing instruction, issued 2026-08-13 — the operator is not a verification source.** He is not a reviewer and cannot verify technical claims. He must not be asked to sanity-check, confirm, or cross-check analysis; his agreement carries no information and converting it into a recorded fact is the CL-03/CL-04 failure class with a human standing in for a test. His recollection is a hypothesis to be checked against a source, never a fact to be recorded. Where a question cannot be settled from the specification, the register, an uploaded file, or a terminal command, **it is recorded here as unresolved.** Unresolved is a legitimate status. Design intent, business direction, risk appetite, priorities and scope are his and are brought to him plainly; everything else the reviewer owns. Recorded in full at Handoff Brief v4 §3.7.
+
+**Companion brief is now v4.** v2 was wrong about Appendix A (see Corrections to Brief v2 below); v3 fixed that; v4 adds the standing instruction above. Any session holding v2 or v3 is holding a superseded document.
+
+**CL-76 supersedes the priority question below.** The operator chose the CLTV grep; it ran; it led here. The provenance-audit-versus-CLTV choice is now moot — CL-76 outranks both, and its resolution is a design decision, not a verification task.
+
+**The next single task — SUPERSEDED, retained for the record. Was a priorities question for the operator, not a technical one.** Two governing documents disagree. This register's v6 carry-forward said: continue the provenance audit (38 Cosmos tests, 116 Base tests, sweeping for the A11 signature). Handoff Brief §10 item 5 said: run the CLTV grep first, because five of seventeen advertised environments may have no lock implementation in the repository at all. **The grep has still never been executed.** The two are not rankable on technical grounds — one deepens confidence in code known to exist, the other tests whether claimed code exists. Both are legitimate. The choice is the operator's and is recorded as open until he makes it.
+
+---
+
+## CORRECTIONS TO SESSION HANDOFF BRIEF v2 — errors by this reviewer
+
+**Brief v2 §1.4 mischaracterized Appendix A of this register.** It described these notes as "Revision 7 candidate amendments" living in two places, and it separately reproduced A8–A11 in its §7 as "the derived axioms" without stating they were the same series. A reader could reasonably conclude two A-series existed. Neither claim survives opening the appendix.
+
+**What is actually true.** One series, A1 through A11, titled **"Rationale Notes for Revision 7."** Most entries are review methodology and carry no specification change of any kind.
+
+**Why the error was not cosmetic.** Brief v2 also instructed that Rev 7 be incorporated at the freeze gate, and Appendix A's own header instructed that these notes go into Rev 7 wholesale when it is cut. Followed together, the two would have imported audit methodology — how to read a README, how to sequence a build, how to write a test — into a protocol specification governing an immutable deployment. That is a category error, and it would have been committed at the single point in the process where the document is hardest to unwind.
+
+**The corrected rule, and it now governs.** Only the subset of Appendix A entries that names an actual **gap in the specification** enters Rev 7, and that subset is selected **entry by entry at freeze.** Never wholesale. Appendix A's header is corrected below to say so. Handoff Brief v3 §1.4 carries the same rule.
+
+**Second error, same session.** Having classified the entries, this reviewer asked the operator to "sanity-check against your own read" and to confirm a conclusion "when you get there." He cannot do either — he is not a reviewer — and the request invited exactly the false verification this register exists to prevent. Both questions were answerable from documents already in hand and were subsequently answered that way. See the standing instruction in the carry-forward block.
+
+**Also corrected.** Brief v2 named a repository file `REVISION_7_CANDIDATE_AMENDMENTS.md`. The document in hand is `Revision_7_Candidate_Log.md`. Whether both exist is untested and unimportant; what matters is below.
+
+---
+
+## `Revision_7_Candidate_Log.md` — SCOPE CAVEAT OWED
+
+The Log sweeps **code to specification**: does any intentional implementation behavior extend, override, or contradict Rev 6 without a governing requirement? Its answer is no, and within that scope the answer stands. Its stated exclusions are explicit and include deferred requirements.
+
+**Its closing line — "No protocol changes requiring a new Master Specification revision were found" — reads as global and is not.** It sweeps the direction that finds unauthorized code. It does not sweep the direction that finds missing specification, and A6 and A10 both name gaps it never looked for.
+
+**Consequence.** A reader arriving at the freeze gate holding only the Log would conclude Rev 7 is empty and skip the Appendix A selection entirely. **Owed before freeze:** one sentence in the Log stating its direction and pointing at Appendix A. Recorded as open.
 
 ---
 
@@ -215,6 +251,95 @@ They are now genuinely Resolved, by edits made and tested in this session.
 ---
 
 ## OPEN — CRITICAL
+
+### CL-76 · Critical · **OPEN** — the cross-chain proof system authenticates nothing, on all seventeen environments
+
+**Evidence.** Five verifier contracts read in full, plus `IChainVerifier.sol` (49 lines) and the consuming path in `VinculumFinalisVerifier.sol`. File hashes recorded: `UtxoChainVerifier.sol` `a1fe9fd408650464b175276ff83ba52302f6865144a7cdaff47c0ba3abd39680`, identical at `base-contracts/contracts/chain-verifiers/` and `src/base-verifier/contracts/chain-verifiers/`.
+
+**The finding.** All five verifiers — `EvmChainVerifier` (108 lines), `UtxoChainVerifier` (62), `SolanaChainVerifier` (48), `StellarChainVerifier` (41), `XrplChainVerifier` (41) — carry a **byte-identical `extractFacts`**: a bare `abi.decode` of `lockEventProof`. Every `verifyFinality` decodes a caller-supplied assertion and requires it to be favourable:
+
+| Verifier | The gate | Who supplies the value |
+|---|---|---|
+| Stellar | `require(closed)` | caller |
+| XRPL | `require(validated)` | caller |
+| Solana | `require(commitment == 1)` | caller |
+| EVM | status codes / `l1Finalized` / `challengePassed` | caller; **`sameChain` returns `true` with no check** |
+| UTXO | `require(confirmations >= 6)` | caller |
+
+`UtxoChainVerifier.verifyFinality` additionally accepts `lockEventProof` and **never reads it** — nothing binds the finality claim to the lock it finalizes. None of the five has a light client, a merkle proof, or an attestation signature.
+
+**Why the consumer does not save it.** `VinculumFinalisVerifier.verifyAndMint` is `external onlyWhenFinalized` — permissionless by design under VF-SEC-005. Step 11 cross-checks `extractFacts` output against the normalized package, and its comment states the intent correctly: extraction is meant to come from the chain-specific event rather than normalized fields, defeating relayer tampering. **Both sides originate from the same caller.** `extGross == pkg.grossAmountSmallestUnits` compares the caller's number to the caller's other number. This is A11's signature appearing in a contract rather than a test — the same witness testifying twice.
+
+**Why the CL-01/CL-75 derivation does not save it either, and this is the part that inverts a settled conclusion.** Line 682 asserts that the quantities determining issuance are derived, not accepted. That is true for the USD price (signed publisher record, VF-ORC-007 — the only `ecrecover` in the contract) and true for the emission rate. **Issuance is price times quantity, and the quantity is not derived.** `_verifiedGrossUsdMicro` returns `pkg.grossAmountSmallestUnits * pr.priceUsdMicro * 1e12 / 10**_registeredPrecision(pkg)`. Authenticated price, registry divisor, **caller-supplied amount**. There is no signature over the ProofPackage anywhere in the contract. An authenticated price multiplied by an unauthenticated amount yields an unauthenticated result.
+
+**Exploit path.** On any of the seventeen environments, any address calls `recordFeeAndRac` then `verifyAndMint` with a self-consistent fabricated package and mints VCLM or CHONX up to the hard cap, with no lock existing on any chain. Replay protection, the RAC precondition, the USD floor and the caps shape the attack; none prevent it.
+
+**Classification (A8).** Bucket 1 — undisclosed defect. Lines 762–775 disclose a conscious deferral of VF-FEE-007, cryptographic verification that the *fee transfer* occurred. That disclosure is honest and does **not** extend to lock-event authenticity. This was not on the author's list.
+
+**What is correct and must not be discarded in the fix.** The dispatch architecture is sound and `IChainVerifier` is the right seam. The per-chain finality taxonomy is correct and reflects real domain knowledge — Ethereum PoS finalized, Avalanche Snowman accepted, Polygon Heimdall v2 checkpoint, Solana max-rooted, Stellar SCP closed, XRPL validated ledger, UTXO confirmation depth. Step 11's cross-check design is right. The missing element is a mechanism establishing that an asserted fact is true. **One layer, not seventeen defects.**
+
+**Consequence for every green suite.** 116 Base tests and the 24/24 mainnet solo test all passed with this in place, and necessarily would: a suite constructing its own proof packages always satisfies a cross-check between two caller-supplied fields. No existing test result is evidence about the proof path. This is the register's own lesson at maximum scale.
+
+**Resolution is a DESIGN DECISION, not a fix, and it belongs to the operator.** Attestation quorum, per-chain light clients, or an existing proof protocol. They differ in cost, decentralization, and disclosed trust assumptions. **§2 immutability makes the choice permanent**, and an attestation quorum is a set of people holding power — the thing §2 exists to eliminate, and in tension with the operator's published pause-button position. **Recorded as unresolved pending his decision. No reviewer recommendation is recorded here.**
+
+**CLASSIFICATION (v10): CRITICAL — PRE-DEPLOYMENT.** Blocks release. Not a production incident.
+
+Deployment evidence, repo-wide grep for `registerChainVerifier|finalizeConfiguration` excluding `.md`, 12 results: two copies of `VinculumFinalisVerifier.sol`, one Hardhat build artifact, six test files, `BASELINE_85_tests.txt`, `evidence/BASE_HARNESS_RUN_2026-08-09.txt`. **No deployment script of any language or extension. No `deployments/` or `broadcast/` directory.** No finalized deployment of these contracts exists; `configurationFinalized` has never been set true outside a test harness. Verifier replacement therefore remained possible, and the fail-closed remediation below was available.
+
+**VERIFIED BY TEST — the standing verification rule is satisfied for this finding.**
+
+`base-contracts/test/10_cl76_forged_package.test.cjs`, run against the production `UtxoChainVerifier` (constructor `("bitcoin", 6)`), NOT `MockChainVerifier`:
+
+- Pre-remediation, 3 passing: an unprivileged caller (signer #5, `0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc`, no deployer role, no lock on any chain) minted **15.003 VCLM** from a fabricated package. `verifyFinality` returned `true` for an invented block hash. A second distinct phantom lock minted again.
+- Post-remediation, 3 failing: `VerifierNotImplemented("utxo")` raised at `UtxoChainVerifier.sol:58`, propagating through `VinculumFinalisVerifier.verifyAndMint` at `:792` — the same call site identified in the original analysis.
+- Full suite post-remediation: **116 passing, 3 failing**, the three being CL-76 by design. No other test depended on placeholder success.
+
+**REMEDIATION APPLIED (partial).** `UtxoChainVerifier`, `SolanaChainVerifier`, `StellarChainVerifier`, `XrplChainVerifier` replaced with explicit non-operational implementations reverting `VerifierNotImplemented` from both `verifyFinality` and `extractFacts`. Per-chain finality taxonomy and Section O requirements preserved as comments. `setMinConfirmations` removed. `EvmChainVerifier` deliberately untouched: its same-chain Base path is implementable without a trust-model decision and is the next work item. **CL-76 remains OPEN** — fail-closed removes the mint path; it does not supply verification.
+
+**REVIEWER ERROR — CORRECTED (v10).** v9 stated a forged package could mint "to the hard cap" in a single call. **This is false.** `VF-COM-003` bounds each handshake to $0.95–$1.05 USD, enforced at `VinculumFinalisVerifier.sol:615` inside `recordFeeAndRac`, upstream of the verifier call. The observed mint was 15.003 VCLM. The defect is unchanged in kind — minting against a nonexistent lock breaks the supply invariant, and repetition is unbounded — but the per-transaction severity was overstated. Found by the test, not by reading; the reading missed VF-COM-003 entirely.
+
+**HYPOTHESIS DISPROVED (v10).** The reviewer hypothesised Axelar might already be a lock-authentication trust dependency, making its use for proof transport additive-free. Repo-wide grep for `axelar|wormhole|layerzero|hyperlane|ccip`, 15 results, **zero `.sol` files**. Hits were documentation, traceability CSVs, Rust build artifacts, and the price fetcher. No contract references any cross-chain messaging protocol. Axelar is mandated by VF-XCH-018 and excluded from issuance by VF-XCH-021 and VF-SUP-014 (all three verified verbatim against the hash-locked Rev 6 spec). Its role is transport of minted tokens, not evidence of locks.
+
+**CHALLENGED AND UPHELD — the CL-02 hypothesis, raised by the operator and disproved from source.**
+
+The hypothesis: `registerChainVerifier` allows installing a verifier that validates forged locks; that is CL-02, already open and Critical; therefore the architecture was chosen and the open question is access control, not design intent; therefore CL-76 should be withdrawn or rewritten.
+
+Disproved on three independent points:
+
+1. **The cited evidence does not say that.** Register v6 line 261 is CL-63 — the Solana SPL vault's per-lock token-authority coupling. It concerns neither verifier registration nor forged locks.
+2. **The registration surface cannot reach a mint.** `registerChainVerifier` is `onlyDuringDeployment` (`!configurationFinalized` AND `msg.sender == deployer`, `:561`). `verifyAndMint` is `onlyWhenFinalized` (`configurationFinalized == true`). `configurationFinalized` is written once, at `:594`, to `true`, with no reversing path. The states are **mutually exclusive**; no moment exists in which a verifier is installable and a mint is possible. `chainVerifiers` has exactly one write site, `:564`, behind that modifier. **This is evidence in CL-02's favour on this surface and should be reflected when CL-02 is next assessed.**
+3. **CL-76 installs nothing.** CL-02 governs *who may install a verifier*; CL-76 concerns *what the correctly installed verifier does*. The exploit uses the honestly registered verifier, deployed as intended. Perfect access control on registration is orthogonal.
+
+**On the architecture claim.** `IChainVerifier` existing establishes that a **seam** was chosen, not a trust model. Its signature returns `bool finalized` and is silent on how that boolean is established; all five implementations establish it by asking the caller. The interface is equally compatible with a light client, an attestation quorum, or a proof protocol — and nothing in the codebase selects one. **The trust model remains undecided. Finding upheld without modification.**
+
+**Consequence for Brief §4.** The recorded calibration — invention finished, only verification remains — is **false in one specific respect**. The cross-chain trust model is undecided. Brief correction owed.
+
+---
+
+### CL-27 · **ANSWERED, and the original framing was wrong**
+
+Three independent searches — `cltv|checklocktime`, then `nlocktime|redeemscript|scriptpubkey|p2sh|bitcoinjs|bip65`, then a filename sweep for the chain names — found **no Bitcoin-family locking script anywhere in the repository.** The CLTV hits were confined to `.git` pack objects, three `reviewers/` documents discussing the gap, `src/lib/vfProofNormalizer.js`, and `Vinculum_Finalis_Architecture_Design.md`. The second sweep returned neither of those last two, meaning the design document describes CLTV without ever using implementation vocabulary — the §12 pattern precisely.
+
+The filename sweep did return `UtxoChainVerifier.sol` and its twin, which is the **consumer**, not the producer. **Producer absent, consumer present-but-inert (CL-76).** CL-27's remainder is not "verify a built pattern"; it is "the pattern was never built."
+
+**Correction to CL-27's scope: it is SIX chains, not five.** DigiByte is a Bitcoin fork, `UtxoChainVerifier`'s header lists it correctly, and §11.1 confirms it. The register and brief both grouped DigiByte separately. **DigiByte's recorded clearance — three passing tests — requires re-examination**, since a DigiByte lock would use the script vocabulary three searches failed to find.
+
+---
+
+### ENVIRONMENT ACCOUNTING — corrected against §11.1
+
+Rev 6 §11.1's table is authoritative and its registry column **sums to exactly 1,001**, which independently confirms it is the real list. VF-XCH-001 makes the set exactly these; VF-XCH-002 forbids addition or substitution without a specification decision.
+
+**Seven EVM:** Ethereum, BNB Smart Chain, Avalanche, Polygon, Arbitrum, Base, Optimism (registry entries sum to 914).
+**Ten non-EVM:** Bitcoin, Bitcoin Cash, Solana, XRP Ledger, Stellar, Cosmos, Litecoin, Dogecoin, DigiByte, Zcash.
+
+**Three corrections:**
+
+1. **The handoff documents say "8 EVM / 8 non-EVM plus Solana."** Both counts are wrong; the asset totals they carry (914 EVM, 78 Solana) are right, because those came from the spec while the groupings were reconstructed later.
+2. **Cardano and Algorand are NOT Vinculum Finalis environments.** They appear in Rev 6 exactly twice, as wrapped registry assets — Binance-Peg Cardano on BNB Smart Chain (row 537) and ALGO on Ethereum (row 980). The register nonetheless carries "Algorand TEAL confirmed genuine" and a clean-compiling Cardano validator as clearances. Effort was spent on two chains the protocol does not support, and those entries inflate apparent coverage by sitting beside real ones. Under VF-XCH-002 they cannot be admitted by discovering someone built them.
+3. **Cosmos is one of the seventeen and has no verifier in `base-contracts/contracts/chain-verifiers/`.** The five verifiers cover sixteen. A `cosmos-hub-proof-adapter` directory exists elsewhere in the repo and has **not** been examined. **Open — do not assume either way.**
+
+---
 
 ### CL-01 · Unauthenticated USD value permits arbitrary issuance
 - **Evidence:** `VinculumFinalisVerifier.sol:397-401`, `:340-343`. `verifiedGrossUsdMicro` is caller-supplied; no signature check, no batch lookup.
@@ -521,7 +646,26 @@ Base44 backend functions · `vinculum_price_fetcher_v9.py` · 98 JSX components 
 
 **Why these exist.** Each records reasoning that was reconstructed from scratch in a working session, cost real time, and would otherwise be reconstructed again by the next reader — human or AI — starting with fresh eyes. Each names the wrong path explicitly so it is recognized as already-walked rather than newly-clever.
 
-**Do not edit Revision 6 to add these.** Rev 6 is hash-locked and that hash is cited throughout this register. Editing it breaks the chain of custody. These belong in the Style & Terminology Guide now, and in Rev 7 when it is cut.
+**Do not edit Revision 6 to add these.** Rev 6 is hash-locked and that hash is cited throughout this register. Editing it breaks the chain of custody.
+
+**DISPOSITION RULE — corrected in v7. The earlier instruction was wrong.** This header previously read that these notes belong in the Style & Terminology Guide now "and in Rev 7 when it is cut," which reads as wholesale inclusion. It is not wholesale.
+
+**All eleven belong in the Style & Terminology Guide.** That is their home and most of them have no other one.
+
+**Only entries that name an actual gap in the specification enter Rev 7, and they are selected entry by entry at freeze.** Folding this appendix into a revision as a block would write review methodology — how to read a README, how to order a build, how to shape a test — into a protocol specification. The specification governs the protocol's behavior. It does not govern the auditor's technique, and an immutable deployment is the worst possible place to blur that.
+
+**Qualifying entries as of v7, both verified against the Revision 6 document itself:**
+
+| Entry | What it names | Verified how |
+|---|---|---|
+| **A6** | Integer width at the transfer boundary is unspecified | Rev 6 text extracted from the hash-verified `.docx`; **209** unique `VF-***-***` requirements present; grep for `u64`, `u128`, `64-bit`, `128-bit`, `overflow`, `saturate`, `truncate` returns **zero hits in the entire document**, not merely zero in the requirements. VF-COM-011/012/013 confirmed present and confirmed silent on domain. |
+| **A10 — corollary only** | Canonical wire scale for USD values crossing an environment boundary is unstated | `18-decimal fixed-point` occurs twice, both at the **consumption** site — the issuance arithmetic Base performs. VF-XCH-011 enumerates the evidence that must bind across a boundary, including gross amount, fee amount and asset precision, and never states the scale those values carry on the wire. |
+
+**A10's rule** — read both sides before assigning severity — is methodology and does not qualify. Only the corollary does.
+
+**Probable consolidation at freeze, recorded as a hypothesis and not a decision.** A6 names its own defect class and points at **CL-43** and **VF-REG-012**: an implementation convention that governs behavior while living outside the specification, so every implementer re-derives it and any two may derive differently. A6, A10's corollary and CL-43 may therefore be **one Rev 7 section rather than three.** Untested. It is drafting work for the freeze gate, and it is recorded here so the next reader does not re-derive it.
+
+**A1 and A2 do not qualify.** Both state that Rev 6 is correct and was misread. A misreading is not a gap. **A3, A4, A5, A7, A8, A9, A11 and A10's rule do not qualify** — all are review method.
 
 ## A1 — Deployment authority is governed by §15, not §2 alone
 
@@ -630,3 +774,39 @@ CL-71 and CL-66 are the same protocol at two extremes. The missing registry is d
 **The correct form, demonstrated by the CL-74 fix.** Transcribe the literals from the specification, carry the specification's hash in the comment so the transcription's provenance is checkable, assert set equality in **both** directions — the implementation accepts everything permitted *and* nothing else — and assert the count. Then add a negative test naming the specific values that must be refused. Both together make the omission detectable, which one alone does not.
 
 **Repair the instrument before the code.** The suite was run after the tests were rewritten and before `msg.rs` was touched, and produced exactly the two predicted failures. That step converts a hope that the new test works into evidence that it does, and it costs one command. Without it, a green suite after the fix cannot distinguish a repaired table from a test that never checked anything.
+
+---
+
+## v10 ADDENDUM — NEW FINDINGS, WITHDRAWALS, AND REPORTED-BUT-UNVERIFIED ITEMS
+
+### CL-77 · HIGH · OPEN · No test exercised any production chain verifier
+`base-contracts/test/04_endtoend.test.cjs:52` deploys `MockChainVerifier`; the describe block is titled "full verification pipeline via MockChainVerifier." Its `buildPackage` helper sets `sourceFinalityProof: "0x"` — empty bytes — and the suite passes. The production verifiers would revert on `abi.decode` of empty bytes. **The 116-test suite never supplied a finality proof at all.** This is why CL-76 survived every green test, and it generalises: a passing suite that exercises only mocks is not evidence about production code paths. Remediation: production-verifier coverage required before any environment is considered complete.
+
+### CL-78 · MEDIUM · RESOLVED BY REMEDIATION · `setMinConfirmations` had no access control
+Former `UtxoChainVerifier.sol:35`, `external`, no modifier, in-file comment: "Only callable by authority in production (access control omitted for clarity)." Anyone could lower the confirmation threshold on a deployed verifier. Removed in the fail-closed rewrite. **Must not be reintroduced without an explicit authority** when the verifier is implemented.
+
+### CL-02 · STATUS QUESTIONED (v10) · entry cites a superseded contract
+The CL-02 entry cites `VinculumFinalisVerifier.sol:296,314,318` and describes `registerChainVerifier` as "permanently open" and able to "install a verifier that validates forged locks." **Current source contradicts this:** `registerChainVerifier` is at `:561`, guarded by `onlyDuringDeployment` (`!configurationFinalized` AND `msg.sender == deployer`); `configurationFinalized` is written once at `:594` to `true` with no reversing path; `chainVerifiers` has one write site at `:564`. The entry describes an earlier revision of the contract. **CL-02 requires full re-verification against current source before its status is trusted.** Note this is the entry that prompted a challenge to CL-76; the challenge was reasonable given the entry text.
+
+### WITHDRAWN — reviewer statements made from attachments that never arrived
+Three uploads in the 2026-08-14/15 session rendered as empty documents; the reviewer generated detailed content for them instead of reporting the failure. **All statements below are withdrawn and must not be carried forward:**
+- All characterisations of Architecture Design document **Section O** — the thirteen required elements, the per-environment status table, Base marked "RESOLVED — DEPLOYABLE MECHANISM ESTABLISHED", the Bitcoin light-client checkpoint specification, and the two stated Section O prohibitions.
+- Architecture Design document **line numbers 228, 257, 271** and their described contents.
+- **Git history** for `UtxoChainVerifier.sol`, including commit `d5352ec`, its date, and its message.
+- `src/lib/vfComplianceData.js` VF-XCH-018 status "IMPLEMENTED" and its stated trace.
+
+Section O may well contain material relevant to CL-76. It has not been read in this column. **UNRESOLVED — requires the document text.**
+
+### REPORTED — NOT VERIFIED IN THIS COLUMN
+The following were reported by the operator or a second AI reviewer. No artifact supporting them has been seen in this column. They are recorded as claims, not findings, per Evidence Rule 1:
+- Cosmos vault compiles; Cosmos test suite passes (count reported as 45).
+- Solana vault compiles following transfer-width (u64) fixes.
+
+Settling evidence would be the build/test output committed under `evidence/`. Uncommitted artifacts `VF_SOLANA_FIX_v2.zip`, `solana-vault/VF_SOLANA_u64_FIX (1).zip`, and `solana-vault/build_errors.txt` were present in the working tree and were not opened.
+
+### CARRY-FORWARD — next artifacts
+1. `PROJECT_REVIEW_STATUS.md` — facts-only baseline, governed by Evidence Rule 1. Then commit to freeze the baseline.
+2. Verifier Completion Standard — Rev 7 policy defining what "complete" means for any verifier.
+3. `EvmChainVerifier` Base same-chain implementation — the reference verifier; requires no trust-model decision.
+4. Trust model for the remaining sixteen environments — operator-owned; attestation quorum eliminated by operator decision.
+
