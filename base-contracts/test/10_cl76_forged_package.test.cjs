@@ -73,8 +73,11 @@ async function deployWithRealUtxoVerifier(allowance = 3) {
 
   // *** THE ONLY MEANINGFUL DIFFERENCE FROM 04_endtoend ***
   // The production UTXO verifier, deployed honestly by the deployer.
+  const HC = await ethers.getContractFactory("Sha256dHeaderChain");
+  const gen = ethers.sha256(ethers.sha256(ethers.getBytes("0x01000000" + "00".repeat(32) + "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" + "29ab5f49ffff001d1dac2b7c")));
+  const hc = await HC.deploy(gen, 0, 0x1d00ffff, 0x495fab29);
   const Utxo = await ethers.getContractFactory("UtxoChainVerifier");
-  const utxo = await Utxo.deploy(ENV, 6);
+  const utxo = await Utxo.deploy(ENV, 6, await hc.getAddress());
 
   // Honest deployment ceremony.
   await verifier.registerAssetPrecision(ENV, ASSET, "BTC", DECIMALS, 1, 0);
@@ -149,9 +152,9 @@ function buildForgedPackage(o) {
   };
 }
 
-describe("CL-76 · forged package mints against the production UtxoChainVerifier", function () {
+describe("CL-76 · REGRESSION — forged packages are rejected by the production UtxoChainVerifier", function () {
 
-  it("mints VCLM to an unprivileged caller with no lock on any chain", async function () {
+  it("refuses to mint for an unprivileged caller with no lock on any chain", async function () {
     const s = await deployWithRealUtxoVerifier(3);
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
 
@@ -164,20 +167,20 @@ describe("CL-76 · forged package mints against the production UtxoChainVerifier
 
     // Called by an address that holds no role and performed no lock.
     await s.verifier.connect(s.attacker).recordFeeAndRac(pkg);
-    await s.verifier.connect(s.attacker).verifyAndMint(pkg);
+    await expect(s.verifier.connect(s.attacker).verifyAndMint(pkg)).to.be.reverted;
 
     const after = await s.vclm.balanceOf(s.attacker.address);
     const minted = after - before;
 
-    console.log(`\n    CL-76: minted ${ethers.formatUnits(minted, 18)} VCLM from a forged package`);
+    console.log(`\n    CL-76 regression: minted ${ethers.formatUnits(minted, 18)} VCLM from a forged package`);
     console.log(`    Caller: ${s.attacker.address} (no deployer role, no lock)\n`);
 
     // TODAY: this assertion holds, which is the vulnerability.
     // AFTER FAIL-CLOSED FIX: the calls above revert and this line is unreachable.
-    expect(minted).to.be.greaterThan(0n);
+    expect(minted).to.equal(0n);
   });
 
-  it("the production verifier returns finalized=true for an invented block", async function () {
+  it("the production verifier refuses an invented block", async function () {
     const s = await deployWithRealUtxoVerifier(3);
 
     const finalityProof = ethers.AbiCoder.defaultAbiCoder().encode(
@@ -191,13 +194,13 @@ describe("CL-76 · forged package mints against the production UtxoChainVerifier
       [ethers.ZeroHash, 0n, 0n, 0n, 0n, 0n, 0n]
     );
 
-    const [finalized] = await s.utxo.verifyFinality(lockEventProof, finalityProof);
+    
 
     // The verifier made no request to Bitcoin. It cannot. It returned true.
-    expect(finalized).to.equal(true);
+    await expect(s.utxo.verifyFinality(lockEventProof, finalityProof)).to.be.reverted;
   });
 
-  it("repeats: a second forged handshake mints again from a distinct phantom lock", async function () {
+  it("a second forged handshake is refused just as the first was", async function () {
     const s = await deployWithRealUtxoVerifier(3);
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
 
@@ -208,10 +211,10 @@ describe("CL-76 · forged package mints against the production UtxoChainVerifier
     });
 
     await s.verifier.connect(s.attacker).recordFeeAndRac(pkg);
-    await s.verifier.connect(s.attacker).verifyAndMint(pkg);
+    await expect(s.verifier.connect(s.attacker).verifyAndMint(pkg)).to.be.reverted;
 
     const minted = await s.vclm.balanceOf(s.attacker.address);
-    console.log(`\n    CL-76 repetition: minted ${ethers.formatUnits(minted, 18)} VCLM from a second phantom lock\n`);
-    expect(minted).to.be.greaterThan(0n);
+    console.log(`\n    CL-76 regression, repeat: minted ${ethers.formatUnits(minted, 18)} VCLM from a second phantom lock\n`);
+    expect(minted).to.equal(0n);
   });
 });
