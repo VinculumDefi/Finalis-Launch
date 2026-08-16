@@ -1,5 +1,5 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v13 · 2026-08-16
+## Reviewer column: CLAUDE · v14 · 2026-08-16
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
@@ -947,4 +947,60 @@ The forged-package regression tests are **green**: a fabricated package that pre
 
 ### REVIEWER NOTE — implementation defect found by testing against real chain data
 `Sha256dHeaderChain._reverseUint` compared the block hash in the wrong byte order, accepting no valid header. It was found because the tests use real Bitcoin mainnet headers; synthetic data constructed to match the implementation's assumptions would have passed. Recorded as a methodological point: proof-verification code must be tested against data the implementation cannot influence.
+
+---
+
+## v14 ADDENDUM — TWO BLOCKERS RESOLVED; THREE VERIFICATION PATHS COMPLETE
+
+**Basis.** `git log` through `133a4e5`; `evidence/` listing; Architecture Design C.1, C.8, C.13–C.17, Section O; Master Specification Revision 6 (hash re-verified). Nothing recorded without a committed artifact.
+
+### B-2 / CL-27 · RESOLVED — the CLTV lock format was specified all along
+v13 recorded B-2 as a blocker on the grounds that no CLTV lock script format existed. **Architecture C.8 specifies it completely:** "single Commitment Vault transaction, inputs = User UTXOs, outputs in the same tx: (1) fee output → Dev Fund (P2WPKH/P2TR), (2) principal output → `P2WSH`/Taproot `OP_CHECKLOCKTIMEVERIFY <maturity_T>` + owner signature, (3) change. Native asset only (BTC)." Replay id: env + txid + principal output index. Handshake identity: the canonical release public key.
+
+**Reviewer error.** CL-27 established that no *implementation* existed, which was correct. The register generalized that to no *format being specified*, which C.8 disproves. The reviewer had requested C.8 and, not receiving it, asserted the blocker without reading it — the same pattern as the Base source-environment error recorded in v11.
+
+**Implemented** (`a3f746e`): `BitcoinTx.sol` parses the transaction — varints, inputs, outputs, values, scripts; txid as double-SHA256 of the non-witness serialization; P2WSH verification against the committed `sha256(witnessScript)`; CLTV script parsing rejecting block-height maturities and, per C.8, ambiguous or multi-key release paths. `UtxoChainVerifier.extractFacts` now derives every fact from proven transaction bytes. 15 tests. Evidence: `evidence/BITCOIN_C8_COMPLETE_2026-08-16.txt`.
+
+### B-1 · RESOLVED for Ethereum — approach named by Section O, now built
+Section O's Ethereum row names three candidates: "L1Block predeploy vs light client vs L1-header oracle."
+
+- **L1-header oracle** — excluded by Section O ("a relayer signature is never treated as proof") and VF-XCH-017.
+- **Light client** — requires BLS12-381 verification over the sync committee; Base provides no precompile. No deployable path identified from the governing artifacts.
+- **L1Block predeploy** — selected. Written by the OP Stack derivation pipeline that defines Base's own state, so it introduces **no new trust party**.
+
+**Implemented** (`f44c993`, `133a4e5`): `L1BlockRegistry.sol` — permissionless `record()` reads the predeploy directly; `receiptsRootOf()` verifies a supplied RLP header against the recorded hash. `EvmReceipt.sol` — receipt and log parsing. `EthereumChainVerifier.sol` — the full chain: header authenticated, receipt proven against `receiptsRoot`, lock event read from the proven receipt. Source vault address and event topic immutable; the proven trie value is compared against the caller's receipt bytes. 25 tests across both. Evidence: `evidence/L1_HEADER_AUTH_2026-08-16.txt`, `evidence/ETHEREUM_C1_2026-08-16.txt`.
+
+**Suite at `133a4e5`: 219 passing, 0 failing.**
+
+### CL-82 · HIGH · OPEN · No EVM source vault contracts exist
+C.1 specifies the Ethereum source mechanism as "vault contract `createLock()` atomic. Native ETH path: `payable` with `msg.value`; Token path: ERC-20 `transferFrom` with actual-received verification" — the same pattern as `VinculumFinalisBaseVault`. C.2–C.5 and C.7 specify the same mechanism for BNB, Avalanche, Polygon, Arbitrum and Optimism.
+
+**No such contract exists in this repository for any of the six.** Same class as CL-79 for Base. The Base-side verifier is built and tested against the event format the Base vault defines; the source contracts are a separate deliverable.
+
+### CORRECTION — overstated impossibility claim
+v13's carry-forward and this reviewer's analysis stated that no component for scrypt, multi-algorithm, or Equihash proof-of-work verification "exists or can." **The second half was not demonstrated.** The supportable statement: no Base-resident implementation exists in the repository, and no practical direct EVM implementation has been identified from the governing artifacts. Optimistic constructions, fraud proofs, and succinct proofs of the header chain were not examined.
+
+### IMPLEMENTATION CLASSES — current state
+| Class | Component | State |
+|---|---|---|
+| Bitcoin-derived tx parsing | `BitcoinTx` | ✅ Serves all six UTXO chains |
+| SHA256d header chain | `Sha256dHeaderChain` | ✅ Serves Bitcoin, Bitcoin Cash |
+| Non-SHA256d PoW | — | ❌ None; Litecoin, Dogecoin, DigiByte, Zcash |
+| EVM receipt proof | `MerklePatriciaProof`, `EvmReceipt` | ✅ Serves all seven EVM chains |
+| EVM header authentication | `L1BlockRegistry` | ✅ Ethereum; routes Polygon, Arbitrum, Optimism |
+| Same-chain | `BaseSameChainVerifier` | ✅ Base |
+| Independent EVM header auth | — | ❌ None; BNB, Avalanche |
+| Signature-based finality | — | ❌ None; Solana, XRPL, Stellar, Cosmos |
+
+### VERIFICATION PATHS COMPLETE
+Base (`de5f633`), Bitcoin and Bitcoin Cash (`a3f746e`), Ethereum (`133a4e5`). Bitcoin Cash is code-complete but **parameter-blocked**: C.17 marks its confirmation count DESIGN DEFINED, and Verifier Completion Standard §3.3 forbids defaulting the parameter. Litecoin, Dogecoin and DigiByte share that gap and add the proof-of-work problem.
+
+### REMAINING
+1. Polygon, Arbitrum, Optimism — verifier wiring plus the extra hop each row specifies (Heimdall checkpoint proof; output-root proof). No new cryptography.
+2. **CL-82** — EVM source vault contracts, six environments.
+3. BNB, Avalanche — independent header authentication.
+4. Solana, XRPL, Stellar, Cosmos — signature-based finality. XRPL and Cosmos are additionally blocked at the source mechanism (C.10, C.12).
+5. Confirmation counts for Bitcoin Cash, Litecoin, Dogecoin, DigiByte.
+6. Deployment evidence from Base for the `L1Block` predeploy integration.
+7. Carry-forward from v13: CL-02 re-verification; Solana build evidence; Cosmos Base-side verifier; Session Handoff Brief still at v1.
 
