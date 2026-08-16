@@ -1,5 +1,5 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v14 · 2026-08-16
+## Reviewer column: CLAUDE · v15 · 2026-08-16
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
@@ -1003,4 +1003,62 @@ Base (`de5f633`), Bitcoin and Bitcoin Cash (`a3f746e`), Ethereum (`133a4e5`). Bi
 5. Confirmation counts for Bitcoin Cash, Litecoin, Dogecoin, DigiByte.
 6. Deployment evidence from Base for the `L1Block` predeploy integration.
 7. Carry-forward from v13: CL-02 re-verification; Solana build evidence; Cosmos Base-side verifier; Session Handoff Brief still at v1.
+
+---
+
+## v15 ADDENDUM — L1-ANCHORED FAMILY COMPLETE
+
+**Basis.** `git log` through `0855fd6`; `evidence/` listing; Architecture C.4, C.5, C.7, Section O. Nothing recorded without a committed artifact.
+
+### THREE VERIFICATION PATHS ADDED
+
+| Environment | Commit | Evidence | Chain |
+|---|---|---|---|
+| Optimism (C.7) | `8d5f1a8` | `evidence/OPSTACK_C7_2026-08-16.txt` | 5 links |
+| Polygon (C.4) | `3243f4c` | `evidence/POLYGON_C4_2026-08-16.txt` | 4 links |
+| Arbitrum (C.5) | `0855fd6` | `evidence/ARBITRUM_C5_2026-08-16.txt` | 4 links |
+
+**Suite at `0855fd6`: 260 passing, 0 failing.**
+
+All three chain from a block hash Base's own derivation pipeline recorded, through the environment's L1 anchor, to the vault's lock event. Each proven trie value is compared against the caller's supplied bytes at every level. Oracle, checkpoint, rollup, vault addresses and all event topics are immutable constructor arguments.
+
+**Optimism** — L1 header → `OutputProposed` from the output oracle → output-root preimage recomputed → L2 header → lock receipt.
+
+**Polygon** — L1 header → `NewHeaderBlock` from the checkpoint contract → Bor block range check and leaf Merkle path → lock receipt. The leaf commits to the Bor `receiptRoot` directly, so no separate L2 header step exists. C.4's finality rule is enforced structurally: a Bor block outside a posted checkpoint cannot be proven.
+
+**Arbitrum** — L1 header → confirmed-assertion event from the rollup contract → L2 header → lock receipt. The confirmation carries the L2 block hash directly.
+
+### OBSERVATION — C.5's challenge-window parameter may be unnecessary
+C.5 marks "exact Arbitrum assertion-challenge duration on the intended chain" as DESIGN DEFINED — DEPLOYABILITY EVIDENCE REQUIRED. The implementation does not use it: Arbitrum's rollup contract emits the confirmation event only after the window elapses, so requiring that event delegates enforcement to Arbitrum rather than measuring elapsed time on Base. The parameter would be needed only if Base computed the window independently.
+
+**Recorded as an implementation observation.** Whether C.5's requirement is therefore satisfied is an architecture decision, not one made here.
+
+### EXTERNAL DEPENDENCIES REQUIRING VERIFICATION (Standard 5)
+Three protocol details are used that the governing artifacts do not state. Each is exposed publicly or bound at deployment so it can be checked against real chain data before use:
+
+| Detail | Environment | Exposure |
+|---|---|---|
+| Output-root preimage formula | Optimism | `computeOutputRoot` public |
+| Checkpoint leaf preimage; `NewHeaderBlock` data layout | Polygon | `computeLeaf`, `verifyCheckpointPath` public |
+| Confirmation event identity; its data layout | Arbitrum | topic is a constructor argument |
+
+None has been verified against mainnet. Tests prove each chain's logic against the assumed construction; they cannot prove the construction is correct.
+
+### VERIFICATION PATHS — CURRENT STATE
+Complete: **Base**, **Bitcoin / Bitcoin Cash**, **Ethereum**, **Optimism**, **Polygon**, **Arbitrum**. This exhausts the environments the L1-anchored and SHA256d machinery reaches.
+
+### REMAINING — corrected statement
+v14 and prior reviewer statements described the remaining environments as needing cryptography Base "can't perform." **That overstates the evidence.** The supportable statement:
+
+> The remaining environments require consensus-authentication mechanisms not implemented in this repository. BNB and Avalanche require validator-signature verification (C.2 fast-finality votes; C.3 Snowman membership). Solana, Stellar, XRPL and Cosmos require signature-based finality per Section O. Litecoin, Dogecoin, DigiByte and Zcash use proof-of-work algorithms for which no implementation exists here. Whether deployable implementations are achievable on Base has not been established either way from the governing artifacts.
+
+Additionally blocked at the source mechanism, not the verifier: **XRPL** (C.10, atomic batch availability DESIGN DEFINED) and **Cosmos** (C.12, EVIDENCE REQUIRED — CHAIN-NATIVE FEASIBILITY ANALYSIS INCOMPLETE).
+
+Parameter-blocked: **Bitcoin Cash, Litecoin, Dogecoin, DigiByte** — confirmation counts DESIGN DEFINED per C.13–C.15, C.17.
+
+### NEXT — CL-82 is unblocked implementation work
+No EVM source vault contracts exist for Ethereum, BNB, Avalanche, Polygon, Arbitrum or Optimism, though C.1–C.5 and C.7 specify the same `createLock()` mechanism as the Base vault. Nothing blocks building them, and the Base-side verifiers for four of the six are already tested against the event format.
+
+### CARRY-FORWARD (from v14, unchanged)
+Deployment evidence from Base for the `L1Block` predeploy; CL-02 re-verification; Solana build evidence; Cosmos Base-side verifier; Session Handoff Brief still at v1.
 
