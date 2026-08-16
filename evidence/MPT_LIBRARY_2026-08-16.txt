@@ -1,0 +1,318 @@
+
+
+  W0 · harness smoke
+    √ deploys every contract in the system (2593ms)
+    √ tokens report their configured hard caps (231ms)
+
+  CL-04 · stake duration multipliers must match §10.1
+    √ duration 30d multiplier is 1x (249ms)
+    √ duration 60d multiplier is 1.4x (275ms)
+    √ duration 90d multiplier is 1.75x (258ms)
+    √ duration 120d multiplier is 2x (265ms)
+
+  CL-02 · VF-IMM-001/VF-DEP-006: authority terminated at finalization
+    √ initialize() cannot be called twice (402ms)
+    √ deployer address is zeroed - authority irreversibly terminated (421ms)
+    √ finalized flag is independently verifiable on-chain (VF-DEP-007) (492ms)
+    √ no address can seize minting after finalization (390ms)
+    √ the original deployer has no residual minting power (337ms)
+    √ setMinter no longer exists (293ms)
+
+  CL-07 · stake contract can mint epoch rewards
+    √ stake contract is an authorized VCLM minter (229ms)
+    √ verifier is also an authorized VCLM minter (303ms)
+    √ VF-STK-004: stake has no CHONX minting privilege (219ms)
+
+  CL-03 · §10.1 token multipliers (VCLM 1.0x / CHONX 2.0x / SYNTH 4.0x)
+    √ VCLM weight at 30d is amount x 1.0 x 1.0 (236ms)
+    √ CHONX weight is exactly twice VCLM at equal amount and duration (501ms)
+    √ SYNTH weight is exactly four times VCLM at equal amount and duration (597ms)
+
+  CL-14 · VF-STK-025 expired position cannot backdate over a gap
+    √ queueExtension reverts once the position has expired (491ms)
+
+  CL-02 · Verifier: deployment ceremony closes irreversibly
+    √ registerChainVerifier is unreachable after finalization (267ms)
+    √ registerAssetPrecision is unreachable after finalization (293ms)
+    √ configureDevFund is unreachable after finalization (303ms)
+    √ finalize() cannot be called twice (243ms)
+    √ verifier deployer is zeroed - authority terminated (VF-DEP-006) (200ms)
+    √ finalized flag is publicly readable (VF-DEP-007) (194ms)
+    √ no attacker can install a chain verifier that validates forged locks (216ms)
+    √ VF-DEP-002: a zero chain verifier cannot be registered (103ms)
+
+  CL-02 · Synth and Stake carry no authority
+    √ Synth setVerifier no longer exists (194ms)
+    √ Synth setTokenContracts no longer exists (232ms)
+    √ Synth burn targets are immutable (257ms)
+    √ Stake exposes no authority address (CL-29) (248ms)
+
+  VF-DEP-001 · issuance inactive until finalization
+    √ verifyAndMint reverts before the ceremony is closed (116ms)
+
+  CL-01 · VF-ORC-007 signed price records
+    √ the arbitrary-issuance parameter no longer exists (206ms)
+    √ recordFeeAndRac no longer accepts a caller USD value (184ms)
+    √ accepts a batch signed by the price publisher (226ms)
+    √ rejects a batch signed by anyone else (219ms)
+    √ rejects a tampered price with a valid signature over different data (202ms)
+    √ VF-SEC-005: any address may submit; the submitter gains no authority (225ms)
+    √ VF-ORC-008: a run must be newer than the last accepted run (204ms)
+    √ VF-ORC-005: a zero price marks the asset unavailable rather than substituting one (216ms)
+    √ a signature cannot be replayed against a different deployment (234ms)
+
+  CL-01 · price publisher is immutable
+    √ VF-DEP-002: a zero price publisher cannot be constructed (231ms)
+    √ no function can change the price publisher (179ms)
+
+  CL-39 · run watermark cannot be pushed beyond recovery
+    √ rejects a run near the uint64 maximum (196ms)
+    √ rejects an advance one beyond the permitted window (205ms)
+    √ accepts an advance at the permitted boundary (201ms)
+    √ the window advances with the watermark, so long gaps stay recoverable (201ms)
+    √ normal consecutive runs are unaffected (203ms)
+
+  CL-37 · stale price records fail closed
+    √ a fresh record has a usable valuation (209ms)
+    √ remains usable just inside 48 hours (216ms)
+    √ is no longer usable past 48 hours (212ms)
+    √ an unavailable asset is never usable regardless of age (206ms)
+    √ an asset never priced has no usable valuation (178ms)
+    √ a new batch restores usability after staleness (239ms)
+    √ age is measured from the signed fetch timestamp, not from submission (229ms)
+
+  CL-11 · VF-COM-006 handshake allowance registry
+    √ registers a one-use mechanism (104ms)
+    √ registers a three-use mechanism (106ms)
+    √ VF-COM-006: rejects any allowance other than 1 or 3 (129ms)
+    √ an unregistered environment reports zero (94ms)
+    √ allowance cannot be registered after finalization (183ms)
+    √ allowance cannot be changed by a stranger during the ceremony (109ms)
+    √ the package field is no longer consulted anywhere in enforcement
+
+  End-to-end · full verification pipeline via MockChainVerifier
+    √ a valid handshake mints VCLM (228ms)
+    √ CL-01: issuance is impossible without a published price (217ms)
+    √ CL-37: issuance fails closed once the price is stale (195ms)
+    √ VF-XCH-011: a package contradicting the source facts is rejected (203ms)
+    √ VF-XCH-006: an unfinalized source event is rejected (227ms)
+
+  CL-11 · handshake allowance consumption, end to end
+    √ VF-COM-007: a three-use mechanism permits exactly three, rejects the fourth (339ms)
+    √ VF-COM-007: a one-use mechanism permits exactly one, rejects the second (264ms)
+    √ allowance is per identity, not global (256ms)
+    √ CL-11: the caller's asserted allowance count is ignored entirely (244ms)
+    √ VF-COM-008: a rejected attempt consumes no allowance (313ms)
+
+  CL-12 · Dev Fund destination enforcement
+    √ VF-FEE-006: a substituted destination is rejected (201ms)
+    √ the registered destination is accepted (210ms)
+    √ an empty destination is rejected even if the registry were empty (225ms)
+    √ VF-FEE-008: missing fee transfer evidence is rejected (247ms)
+    √ VF-FEE-009: an unconfigured environment cannot issue (159ms)
+    √ VF-FEE-009: an empty destination cannot be registered at all (90ms)
+
+  CL-06 · epoch reward basis is populated from RAC credits
+    √ the verifier accumulates a running per-epoch reward basis (205ms)
+    √ credits accumulate additively within one epoch (239ms)
+    √ closeEpoch reads the basis instead of leaving it zero (257ms)
+    √ an epoch with no credits has a zero basis and pays nothing (242ms)
+
+  CL-07 · the Stake contract actually mints epoch rewards
+    √ a staker is paid through closeEpoch, allocateEpoch and claim (265ms)
+    √ VF-STK-004: the reward is newly minted VCLM, raising total supply (285ms)
+    √ VF-STK-015: an epoch with no stakers allocates nothing (225ms)
+
+  CL-09 · epoch processing cost must not grow with position count
+        closeEpoch gas: 5 positions=109284, 60 positions=109284, ratio=1.00x
+    √ closeEpoch gas is bounded as positions accumulate (665ms)
+        closeEpoch gas: 5=109284, 600=109284, ratio=1.000x
+    √ closeEpoch gas is flat from 5 to 600 lifetime positions (3901ms)
+        allocateEpoch gas: 5=53271, 60=53271, ratio=1.00x
+    √ allocateEpoch gas is bounded as positions accumulate (686ms)
+
+  CL-09 · differential oracle — accumulator vs specification
+    √ agrees with brute force across 20 randomized positions and 6 epochs (577ms)
+    √ agrees after a withdrawal cancels future contribution (218ms)
+    √ conservation: registered weight matches the accumulator at every boundary (278ms)
+
+  CL-41 PROOF OF EXPLOIT · unvalidated assetPrecision in recordFeeAndRac
+        honest credit: 600000000000000000
+        attack credit: 600000000000000000
+        inflation:     1x
+    √ a caller can inflate the epoch reward basis by understating decimals (167ms)
+
+  CL-41 · pkg.assetPrecision is economically inert
+        credits by declared precision [0,6,12,18,255]: 600000000000000000, 600000000000000000, 600000000000000000, 600000000000000000, 600000000000000000
+    √ credit is identical across 0, 6, 12, 18 and 255 declared precision (211ms)
+
+  CL-41 · precision divisor comes from the registry
+    √ no USD derivation divides by pkg.assetPrecision
+
+  CL-42 · custody class must not silently default
+    √ VF-SEC-003: an unrecognized custody class is rejected at registration (131ms)
+    √ the three valid classes are accepted (120ms)
+    √ custody path is bounded to native or token (100ms)
+
+  CL-43 · asset precision must be within the executable domain
+    √ a precision beyond safe arithmetic is rejected at registration (127ms)
+    √ precisions across the real range are accepted (127ms)
+
+  CL-44 · output token discriminator is closed
+    √ VF-COM-020: every value outside {0,1} is rejected before any minting (256ms)
+    √ VCLM (0) mints VCLM and not CHONX (177ms)
+    √ rejection precedes emission-rate selection, so no invalid rate is ever used
+
+  CL-45 · staking token discriminator is closed
+    √ VF-STK-002: every value outside {0,1,2} is rejected (180ms)
+    √ all three valid tokens can be staked (181ms)
+
+  CL-46 · maximum multiplier product does not overflow
+    √ SYNTH at 120 days — the largest product — computes exactly 8x (153ms)
+    √ a very large stake at maximum multipliers does not revert (138ms)
+    √ the weight expression keeps the uint256 operand leftmost
+
+  CL-47 · duration discriminator admits only the specified terms
+    √ §10.1: an unlisted duration is rejected (197ms)
+
+  CL-76 · REGRESSION — forged packages are rejected by the production UtxoChainVerifier
+
+    CL-76 regression: minted 0.0 VCLM from a forged package
+    Caller: 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc (no deployer role, no lock)
+
+    √ refuses to mint for an unprivileged caller with no lock on any chain (263ms)
+    √ the production verifier refuses an invented block (230ms)
+
+    CL-76 regression, repeat: minted 0.0 VCLM from a second phantom lock
+
+    √ a second forged handshake is refused just as the first was (239ms)
+
+  Base Commitment Vault — creation
+    √ creates a lock, splits the fee, and isolates principal in its own contract (223ms)
+    √ accepts all 16 permitted durations and rejects durations adjacent to them (489ms)
+
+  Base Commitment Vault — negative cases (Standard §5.2)
+    √ rejects an unapproved asset WITHOUT moving any of the user's funds (248ms)
+    √ rejects a fee-on-transfer asset rather than locking a different amount than recorded (326ms)
+    √ rejects a duplicate lock id (217ms)
+    √ rejects a zero base recipient and a zero release destination (259ms)
+    √ rejects a standard lock below $10.00 (186ms)
+    √ rejects a Handshake outside the $0.95-$1.05 band (209ms)
+    √ rejects a fourth Handshake from the same identity (231ms)
+    √ rejects a CHONX output with no activation receipt (196ms)
+    √ rejects ETH sent alongside an ERC-20 lock (197ms)
+
+  Base Commitment Vault — valuation is derived, not asserted
+    √ the same gross amount qualifies or fails purely on the oracle price (360ms)
+    √ records the derived USD value in the immutable lock record (193ms)
+
+  Base Commitment Vault — release
+    √ refuses to release before maturity (224ms)
+    √ releases at maturity to the bound destination when called by a stranger (238ms)
+    √ refuses a second release (268ms)
+    √ releases without consulting the verifier, the price feed, or the factory (288ms)
+
+  Base Commitment Vault — isolation by construction
+    √ releasing one lock leaves every other lock untouched (384ms)
+    √ the cloned implementation cannot be re-initialized (213ms)
+    √ the implementation contract itself is permanently disabled (235ms)
+
+  Base Commitment Vault — configuration
+    √ refuses lock creation before configuration is finalized (145ms)
+    √ refuses asset registration after finalization, and from a non-deployer (210ms)
+
+  CL-48 · fetchTimestamp is bounded in both temporal directions
+    √ BACKWARD: a record older than 48 hours is not usable (CL-37) (120ms)
+    √ FORWARD: a future fetchTimestamp is rejected at submission (152ms)
+    √ a future timestamp cannot extend the freshness window, because it cannot be stored (115ms)
+    √ a fetchTimestamp equal to the current block is accepted (121ms)
+
+  CL-49 · runId cannot wrap, skip beyond recovery, or be reused
+    √ the maximum permitted advance succeeds (106ms)
+    √ one beyond the permitted advance is rejected (111ms)
+    √ a run id cannot be reused, so no batch can be replayed (129ms)
+    √ no earlier run id can be accepted after a later one (154ms)
+
+  BaseSameChainVerifier — rejects forged evidence
+    √ reverts on a lock that does not exist, however well-formed the proof (233ms)
+    √ ignores the caller's claimed amounts and returns vault storage instead (247ms)
+    √ ignores the finality proof entirely (266ms)
+    √ derives the block hash and height rather than echoing the caller's (232ms)
+
+  BaseSameChainVerifier — accepts genuine locks
+    √ verifies a real lock and reports it finalized (263ms)
+    √ reports an unknown lock as unverifiable without reverting (200ms)
+
+  BaseSameChainVerifier — construction
+    √ refuses a zero vault address
+    √ binds the vault immutably at construction (235ms)
+
+  Base end-to-end — genuine lock through the production verifier
+
+    Base e2e: minted 1725.0 VCLM against a real lock
+
+    √ mints against a real Base lock, called by an unprivileged relayer (313ms)
+    √ element 9 — the same lock cannot mint twice (340ms)
+    √ element 10 — a failed attempt consumes nothing and the lock stays mintable (359ms)
+    √ a package naming a lock that was never created cannot mint (343ms)
+
+    Base verifyAndMint gas: 213527
+
+    √ element 8 — records the gas cost of same-chain verification (375ms)
+
+  Sha256dHeaderChain — proof of work
+    √ accepts a real header whose work meets its declared target (82ms)
+    √ accepts consecutive headers in one call (82ms)
+    √ rejects a header whose nonce has been altered (44ms)
+    √ rejects a header with an altered merkle root (43ms)
+    √ rejects a header whose parent is unknown (39ms)
+    √ rejects a malformed header length (47ms)
+    √ rejects a difficulty change off a retarget boundary
+
+  Sha256dHeaderChain — chain state
+    √ is idempotent: resubmitting a known header is a no-op (44ms)
+    √ reports confirmation depth from the best tip (56ms)
+    √ reports zero confirmations for an unknown block (41ms)
+    √ accumulates work rather than counting height
+    √ refuses a zero checkpoint
+
+  Sha256dHeaderChain — merkle inclusion
+    √ verifies the coinbase of a single-transaction block (59ms)
+    √ rejects a transaction that is not in the block (52ms)
+    √ reverts for an unknown block (43ms)
+
+  UtxoChainVerifier — SPV-backed finality
+    √ verifies a transaction included in a proof-of-work-validated block (113ms)
+    √ rejects a block the header chain has never seen (74ms)
+    √ rejects a transaction that is not in the block (67ms)
+    √ rejects a valid transaction paired with the wrong block (66ms)
+    √ rejects insufficient confirmation depth (80ms)
+    √ reads depth from the header chain, not from the caller (77ms)
+    √ isFinal reports without reverting (98ms)
+
+  UtxoChainVerifier — extractFacts is blocked by CL-27
+    √ fails closed rather than returning caller-decoded values (71ms)
+
+  UtxoChainVerifier — construction
+    √ refuses a zero header chain address
+    √ binds the header chain immutably and exposes no setter (97ms)
+
+  MerklePatriciaProof — single-leaf trie
+    √ recovers the value from a leaf node whose hash is the root (49ms)
+    √ rejects a proof whose node does not hash to the root
+    √ rejects a leaf whose path does not match the key
+    √ rejects an empty proof
+
+  MerklePatriciaProof — branch node
+    √ descends a branch to the correct leaf (88ms)
+    √ rejects a key routed to an empty branch slot (50ms)
+    √ rejects a leaf swapped between branch slots (46ms)
+
+  MerklePatriciaProof — receipt decoding
+    √ strips the type byte from a typed receipt and leaves legacy untouched (51ms)
+    √ decodes a receipt's status field
+    √ reports a failed receipt as status zero
+
+
+  189 passing (44s)
+
