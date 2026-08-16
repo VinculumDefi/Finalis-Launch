@@ -1,0 +1,118 @@
+warning: virtual workspace defaulting to `resolver = "1"` despite one or more workspace members being on edition 2021 which implies `resolver = "2"`
+note: to keep the current resolver, specify `workspace.resolver = "1"` in the workspace root's manifest
+note: to use the edition 2021 resolver, specify `workspace.resolver = "2"` in the workspace root's manifest
+note: for more details see https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions
+   Compiling vf-solana-vault v0.1.0 (/mnt/c/Users/Shannon/Documents/GitHub/Finalis-Launch/Finalis-Launch/solana-vault/programs/vf-solana-vault)
+warning: ambiguous glob re-exports
+ --> programs/vf-solana-vault/src/instructions/mod.rs:5:9
+  |
+5 | pub use commit_vault_lock::*;
+  |         ^^^^^^^^^^^^^^^^^^^^ the name `handler_native` in the value namespace is first re-exported here
+6 | pub use initialize::*;
+7 | pub use release_principal::*;
+  |         -------------------- but the name `handler_native` in the value namespace is also re-exported here
+  |
+  = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+ --> programs/vf-solana-vault/src/instructions/mod.rs:5:9
+  |
+5 | pub use commit_vault_lock::*;
+  |         ^^^^^^^^^^^^^^^^^^^^ the name `handler_spl` in the value namespace is first re-exported here
+6 | pub use initialize::*;
+7 | pub use release_principal::*;
+  |         -------------------- but the name `handler_spl` in the value namespace is also re-exported here
+
+error[E0308]: mismatched types
+   --> programs/vf-solana-vault/src/instructions/commit_vault_lock.rs:231:41
+    |
+231 |     system_program::transfer(gross_cpi, params.gross_amount)?;
+    |     ------------------------            ^^^^^^^^^^^^^^^^^^^ expected `u64`, found `u128`
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> src/system_program.rs:298:8
+help: you can convert a `u128` to a `u64` and panic if the converted value doesn't fit
+    |
+231 |     system_program::transfer(gross_cpi, params.gross_amount.try_into().unwrap())?;
+    |                                                            ++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> programs/vf-solana-vault/src/instructions/commit_vault_lock.rs:244:39
+    |
+244 |     system_program::transfer(fee_cpi, fee)?;
+    |     ------------------------          ^^^ expected `u64`, found `u128`
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> src/system_program.rs:298:8
+help: you can convert a `u128` to a `u64` and panic if the converted value doesn't fit
+    |
+244 |     system_program::transfer(fee_cpi, fee.try_into().unwrap())?;
+    |                                          ++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> programs/vf-solana-vault/src/instructions/commit_vault_lock.rs:380:32
+    |
+380 |     token::transfer(gross_cpi, params.gross_amount)?;
+    |     ---------------            ^^^^^^^^^^^^^^^^^^^ expected `u64`, found `u128`
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> src/token.rs:11:8
+help: you can convert a `u128` to a `u64` and panic if the converted value doesn't fit
+    |
+380 |     token::transfer(gross_cpi, params.gross_amount.try_into().unwrap())?;
+    |                                                   ++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> programs/vf-solana-vault/src/instructions/commit_vault_lock.rs:394:30
+    |
+394 |     token::transfer(fee_cpi, fee)?;
+    |     ---------------          ^^^ expected `u64`, found `u128`
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> src/token.rs:11:8
+help: you can convert a `u128` to a `u64` and panic if the converted value doesn't fit
+    |
+394 |     token::transfer(fee_cpi, fee.try_into().unwrap())?;
+    |                                 ++++++++++++++++++++
+
+error[E0308]: mismatched types
+  --> programs/vf-solana-vault/src/instructions/release_principal.rs:86:39
+   |
+86 |     system_program::transfer(cpi_ctx, principal)?;
+   |     ------------------------          ^^^^^^^^^ expected `u64`, found `u128`
+   |     |
+   |     arguments to this function are incorrect
+   |
+note: function defined here
+  --> src/system_program.rs:298:8
+help: you can convert a `u128` to a `u64` and panic if the converted value doesn't fit
+   |
+86 |     system_program::transfer(cpi_ctx, principal.try_into().unwrap())?;
+   |                                                ++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> programs/vf-solana-vault/src/instructions/release_principal.rs:183:30
+    |
+183 |     token::transfer(cpi_ctx, principal)?;
+    |     ---------------          ^^^^^^^^^ expected `u64`, found `u128`
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> src/token.rs:11:8
+help: you can convert a `u128` to a `u64` and panic if the converted value doesn't fit
+    |
+183 |     token::transfer(cpi_ctx, principal.try_into().unwrap())?;
+    |                                       ++++++++++++++++++++
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `vf-solana-vault` (lib) generated 2 warnings
+error: could not compile `vf-solana-vault` (lib) due to 6 previous errors; 2 warnings emitted
