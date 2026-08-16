@@ -1,4 +1,23 @@
 // =============================================================================
+// MockChainVerifier — TEST FIXTURE ONLY. Never deployed.
+//
+// Returns success without verifying anything. That is its purpose: it lets
+// the issuance pipeline be tested independently of whether any verifier
+// works.
+//
+// IT IS NOT EVIDENCE ABOUT VERIFICATION.
+//   Verifier Completion Standard 4.4: "Evidence offered under 5 SHALL
+//   exercise the production verifier. A test that substitutes a mock at the
+//   verifier seam produces no evidence about the verifier, however
+//   comprehensive it is about everything else."
+//
+//   A suite that registers this contract cannot demonstrate that a forged
+//   proof is rejected — this contract accepts everything by construction.
+//
+// Recorded under CL-77.
+// =============================================================================
+
+// =============================================================================
 // MockChainVerifier — TEST INFRASTRUCTURE ONLY
 //
 // *** THIS CONTRACT MUST NEVER BE DEPLOYED TO ANY PRODUCTION NETWORK. ***

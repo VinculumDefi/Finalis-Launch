@@ -1,4 +1,16 @@
 // =============================================================================
+// CANONICAL PRODUCTION-VERIFIER COMPLETION EVIDENCE — BASE
+//
+// This suite is the evidence cited under Verifier Completion Standard 5 for
+// the Base environment. It exercises the production BaseSameChainVerifier
+// against genuine locks created by VinculumFinalisBaseVault, through to real
+// issuance by VinculumFinalisVerifier. No mock stands at any seam.
+//
+// 04_endtoend.test.cjs uses MockChainVerifier and is explicitly NOT
+// completion evidence. Recorded under CL-77.
+// =============================================================================
+
+// =============================================================================
 // Base environment — end-to-end integration (Section O elements 9, 10)
 //
 // The first test in this project where a genuine lock, the production verifier,

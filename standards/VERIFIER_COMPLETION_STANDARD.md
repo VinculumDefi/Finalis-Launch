@@ -261,3 +261,37 @@ structural conditions under which an implementation of existing protocol
 requirements may be considered finished.
 
 VF-XCH-012 and VF-XCH-017 are incorporated as mandatory criteria under §3.6.
+
+---
+
+## 8. Completion evidence register
+
+Section 4.4 prohibits mock substitution in completion evidence. That
+prohibition only works if it is unambiguous which suites are being offered as
+evidence. This section names them.
+
+**A suite not listed here is not completion evidence for any verifier**,
+regardless of how thorough it is.
+
+| Verifier | Completion evidence suite | Evidence artifact |
+|---|---|---|
+| `BaseSameChainVerifier` | `12_base_verifier.test.cjs`, `13_base_e2e.test.cjs` | `evidence/BASE_VERIFIER_TEST_2026-08-15.txt`, `evidence/BASE_E2E_TEST_2026-08-15.txt` |
+| `UtxoChainVerifier` | `14_header_chain.test.cjs`, `15_utxo_verifier.test.cjs` | `evidence/BITCOIN_C8_COMPLETE_2026-08-16.txt` |
+| `EthereumChainVerifier` | `17_l1_registry.test.cjs`, `18_ethereum_verifier.test.cjs` | `evidence/ETHEREUM_C1_2026-08-16.txt` |
+| `OpStackChainVerifier` | `19_opstack_verifier.test.cjs` | `evidence/OPSTACK_C7_2026-08-16.txt` |
+| `PolygonChainVerifier` | `20_polygon_verifier.test.cjs` | `evidence/POLYGON_C4_2026-08-16.txt` |
+| `ArbitrumChainVerifier` | `21_arbitrum_verifier.test.cjs` | `evidence/ARBITRUM_C5_2026-08-16.txt` |
+
+**Explicitly not completion evidence:**
+
+| Suite or contract | Why |
+|---|---|
+| `04_endtoend.test.cjs` | Registers `MockChainVerifier` and supplies an empty finality proof. Tests the issuance pipeline given valid facts, which is a different claim. |
+| `contracts/mocks/MockChainVerifier.sol` | Returns success without verifying. Accepts every input by construction. |
+| `contracts/test/Sha256dHeaderChainTestable.sol` | Bypasses proof-of-work validation so tests can construct blocks. Proof-of-work verification is evidenced separately in `14_header_chain.test.cjs` against real Bitcoin mainnet headers. |
+| `contracts/test/MockL1Block.sol` | Stands in for the OP Stack predeploy, which does not exist on a local chain. Integration with the real predeploy requires deployment evidence from Base. |
+
+**Separation of concerns is deliberate.** Pipeline tests that depend on a
+working verifier make failures harder to localise and ask one suite to prove
+two different things. The correct discipline is not to eliminate mocks but to
+ensure the strongest available evidence is cited for each claim.

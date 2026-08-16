@@ -1,3 +1,31 @@
+// =============================================================================
+// Issuance pipeline integration — NOT VERIFIER COMPLETION EVIDENCE
+//
+// PURPOSE
+//   Tests that the issuance system behaves correctly GIVEN valid facts: fee
+//   routing, RAC recording, epoch accounting, supply caps, handshake
+//   allowance, precision handling.
+//
+// THIS SUITE USES MockChainVerifier DELIBERATELY.
+//   The issuance pipeline should be testable without a working verifier.
+//   Coupling every issuance test to a vault and a verifier would make
+//   failures harder to localise and would test two subsystems at once.
+//
+// IT IS NOT COMPLETION EVIDENCE FOR ANY VERIFIER.
+//   Verifier Completion Standard 4.4 prohibits mock substitution in
+//   completion evidence. Nothing in this file may be cited as evidence that
+//   a production verifier authenticates anything. It cannot: the verifier
+//   here is a mock and the finality proof supplied is empty bytes.
+//
+//   Production-verifier evidence lives in:
+//     12_base_verifier.test.cjs   BaseSameChainVerifier
+//     13_base_e2e.test.cjs        genuine lock through to issuance
+//     15_utxo_verifier.test.cjs   UtxoChainVerifier
+//     18_ethereum_verifier.test.cjs / 19_opstack / 20_polygon / 21_arbitrum
+//
+// Recorded under CL-77.
+// =============================================================================
+
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
