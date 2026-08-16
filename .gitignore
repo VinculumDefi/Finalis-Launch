@@ -15,3 +15,7 @@
 *.pem
 *.key
 id.json
+
+# Build artifacts and archives
+*.zip
+solana-vault/build_errors.txt
