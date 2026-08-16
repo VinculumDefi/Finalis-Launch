@@ -1,5 +1,5 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v10 · 2026-08-15
+## Reviewer column: CLAUDE · v13 · 2026-08-16
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
@@ -809,4 +809,142 @@ Settling evidence would be the build/test output committed under `evidence/`. Un
 2. Verifier Completion Standard — Rev 7 policy defining what "complete" means for any verifier.
 3. `EvmChainVerifier` Base same-chain implementation — the reference verifier; requires no trust-model decision.
 4. Trust model for the remaining sixteen environments — operator-owned; attestation quorum eliminated by operator decision.
+
+---
+
+## v11 ADDENDUM — BASE SOURCE MECHANISM AND EVM VERIFIER SCOPE
+
+### CL-79 · CRITICAL · OPEN · No Base-native commitment lock mechanism exists
+**Classification: missing implementation of a specified component.** Not a design question. Design intent is settled and is not reopened by this finding.
+
+**What the specification requires.** Rev 6 §11.1 lists `EVM | Base | 33` — Base is one of the 17 approved source environments with 33 approved assets in the 1,001-entry registry. Rev 6 line 277: each environment "uses an appropriate deterministic chain-native locking mechanism, while Base performs canonical protocol-token issuance and accounting" — both roles, simultaneously. Line 78: the source mechanism transfers the rounded fee to the Dev Fund destination and places principal into the lock. VF-XCH-005: the source mechanism binds user, principal-release destination, asset, amount, creation timestamp, and maturity. The Rev 7 working draft carries §3.1 forward unchanged; nothing supersedes the requirement.
+
+**What the repository contains.** `base-contracts/contracts/` holds four contracts — Verifier, Stake, Synth, Token — plus `interfaces/` and `chain-verifiers/`. Searches: `find -iname "*vault*" -name "*.sol"` → empty. `grep -rln "createLock|CommitmentVaultLock|createCommitment|lockAsset|LockCreated" --include=*.sol` → empty. `VinculumFinalisVerifier.sol` storage records issuance state only — `consumedLocks` (`:285`) marks lock IDs already spent; no mapping records a lock having been created.
+
+**Why it was never found.** Every prior lock-implementation audit targeted non-EVM environments (CL-27, Bitcoin-family CLTV). Base was treated throughout as the issuance destination, so its source-mechanism obligation was never examined by any review pass.
+
+**Relationship to CL-76.** Distinct and more fundamental. CL-76: the protocol cannot authenticate locks it is told about. CL-79: for one environment the lock mechanism itself is absent. CL-79 also explains `EvmChainVerifier`'s `sameChain` shortcut — with no Base lock state in existence, there was nothing for a same-chain verifier to read.
+
+**Consequence for planning.** Base was designated the reference verifier implementation because same-chain verification requires no trust model. That remains true, but the implementation cannot be built or evidenced until the Base source mechanism exists. Per the Verifier Completion Standard, the Base verifier's interface, expected inputs, failure behaviour, and evidence requirements can be specified now; the implementation waits.
+
+### CL-80 · CRITICAL · OPEN · `EvmChainVerifier` unremediated across seven EVM environments
+Excluded from the `220a115` fail-closed change by reviewer decision, on the reasoning that its same-chain Base path was implementable. CL-79 shows it is not, and the file's scope is wider than that path.
+
+`EvmChainVerifier.sol` serves all seven EVM environments — Ethereum (PoS finalized), BNB (FFF), Avalanche (Snowman), Polygon, Arbitrum, Base, Optimism — dispatching on a `finalityModel` string. Every branch decodes `sourceFinalityProof` supplied by the caller and tests the decoded values. This is the CL-76 defect across seven environments rather than one.
+
+The `sameChain` branch (`:63-66`) decodes the caller's bytes and returns `(true, blockHash, blockHeight)` — **caller-derived values rather than independently derived Base chain state** — despite `block.number` and `blockhash()` being directly available on Base.
+
+**Remediation:** fail-closed under the same policy as the other four, pending both CL-79 and the trust-model decision.
+
+### REVIEWER ERROR — CORRECTED (v11)
+The reviewer presented "is Base a source environment, or issuance-only?" to the operator as an open design decision. **It is not.** Rev 6 §11.1, the Approved Asset Registry, and the Rev 7 draft all settle it. Reporting what the artifacts require was the correct action; asking the operator to re-decide a settled requirement was not.
+
+**Rule refined:** a decision is open only if no artifact settles it. Operator ownership of design intent does not convert an already-specified requirement into a question. Project axioms are now recorded in `PROJECT_REVIEW_STATUS.md` §Project axioms to prevent recurrence across fresh sessions.
+
+---
+
+## v12 ADDENDUM — BASE ENVIRONMENT COMPLETE; SECTION O READ
+
+### Section O — WITHDRAWAL LIFTED
+Register v11 withdrew all statements about Architecture Design Section O as unverified (generated from an attachment that never arrived). **Section O has now been read from source**, lines 427–452 of `Vinculum_Finalis_Architecture_Design.md`.
+
+Confirmed: it requires twelve elements per environment; every non-Base row is marked "not established"; the Base row is marked **RESOLVED — DEPLOYABLE MECHANISM ESTABLISHED** with proof "none (same-chain)"; Bitcoin is specified as a Base-resident light client with trusted checkpoint header and PoW header sync; a relayer signature is never treated as proof.
+
+**Note on method.** The withdrawn statements turned out substantially accurate. This does not validate them — they were unsupported when made, and no way existed to know which parts were wrong. Accuracy by inference is not evidence.
+
+### Section O settles the proof mechanism — NO ROW NAMES AXELAR
+Every verifier row in Section O specifies native verification: Merkle-Patricia receipt proofs, SPV proofs, signed headers, IBC proofs; verifiers are "Base-resident light client," "header auth on Base," "IBC client on Base," "verify via Ethereum L1". **Axelar appears in no verifier row.** Axelar's role is Section F, ITS, token transport (VF-XCH-018, VF-XCH-021, VF-SUP-014).
+
+The architecture's answer to CL-76 is therefore per-environment light clients and native proof verification — already specified, sixteen of them, all currently "not established." **This was never an open design question; the reviewer repeatedly presented it as one.**
+
+### CL-79 · RESOLVED — Base commitment vault implemented and tested
+`VinculumFinalisBaseVault.sol` + `CommitmentLock.sol`. Per-lock isolation via EIP-1167 clones (VF-IMM-006); release depends on no external contract (VF-SEC-006); Verified Gross USD derived from the oracle-signed price record, never caller-supplied (VF-ORC-007/012); registry membership enforced before value moves (VF-ARC-004, avoiding CL-71's failure); fee-on-transfer assets fail closed. 22 tests. Evidence: `evidence/BASE_VAULT_TEST_2026-08-15.txt`.
+
+### CL-80 · RESOLVED — `EvmChainVerifier` fail-closed
+Six remote EVM environments revert `VerifierNotImplemented`. The `sameChain` branch and its constructor parameter are deleted, so no configuration can route Base there. Per-chain finality vocabulary preserved as comments. Evidence: `evidence/EVM_FAILCLOSED_TEST_2026-08-15.txt`.
+
+### CL-81 · RESOLVED — `IChainVerifier.extractFacts` was `pure`
+A `pure` function cannot read storage or call another contract. **No implementation of `extractFacts` could ever establish anything beyond decoding its own argument** — caller-trust was mandated by the interface, not merely chosen by implementers. Changed to `view`. Existing verifiers compile unchanged (more-restrictive overrides are permitted).
+
+### CL-76 · Base path REMEDIATED; sixteen environments remain OPEN
+`BaseSameChainVerifier.sol` reads every returned fact from vault storage; `sourceFinalityProof` is ignored entirely. The consumer's VF-XCH-011 cross-check now compares independent sources.
+
+**End-to-end verified:** a genuine 100 MUSD lock minted 1,725 VCLM through the production verifier, called by an unprivileged relayer. Gas: 222,795. Evidence: `evidence/BASE_E2E_TEST_2026-08-15.txt`.
+
+Section O Base row: **twelve of twelve elements satisfied.** Element 7 (reorg) is satisfied structurally — the verifier reads live storage, so a reorg removing the lock causes any re-executed mint to revert; there is no state where issued tokens survive without their lock. Elements 8/9/10 closed by test.
+
+### REVIEWER ERROR — CORRECTED (v12): invented protocol rule
+`BaseSameChainVerifier.verifyFinality` was written to refuse a lock whose principal had already been released. **Rev 6 §3.2 orders issuance before maturity and release after it**, so the scenario falls outside the specified lifecycle; VF-XCH-013 replay protection belongs to the consumer. The rule was invented, not transcribed. Removed; a SCOPE note in the source records why release state is not consulted.
+
+**Rule:** read the Master Specification before reasoning about protocol behavior, not after being challenged.
+
+### CARRY-FORWARD
+1. **Sixteen verifiers remain.** UTXO family (6, one SPV pattern, per-chain depth), remote EVM (6), Solana, XRPL, Stellar, Cosmos. Mechanism specified per row in Section O.
+2. **CL-27 still open** — no Bitcoin-family CLTV locking script exists. A UTXO verifier verifies proofs of a lock no source mechanism currently creates.
+3. **Cosmos has no Base-side verifier**; `cosmos-hub-proof-adapter` unexamined.
+4. **Solana build evidence gap** — commits exist, no artifact under `evidence/`.
+5. **`core.autocrlf` unset** — produces phantom whole-file modifications on Windows. A `.gitattributes` would make `git status` trustworthy.
+6. **CL-02 re-verification** against current source still owed.
+
+---
+
+## v13 ADDENDUM — IMPLEMENTATION STATUS FROM REPOSITORY EVIDENCE
+
+**Basis.** `git log` through `cebbb94`; `evidence/` directory listing; `reviewers/` directory listing; `contracts/` tree; Architecture Design C.1–C.7 and Section O; Master Specification Revision 6 (SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`, re-verified against the uploaded document this session). Nothing below is recorded without a committed artifact.
+
+### DOCUMENT CONTROL DEFECT — v11 and v12 were never committed
+`reviewers/` contains **Register v10** only. The last register change in the commit history is the v9→v10 rename in `8dddc04`. Registers v11 and v12 were produced but never reached the repository, so **CL-79, CL-80 and CL-81 exist in no committed artifact.** This addendum carries that content forward; v13 supersedes v10 on disk directly.
+
+`PROJECT_REVIEW_STATUS.md` on disk is **v1**, header reading "Head commit at time of writing: `220a115`" — eleven commits stale. The v2 revision adding Project Axioms was never committed. **Both documents require committing.**
+
+### COMPLETED AND VERIFIED BY COMMITTED EVIDENCE
+
+| Item | Commit | Evidence artifact |
+|---|---|---|
+| Base commitment vault (CL-79) | `afa3bd7` | `evidence/BASE_VAULT_TEST_2026-08-15.txt` |
+| BaseSameChainVerifier (CL-76 Base path, CL-81) | `de5f633` | `evidence/BASE_VERIFIER_TEST_2026-08-15.txt` |
+| Base end-to-end issuance | `ba18cdd` | `evidence/BASE_E2E_TEST_2026-08-15.txt` |
+| EvmChainVerifier fail-closed (CL-80) | `cc59904` | `evidence/EVM_FAILCLOSED_TEST_2026-08-15.txt` |
+| Released-lock rule removed | `e067337` | `evidence/BASE_COMPLETE_2026-08-15.txt` |
+| SHA256d SPV header chain; UtxoChainVerifier finality | `55a26ee` | `evidence/SPV_HEADER_CHAIN_2026-08-15.txt`, `evidence/UTXO_SPV_2026-08-15.txt`, `evidence/CL76_REGRESSION_GREEN_2026-08-15.txt` |
+| Merkle-Patricia proof library | `cebbb94` | `evidence/MPT_LIBRARY_2026-08-16.txt` |
+
+**Suite state at `cebbb94`: 189 passing, 0 failing** (`evidence/MPT_LIBRARY_2026-08-16.txt`).
+
+### CL-76 · Base path RESOLVED; SHA256d UTXO finality RESOLVED; twelve environments OPEN
+The forged-package regression tests are **green**: a fabricated package that previously minted 15.003 VCLM now mints 0.0 and reverts (`evidence/CL76_REGRESSION_GREEN_2026-08-15.txt`).
+
+- **Base** — resolved. Facts read from vault storage; `sourceFinalityProof` ignored.
+- **Bitcoin, Bitcoin Cash** — `verifyFinality` resolved. Merkle inclusion verified against a header whose proof of work was validated on Base; depth read from header-chain state.
+- **Remaining twelve environments** — open.
+
+### BLOCKED BY REPOSITORY EVIDENCE
+
+**B-1 · On-Base header authentication, six remote EVM environments.** Architecture C.1–C.7 mark the Base verification path **DESIGN DEFINED — DEPLOYABILITY EVIDENCE REQUIRED** for Ethereum, BNB, Avalanche, Polygon, Arbitrum and Optimism. C.1 states the requirement precisely: a receipt proof "authenticated against a finalized Ethereum header that Base obtains; concrete on-Base Ethereum header-authentication mechanism — DESIGN DEFINED." The receipt-proof half is implemented (`cebbb94`); the header-authentication half is undefined in the architecture. Polygon, Arbitrum and Optimism route through Ethereum L1, so Ethereum header authentication unblocks four environments.
+
+**B-2 · `extractFacts` on all non-Base verifiers (CL-27).** Recovering lock facts requires a source-side lock format. CL-27 established by three independent searches that no CLTV script, `nLockTime`, `redeemScript`, `scriptPubKey`, P2SH, or BIP65 reference exists in any source file. Fails closed with the blocker named in `UtxoChainVerifier.sol`.
+
+**B-3 · Signature-based finality: Solana, Cosmos, Stellar, XRPL.** Architecture Section O specifies signed-header and IBC-proof paths. All rest on ed25519 or BLS verification; Base provides no precompile for either. Section O marks each "not established."
+
+### DEFERRED
+
+**D-1 · Litecoin, Dogecoin, DigiByte, Zcash.** `Sha256dHeaderChain` serves SHA256d chains only. These use scrypt, rotating algorithms, and Equihash respectively — memory-hard by construction, not verifiable within EVM gas limits. Recorded in `UtxoChainVerifier.sol` and `Sha256dHeaderChain.sol` headers.
+
+**D-2 · Cosmos Base-side verifier.** No contract exists in `contracts/chain-verifiers/`. `cosmos-hub-proof-adapter` remains unexamined.
+
+**D-3 · `core.autocrlf` unset.** Produces whole-file phantom modifications in `git status` on Windows. A `.gitattributes` would resolve it.
+
+**D-4 · Solana build evidence.** Commits `30c709a` and `33941da` exist; no build artifact under `evidence/`. Level-2 evidence only.
+
+**D-5 · CL-02 re-verification** against current source, still owed.
+
+### REMAINING WORK
+1. Commit Register v13 and `PROJECT_REVIEW_STATUS.md` v2.
+2. Resolve B-1 — on-Base header authentication. Largest single unblocker.
+3. Resolve B-2 — specify the source-side CLTV lock format (CL-27), a protocol decision.
+4. Resolve B-3 — signature-verification approach for four environments.
+5. Address D-1 through D-5.
+
+### REVIEWER NOTE — implementation defect found by testing against real chain data
+`Sha256dHeaderChain._reverseUint` compared the block hash in the wrong byte order, accepting no valid header. It was found because the tests use real Bitcoin mainnet headers; synthetic data constructed to match the implementation's assumptions would have passed. Recorded as a methodological point: proof-verification code must be tested against data the implementation cannot influence.
 
