@@ -1,7 +1,34 @@
 // =============================================================================
 // OpStackChainVerifier — OP Stack L2 Verifier (Architecture C.7, Section O)
 //
-// STATUS: IMPLEMENTED, with one external dependency flagged below.
+// STATUS: **NOT COMPLETE — CL-83.** Do not deploy.
+//
+// CL-83: THIS VERIFIER TARGETS A CONTRACT OPTIMISM HAS REMOVED.
+//   It reads an OutputProposed event from an L2OutputOracle. Optimism's
+//   documentation states that contract "has been removed from the OP Stack
+//   contracts" and that "output proposals are made through the
+//   DisputeGameFactory instead".
+//
+//   The defect is deeper than the address. Under fault proofs an output root
+//   is proposed by creating a dispute game; the claim is only trustworthy once
+//   that game has RESOLVED, is of the portal's respected game type, and is not
+//   blacklisted. This contract treats a single event as proof of finality,
+//   which is true of the superseded design and false of the current one.
+//
+//   CONFIRMED CORRECT: the output-root preimage formula. The OP Stack
+//   specification computes the root from the state root, block hash and
+//   withdrawals storage root — the construction computeOutputRoot implements.
+//   The formula is right; the source of the root is wrong.
+//
+//   The 13 tests in 19_opstack_verifier.test.cjs pass against the superseded
+//   construction. They are not evidence about current OP Mainnet.
+//
+//   Remediation is a design change, not a patch: query DisputeGameFactory,
+//   read the game's status and type, and confirm resolution before accepting
+//   a root claim. Requires reading the fault-proof specification.
+//
+// STATUS (superseded description below, retained for context):
+// IMPLEMENTED, with one external dependency flagged below.
 //
 // SERVES: Optimism, and any OP Stack L2 whose output roots are posted to
 //   Ethereum L1 by an L2OutputOracle-style contract.

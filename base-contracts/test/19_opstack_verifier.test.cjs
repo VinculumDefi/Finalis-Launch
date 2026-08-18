@@ -1,4 +1,15 @@
 // =============================================================================
+// CL-83 — THIS SUITE IS NOT COMPLETION EVIDENCE.
+//
+// It validates OpStackChainVerifier against the L2OutputOracle design, which
+// Optimism has removed. Output proposals now go through DisputeGameFactory and
+// require game resolution before a root claim is final.
+//
+// These tests pass. They are not evidence about current OP Mainnet.
+// Removed from the completion-evidence register in Standard section 8.
+// =============================================================================
+
+// =============================================================================
 // OpStackChainVerifier — C.7 proof-chain tests
 //
 // Five chained verifications, each attacked separately: L1 header, output-root

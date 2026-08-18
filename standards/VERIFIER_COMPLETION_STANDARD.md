@@ -278,7 +278,7 @@ regardless of how thorough it is.
 | `BaseSameChainVerifier` | `12_base_verifier.test.cjs`, `13_base_e2e.test.cjs` | `evidence/BASE_VERIFIER_TEST_2026-08-15.txt`, `evidence/BASE_E2E_TEST_2026-08-15.txt` |
 | `UtxoChainVerifier` | `14_header_chain.test.cjs`, `15_utxo_verifier.test.cjs` | `evidence/BITCOIN_C8_COMPLETE_2026-08-16.txt` |
 | `EthereumChainVerifier` | `17_l1_registry.test.cjs`, `18_ethereum_verifier.test.cjs` | `evidence/ETHEREUM_C1_2026-08-16.txt` |
-| `OpStackChainVerifier` | `19_opstack_verifier.test.cjs` | `evidence/OPSTACK_C7_2026-08-16.txt` |
+| `OpStackChainVerifier` | **NONE — CL-83** | Suite validates a superseded Optimism design |
 | `PolygonChainVerifier` | `20_polygon_verifier.test.cjs` | `evidence/POLYGON_C4_2026-08-16.txt` |
 | `ArbitrumChainVerifier` | `21_arbitrum_verifier.test.cjs` | `evidence/ARBITRUM_C5_2026-08-16.txt` |
 

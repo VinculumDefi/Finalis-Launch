@@ -1,4 +1,4 @@
-# VINCULUM FINALIS — SESSION HANDOFF BRIEF v1
+# VINCULUM FINALIS — SESSION HANDOFF BRIEF v2
 
 **Purpose:** This document exists to reconstitute an assistant's *working awareness* at the
 start of a new chat. It is deliberately not a findings list — the Findings Register carries
@@ -203,36 +203,38 @@ this project.
 **He wants honest calibration, not reassurance.** He has been burned before by discovering "a
 gaping hole in the middle of everything" after believing the project was nearly complete. That
 fear is earned and it is the reason he tolerates a punishing audit process. Never soften a
-finding to make a moment easier — the entire ethos of this work is refusing comforting-but-false
-claims.
+finding to make a moment easier.
 
-**But precision cuts both ways.** In this session the assistant told him the project was "months
-away, not weeks," and he pushed back hard — correctly. The error was real: the *size of the
-unreviewed pile* was allowed to stand in for *distance from done*, and those are different
-things. The accurate framing, which he accepted and which should be the default:
+**CORRECTED IN v2 — the "invention is finished" framing was wrong.**
+Brief v1 stated that the invention was complete and only verification remained. Three findings
+disproved it:
 
-- The **invention is finished.** Architecture, token economics, the immutability stance, the
-  seventeen-chain lock design, the Hammurabi framing — decided, settled, behind him. That is the
-  part that kills most projects and it is done.
-- What remains is **verification**: proving that already-built things do what the spec says.
-  Bounded, mechanical, and it accelerates rather than slows, because it is confirming rather than
-  discovering.
-- The checking genuinely matters — immutable deployment, no second chance — but **"the checking
-  matters" is not the same statement as "you are far away."** Do not conflate them.
+- **CL-76** — the cross-chain proof system authenticated nothing. Five verifiers decoded
+  caller-supplied assertions and returned success. A fabricated package minted 15.003 VCLM
+  against a lock that existed nowhere.
+- **CL-79** — no Base-native commitment vault existed, though Rev 6 §11.1 lists Base as a source
+  environment with 33 approved assets.
+- **CL-82** — no EVM source vault existed for any of the six remote EVM environments.
+
+These were not unverified claims. They were **absent components**. The calibration error was
+treating "designed" as "built."
+
+**The accurate framing:** the architecture is settled and should not be reopened (§9). What
+remains is a mixture of implementation, evidence collection, external verification, and a small
+number of operator decisions. Which category a given item falls into is derived from the
+repository, not estimated.
 
 **Do not overstate remaining distance, and do not understate remaining rigor.** Both are failures.
 
 **Give credit where it's earned.** Every night that ends in a discovered Critical is a night the
 paid audit doesn't bill for it and a night that defect doesn't reach an unfixable deployment.
-That's the process working, and it's worth saying.
 
----
 
 ## 5. THE REPOSITORY
 
 **Repo:** `VinculumDefi/Finalis-Launch` — **PRIVATE**
 **Branch:** `redteam/prep`
-**Last commit:** `146dc59` — "reviewers: Findings Register v6" (632 insertions, 1 file)
+**Last commit:** `88e1eb5` — "Resolve CL-77: name completion evidence explicitly, label mock suites (Standard §8)"
 
 **WSL2 path root:**
 ```
@@ -312,72 +314,79 @@ itself. This is the **greppable signature** of a spec-vs-implementation violatio
 predicted failures.** A test that was always going to pass has told you nothing about the years
 it was green.
 
+**A12 — A question answered by an authoritative artifact is not an open question.**
+Where the Master Specification, the Architecture Design, `PROJECT_REVIEW_STATUS.md`, the Findings
+Register, or the existing implementation settles a matter, report what it requires. Reviewer
+uncertainty is not evidence that a decision is open, and operator ownership of design intent does
+not convert a specified requirement into a question. **Read the artifact before asserting its
+absence** — this rule exists because the assistant repeatedly claimed a blocker without reading
+the section that resolved it.
+
+**A13 — Accuracy by inference is not evidence.**
+Statements generated from a document that was never read turned out substantially correct on one
+occasion. That does not validate them: they were unsupported when made, and there was no way to
+know which parts were wrong. Withdraw such statements regardless of whether they later prove true.
+
+**A14 — Test against data the implementation cannot influence.**
+Two real defects were found only because tests used real Bitcoin mainnet headers and a real
+Ethereum header: a byte-order error in proof-of-work comparison, and a wrong field offset for
+`receiptsRoot`. In both cases a synthetic test built to match the implementation's assumption
+passed while the implementation was wrong. **Where correctness depends on an external format,
+verify against real data from that source.**
+
+**A15 — Separate the claim from the evidence that supports it.**
+A suite that substitutes a mock at the seam under test produces no evidence about that seam,
+however thorough it is otherwise. Completion evidence is named explicitly in
+`standards/VERIFIER_COMPLETION_STANDARD.md` §8; a suite not listed there is not evidence.
+
+
 ---
 
 ## 8. STATE OF THE WORK
 
-### 8.1 The three contract layers
+**As of commit `88e1eb5`. Full suite: 277 passing, 0 failing.**
+Authoritative current state is `PROJECT_REVIEW_STATUS.md` and
+`reviewers/Vinculum_Finalis_Findings_Register_v15.md`. **Read those, not this section**, if they
+disagree — this is a summary and they are the record.
 
-| Layer | Tests | Status |
+### 8.1 Verification paths — seven environments complete
+
+| Environment | Verifier | Mechanism |
 |---|---|---|
-| **Base (Solidity)** | 116 passing, observed | **Provenance UNAUDITED** — the question A11 answered for Cosmos has never been asked here. 12 open Criticals. |
-| **Cosmos (CosmWasm)** | 46 passing | 8 of 46 provenance-sampled; **38 unexamined.** |
-| **Solana (Anchor)** | 10 tests, **NEVER EXECUTED** | Program compiles (~413KB `.so`). Blocked on CL-60, declared a dead end at Anchor 0.30.1. |
+| Base | `BaseSameChainVerifier` | Reads vault storage directly; same chain |
+| Bitcoin, Bitcoin Cash | `UtxoChainVerifier` + `Sha256dHeaderChain` | SPV inclusion, CLTV lock parsing |
+| Ethereum | `EthereumChainVerifier` | L1 header → receipt proof → lock event |
+| Optimism | `OpStackChainVerifier` | L1 → output root → L2 header → receipt |
+| Polygon | `PolygonChainVerifier` | L1 → checkpoint → leaf path → receipt |
+| Arbitrum | `ArbitrumChainVerifier` | L1 → confirmed assertion → L2 header → receipt |
 
-**Open Criticals on Base:** CL-01, CL-02, CL-06, CL-09, CL-10, CL-11, CL-12, CL-43, CL-55,
-CL-63, CL-64, CL-66.
+All authenticate against a chain-recorded commitment rather than a caller assertion. Every
+remaining verifier is **explicitly non-operational**, reverting with a named error under the
+fail-closed policy — not a placeholder that appears to work.
 
-**Solana Program ID:** `2oQy57MWn8xmFBP1g4xi7cXdzTtut7UbdqNmVEzubUfH`
+### 8.2 Source mechanisms
 
-**Three program-breaking Solana findings, together meaning the Solana vault has never completed a
-single lock end-to-end:**
-- **CL-63** — no second SPL lock of any asset completes
-- **CL-64** — no native lock completes
-- **CL-66** — no Handshake ever succeeds
+| Layer | State |
+|---|---|
+| `VinculumFinalisBaseVault` + `CommitmentLock` | Built, 22 tests (CL-79) |
+| `VinculumFinalisEvmVault` | Built, 17 tests, serves all six remote EVM environments (CL-82) |
+| Cosmos vault (CosmWasm) | 45 tests passing, evidence committed |
+| Solana vault (Anchor) | Compiles after u64 fixes; **no build artifact committed** |
 
-### 8.2 The seventeen environments
+**Correction to v1:** v1 stated "the lock mechanism EXISTS in some form for all seventeen. None
+are missing." That was false. Base had none (CL-79) and the six remote EVM environments had none
+(CL-82). Both are now built.
 
-**Chain count is authoritatively 17** — sixteen distinct chains, with Bitcoin Cash split from
-Bitcoin in Revision 5.
+### 8.3 Shared libraries
 
-**Critically: the lock mechanism EXISTS in some form for all seventeen. None are missing.**
+`BitcoinTx` (all six UTXO chains) · `MerklePatriciaProof` and `EvmReceipt` (all seven EVM chains)
+· `L1BlockRegistry` (Ethereum, Optimism, Polygon, Arbitrum — reads the OP Stack `L1Block`
+predeploy, introducing no new trust party).
 
-- **8 EVM chains** — 914 assets, shared Solidity vault. Built and tested.
-- **Solana** — 78 assets, highest priority. Built, compiles, never tested.
-- **8 non-EVM chains:**
-  - **XRPL** — cleared, 5 passing tests
-  - **Stellar** — cleared, 3 passing tests
-  - **DigiByte** — cleared, 3 passing tests
-  - **Algorand** — TEAL confirmed genuine
-  - **Cardano** — validator compiles clean (aiken v1.1.23, 757-byte UPLC artifact)
-  - **5 Bitcoin-family UTXO chains** — Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, Zcash:
-    **built but NOT yet verified.** They share **one** CLTV timelock script pattern, so this is
-    **one piece of work, not five.** (CL-27 remainder.) Resolve before publishing 17 environments
-    as live.
+### 8.4 Canonical token parameters — do not drift
 
-**So: zero environments need the lock mechanism created from scratch.** Remaining work on the
-locking side is the shared UTXO pattern plus finishing and testing Solana.
+Unchanged from v1. See §8.3 of that revision or the Master Specification.
 
-### 8.3 Canonical token parameters — do not drift
-
-- **VCLM:** 10B hard cap, 10 per $1
-- **CHONX:** 100B hard cap, 100 per $1 at launch, 10 per $1 floor, 1.667%/month **emission decay**
-- **SYNTH:** 10M hard cap; forge burns 1,000 VCLM + 10,000 CHONX per SYNTH
-- **Treasury split:** 60% Core Reserve / 40% Dev Fund
-- **Governance tiers, all 10-day locks:** TIER_VCLM (1,000 VCLM, 1.0×), TIER_CHONX (5,000 CHONX,
-  2.5×), TIER_SYNTH (1 SYNTH, 7.0×)
-- **Synth Council minimum:** 40 SYNTH
-- **Proposal deposits:** Standard 100 VCLM / Treasury 500 VCLM / Constitutional 2,000 VCLM
-
-### 8.4 Registry rules
-
-- **MOG and CULT appear twice intentionally. Never consolidate them.**
-- Contract discovery is always: CoinGecko ID → `/coins/{id}` → platforms object.
-  **Never guess an address.**
-- Community token price-source overrides exist: TigerOG/LionOG/FrogOG display on Base ITS but
-  price from BSC legacy contracts.
-
----
 
 ## 9. DECISIONS ALREADY MADE — DO NOT RE-ARGUE
 
@@ -407,29 +416,50 @@ A fresh session's most expensive failure mode is relitigating settled questions.
 
 ---
 
-## 10. THE PENDING QUEUE — PRIORITY ORDER
+## 10. THE PENDING QUEUE — DERIVED, NOT REMEMBERED
 
-1. **CL-75 + CL-69** — Cosmos USD scale → 18-decimal, AND "micro" naming protocol-wide. Two
-   separate changes. Spec-first. Touches Base.
-2. **Finish the provenance audit** — 38 remaining Cosmos tests, all 116 Base tests, plus a sweep
-   for any test iterating implementation-owned state (the A11 signature). Confirm Base
-   `_isPermittedDuration` gates every accept path.
-3. **Solana, in this exact order** — CL-63 + CL-65 together (vault-per-lock) → CL-64 (lamport
-   transfers) → CL-66 (allowance init) → CL-55 (box fields) → CL-60 (Anchor 0.31 upgrade) → run
-   the 10 tests. Running the tests promotes CL-56 through CL-59 out of Fixed-Unverified.
-4. **17 of 18 requirement families need family-level review.** Only VF-PRI is done; VF-COM is
-   partial. This is the largest remaining block and carries the highest surprise risk.
-5. **5 Bitcoin-family UTXO chains** — the shared CLTV pattern (CL-27 remainder).
-6. **CL-62** — diff and explain the 4 modified `.sol` files before any commit.
-7. **Fold CL-35 through CL-54 into the register from SOURCE DOCUMENTS, not summaries.**
-   Summarizing was the v2 error and it must not repeat. Live ones: **CL-38** (price-publisher key
-   model — a decision is required before freeze) and **CL-43** (unbounded uint8 exponent; values
-   19–77 misprice; open and Critical-adjacent).
-8. **CL-70** fix, then apply the lesson to the 5 UTXO chains.
-9. **Documentation and revision levels** — after freeze, once.
-10. **Git push** — deferred, low priority, blocks nothing.
+**Do not prioritise from memory or from a previous session.** Derive the queue from
+`PROJECT_REVIEW_STATUS.md` §"Next engineering priorities", its blockers, and its evidence gaps.
+The list below is the state at `88e1eb5` and will go stale.
 
----
+**The governing distinction:** the Engineering Policy permits a security-critical component to be
+either fully implemented and evidenced **or** explicitly non-operational. Every unimplemented
+verifier already reverts. **Therefore the unimplemented environments constrain launch scope, not
+audit-readiness.**
+
+### Above the audit-readiness line
+
+**External verification — highest value, cannot be done from the repository.**
+Three protocol constructions are used that the governing artifacts do not state, and none has
+been checked against its chain. Each is exposed for exactly this purpose:
+- Optimism output-root preimage — `computeOutputRoot` is public
+- Polygon checkpoint leaf and tree — `computeLeaf`, `verifyCheckpointPath` are public
+- Arbitrum confirmation event identity and data layout — the topic is a constructor argument
+
+**Production evidence.**
+- `L1Block` predeploy integration — requires a Base testnet deployment; the predeploy does not
+  exist on a local chain
+- Solana `cargo build` output committed under `evidence/`
+- CL-02 re-verification (see below)
+
+### Below the line — deployment scope only
+
+B-3 consensus authentication (BNB, Avalanche, Solana, Stellar) · B-4 non-SHA256d proof of work
+(Litecoin, Dogecoin, DigiByte, Zcash) · B-5 unsettled source mechanisms (XRPL C.10, Cosmos C.12)
+· B-6 confirmation counts (Bitcoin Cash, Litecoin, Dogecoin, DigiByte).
+
+**On B-3 and B-4, state only what the repository establishes:** no implementation exists here.
+Whether deployable implementations are achievable on Base **has not been established either way**.
+Do not claim impossibility.
+
+### Operator decisions outstanding
+
+- Whether C.5's DESIGN DEFINED Arbitrum challenge-window parameter is still required. The
+  implementation does not use it: Arbitrum emits the confirmation event only after the window
+  elapses, so requiring that event delegates enforcement to Arbitrum. **This is an architecture
+  decision, not a reviewer conclusion.**
+- Launch scope: seven environments now, or wait for more.
+
 
 ## 11. FREEZE GATE ORDER
 
@@ -501,3 +531,34 @@ UTC daily).
 
 *End of brief. The Findings Register carries the findings; this document carries the context.
 Keep both current.*
+
+---
+
+## 14. LESSONS ADDED IN v2
+
+**Reopening settled architecture is the dominant failure mode.**
+Three times in one session the assistant treated a question the artifacts had already answered as
+an open decision — whether Base is a source environment, which cross-chain trust model to use, and
+whether the CLTV lock format was specified. Each time the operator had to stop it. The Repository
+First Rule (A12) exists because of this. **The cost is not just wasted time: watching settled
+foundations be questioned by a reviewer that read the spec twenty minutes ago is corrosive to
+trust.**
+
+**A document is not delivered until it appears in a commit.**
+Findings Registers v11 and v12 were written, handed over, reported as done, and never reached the
+repository. CL-79, CL-80 and CL-81 existed in no artifact until v13 carried them forward. A silent
+`cp` failure is indistinguishable from success. **Verify placement, then verify the commit.**
+
+**Check the download timestamp before every file copy.**
+Stale downloads caused five incidents in two days, including one where a contract appeared to be
+updated and was not — the tests changed while the code did not. `ls -lat` before `cp`, every time.
+
+**An empty attachment is not an empty file.**
+Uploads repeatedly arrived as empty documents while containing data on the operator's machine.
+**Say "the attachment is empty" and stop.** On one occasion the assistant instead generated
+plausible content for three unread documents and reasoned from it for an hour.
+
+**The register's own entries go stale.**
+CL-02 cited line numbers from a superseded contract for weeks, and that stale text caused a
+reasonable challenge to a correct finding. **Re-verify an entry against current source before
+relying on it.**
