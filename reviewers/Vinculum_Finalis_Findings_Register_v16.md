@@ -1,5 +1,5 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v15 · 2026-08-16
+## Reviewer column: CLAUDE · v16 · 2026-08-22
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
@@ -1061,4 +1061,56 @@ No EVM source vault contracts exist for Ethereum, BNB, Avalanche, Polygon, Arbit
 
 ### CARRY-FORWARD (from v14, unchanged)
 Deployment evidence from Base for the `L1Block` predeploy; CL-02 re-verification; Solana build evidence; Cosmos Base-side verifier; Session Handoff Brief still at v1.
+
+---
+
+## v16 ADDENDUM — CL-84 · BASE-CAP IMPLEMENTED
+
+**Basis.** Master Specification Revision 6 (hash `5a935061…4ef0bf9`, re-verified this session); `spec/Vinculum_Finalis_Requirement_Traceability.csv`; Architecture Design A.12; commits through `a086746`. Nothing recorded without an artifact.
+
+### CL-84 · CRITICAL · RESOLVED · Epoch rewards did not consume lifetime issuance capacity
+
+**Established from the specification.** Rev 6 §13.1 defines the invariant: *"Remaining lifetime capacity = hard cap − cumulative lifetime protocol issuance."*
+- **VF-SUP-001** — every authorized issuance path reconciles against the applicable global lifetime hard cap.
+- **VF-SUP-002** — *"Commitment Vault issuance and Treasury Reward Stake rewards draw from the same VCLM lifetime hard cap."*
+- **VF-SUP-003** — burning reduces circulating supply and does **not** reduce cumulative lifetime issuance or restore issuance capacity.
+
+**The defect.** `VinculumFinalisStake` read remaining capacity (`:375`), refused an epoch reward exceeding it (`:383`), and minted (`:411`) — but nothing incremented the counter. The only writes to `cumulativeVclmIssued` and `cumulativeChonxIssued` were inside `verifyAndMint` at `VinculumFinalisVerifier:839` and `:849`. **Every epoch measured against an unchanged number.**
+
+Secondary: the token's cap check read `totalSupply`, which falls on every burn. The SYNTH forge burns VCLM and CHONX by design, so that check permitted burn-then-mint — contradicting VF-SUP-003 directly. It was not exploitable while the verifier's counter was the tighter constraint, but it was wrong in kind.
+
+Consequence beyond supply: **CHONX activation** is driven by the same counter (`:843`). With stake issuance invisible to it, activation was gated on vault issuance alone and would arrive later than VF-SUP-004 intends.
+
+**Ownership established from the architecture, not chosen.** The Requirement Traceability Matrix assigns the invariant to **`BASE-CAP`**:
+
+| Requirement | Traced component |
+|---|---|
+| VF-SUP-001, VF-SUP-002, VF-SUP-003, VF-SUP-013 | `BASE-CAP` alone |
+| VF-SUP-005 | `BASE-CAP + BASE-ISSUE` |
+| VF-SUP-009, VF-STK-028 | `BASE-EPOCH + BASE-CAP` |
+| VF-STK-029 | `BASE-STAKE + BASE-CAP` |
+| VF-XCH-021 | `AXELAR-ITS + BASE-CAP` |
+
+Every path touching lifetime capacity traces as *that component **plus** `BASE-CAP`*. It is a participant each reconciles against, not a responsibility folded inside any one of them. Architecture A.12 names it: *Global lifetime-cap accounting — `BASE-CAP` [BASE-CHAIN]*.
+
+**`BASE-CAP` did not exist.** Its state lived inside `BASE-VERIFY`, reachable only from one issuance path — which is precisely why `BASE-STAKE` could read the figure but never move it. The defect was a symptom of the missing component.
+
+**Two reviewer proposals the architecture ruled out.** Before consulting the matrix the reviewer proposed (a) adding `recordStakeIssuance` to the verifier, or (b) moving accounting into the token. **Both would have worked and both were wrong** — (a) makes `BASE-VERIFY` the owner, (b) makes `BASE-TOK` the owner, and the matrix assigns neither. Recorded because it demonstrates the failure mode: an implementation can satisfy its observable behavior while violating the governing architecture.
+
+**Remediation (`a086746`).** `VinculumFinalisCap.sol` implements A.12.
+- Counters are **monotonic by construction** — no burn path, no decrement, no setter. VF-SUP-003 holds structurally, and no route restores capacity including future Axelar ITS transport (VF-XCH-021, VF-SUP-014).
+- Recorders fixed at initialization; deployment authority destroyed in the same call, mirroring the token's one-shot pattern.
+- `BASE-VERIFY` (`:842`, `:856`) and `BASE-STAKE` (`:392`, `:431`) both reconcile against it.
+- The stake path records **`distributed`**, the amount actually minted. It rounds down and can be less than the `totalReward` checked. VF-SUP-001 requires reconciliation against what was issued.
+- **Activation logic deliberately remains in `BASE-ACT`.** VF-SUP-004, VF-TOK-002 and VF-TOK-003 trace to `BASE-ACT`; none names `BASE-CAP`. The verifier evaluates the threshold using the figure `recordVclmIssuance` returns.
+
+**Known consequence, recorded not fixed.** Activation is evaluated only in the vault path. A stake mint crossing the 10,000,000 VCLM threshold would activate CHONX on the next vault mint rather than at the crossing. This is a `BASE-ACT` concern; folding it into `BASE-CAP` would take responsibility the matrix did not assign.
+
+**Evidence.** `evidence/CL84_BASE_CAP_2026-08-22.txt` — **292 passing, 0 failing.** `test/24_cl84_lifetime_cap.test.cjs` establishes the invariant directly, including an ABI inspection asserting no function name matches burn, decrease, reduce, reset, restore or set — VF-SUP-003 is the absence of a path, so the interface is the proof.
+
+### TECHNICAL DEBT — not a finding
+The protocol-stack deployment sequence is duplicated across twenty-plus test suites; only four import `deploySystem` from `00_smoke`. Integrating `BASE-CAP` therefore required editing sixteen files. **This violates no specification, architecture, standard or engineering policy, and is recorded here as debt rather than entered as a finding.** A consolidation pass would reduce drift on the next cross-cutting change.
+
+### MILESTONE
+`BASE-CAP` is the first of the architecture's **named components** to be implemented as such. A.12 existed on paper with nothing behind it. Lifetime-cap accounting is now enforced by the dedicated component rather than by individual issuance paths remembering to report.
 
