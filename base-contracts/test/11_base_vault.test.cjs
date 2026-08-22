@@ -56,9 +56,10 @@ async function deployVault(opts = {}) {
   const chonx = await Token.deploy("Chonx", "CHONX", 100_000_000_000n * 10n**18n);
 
   const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
   const verifier = await V.deploy(
-    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs
+    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs, await __cap.getAddress()
   );
 
   // Mock ERC-20 standing in for an approved Base asset (18 decimals).
@@ -435,13 +436,14 @@ describe("Base Commitment Vault — configuration", function () {
 
   it("refuses lock creation before configuration is finalized", async function () {
     const signers = await ethers.getSigners();
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await Token.deploy("V", "V", 10n**28n);
     const chonx = await Token.deploy("C", "C", 10n**28n);
     const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
     const verifier = await V.deploy(await vclm.getAddress(), await chonx.getAddress(),
-                                    signers[9].address, launchTs);
+                                    signers[9].address, launchTs, await __cap.getAddress());
     const Vault = await ethers.getContractFactory("VinculumFinalisBaseVault");
     const vault = await Vault.deploy(await verifier.getAddress(), signers[8].address);
 

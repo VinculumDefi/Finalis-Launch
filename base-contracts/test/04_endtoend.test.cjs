@@ -62,16 +62,18 @@ async function deployConfigured(allowance = 3) {
   const synthTok = await Token.deploy("Synth", "SYNTH", 10_000_000n * 10n ** 18n);
 
   const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
   const verifier = await V.deploy(
-    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs
+    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs, await __cap.getAddress()
   );
 
   const Stake = await ethers.getContractFactory("VinculumFinalisStake");
   const stake = await Stake.deploy(
     await vclm.getAddress(), await chonx.getAddress(),
-    await synthTok.getAddress(), await verifier.getAddress(), launchTs
+    await synthTok.getAddress(), await verifier.getAddress(), launchTs, await __cap.getAddress()
   );
+  await __cap.initialize(await verifier.getAddress(), await stake.getAddress());
 
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ZERO);
@@ -322,9 +324,10 @@ describe("CL-12 · Dev Fund destination enforcement", function () {
     const vclm = await Token.deploy("V", "V", 10n ** 30n);
     const chonx = await Token.deploy("C", "C", 10n ** 30n);
     const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
     const v = await V.deploy(
-      await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs
+      await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs, await __cap.getAddress()
     );
     const Mock = await ethers.getContractFactory("MockChainVerifier");
     const mock = await Mock.deploy();
@@ -351,7 +354,8 @@ describe("CL-12 · Dev Fund destination enforcement", function () {
     const a = await Token.deploy("A", "A", 10n ** 30n);
     const b = await Token.deploy("B", "B", 10n ** 30n);
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
-    const v = await V.deploy(await a.getAddress(), await b.getAddress(), signers[9].address, ts);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    const v = await V.deploy(await a.getAddress(), await b.getAddress(), signers[9].address, ts, await __cap.getAddress());
     await expect(v.configureDevFund(ENV, ""))
       .to.be.revertedWith("VF-FEE-009: empty dev fund destination");
   });

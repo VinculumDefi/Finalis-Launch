@@ -62,16 +62,18 @@ async function deployStack() {
   const synth = await Token.deploy("Synth", "SYNTH", 10_000_000n * 10n**18n);
 
   const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
   const verifier = await V.deploy(
-    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs
+    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs, await __cap.getAddress()
   );
 
   const Stake = await ethers.getContractFactory("VinculumFinalisStake");
   const stake = await Stake.deploy(
     await vclm.getAddress(), await chonx.getAddress(),
-    await synth.getAddress(), await verifier.getAddress(), launchTs
+    await synth.getAddress(), await verifier.getAddress(), launchTs, await __cap.getAddress()
   );
+  await __cap.initialize(await verifier.getAddress(), await stake.getAddress());
 
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ZERO);

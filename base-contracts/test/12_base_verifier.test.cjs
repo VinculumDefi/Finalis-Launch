@@ -63,11 +63,13 @@ async function deployAll() {
   const chonx = await Token.deploy("Chonx", "CHONX", 100_000_000_000n * 10n**18n);
 
   const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
   const verifier = await V.deploy(
-    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs
+    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs, await __cap.getAddress()
   );
 
+  await __cap.initialize(await verifier.getAddress(), await vclm.getAddress());
   const Mock = await ethers.getContractFactory("MockERC20");
   const token = await Mock.deploy("MockUSD", "MUSD", 18, 10n**30n);
 

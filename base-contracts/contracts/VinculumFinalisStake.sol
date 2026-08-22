@@ -49,6 +49,12 @@
 
 pragma solidity 0.8.19;
 
+interface IVinculumFinalisCap {
+    function recordVclmIssuance(uint256 amount) external returns (uint256);
+    function cumulativeVclmIssued() external view returns (uint256);
+    function remainingVclmCapacity() external view returns (uint256);
+}
+
 interface IVerifier {
     function cumulativeVclmIssued() external view returns (uint256);
     function racCredits(bytes32 racIdentity) external view returns (uint256);
@@ -106,6 +112,11 @@ contract VinculumFinalisStake {
     IStakeToken public chonxToken;
     IStakeToken public synthToken;
     IVerifier public verifier;
+    // CL-84 / A.12: BASE-CAP owns lifetime issuance accounting. BASE-STAKE
+    // reconciles against it (VF-SUP-002, VF-STK-028, VF-STK-029).
+    IVinculumFinalisCap public cap;
+    // CL-84 / A.12: BASE-CAP owns lifetime issuance accounting. BASE-STAKE
+    // reconciles against it (VF-SUP-002, VF-STK-028, VF-STK-029).
 
     bool public terminalState;
 
@@ -172,14 +183,16 @@ contract VinculumFinalisStake {
     event EpochAllocated(uint256 indexed epoch, uint256 mintedVclm, uint256 distributions);
     event VclmClaimed(address indexed owner, uint256 amount);
     event TerminalStateEntered();
-
     constructor(
+
         address _vclmToken,
         address _chonxToken,
         address _synthToken,
         address _verifier,
-        uint256 _launchTimestamp
+        uint256 _launchTimestamp,
+        address _cap
     ) {
+        require(_cap != address(0), "VF-DEP-002: zero cap");
         // CL-21: an unset T0 is rejected, never defaulted to zero.
         require(_launchTimestamp > 0, "CL-21: launchTimestamp not set");
         launchTimestamp = _launchTimestamp;
@@ -187,6 +200,7 @@ contract VinculumFinalisStake {
         chonxToken = IStakeToken(_chonxToken);
         synthToken = IStakeToken(_synthToken);
         verifier = IVerifier(_verifier);
+        cap = IVinculumFinalisCap(_cap);
     }
 
     // ===== VF-STK-001/002/031: Create stake position =====
@@ -372,7 +386,10 @@ contract VinculumFinalisStake {
         uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
 
         // VF-STK-028: Cap check
-        uint256 remaining = VCLM_HARD_CAP - verifier.cumulativeVclmIssued();
+        // CL-84 / VF-SUP-002: Commitment Vault issuance and Treasury Reward
+        // Stake rewards draw from the same VCLM lifetime hard cap, owned by
+        // BASE-CAP. Previously this read the verifier and never consumed.
+        uint256 remaining = cap.remainingVclmCapacity();
 
         // CL-08 / VF-STK-029: terminal state at zero remaining VCLM capacity.
         if (remaining == 0 && !terminalState) {
@@ -406,6 +423,13 @@ contract VinculumFinalisStake {
         ep.mintedVclm = distributed;
         ep.allocated = true;
         ep.allocateTimestamp = block.timestamp;
+
+        // CL-84 / VF-SUP-001: every authorized issuance path reconciles
+        // against the global lifetime hard cap. Record the amount actually
+        // minted — `distributed` rounds down and may be less than totalReward.
+        if (distributed > 0) {
+            cap.recordVclmIssuance(distributed);
+        }
 
         // Mint VCLM to this contract (VF-STK-004: rewards in newly minted VCLM)
         vclmToken.mint(address(this), distributed);

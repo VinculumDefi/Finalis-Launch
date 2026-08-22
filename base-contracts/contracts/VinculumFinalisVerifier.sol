@@ -161,6 +161,15 @@ struct ProofPackage {
 // VinculumFinalisVerifier — the recognition boundary
 // ---------------------------------------------------------------------------
 
+interface IVinculumFinalisCap {
+    function recordVclmIssuance(uint256 amount) external returns (uint256);
+    function recordChonxIssuance(uint256 amount) external returns (uint256);
+    function cumulativeVclmIssued() external view returns (uint256);
+    function cumulativeChonxIssued() external view returns (uint256);
+    function remainingVclmCapacity() external view returns (uint256);
+    function remainingChonxCapacity() external view returns (uint256);
+}
+
 contract VinculumFinalisVerifier {
 
     // ===== Protocol constants (verbatim from Revision 6) =====
@@ -291,9 +300,12 @@ contract VinculumFinalisVerifier {
     // keccak256(handshakeIdentity) => count used
     mapping(bytes32 => uint256) public handshakeUsage;
 
-    // BASE-CAP: lifetime issuance
-    uint256 public cumulativeVclmIssued;
-    uint256 public cumulativeChonxIssued;
+    // BASE-CAP: lifetime issuance is owned by VinculumFinalisCap.
+    // CL-84: the Requirement Traceability Matrix assigns VF-SUP-001/002/003/013
+    // to BASE-CAP. These counters previously lived here, reachable only from
+    // verifyAndMint, which is why BASE-STAKE could read remaining capacity but
+    // never consume it.
+    IVinculumFinalisCap public cap;
 
     // BASE-ACT: CHONX activation
     bool public chonxActivated;
@@ -381,10 +393,13 @@ contract VinculumFinalisVerifier {
         address _vclmToken,
         address _chonxToken,
         address _pricePublisher,
-        uint256 _launchTimestamp
+        uint256 _launchTimestamp,
+        address _cap
     ) {
         require(_pricePublisher != address(0), "VF-DEP-002: zero price publisher");
         require(_launchTimestamp > 0, "VF-DEP-002: launchTimestamp not set");
+        require(_cap != address(0), "VF-DEP-002: zero cap");
+        cap = IVinculumFinalisCap(_cap);
         deployer = msg.sender;
         vclmToken = IERC20(_vclmToken);
         chonxToken = IERC20(_chonxToken);
@@ -652,7 +667,7 @@ contract VinculumFinalisVerifier {
         // VF-RAC-008: No RAC after VCLM capacity = 0 (fee verification still proceeds).
         // VF-SUP-012: At zero VCLM capacity, fees still reach Dev Fund but no RAC.
         recordedRacs[pkg.racIdentity] = true;
-        if (cumulativeVclmIssued < VCLM_HARD_CAP) {
+        if (cap.cumulativeVclmIssued() < VCLM_HARD_CAP) {
             // CL-30 / VF-ORC-012: the SAME accepted reference price determines
             // both Verified Gross USD Value and Verified USD Fee Value.
             // Deriving the fee proportionally would introduce a second rounding.
@@ -824,10 +839,10 @@ contract VinculumFinalisVerifier {
 
         // Step 13: Hard cap (VF-SUP-015)
         if (pkg.selectedOutputToken == 0) { // VCLM
-            uint256 remaining = VCLM_HARD_CAP - cumulativeVclmIssued;
+            uint256 remaining = cap.remainingVclmCapacity();
             require(issuanceAmount <= remaining, "VF-SUP-015: exceeds VCLM cap");
         } else { // CHONX
-            uint256 remaining = CHONX_HARD_CAP - cumulativeChonxIssued;
+            uint256 remaining = cap.remainingChonxCapacity();
             require(issuanceAmount <= remaining, "VF-SUP-015: exceeds CHONX cap");
         }
 
@@ -836,17 +851,20 @@ contract VinculumFinalisVerifier {
 
         // Mint tokens (BASE-EMIT)
         if (pkg.selectedOutputToken == 0) { // VCLM
-            cumulativeVclmIssued += issuanceAmount;
+            // BASE-CAP records; BASE-VERIFY mints. The returned figure is the
+            // cumulative lifetime issuance after this authorization.
+            uint256 newCumulative = cap.recordVclmIssuance(issuanceAmount);
             vclmToken.mint(pkg.baseRecipient, issuanceAmount);
 
-            // Check CHONX activation (BASE-ACT)
-            if (!chonxActivated && cumulativeVclmIssued >= CHONX_ACTIVATION_THRESHOLD) {
+            // Check CHONX activation (BASE-ACT) — VF-TOK-002 traces activation
+            // to BASE-ACT + BASE-VERIFY, not to BASE-CAP.
+            if (!chonxActivated && newCumulative >= CHONX_ACTIVATION_THRESHOLD) {
                 chonxActivated = true;
                 chonxActivationBlock = block.number;
                 emit ChonxActivated(block.number);
             }
         } else { // CHONX
-            cumulativeChonxIssued += issuanceAmount;
+            cap.recordChonxIssuance(issuanceAmount);
             chonxToken.mint(pkg.baseRecipient, issuanceAmount);
         }
 
@@ -948,12 +966,17 @@ contract VinculumFinalisVerifier {
     function getHandshakeUsage(string calldata handshakeIdentity) external view returns (uint256) {
         return handshakeUsage[keccak256(abi.encodePacked(handshakeIdentity))];
     }
-
     function getRemainingVclmCap() external view returns (uint256) {
-        return VCLM_HARD_CAP - cumulativeVclmIssued;
+        return cap.remainingVclmCapacity();
     }
-
     function getRemainingChonxCap() external view returns (uint256) {
-        return CHONX_HARD_CAP - cumulativeChonxIssued;
+        return cap.remainingChonxCapacity();
+    }
+    /// @notice Retained so existing readers keep working; BASE-CAP owns these.
+    function cumulativeVclmIssued() external view returns (uint256) {
+        return cap.cumulativeVclmIssued();
+    }
+    function cumulativeChonxIssued() external view returns (uint256) {
+        return cap.cumulativeChonxIssued();
     }
 }

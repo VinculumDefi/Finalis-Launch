@@ -20,7 +20,8 @@ async function freshVerifier() {
   const b = await T.deploy("B", "B", 10n ** 30n);
   const ts = (await ethers.provider.getBlock("latest")).timestamp;
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
-  return await V.deploy(await a.getAddress(), await b.getAddress(), sg[9].address, ts);
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+  return await V.deploy(await a.getAddress(), await b.getAddress(), sg[9].address, ts, await __cap.getAddress());
 }
 
 describe("CL-42 · custody class must not silently default", function () {
@@ -102,7 +103,9 @@ describe("CL-44 · output token discriminator is closed", function () {
     const chonx = await T.deploy("C","C",10n**30n);
     const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
-    const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), pub.address, launchTs);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), pub.address, launchTs, await __cap.getAddress());
+    await __cap.initialize(await v.getAddress(), await vclm.getAddress());
     await vclm.initialize(await v.getAddress(), "0x0000000000000000000000000000000000000000");
     await chonx.initialize(await v.getAddress(), "0x0000000000000000000000000000000000000000");
     const M = await ethers.getContractFactory("MockChainVerifier");

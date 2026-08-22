@@ -30,7 +30,8 @@ async function fresh() {
   const b = await T.deploy("B", "B", 10n ** 30n);
   const ts = (await ethers.provider.getBlock("latest")).timestamp;
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
-  const v = await V.deploy(await a.getAddress(), await b.getAddress(), sg[9].address, ts);
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+  const v = await V.deploy(await a.getAddress(), await b.getAddress(), sg[9].address, ts, await __cap.getAddress());
   return { v, pub: sg[9] };
 }
 

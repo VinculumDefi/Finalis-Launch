@@ -24,7 +24,8 @@ describe("CL-41 PROOF OF EXPLOIT · unvalidated assetPrecision in recordFeeAndRa
     const chonx = await T.deploy("C","C",10n**30n);
     const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
-    const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), pub.address, launchTs);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), pub.address, launchTs, await __cap.getAddress());
     const M = await ethers.getContractFactory("MockChainVerifier");
     const mock = await M.deploy();
     await v.registerAssetPrecision(ENV, ASSET, "MOCK", 18, 1, 0);   // TRUE decimals = 18
@@ -86,7 +87,8 @@ describe("CL-41 · pkg.assetPrecision is economically inert", function () {
     const chonx = await T.deploy("C","C",10n**30n);
     const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
-    const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), pub.address, launchTs);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), pub.address, launchTs, await __cap.getAddress());
     const M = await ethers.getContractFactory("MockChainVerifier");
     const mock = await M.deploy();
     await v.registerAssetPrecision(ENV, ASSET, "MOCK", 18, 1, 0);

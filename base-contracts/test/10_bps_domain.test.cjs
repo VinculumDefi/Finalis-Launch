@@ -23,11 +23,13 @@ async function deploy() {
   const synth = await T.deploy("S", "S", 10n ** 30n);
   const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
-  const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), sg[9].address, launchTs);
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+  const v = await V.deploy(await vclm.getAddress(), await chonx.getAddress(), sg[9].address, launchTs, await __cap.getAddress());
   const S = await ethers.getContractFactory("VinculumFinalisStake");
   const stake = await S.deploy(
     await vclm.getAddress(), await chonx.getAddress(),
-    await synth.getAddress(), await v.getAddress(), launchTs);
+    await synth.getAddress(), await v.getAddress(), launchTs, await __cap.getAddress());
+  await __cap.initialize(await v.getAddress(), await stake.getAddress());
   await vclm.initialize(await v.getAddress(), await stake.getAddress());
   await chonx.initialize(await v.getAddress(), ZERO);
   await synth.initialize(await v.getAddress(), ZERO);

@@ -27,14 +27,16 @@ async function deployStakeOnly() {
   // cumulativeVclmIssued and epochRewardBasis. Use the real Verifier with no
   // credits recorded, so the epoch is zero-eligible and we measure the LOOP,
   // not the distribution.
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
   const V = await ethers.getContractFactory("VinculumFinalisVerifier");
   const verifier = await V.deploy(
-    await vclm.getAddress(), await chonx.getAddress(), signers[9].address, launchTs);
+    await vclm.getAddress(), await chonx.getAddress(), signers[9].address, launchTs, await __cap.getAddress());
 
   const Stake = await ethers.getContractFactory("VinculumFinalisStake");
   const stake = await Stake.deploy(
     await vclm.getAddress(), await chonx.getAddress(),
-    await synth.getAddress(), await verifier.getAddress(), launchTs);
+    await synth.getAddress(), await verifier.getAddress(), launchTs, await __cap.getAddress());
+  await __cap.initialize(await verifier.getAddress(), await stake.getAddress());
 
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   return { deployer, vclm, stake, verifier, launchTs };

@@ -20,12 +20,18 @@ async function deploySystem() {
   const pricePublisher = (await ethers.getSigners())[9];
   const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
 
+  // CL-84 / A.12: BASE-CAP owns lifetime issuance accounting. Deployed first
+  // because both BASE-VERIFY and BASE-STAKE reconcile against it.
+  const Cap = await ethers.getContractFactory("VinculumFinalisCap");
+  const cap = await Cap.deploy(VCLM_HARD_CAP, CHONX_HARD_CAP);
+
   const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
   const verifier = await Verifier.deploy(
     await vclm.getAddress(),
     await chonx.getAddress(),
     pricePublisher.address,
-    launchTs
+    launchTs,
+    await cap.getAddress()
   );
 
   const Synth = await ethers.getContractFactory("VinculumFinalisSynth");
@@ -43,12 +49,15 @@ async function deploySystem() {
     await chonx.getAddress(),
     await synthToken.getAddress(),
     await verifier.getAddress(),
-    launchTimestamp
+    launchTimestamp,
+    await cap.getAddress()
   );
 
   // VF-DEP-004/006: one-shot initialization, then authority is gone.
   // VF-STK-004: only VCLM has a stake minter; CHONX/SYNTH pass address(0).
   const ZERO = "0x0000000000000000000000000000000000000000";
+  // VF-SUP-001/002: both authorized issuance paths reconcile against BASE-CAP.
+  await cap.initialize(await verifier.getAddress(), await stake.getAddress());
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ZERO);
   await synthToken.initialize(await verifier.getAddress(), ZERO);
@@ -57,7 +66,7 @@ async function deploySystem() {
   await verifier.configureDevFund("base", "devfund.source.address");
   await verifier.finalize();
 
-  return { deployer, vclm, chonx, synthToken, verifier, synth, stake, launchTimestamp, pricePublisher };
+  return { deployer, vclm, chonx, synthToken, verifier, synth, stake, cap, launchTimestamp, pricePublisher };
 }
 
 module.exports = { deploySystem, VCLM_HARD_CAP, CHONX_HARD_CAP, SYNTH_HARD_CAP };

@@ -193,7 +193,8 @@ describe("CL-02 · Verifier: deployment ceremony closes irreversibly", function 
     const b = await Token.deploy("B", "B", 1n);
     const pp = (await ethers.getSigners())[9];
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
-    const fresh = await v.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    const fresh = await v.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts, await __cap.getAddress());
     await expect(
       fresh.registerChainVerifier("base", ZERO)
     ).to.be.revertedWith("VF-DEP-002: zero chain verifier");
@@ -232,7 +233,8 @@ describe("VF-DEP-001 · issuance inactive until finalization", function () {
     const b = await Token.deploy("B", "B", 10n ** 30n);
     const pp = (await ethers.getSigners())[9];
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
-    const fresh = await V.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    const fresh = await V.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts, await __cap.getAddress());
     expect(await fresh.configurationFinalized()).to.equal(false);
   });
 });

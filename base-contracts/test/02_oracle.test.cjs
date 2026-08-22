@@ -104,9 +104,10 @@ describe("CL-01 · VF-ORC-007 signed price records", function () {
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
     const sig = await signBatch(verifier, pricePublisher, 1, [ASSET], [150_000_000n], ts);
 
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
     const other = await V.deploy(
-      await vclm.getAddress(), await chonx.getAddress(), pricePublisher.address, ts
+      await vclm.getAddress(), await chonx.getAddress(), pricePublisher.address, ts, await __cap.getAddress()
     );
     await expect(
       other.submitPriceBatch(1, [ASSET], [150_000_000n], ts, sig)
@@ -117,10 +118,11 @@ describe("CL-01 · VF-ORC-007 signed price records", function () {
 describe("CL-01 · price publisher is immutable", function () {
   it("VF-DEP-002: a zero price publisher cannot be constructed", async function () {
     const { vclm, chonx } = await deploySystem();
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
     const V = await ethers.getContractFactory("VinculumFinalisVerifier");
     await expect(
       V.deploy(await vclm.getAddress(), await chonx.getAddress(),
-               "0x0000000000000000000000000000000000000000", 1)
+               "0x0000000000000000000000000000000000000000", 1, await __cap.getAddress())
     ).to.be.revertedWith("VF-DEP-002: zero price publisher");
   });
 

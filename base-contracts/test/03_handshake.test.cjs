@@ -19,7 +19,8 @@ describe("CL-11 · VF-COM-006 handshake allowance registry", function () {
     const b = await Token.deploy("B", "B", 10n ** 30n);
     const pp = (await ethers.getSigners())[9];
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
-    return await V.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts);
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap")).deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+    return await V.deploy(await a.getAddress(), await b.getAddress(), pp.address, ts, await __cap.getAddress());
   }
 
   it("registers a one-use mechanism", async function () {
