@@ -160,3 +160,81 @@ Not construction. Verification: 33 of the 36 `src/lib` modules have not been
 read, and the production-versus-simulation status of `vfVerifierEngine.js` and
 `vfProofAdapter.js` is unestablished — the latter is explicitly marked
 RED-TEAM / NON-PRODUCTION.
+
+
+---
+
+# Appendix — Closure of the Case 1 Protocol Construction Queue
+
+**Repository state:** `c8fee08`
+**Date:** 2026-08-22
+
+## Final unresolved classification
+
+Every architecture component in the Component Implementation Inventory resolved
+to an implementation, an external service, or "satisfied by construction" —
+with one exception, which is resolved here.
+
+### A.18 `DEPLOY-MANIFEST`
+
+**Revision 6 requirements**
+- VF-DOC-005 (§0.2) — revision designation recorded in Appendix D only
+- VF-XCH-003 (§11.1) — deployment records the exact canonical network and
+  chain id per environment. Marked **DEFERRED**; canonical chain ids are a
+  deferred input.
+- VF-DEP-005 (§15) — the manifest records addresses, ids, hashes, compiler and
+  lockfile versions and bytecode, and preserves the registry artifact and
+  asset-precision metadata
+
+**Architectural component**
+`DEPLOY-MANIFEST`, appearing alone in VF-XCH-003 and VF-DEP-005, and as
+`DOC-GOV + DEPLOY-MANIFEST` in VF-DOC-005.
+
+**Repository evidence**
+Recorded as **Not located** in `standards/COMPONENT_IMPLEMENTATION_INVENTORY_v1.md`.
+No file in the repository implements it.
+
+**Classification: deployment / configuration**
+
+The Requirement Traceability Matrix chain column reads **`Deployment`** for
+VF-XCH-003 and VF-DEP-005, and **`Governance process + manifest`** for
+VF-DOC-005. It reads neither `Base` nor `Source` nor `Off-chain`.
+
+**Rationale.** The governing requirements specify a manifest recording deployed
+addresses, canonical chain identifiers, compiler versions, bytecode hashes,
+lockfiles, registry artifacts and asset-precision metadata. Every one of those
+values comes into existence at deployment. **The artifact cannot be authored
+before the thing it records exists.** It documents deployment state; it is not
+protocol implementation. No contract, module or program implements a deployment
+manifest — it is produced by the act of deploying.
+
+---
+
+## Conclusion
+
+After applying the Reviewer Startup Procedure, the Build Classification, the
+Component Implementation Inventory, the Requirement Traceability Matrix and the
+Architecture Design, **no remaining Case 1 protocol construction has been
+identified in the repository.**
+
+Remaining work consists of:
+
+- deployment,
+- configuration,
+- external infrastructure,
+- evidence generation,
+- and architectural items already classified outside Case 1.
+
+## What this does not assert
+
+This is **not** a claim that the protocol is deployed, that any chain is live,
+or that configuration is complete. Those are separate phases. It asserts only
+that no protocol code required by Revision 6 has been identified as absent.
+
+## Reopening discipline
+
+**Any future claim of additional protocol construction must identify new
+repository evidence or a governing-artifact change that invalidates this
+appendix.** A commit that reopens the construction queue must cite that
+requirement and that evidence. Speculation, recollection and implementation
+preference are not sufficient.
