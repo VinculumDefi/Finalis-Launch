@@ -1,5 +1,7 @@
 # Build Classification — Frozen v1
 
+> **SUPERSEDED IN SCOPE — read the correction below before relying on this.**
+
 **Date:** 2026-08-22
 **Basis:** Architecture Design C.1–C.17 status lines; repository contract and
 directory listing at commit `a086746`.
@@ -108,3 +110,53 @@ That is analysis and evidence, not implementation.
 **No protocol construction remains that the governing artifacts authorize.**
 
 The next phase is auditing what has been built, not finding more to build.
+
+
+---
+
+## SCOPE CORRECTION — added 2026-08-22, same day
+
+**This document classified environments only. It did not classify components,
+and its conclusion was stated more broadly than its evidence supported.**
+
+The table below answers: *for each of the seventeen environments, is protocol
+code missing?* That question was answered correctly from the C.1–C.17 status
+lines, and those rows stand.
+
+What it did **not** ask is whether every architecture component A.1–A.21 is
+implemented. Immediately after this document was frozen, four components were
+raised as possibly missing — `A.5 PRICE-FETCH`, `A.6 PRICE-DELIVER`,
+`A.7 SRC-EVID`, `A.8 RELAY` — none of which appears anywhere in the table.
+
+**Those four were then checked against the repository and the governing
+artifacts. All four are resolved:**
+
+| Component | Finding |
+|---|---|
+| A.5 `PRICE-FETCH` | Implemented — `scripts/vinculum_price_fetcher_v9.py`, `base44/functions/fetchAssetPrice` |
+| A.6 `PRICE-DELIVER` | Implemented — `src/lib/vfPriceService.js` and the Base receiver `submitPriceBatch` |
+| A.7 `SRC-EVID` | Implemented — `src/lib/vfProofNormalizer.js`, whose header cites *"SRC-EVID + BASE-VERIFY"* |
+| A.8 `RELAY` | No implementation required. Every requirement is a prohibition — VF-XCH-012, VF-SEC-005, VF-XCH-017 — already satisfied on-chain. Submission is permissionless by construction. |
+
+**The reason they were raised at all** is that the reviewer read the commit
+history, saw only Solidity, and inferred absence. The repository contains
+6,201 lines in `src/lib/` alone, plus Rust, CosmWasm, Python and serverless
+functions. **Implementation is not synonymous with Solidity.**
+
+### Governing scope
+
+For **environments**, this document remains authoritative.
+
+For **components**, the authoritative artifact is
+`standards/COMPONENT_IMPLEMENTATION_INVENTORY_v1.md`, which maps every
+architecture component to its implementation across all languages and marks
+each row verified or present-but-unexamined.
+
+**Neither document alone answers "is the build complete."** Read both.
+
+### What remains open after both
+
+Not construction. Verification: 33 of the 36 `src/lib` modules have not been
+read, and the production-versus-simulation status of `vfVerifierEngine.js` and
+`vfProofAdapter.js` is unestablished — the latter is explicitly marked
+RED-TEAM / NON-PRODUCTION.
