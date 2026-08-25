@@ -135,8 +135,12 @@ directly.
 **Depends on.** Nothing. Everything else depends on it.
 **Evidence.** None inherent. It describes; it does not prove.
 **Post-deployment.** None.
-**Blocked by** `[OPEN]` **3** — which audience it primarily serves. The
-decision determines what the surface is, not merely how it reads.
+**Primary audience — decision 3, CLOSED.** The **Intelligent Newcomer**: a
+thoughtful person curious enough to understand before acting, assumed to have
+neither deep blockchain expertise nor complete unfamiliarity. **Teaches before
+asking for action; does not optimise for speculation, urgency, or immediate
+conversion.** All six audiences remain fully supported; the Intelligent
+Newcomer establishes tone, pacing and depth. Canonical record: Index §6.2.
 
 ### S02 · Trust Cluster
 
@@ -178,10 +182,11 @@ presentation.
 **Evidence.** Registry contents; price source and update time per PRC-10.
 **Post-deployment.** **Registry immutability is provable only post-deployment**
 (Index §7.2). Asset contents are available before.
-**Blocked by** `[OPEN]` **15** — whether the display set is closed to PRC-05's
-eight fields. This determines what the surface may contain and must be resolved
-before it is designed. **Also governed by** `[OPEN]` **19** — the scope of
-"public" for price obligations.
+**Decisions 15 and 19, CLOSED (Index §6.2).** The display set is
+**permissive-open**: the eight enumerated fields are expressly authorised and
+further fields are permitted subject to VF-PUB-001. **Price Source and Last
+Updated accompany every price the product displays**, on this surface and
+everywhere else.
 
 ### S04 · Token Statistics
 
@@ -199,8 +204,10 @@ Has CHONX activated? Is the Forge available yet?
 **Evidence.** On-chain state, readable by anyone.
 **Post-deployment.** **Entirely.** Lifetime issuance, capacity and activation
 are available only post-deployment (Map A overlay O4).
-**Governed by** `[OPEN]` **20** — whether a supply projection or decay schedule
-constitutes an implied economic promise under PRC-04.
+**Decision 20, CLOSED (Index §6.2).** Specification-derived mechanics —
+including the emission schedule and cumulative issuance against capacity — **are
+facts and may be stated plainly.** Excluded is any projection or comparison
+presented as indicative of what a participant will receive.
 
 ### S05 · Market and Listing Disclosures
 
@@ -219,10 +226,11 @@ activity change what the protocol does?
 **Evidence.** The specification itself; VF-RAC-005's fixed $0.10 reward
 reference as the concrete demonstration that rewards do not track market price.
 **Post-deployment.** None.
-**Blocked by** `[OPEN]` **17** — whether market data appears on public surfaces
-at all — and `[OPEN]` **18** — whether listing effort is communicated at all.
-Together these determine whether this surface exists as a distinct thing or is
-absorbed into S01 and S02.
+**Decisions 17 and 18, CLOSED (Index §6.2).** This surface **exists
+distinctly.** It carries the non-guarantees and **one factual statement that
+listing pursuit is a development objective** — no timeline, no likelihood, no
+repetition elsewhere. **No third-party market or venue data appears on it or on
+any public surface.**
 
 ---
 
@@ -254,10 +262,9 @@ registry.
 `required` in Map A Step 2** — not a presentation choice. **PRC-10's price
 source and update time attach to any price shown here**, subject to `[OPEN]`
 19.
-**Shaped by** `[OPEN]` **16** — how PRC-06's accuracy obligation is satisfied.
-Per the revised PRC-06, this is expected to be satisfied by presenting the
-commitment's own figures as the commitment's own figures, not by teaching a
-distinction.
+**Decision 16, CLOSED (Index §6.2).** Satisfied by presenting the commitment's
+own figures as the commitment's own figures. **No explanatory apparatus about
+price-object distinctions appears on any participant-facing surface.**
 
 ### S07 · Commitment Tracking
 
@@ -277,9 +284,12 @@ something wrong? What happens if it never completes?
 **Carries a required obligation.** **Pending disposition is marked `required
 behaviour`** in Map A Step 4 — how a pending attempt is disposed of is
 specification-governed, not a design choice.
-**Shaped by** `[OPEN]` **2** — optional notifications. Map A is explicit that
-the journey is never notification-driven; the application is an instrument
-panel, not an autopilot.
+**Decision 2, CLOSED — the Application remains intentionally thin.** A
+notification is a convenience feature and is not adopted on that basis. The only
+admitted test is **prevention of genuine operational mistakes**, which any
+future proposal must meet rather than assume. Map A remains explicit: the
+journey is never notification-driven; the application is an instrument panel,
+not an autopilot. Canonical record: Index §6.2.
 
 ### S08 · Proof Surface
 
@@ -297,10 +307,13 @@ someone else? Does it matter who?
 **Evidence.** Proof submission transactions; permissionless submission is
 demonstrable by anyone submitting.
 **Post-deployment.** Entirely.
-**Blocked by** `[OPEN]` **1** — the application's role in proof construction.
-Map A frames this as determining "the application's thickness." **This is the
-single open decision with the largest effect on implementation scope**, and it
-is unresolved. The **evidence schema belongs in documentation regardless** —
+**Governed by decision 2, not blocked.** Decision 1 — the application's role in
+proof construction — is **reclassified as an implementation and UX decision**
+(Index §6.2). The accepted principle answers the architectural question: this
+surface exists only insofar as it is **actually and defensibly necessary** for
+successful participation, understanding, verification, or prevention of genuine
+operational mistakes. Whether proof construction meets that test is determined
+by operational fact. The **evidence schema belongs in documentation regardless** —
 Map A says so explicitly, so S29 proceeds whatever is decided.
 
 ### S09 · Issuance Status
@@ -406,12 +419,15 @@ producing it is not.
 **Evidence.** Epoch boundaries computable from T0; position timestamps
 on-chain; eligibility independently determinable.
 **Post-deployment.** Entirely.
-**Carries the protocol's hardest presentation problem.** `[OPEN]` **9** — the
-eligibility rule requires a position be active at the exact beginning of epoch
-N, continuously through N, and still active at the scheduled end of N+1. Map B
-names it **the least intuitive rule in the protocol and the most likely to be
-misunderstood**. Combined with VF-STK-025, **a participant can lose an
-already-earned entitlement by letting a position lapse one day early.**
+**Carries the protocol's hardest presentation problem — and is its canonical
+product treatment.** Per Index §6.2, **the rule's canonical `[SPEC]` source is
+Presentation Map B Stage 3, and this entry is its canonical product
+treatment.** Downstream artifacts point here rather than restating it.
+`[OPEN]` **9** — the eligibility rule requires a position be active at the exact
+beginning of epoch N, continuously through N, and still active at the scheduled
+end of N+1. Map B names it **the least intuitive rule in the protocol and the
+most likely to be misunderstood**. Combined with VF-STK-025, **a participant can
+lose an already-earned entitlement by letting a position lapse one day early.**
 **Also shaped by** `[OPEN]` **13** — whether terminal state is presented before
 it is reached.
 
@@ -587,6 +603,12 @@ happens when it does?
 **Depends on.** S24 · S25.
 **Evidence.** **Verification transactions — available only post-deployment.**
 **Post-deployment.** Entirely.
+**Failure reporting — accepted, no new requirement.** Truthful presentation of
+both successful and unsuccessful verification outcomes **derives sufficiently
+from Charter principles 3 and 7** — evidence over assertion, and honest
+communication of limitations. **This is deliberately not elevated into a
+protocol requirement.** A dashboard showing only successes is a Charter
+violation, not a specification violation, and that is the correct classification.
 
 ### S23 · Epoch Dashboard
 
@@ -605,10 +627,11 @@ finalized them? What was allocated?
 **Evidence.** **T0 and every boundary computable by anyone**; finalization
 transactions public.
 **Post-deployment.** Entirely — T0 is defined by protocol launch.
-**Blocked by** `[OPEN]` **8** — whether the application offers epoch
-finalization or only observes it. **This determines whether S23 is an
-observation surface or also a performance surface**, which changes its nature
-rather than its appearance. Overlay P1: finalization is permissionless, exactly
+**Decision 8, RECLASSIFIED (Index §6.2).** Finalization is permissionless and
+an epoch finalizes regardless of who acts, so offering it is **not necessary for
+successful participation** under the accepted thin-Application principle.
+Whether the Workspace offers it is implementation and UX. **This surface remains
+an observation surface either way.** Overlay P1: finalization is permissionless, exactly
 as proof submission is — **anyone may act, and it changes nothing about the
 outcome.**
 
@@ -644,8 +667,9 @@ lets anyone confirm deployed code matches published source.
 code and registry immutability as post-deployment. Before deployment, **O8 /
 VF-EXT-002 requires unavailable entries be reported as incomplete rather than
 replaced with an invented value.**
-**Blocked by** `[OPEN]` **21** — whether the manifest is surfaced beyond the
-repository, and in what form.
+**Decision 21, CLOSED (Index §6.2).** The manifest is **published as a public
+surface.** Form is implementation. Unavailable entries are reported as
+incomplete per VF-EXT-002.
 
 ### S25 · Traceability Publication
 
@@ -717,8 +741,8 @@ specification.
 **Depends on.** Nothing.
 **Evidence.** The specification and its hash.
 **Post-deployment.** None. **Available now.**
-**Blocked by** `[OPEN]` **14** — whether the specification and its hash are
-published on public surfaces and how prominently.
+**Decision 14, CLOSED (Index §6.2).** The specification **is published, with
+its hash alongside it.** Prominence is UX.
 **Architectural note.** PRC-01's product consequence: **no product surface may
 position itself as the authoritative description of protocol behaviour**,
 because a more authoritative description is preserved and available.
@@ -884,7 +908,7 @@ checkable rather than asserted claims. **The verifier and skeptic audiences are
 served from Phase 0**, which is unusual and deliberate: Map A treats them as
 first-class.
 
-**Blocked by.** `[OPEN]` 5 (S25), `[OPEN]` 14 (S27's public form).
+**Blocked by.** `[OPEN]` 5 (S25) — the only remaining blocker in the product.
 
 ## Phase 1 · Public understanding
 
@@ -900,12 +924,8 @@ have not acted; PRC-04 governing all four surfaces identically.
 
 **Unlocks.** Everything participant-facing. S03 is the entry to S06.
 
-**Blocked by.** `[OPEN]` 3 (S01 — determines what the surface *is*), `[OPEN]`
-15 (S03 — determines what it may contain), `[OPEN]` 17 and 18 (S05 — determine
-whether it exists distinctly), `[OPEN]` 19 (price obligation scope).
-
-**Five of the nine blocking open decisions sit on this phase.** They should be
-resolved as a set before Phase 1 begins.
+**Not blocked.** Decisions 15, 17, 18 and 19 are closed (Index §6.2). **This
+phase may begin immediately.**
 
 ## Phase 2 · Commitment application
 
@@ -922,10 +942,10 @@ the seams.
 
 **Unlocks.** Phase 3 entirely. Area 3 entirely.
 
-**Blocked by.** `[OPEN]` **1** — the application's role in proof construction,
-which Map A frames as determining **the application's thickness**. This is the
-largest scope uncertainty in the inventory and it sits in the middle of the
-critical path. **It should be resolved before Phase 2 begins, not during it.**
+**Not blocked.** Decision 1 is reclassified as implementation and UX, governed
+by the accepted thin-Application principle (Index §6.2). **Implementation scope
+still varies with how it is answered**, but the answer is no longer an
+architectural prerequisite to beginning the phase.
 
 **Note.** S11 must work where issuance never occurred — §12 keeps principal
 releasable even after permanent verification failure. That is not an edge case
@@ -954,7 +974,7 @@ possible only once deployment has occurred — which Phase 2 requires anyway.
 **Unlocks.** Real participant feedback before the larger Area 3 build. S24
 unlocks S02's claims moving from asserted to demonstrable.
 
-**Blocked by.** `[OPEN]` 21 (S24's public form).
+**Not blocked.** Decision 21 is closed (Index §6.2).
 
 ## Phase 4 · Participation application
 
@@ -971,8 +991,7 @@ Map A Step 7.
 
 **Unlocks.** The full participation lifecycle.
 
-**Blocked by.** `[OPEN]` 8 (S23 — determines whether it performs or only
-observes).
+**Not blocked.** Decision 8 is reclassified as implementation and UX (Index §6.2).
 
 **Highest-risk content in the whole inventory.** S13 carries `[OPEN]` 9, the
 eligibility rule Map B names as the least intuitive in the protocol; S16
@@ -1003,7 +1022,7 @@ requires incompleteness be reported rather than papered over.**
 | Phase | Surfaces | Gate |
 |---|---|---|
 | 0 · Reference foundation | S25, S26, S27, S30 | `[OPEN]` 5, 14 |
-| 1 · Public understanding | S01, S02, S03, S05 | `[OPEN]` 3, 15, 17, 18, 19 |
+| 1 · Public understanding | S01, S02, S03, S05 | `[OPEN]` 15, 17, 18, 19 |
 | 2 · Commitment application | S06–S11 | `[OPEN]` 1 · requires deployment |
 | 3 · Handshake and observation | S20, S21, S22, S24, S31 | `[OPEN]` 21 · requires Phase 2 |
 | 4 · Participation application | S12–S17, S23, S32 | `[OPEN]` 8 · requires Phase 2 |
@@ -1022,48 +1041,47 @@ it looks.
 
 | # | Decision | Surfaces affected | Blocks? | May proceed before resolution? |
 |---|---|---|---|---|
-| 1 | Application's role in proof construction | S08, S06, S07 | **Yes** | No — determines application thickness and Phase 2 scope |
-| 2 | Optional notifications | S07, S11 | No | Yes — Map A: the journey is never notification-driven |
-| 3 | Home page primary audience | S01 | **Yes** | No — determines what the surface is |
+| 1 | Application's role in proof construction | S08, S06, S07 | **No — reclassified** | Yes — implementation/UX governed by decision 2; Index §6.2 |
+| 2 | ~~Optional notifications~~ | S07, S11 | — | **CLOSED** — Application remains intentionally thin; Index §6.2 |
+| 3 | ~~Home page primary audience~~ | S01 | — | **CLOSED** — Intelligent Newcomer; Index §6.2 |
 | 4 | Trust cluster explains vs asserts | S02 | No | Yes — affects depth, not existence |
-| 5 | Whether and how §16 traceability is published | S25, S22, S30 | **Yes** | No — S25 exists only if published |
+| 5 | Whether and how §16 traceability is published | S25, S22, S30 | **Yes** | No — S25 exists only if published. **The only remaining blocker** |
 | 6 | Signing-key risk disclosure | S02, S21, S05 | No | Yes — but resolve before public launch; VF-EXT-002 governs reporting |
 | 7 | Presentation basis for post-issuance capabilities | S18, S19, S12–S17 | No | Yes — **appears discharged by Map B**; Index §6.1 flags closure as unrecorded |
-| 8 | Application offers epoch finalization or observes | S23, S14 | **Yes** | No — determines whether S23 performs or observes |
+| 8 | ~~Application offers epoch finalization or observes~~ | S23 | **No — reclassified** | Yes — implementation/UX under decision 2; §6.2 |
 | 9 | Making the eligibility rule comprehensible | S13, S29 | No | Yes — but **highest misunderstanding risk in the protocol** |
 | 10 | Communicating the extension gap rule | S16, S29 | No | Yes — but consequence is irreversible |
 | 11 | Forge as conversion or milestone | S18 | No | Yes — framing, and protocol-gated regardless |
 | 12 | Disclosing the rounding remainder | S14, S29 | No | Yes — overlay P2 is a disclosure, not a defect |
 | 13 | Presenting terminal state before it is reached | S20, S13, S29 | No | Yes |
-| 14 | Publishing the specification and its hash | S27, S02 | **Yes** | No — determines whether S27 is a public surface |
-| 15 | Registry display set closed or open | S03, S21 | **Yes** | No — determines what the surface may contain |
-| 16 | How PRC-06's accuracy obligation is satisfied | S06, S21, S32 | No | Yes — expected to be satisfied by presenting commitment figures as such |
-| 17 | Market or venue data on public surfaces | S05, S04 | **Yes** | No — determines whether S05 exists distinctly |
-| 18 | Communicating listing effort at all | S05, S01 | **Yes** | No — same |
-| 19 | Scope of "public" under VF-PUB-002 | S03, S06, S21, S32 | **Yes** | No — determines the reach of every price obligation |
-| 20 | What constitutes an economic promise at the margin | S01–S05, S32 | No | Yes — but S32 sits closest to the edge |
-| 21 | Manifest surfaced publicly, and in what form | S24, S02, S22 | **Yes** | No — determines whether S24 is a product surface |
-| 22 | Consistency review on specification revision | All | No | Yes — process obligation |
+| 14 | ~~Publishing the specification and its hash~~ | S27, S02 | — | **CLOSED** — published with hash; §6.2 |
+| 15 | ~~Registry display set closed or open~~ | S03, S21 | — | **CLOSED** — permissive-open; §6.2 |
+| 16 | ~~How PRC-06's accuracy obligation is satisfied~~ | S06, S21, S32 | — | **CLOSED** — by presentation; §6.2 |
+| 17 | ~~Market or venue data on public surfaces~~ | S05, S04 | — | **CLOSED** — none appears; §6.2 |
+| 18 | ~~Communicating listing effort at all~~ | S05 | — | **CLOSED** — stated once, factually; §6.2 |
+| 19 | ~~Scope of "public" under VF-PUB-002~~ | S03, S06, S21, S32 | — | **CLOSED** — applied uniformly; §6.2 |
+| 20 | ~~What constitutes an economic promise at the margin~~ | S01–S05, S32 | — | **CLOSED** — future-value test; §6.2 |
+| 21 | ~~Manifest surfaced publicly, and in what form~~ | S24, S02, S22 | — | **CLOSED** — published; §6.2 |
+| 22 | ~~Consistency review on specification revision~~ | All | — | **CLOSED** — governed by VF-PUB-001; §6.2 |
 
-## The nine blocking decisions, by phase
+## The one remaining blocking decision
 
-| Phase | Blocking decisions |
+| Phase | Blocking decision |
 |---|---|
-| 0 | 5, 14 |
-| 1 | 3, 15, 17, 18, 19 |
-| 2 | 1 |
-| 3 | 21 |
-| 4 | 8 |
+| 0 | 5 — whether and how §16 traceability is published |
 
-**Phase 1 carries five of nine.** They concern what public surfaces may contain
-and say, and they interlock — 15, 17, 18 and 19 all turn on how §17's
-permissions and scope are read. **Resolving them as one deliberate set is
-likely more efficient than resolving them one surface at a time**, though the
-decision to do so is not made here.
+**Every other phase is unblocked.** Decisions 14, 15, 16, 17, 18, 19, 20, 21 and
+22 are closed at Index §6.2; decisions 1 and 8 are reclassified as
+implementation and UX under the accepted thin-Application principle.
 
-**Decision 1 is the largest single scope uncertainty** and it sits in the
-middle of the critical path. Nothing about Phase 2's size can be estimated
-until it is settled.
+**Decision 5 blocks only S25's existence**, not any other surface and not the
+architecture. It is a publish-or-not choice with the same shape as decision 21,
+and Phase 0's other three surfaces proceed regardless.
+
+**Decision 1 no longer blocks.** It is reclassified as an implementation and UX
+decision governed by the accepted thin-Application principle. Phase 2's scope
+still varies with how it is answered — but that is estimation, not architecture,
+and the phase may begin.
 
 ---
 

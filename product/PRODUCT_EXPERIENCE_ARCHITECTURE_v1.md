@@ -394,14 +394,7 @@ more than expand:
 > The product exists to progressively replace uncertainty with understanding,
 > understanding with evidence, and evidence with independent verification.
 
-**Three substitutions. Four states.**
-
-The four participant states are defined by the Product Design Charter.
-
-**[DESIGN]** The mapping of those states onto the experience phases below is a
-product design derivation based on the accepted Presentation Maps and this
-Experience Architecture. The Charter defines the states; it does not prescribe
-how they align with the experience phases.
+**Three substitutions. Four states.** They map onto the phases as follows.
 
 | State | Phases | What changed |
 |---|---|---|
@@ -488,7 +481,9 @@ N, and still active at the scheduled end of N+1. Combined with VF-STK-025, **a
 participant can lose an already-earned entitlement by letting a position lapse
 one day early.**
 
-**These are open decisions 9 and 10 and this document resolves neither.** It
+**Canonical sources: Presentation Map B Stage 3 for the rule; Product Surface
+Architecture S13 for its product treatment** (Index §6.2). **These are open
+decisions 9 and 10 and this document resolves neither.** It
 establishes only the dependency: **both must be understood before a position is
 created**, not at the moment they bite. That is principle 2 applied, and it is
 where the tension named in Section 2 lands.
@@ -790,7 +785,8 @@ checkable.
 ## Technical Communicator
 
 **Finding 8 — the principle 2 / principle 5 tension is real and structural.**
-Named in Section 2 and again in 7.2. **It is open decision 9 and is not
+Named in Section 2 and again in 7.2, both now pointing to the canonical sources
+designated in Index §6.2. **It is open decision 9 and is not
 resolvable by this artifact**; naming it twice is deliberate, since a
 contributor reading only Section 7 would otherwise meet it without warning.
 

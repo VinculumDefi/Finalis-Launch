@@ -202,7 +202,7 @@ re-derived from the Master Specification if it is needed.
 
 # 3 · How the artifacts relate
 
-## 3.1 The authority ladder
+## 3.1 Artifact relationships
 
 ```
         MASTER SPECIFICATION REVISION 6
@@ -328,11 +328,11 @@ v1. That is the specific error the `[REV7]` marking now prevents.
 Thirteen, carried forward unchanged. Map A numbered 1–7; Map B continued at 8.
 **Future decisions continue this single sequence.**
 
-| # | Decision | Affects | Source |
-|---|---|---|---|
-| 1 | The application's role in proof construction | Step 5; the application's thickness | Map A |
-| 2 | Whether optional notifications are offered | Step 8 convenience only | Map A |
-| 3 | Which audience the home page primarily serves | Home page | Map A |
+| # | Decision | Affects | Source | Status |
+|---|---|---|---|---|
+| 1 | The application's role in proof construction | Step 5 | Map A | **RECLASSIFIED** — implementation/UX, governed by decision 2; see §6.2 |
+| 2 | ~~Whether optional notifications are offered~~ | Step 8 convenience only | Map A | **CLOSED** — see 6.2 |
+| 3 | ~~Which audience the home page primarily serves~~ | Home page | Map A | **CLOSED** — see 6.2 |
 | 4 | How much the trust cluster explains versus asserts | Public pages | Map A |
 | 5 | Whether and how §16 traceability is published | Verification surface | Map A |
 | 6 | Whether signing-key risk is publicly disclosed, and where | Governed by VF-EXT-002; anticipated by `[REV7]` VF-ORC-016 | Map A |
@@ -344,7 +344,159 @@ Thirteen, carried forward unchanged. Map A numbered 1–7; Map B continued at 8.
 | 12 | How the inaccessible rounding remainder is disclosed | Overlay P2 | Map B |
 | 13 | Whether terminal state is presented before it is reached | Overlay P3 | Map B |
 
-## 6.1 Status question on decision 7
+## 6.2 Closed product decisions
+
+**This section is the canonical record of closure.** Downstream artifacts point
+here rather than restating a resolution. A decision is closed only by an
+operator decision recorded here, never by a derivation.
+
+### Decision 2 — CLOSED · Workspace philosophy
+
+**Resolution.** The Application remains **intentionally thin**. It exists only
+to support participant-specific information, successful protocol participation,
+participant understanding, participant verification, and prevention of genuine
+operational mistakes. **It does not accumulate convenience features merely
+because they are technically possible**, and becomes richer only where the
+protocol genuinely requires additional participant functionality.
+
+**Effect on the notification question.** A notification is a convenience feature
+and is not adopted on that basis. The one admitted test is *prevention of
+genuine operational mistakes* — which is the criterion any future proposal must
+meet, not a standing permission.
+
+**Governs decision 1, which is hereby reclassified.** Decision 1 asks what role
+the application takes in proof construction. **It is no longer a major
+architectural uncertainty.** The accepted philosophy answers the architectural
+question: the Workspace contains only functionality **actually and defensibly
+necessary** for successful protocol participation, participant understanding,
+participant verification, or prevention of genuine operational mistakes.
+
+Whether proof construction meets that test is an **implementation and UX
+decision constrained by an accepted principle** — determined by operational
+fact, not by architecture. It no longer blocks implementation and is no longer
+counted among the blocking decisions.
+
+**The same reclassification applies to every future question about individual
+Workspace capabilities.** They are governed by this principle rather than
+escalated to architecture.
+
+### Decision 3 — CLOSED · Home page primary audience
+
+**Resolution.** The primary audience is the **Intelligent Newcomer** — a
+thoughtful person curious enough to understand before acting. The home page
+assumes neither deep blockchain expertise nor complete unfamiliarity. **It
+teaches before asking for action and does not optimise for speculation,
+urgency, or immediate conversion.**
+
+**All six audiences remain fully supported.** The Intelligent Newcomer
+establishes tone, pacing and depth — not exclusivity of service.
+
+### Product naming
+
+**Internal architectural term: Application. Participant-facing name:
+Workspace.**
+
+A product naming decision only. **Protocol terminology is unchanged** —
+Appendix B of the Master Specification holds the canonical terms, and
+"Workspace" never describes protocol behaviour.
+
+### Canonical explanation — the eligibility rule
+
+The two-epoch eligibility rule accumulated restatements across seven locations
+in six artifacts. **Canonical sources are hereby designated:**
+
+- **The rule itself** — Presentation Map B, Stage 3. `[SPEC]`, accepted, frozen.
+- **Its product treatment** — Product Surface Architecture, S13.
+
+**Downstream artifacts point to these rather than restating the rule in full.**
+Restatement is retained only where a reader of that surface needs the rule in
+front of them — Participation Rules Reference and the Workspace position
+surface. **Clarity is not reduced; duplication is.**
+
+### §17 resolutions — decisions 14, 15, 16, 17, 18, 19, 20, 21, CLOSED
+
+Closed together because they interlock on one question: how §17's permissions
+and scope are read. **The governing standard is the Charter as accepted — tell
+the truth, teach before asking for action, replace uncertainty with
+understanding. No stricter standard is created here.**
+
+**14 · The specification and its hash are published.** PRC-01 preserves the
+human-readable specification; Charter principle 4 requires that a participant be
+able to verify rather than trust. **A preserved copy nobody can reach verifies
+nothing.** The hash is published alongside it, because the hash is what makes
+the copy checkable. **Prominence is UX, not architecture.**
+
+**15 · The registry display set is permissive-open.** §17.1 states a permission —
+*may display* — not a closed enumeration, and **VF-PUB-001 is already sufficient
+governance for anything additional**: every field must be accurate and
+consistent with the current specification. Reading it as closed would forbid
+displaying asset classification, which PRC-02 requires the machine-readable
+registry to preserve and which aids understanding. **Inventing a restriction
+§17 does not state is not caution; it is a defect.** The eight enumerated fields
+are expressly authorised; further fields are permitted subject to VF-PUB-001,
+and Price Source and Last Updated remain mandatory wherever price appears.
+
+**16 · PRC-06's accuracy obligation is satisfied by presentation, not by
+instruction.** Already resolved in substance at PRC-06: the commitment's own
+figures are presented as the commitment's own figures. **No explanatory
+apparatus about price-object distinctions is required on any participant-facing
+surface.** Implementation guidance, not architecture.
+
+**17 · No third-party market or venue data appears on public surfaces.** Venue
+activity modifies no protocol calculation (VF-PUB-003). Displaying market data
+would require continuous disambiguation from the protocol's own figures,
+**adding confusion without adding understanding.** The protocol's independence
+from market price is communicated once, factually, at the disclosures surface —
+VF-RAC-005's permanent $0.10 reward reference is the concrete demonstration.
+
+**18 · Listing intent is stated once, factually, and never again.** §17.2 makes
+it a development objective. **Silence would conceal an intention that exists**,
+which Charter principle 7 does not permit. It appears once at the disclosures
+surface as an objective — **no timeline, no likelihood, no expectation, no
+roadmap, and no repetition elsewhere.**
+
+**Consequence for S05.** Decisions 17 and 18 together settle it: **S05 exists as
+a distinct surface**, carrying the non-guarantees and the single listing
+statement, and carrying no market data.
+
+**19 · "Public" is resolved by applying the obligation uniformly.** Rather than
+adjudicate whether VF-PUB-002 reaches behind wallet connection, **Price Source
+and Last Updated accompany every price the product displays, in the Workspace as
+on the website.** A participant deciding on a commitment needs that context more
+than a browser does. This is two data elements beside a figure — **proportionate,
+not a warning** — and it removes the ambiguity rather than ruling on it.
+
+**20 · Economic promise, at the margin.** The test is whether a statement
+asserts or implies a **future value outcome.** Specification-derived mechanics
+do not: the emission schedule, a computed weight, a computed issuance amount,
+cumulative issuance against capacity, and the fixed $0.10 reward reference are
+all facts about how the protocol operates and **may be stated plainly.** What is
+excluded is any projection, expectation, comparison, or historical price series
+presented as indicative of what a participant will receive. **Editorial
+guidance, not a new prohibition.**
+
+**21 · The deployment manifest is published as a public surface.** PRC-03
+requires it exist; the verifier and skeptic are first-class audiences; a manifest
+reachable only by cloning a repository serves neither. **Form is
+implementation.** Where an entry is unavailable, VF-EXT-002 already governs:
+report it as incomplete rather than substitute a value.
+
+**22 · Consistency review is governed, not architected.** VF-PUB-001 already
+makes a specification revision a product event requiring review of every public
+and machine-readable representation. **No further architectural treatment is
+required**; recording the review is process.
+
+### Decision 8 — RECLASSIFIED · epoch finalization
+
+**Governed by decision 2, exactly as decision 1 is.** Finalization is
+permissionless and an epoch finalizes regardless of who acts (VF-STK-008,
+VF-STK-010). It is therefore **not necessary for successful protocol
+participation** — the test the accepted thin-Application principle applies.
+Whether the Workspace offers it is an **implementation and UX decision**, not an
+architectural one. The epoch dashboard remains an observation surface either
+way.
+
+## 6.3 Status question on decision 7
 
 Decision 7 asked for a presentation basis for §9, §10, the SYNTH Forge, §4.3
 transferability and §11.4 portability. **Map B v1 subsequently supplied one for
