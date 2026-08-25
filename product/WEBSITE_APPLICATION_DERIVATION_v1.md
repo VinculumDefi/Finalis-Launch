@@ -294,8 +294,7 @@ principle 7** — a first encounter that omits limitations is a persuasion
 surface.
 *Never include:* any economic projection, return figure, or forward value
 statement. PRC-04's first prohibition.
-*Blocked by* `[OPEN]` 3 — which audience it primarily serves. **This determines
-what the surface is, not how it reads.**
+*Primary audience: the Intelligent Newcomer* — decision 3, closed; Index §6.2.
 
 **S02 Trust Cluster**
 *Never omit:* the four claims of Map A's grouping — no one controls this
@@ -425,9 +424,9 @@ commitment's own figures as the commitment's own figures.
 
 Map A Steps 4–5. Tracking through finality and proof.
 *Never omit:* **pending disposition — `required behaviour` at Map A Step 4.**
-*Blocked by* `[OPEN]` 1 — the application's role in proof construction, which
-Map A frames as determining **the application's thickness.** This is the
-largest scope uncertainty in the product and it sits mid-critical-path.
+*Governed by decision 2, not blocked.* Decision 1 is **reclassified as an
+implementation and UX decision** (Index §6.2): this surface exists only insofar
+as it is **actually and defensibly necessary** for the commitment to complete.
 
 ## 5.3 Issuance — S09
 
@@ -503,10 +502,12 @@ at commitment (Map A Step 1). Nothing in §10 or §12 is user-configurable after
 the fact — the protocol has **no admin, no upgrade path, no pause authority**,
 and correspondingly few knobs.
 
-**The single candidate is `[OPEN]` 2 — optional notifications.** If that
-resolves toward offering them, a minimal preference surface follows from it. If
-it resolves against, **no settings surface exists at all**, and that is the
-faithful outcome rather than a gap.
+**Decision 7, ACCEPTED: no Settings surface is invented.** Decision 2's closure
+removes the only candidate — a notification preference — since a notification is
+a convenience feature and the Application remains intentionally thin (Index
+§6.2). **If future protocol functionality genuinely requires participant
+preferences, that surface may emerge naturally. Until then, no Settings page
+exists.**
 
 ---
 
@@ -745,13 +746,7 @@ Every one depends on chain state that does not yet exist.
 
 ## Implementation risk, ranked
 
-**Highest — `[OPEN]` 1.** The application's role in proof construction
-determines **the application's thickness** and sits mid-critical-path in order
-3. Nothing about order 3's size can be estimated until it is settled.
-
-**High — the Phase 1 decision cluster.** `[OPEN]` 3, 15, 17, 18 and 19 all
-block order 2, and four of the five turn on how §17's permissions and scope are
-read. **Resolving them as one set is likely cheaper than one surface at a
+**Closed — the Phase 1 decision cluster.** Decisions 15, 17, 18 and 19 are resolved at Index §6.2; order 2 is unblocked. **Resolving them as one set is likely cheaper than one surface at a
 time.**
 
 **High — S13 and S16 content.** `[OPEN]` 9 and 10 carry the protocol's least
@@ -811,13 +806,12 @@ the verification layer, the calculators, the disclosures — nine surfaces, the
 entire verifier and developer journey, and most of the skeptic's. That work is
 fully specified by the accepted baselines and requires no invention.
 
-**They could not build order 2's public-facing surfaces without inventing
-answers to five blocking open decisions** — 3, 15, 17, 18 and 19 — which
-determine what S01 *is*, what S03 *may contain*, whether S05 exists distinctly,
-and how far the price obligations reach. **They could not scope order 3 without
-`[OPEN]` 1.**
+**Orders 1 and 2 are now fully unblocked**, decisions 15, 17, 18 and 19 having
+been closed at Index §6.2. Order 3's scope still varies with how decision 1 is answered, **but that is an
+implementation and UX question governed by the accepted thin-Application
+principle, not an architectural prerequisite.**
 
-**Nine of twenty-six open decisions block implementation.** No amount of further
+**One of the remaining open decisions blocks implementation** — decision 5. No amount of further
 refinement of this document resolves them, because they are product decisions
 reserved to the operator, not derivations available from the artifacts. **A
 document that answered them would be inventing exactly what this phase has
@@ -870,11 +864,10 @@ should not treat them as a complete prohibition list**, and PRC-04's edge —
 `[OPEN]` 20, what constitutes an economic promise at the margin — remains
 undefined.
 
-**Finding 6 — S22 must show failures, and nothing enforces that.** Part 4.3
-states it. It rests on Charter principle 7 rather than on a numbered
-requirement. **A genuine weakness in the artifact chain**, not in this document:
-no `[SPEC]` requirement compels a verification dashboard to display its
-failures.
+**Finding 6 — CLOSED by decision 6.** S22's failure display rests on Charter
+principles 3 and 7 rather than on a numbered requirement, **deliberately.** It is
+not elevated into a protocol requirement. Showing only successes is a Charter
+violation, and that is the correct classification.
 
 ## Technical Communicator
 
@@ -899,10 +892,9 @@ it; Map A's audiences reinforce it; the North Star reinforces it again.
 directly. If it fails, Parts 4, 5 and 6 are re-cut and Parts 1, 3, 7–10 are
 largely unaffected.
 
-**Finding 10 — Part 5.10 declines to derive participant settings, and that
-refusal should be checked rather than accepted.** The assignment named it. The
-document argues no artifact requires it. **If a reviewer finds a requirement
-that does, the refusal is a defect rather than discipline.**
+**Finding 10 — CLOSED by decision 7.** The refusal to derive a Settings surface
+is accepted. No Settings page exists until protocol functionality genuinely
+requires participant preferences.
 
 **Finding 11 — Part 12's answer to the final question is "not yet," which the
 assignment's instruction treats as a signal to continue refining.** This
@@ -918,7 +910,7 @@ wrong, the document stopped early.
 |---|---|---|---|
 | 26 | Whether the Handshake's public explanation and its application execution are one surface presented across both properties or two surfaces | S31, Parts 2, 4.6, 5 | Part 2 |
 
-**Running total: twenty-six open product decisions. Nine block implementation.**
+**Running total: twenty-six raised, eleven closed, two reclassified (1 and 8), thirteen remaining. One blocks implementation.**
 
 ---
 
