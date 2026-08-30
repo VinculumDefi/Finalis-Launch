@@ -32,7 +32,7 @@ remember is current.**
 
 | # | Document | Answers |
 |---|---|---|
-| 0 | `SESSION_LATCH.md` | **Paste this into a new chat before anything else.** Branch, authority order, what Wave 1 already closed, and what not to reopen. Written for AI reviewers who arrive with no history. |
+| 0 | `LAST_SESSION_STATE.md` | **Read this before anything else, and paste it into a new chat.** Where the last session ended: HEAD commit, deployment status, confirmed and retracted findings, tests executed, specification discoveries, process corrections, and the single named next task. Written for reviewers who arrive with no history. |
 | 1 | `PROJECT_EVIDENCE_INDEX.md` | **What has been established, and where the evidence lives.** Read this first after the latch — it is a derived index and establishes nothing itself, but it points at everything below. |
 | 2 | `reviewers/Vinculum_Finalis_Session_Handoff_Brief_v*.md` | How to work here; operator profile; standing rules |
 | 3 | `standards/COMPONENT_IMPLEMENTATION_INVENTORY_v*.md` | **What is built, in every language** |
@@ -82,7 +82,9 @@ session and was configuration all along.
 | What is implemented, and where? | Component Implementation Inventory |
 | Is an environment blocked by code or by architecture? | Build Classification |
 | What findings exist? | Findings Register |
-| How do I start a new chat about this project? | `SESSION_LATCH.md` — paste it first |
+| How do I start a new chat about this project? | `LAST_SESSION_STATE.md` — paste it first |
+| What is the one next task? | `LAST_SESSION_STATE.md` → Immediate Next Task |
+| What mistakes has this project already made? | `LAST_SESSION_STATE.md` → Process Corrections |
 | What is established, and where is the proof? | `PROJECT_EVIDENCE_INDEX.md` (derived — follow its citations) |
 | Which defects are confirmed and reproduced? | `reviewers/red-team/Wave_*/` |
 | When is a component complete? | Verifier Completion Standard |
@@ -132,6 +134,10 @@ were written, reported as delivered, and never reached the repository.
 `PROJECT_EVIDENCE_INDEX.md` disagrees with the source it cites, the source
 wins and the row is stale. Never upgrade a row's status without executing or
 reading the evidence it names.
+
+**`LAST_SESSION_STATE.md` replaces the former `SESSION_LATCH.md`,** removed at
+the same commit that introduced it. If a document references the old filename,
+that document is stale.
 
 **If a requirement is in Rev 6, it is not an owner decision.** Open the
 specification and quote the VF- identifier. The owner sets design appetite and
