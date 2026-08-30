@@ -1,6 +1,6 @@
 # Vinculum Project Evidence Index
 
-**Status: Derived Document · v4**
+**Status: Derived Document · v5**
 
 This index is a navigation and status aid only. It establishes nothing.
 
@@ -43,7 +43,7 @@ having. That distinction is inherited from
 | Field | Value |
 |---|---|
 | Branch | `redteam/prep` |
-| Commit at last full verification | `af40537` (contracts unchanged since `bff9190`; only tests and documents added) |
+| Commit at last full verification | `2dafc2b` (contracts unchanged since `bff9190`; only tests and documents added) |
 | Test totals at that commit | **293 passing · 8 failing** |
 | The 8 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
 | Session latch | `SESSION_LATCH.md` — paste at the top of a new chat before any review |
@@ -51,6 +51,7 @@ having. That distinction is inherited from
 | Recorded by | Claude, 30 August 2026, from a clone of `redteam/prep` |
 | v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. |
 | v3 revision | BASE-15 upgraded to Reproduced — W1-09a/b execute. Suite now 8 failing, 1 passing (control). BASE-14 still has no test. |
+| v5 revision | W1-04 retraction and the coverage-gap analysis written into the register, so index and register agree. No status changes. |
 | v4 revision | Full suite executed on two machines at `af40537`: 293 passing, 8 failing. Four rows upgraded 🟩 Read → 🟢 Tested against named suites. W1-04 partially retracted. BASE-14 remains the only defect row without a test. |
 | Full suite command | `npx hardhat test` |
 
@@ -123,7 +124,7 @@ timestamp, maturity, selected output, recipient, or calculated issuance.
 | W1-04 | Medium — **partly retracted** | No | see note |
 | W1-06 | Medium | No | same |
 
-**W1-04 partial retraction.** Wave 1 recorded two concerns. The claim that
+**W1-04 partial retraction** — now recorded in the register at §W1-04. Wave 1 recorded two concerns. The claim that
 `pkg.handshakeAllowanceCount` is trusted is **wrong** — `04_endtoend` CL-11
 "the caller's asserted allowance count is ignored entirely" mints once against
 a claimed allowance of 99 where the registry says 1, then rejects the second.
@@ -132,6 +133,12 @@ enforcement." That half is closed and was closed before Wave 1 was written.
 The remaining half stands: `handshakeIdentity` is a caller-supplied string, so
 an attacker minting their own lock can burn another account's verifier-side
 counter.
+
+**Test-coverage note.** The suite is not short of adversarial tests — CL-76,
+CL-11 and CL-41 are all attack tests, and CL-41 is the direct ancestor of
+W1-02. The gap was one shape: a real lock plus a package that disagrees with it
+on an identity field. See register §3a. That is the first shape to reach for in
+Wave 2.
 | W1-07, W1-08 | Low | No | same |
 
 **Deployment gate.** No address enters `vinculum-site/config.js` while any

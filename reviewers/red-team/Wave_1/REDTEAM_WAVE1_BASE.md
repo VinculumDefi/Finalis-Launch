@@ -17,7 +17,7 @@ Finding shape per the agreed standard: attacker · precondition · action · imp
 | W1-01 | **Critical** | Mint package recipient and output token are not bound to the lock record | **Confirmed · reproduced** |
 | W1-02 | **Critical** | Mint package asset identity is not bound — issuance inflation by substitution | **Confirmed · reproduced** |
 | W1-03 | High | `ethers` still loaded without Subresource Integrity | Open |
-| W1-04 | Medium | Verifier-side handshake allowance keyed on a caller-supplied string | Open |
+| W1-04 | Medium | Verifier-side handshake allowance keyed on a caller-supplied string | **Half retracted · half open** |
 | W1-05 | **Critical** | Verifier reprices the lock at mint time — VF-ORC-010 violation | **Confirmed · specification** |
 | W1-09 | **Critical** | Emission rate taken from a caller-supplied Valuation Timestamp — VF-ORC-011 violation | **Confirmed · reproduced** |
 | W1-06 | Medium | Rebasing assets are checked only at creation | Open |
@@ -211,13 +211,21 @@ bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
 
 `pkg.handshakeIdentity` is a free `string` in the package. `protocol.js: packageFromLock` builds it as `"base:" + sourceAccount.toLowerCase()`, but nothing on chain requires that form or ties it to `r.sourceAccount`.
 
-**Mitigating.** The real gate is the vault, and it is sound. `VinculumFinalisBaseVault.sol:292` checks `handshakeUsed[msg.sender] >= HANDSHAKE_ALLOWANCE` before a handshake lock can be created, keyed on the actual caller with `HANDSHAKE_ALLOWANCE = 3`. That is correct for Base under VF-COM-006, and it cannot be bypassed by string choice. A fresh wallet earning a fresh allowance is explicitly permitted by VF-COM-005.
+**Mitigating.** The real gate is the vault, and it is sound.
+`VinculumFinalisBaseVault.sol:292` checks `handshakeUsed[msg.sender] >= HANDSHAKE_ALLOWANCE` before a handshake lock can be created, keyed on the actual caller with `HANDSHAKE_ALLOWANCE = 3`. That is correct for Base under VF-COM-006, and it cannot be bypassed by string choice. A fresh wallet earning a fresh allowance is explicitly permitted by VF-COM-005.
 
-**Residual impact.** Two things remain. An attacker minting their own legitimate lock can pass `handshakeIdentity = "base:0xVictim"`, incrementing the victim's verifier-side usage counter and corrupting `getHandshakeUsage()` for anyone reading it. And `pkg.handshakeAllowanceCount` is caller-supplied while the vault records the true value in `r.handshakeAllowanceCount`, which `extractFacts` does not return.
+**Retraction — the allowance-count half of this finding is wrong.** Wave 1 v1 stated that `pkg.handshakeAllowanceCount` is caller-supplied and trusted. It is not. Two executed tests establish this and both predate Wave 1:
+
+- `04_endtoend` — *"CL-11: the caller's asserted allowance count is ignored entirely."* Mints once against a package claiming an allowance of 99 where the registry says 1, then rejects the second with `VF-COM-007: handshake allowance exhausted`.
+- `03_handshake` — *"the package field is no longer consulted anywhere in enforcement."*
+
+The registry value governs. That half is closed and should never have been recorded as open. The error was writing the finding from a source read without checking whether the suite already covered it.
+
+**Residual impact — this half stands.** `pkg.handshakeIdentity` remains a free `string` at `VinculumFinalisVerifier.sol:764`, never derived from the verified `sourceAccount`. An attacker minting their own legitimate lock can pass `handshakeIdentity = "base:0xVictim"`, incrementing the victim's verifier-side counter and corrupting `getHandshakeUsage()` for anyone reading it. No issuance is stolen and no allowance is fabricated; the vault still gates creation.
 
 **Fix.** Derive `handshakeIdentity` on chain from the verified `sourceAccount` rather than accepting it. Covered by the same interface change as W1-01.
 
-**Missing test.** *Mint lock A while claiming another account's handshake identity; `getHandshakeUsage` for that account must not move.*
+**Missing test.** *Mint lock A while claiming another account's handshake identity; `getHandshakeUsage` for that account must not move.* Not yet written.
 
 ---
 
@@ -378,6 +386,37 @@ Recorded so nobody re-derives these.
 **3.6 · Clone address pre-funding griefing.** Not applicable. `_cloneLock()` uses non-deterministic deployment and checks `instance == address(0)`, so a clone address cannot be predicted and pre-funded to force `confirmFunded()` to revert. Would be a live griefing vector under CREATE2 with a predictable salt — worth preserving this property if the deployment method is ever revisited.
 
 **3.7 · Replay.** `consumedLocks[keccak256(envId, lockId)]` set at line 872, checked at line 706. `recordedRacs[pkg.racIdentity]` enforces RAC exact-once at line 636. Both sound in isolation — note that W1-01 exploits the replay guard rather than defeating it.
+
+---
+
+## 3a · What the suite already covered — and the shape it missed
+
+Recorded because it is the most transferable lesson from Wave 1 and because it
+corrects an implied criticism of the existing tests.
+
+The suite is not short of adversarial thinking. At `af40537` it holds 293
+passing tests, and several are attack tests of exactly the right kind:
+
+- `10_cl76_forged_package` — a forged package with **no lock on any chain**
+- `04_endtoend` CL-11 — a package **lying about its allowance count**
+- `02_oracle` CL-41 — a package **understating asset precision**, which prints
+  `inflation: 1x` to prove the field is economically inert
+- `12_base_verifier` — *"ignores the caller's claimed amounts and returns vault
+  storage instead"*
+- `04_endtoend` — *"VF-XCH-011: a package contradicting the source facts is
+  rejected"*, covering the five numeric fields that are cross-checked
+
+CL-41 is the direct ancestor of W1-02. Someone had already reasoned that a
+package field could be economically abused, tested it, and proved that
+particular field harmless.
+
+**The gap was one specific shape: a real lock, plus a package that disagrees
+with it on an identity field.** CL-76 covers no-lock. CL-11 covers a lied-about
+scalar. Nobody had built the case in between, and all four findings lived there.
+
+For Wave 2 against Ethereum, Polygon, Arbitrum and OP-Stack, that is the shape
+to reach for first: take the honest artifact the suite already builds, change
+one field, and assert on the revert reason rather than on the fact of reverting.
 
 ---
 
