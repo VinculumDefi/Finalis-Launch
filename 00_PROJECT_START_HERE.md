@@ -32,11 +32,14 @@ remember is current.**
 
 | # | Document | Answers |
 |---|---|---|
-| 1 | `reviewers/Vinculum_Finalis_Session_Handoff_Brief_v*.md` | How to work here; operator profile; standing rules |
-| 2 | `standards/COMPONENT_IMPLEMENTATION_INVENTORY_v*.md` | **What is built, in every language** |
-| 3 | `standards/BUILD_CLASSIFICATION_FROZEN_v*.md` | Which environments need code and which are architecturally blocked |
-| 4 | `reviewers/Vinculum_Finalis_Findings_Register_v*.md` | Every finding, its status, its evidence |
-| 5 | `standards/VERIFIER_COMPLETION_STANDARD.md` | When a component is complete; which suites are evidence |
+| 0 | `SESSION_LATCH.md` | **Paste this into a new chat before anything else.** Branch, authority order, what Wave 1 already closed, and what not to reopen. Written for AI reviewers who arrive with no history. |
+| 1 | `PROJECT_EVIDENCE_INDEX.md` | **What has been established, and where the evidence lives.** Read this first after the latch — it is a derived index and establishes nothing itself, but it points at everything below. |
+| 2 | `reviewers/Vinculum_Finalis_Session_Handoff_Brief_v*.md` | How to work here; operator profile; standing rules |
+| 3 | `standards/COMPONENT_IMPLEMENTATION_INVENTORY_v*.md` | **What is built, in every language** |
+| 4 | `standards/BUILD_CLASSIFICATION_FROZEN_v*.md` | Which environments need code and which are architecturally blocked |
+| 5 | `reviewers/Vinculum_Finalis_Findings_Register_v*.md` | Every finding, its status, its evidence |
+| 6 | `reviewers/red-team/Wave_*/` | Adversarial review by wave, with reproductions |
+| 7 | `standards/VERIFIER_COMPLETION_STANDARD.md` | When a component is complete; which suites are evidence |
 
 **Do not inspect source code before completing this.**
 
@@ -51,6 +54,24 @@ treating it as authoritative:
 
 ---
 
+## STOP — the construction gate
+
+**Before proposing that anything be built, answer all three. A reviewer who skips this gate will build phantoms.**
+
+Answer all three:
+
+1. **Which requirement in Revision 6 requires this?**
+2. **Which protocol invariant depends on it?**
+3. **Is this implementing Vinculum, or accommodating external infrastructure?**
+
+If the answer to (3) is "external infrastructure," it is configuration or
+tooling — not protocol construction. Axelar ITS looked like code for an entire
+session and was configuration all along.
+
+---
+
+---
+
 ## Which artifact answers which question
 
 | Question | Artifact |
@@ -61,6 +82,9 @@ treating it as authoritative:
 | What is implemented, and where? | Component Implementation Inventory |
 | Is an environment blocked by code or by architecture? | Build Classification |
 | What findings exist? | Findings Register |
+| How do I start a new chat about this project? | `SESSION_LATCH.md` — paste it first |
+| What is established, and where is the proof? | `PROJECT_EVIDENCE_INDEX.md` (derived — follow its citations) |
+| Which defects are confirmed and reproduced? | `reviewers/red-team/Wave_*/` |
 | When is a component complete? | Verifier Completion Standard |
 
 **The traceability CSV settles ownership disputes.** It is the instrument that
@@ -104,21 +128,17 @@ governing architecture.
 **A document is not delivered until it appears in a commit.** Two registers
 were written, reported as delivered, and never reached the repository.
 
----
+**The Evidence Index is derived, never authoritative.** If a row in
+`PROJECT_EVIDENCE_INDEX.md` disagrees with the source it cites, the source
+wins and the row is stale. Never upgrade a row's status without executing or
+reading the evidence it names.
 
-## Before proposing any new construction
-
-Answer all three:
-
-1. **Which requirement in Revision 6 requires this?**
-2. **Which protocol invariant depends on it?**
-3. **Is this implementing Vinculum, or accommodating external infrastructure?**
-
-If the answer to (3) is "external infrastructure," it is configuration or
-tooling — not protocol construction. Axelar ITS looked like code for an entire
-session and was configuration all along.
-
----
+**If a requirement is in Rev 6, it is not an owner decision.** Open the
+specification and quote the VF- identifier. The owner sets design appetite and
+priority; he is not a verification source and must not be asked to confirm a
+technical claim or pick between protocol mechanics. This rule exists because it
+was broken: W1-05 was presented to him as an A/B choice when VF-ORC-010 already
+answered it.
 
 ## Classification and construction do not overlap
 
