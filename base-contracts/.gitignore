@@ -5,3 +5,4 @@ target/
 coverage/
 .env
 *.log
+hardhat.local.cjs 
