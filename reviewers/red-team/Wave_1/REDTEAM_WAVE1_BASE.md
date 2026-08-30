@@ -41,9 +41,15 @@ asset, amount, creation timestamp and maturity — in all seventeen environments
 Whether a UTXO or XRPL vault does so is therefore a conformance test against each
 native vault, not an open specification question.
 
-**Field set required to close all four:** `canonicalAssetId`, `baseRecipient`,
-`releaseDestination`, `outputToken`, `verifiedGrossUsd`, `creationTimestamp`,
-`maturityTimestamp`.
+**Field set required to close all four — corrected in Wave 2.** Six returned
+facts, not seven: `canonicalAssetId`, `baseRecipient`, `releaseDestination`,
+`outputToken`, `creationTimestamp`, `maturityTimestamp`.
+
+`verifiedGrossUsd` **cannot** be a returned fact. `VinculumFinalisEvmVault`
+computes no USD value — valuation lives on Base under VF-ORC-007 — so no source
+event carries it. W1-05 closes instead by a Base-side rule: select the price
+record at the Valuation Timestamp rather than recomputing from the current one.
+See `reviewers/red-team/Wave_2/REDTEAM_WAVE2_REMEDY_PATH.md`.
 
 ---
 

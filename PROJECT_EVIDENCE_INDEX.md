@@ -1,6 +1,6 @@
 # Vinculum Project Evidence Index
 
-**Status: Derived Document · v5**
+**Status: Derived Document · v6**
 
 This index is a navigation and status aid only. It establishes nothing.
 
@@ -43,7 +43,7 @@ having. That distinction is inherited from
 | Field | Value |
 |---|---|
 | Branch | `redteam/prep` |
-| Commit at last full verification | `2dafc2b` (contracts unchanged since `bff9190`; only tests and documents added) |
+| Commit at last full verification | `151ff7a` (contracts unchanged since `bff9190`; only tests and documents added) |
 | Test totals at that commit | **293 passing · 8 failing** |
 | The 8 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
 | Session latch | `SESSION_LATCH.md` — paste at the top of a new chat before any review |
@@ -51,6 +51,7 @@ having. That distinction is inherited from
 | Recorded by | Claude, 30 August 2026, from a clone of `redteam/prep` |
 | v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. |
 | v3 revision | BASE-15 upgraded to Reproduced — W1-09a/b execute. Suite now 8 failing, 1 passing (control). BASE-14 still has no test. |
+| v6 revision | Field set corrected from seven to six returned facts plus a Base-side valuation rule; `verifiedGrossUsd` cannot be returned by any source verifier. Wave 2 remedy path recorded. No status changes. |
 | v5 revision | W1-04 retraction and the coverage-gap analysis written into the register, so index and register agree. No status changes. |
 | v4 revision | Full suite executed on two machines at `af40537`: 293 passing, 8 failing. Four rows upgraded 🟩 Read → 🟢 Tested against named suites. W1-04 partially retracted. BASE-14 remains the only defect row without a test. |
 | Full suite command | `npx hardhat test` |
@@ -108,9 +109,17 @@ VF-XCH-009 independently settles BASE-14 and BASE-15: confirmation and
 proof-delivery delays do not alter the original Valuation Timestamp, lock
 timestamp, maturity, selected output, recipient, or calculated issuance.
 
-**Interface field set required to close all four:** `canonicalAssetId`,
-`baseRecipient`, `releaseDestination`, `outputToken`, `verifiedGrossUsd`,
-`creationTimestamp`, `maturityTimestamp`.
+**Interface field set — corrected in Wave 2.** Six returned facts:
+`canonicalAssetId`, `baseRecipient`, `releaseDestination`, `outputToken`,
+`creationTimestamp`, `maturityTimestamp`. `verifiedGrossUsd` is **not** among
+them — no source vault computes USD, by design (VF-ORC-007). W1-05 closes by a
+Base-side valuation rule instead.
+
+`VinculumFinalisEvmVault` already emits every identity field in a second event,
+`CommitVaultLockDetail`, whose own comment names VF-XCH-011 as its purpose. The
+EVM verifiers never read it — `findLog` matches one topic0 and they all pass the
+`CommitVaultLock` topic. This is a wiring gap, not a missing capability. See
+`reviewers/red-team/Wave_2/REDTEAM_WAVE2_REMEDY_PATH.md`.
 
 ### Open at this commit
 
