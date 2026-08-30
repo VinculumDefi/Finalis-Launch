@@ -14,8 +14,8 @@ Finding shape per the agreed standard: attacker · precondition · action · imp
 
 | ID | Severity | Title | Status |
 |---|---|---|---|
-| W1-01 | **Critical** | Mint package recipient and output token are not bound to the lock record | Open |
-| W1-02 | **Critical** | Mint package asset identity is not bound — issuance inflation by substitution | Open |
+| W1-01 | **Critical** | Mint package recipient and output token are not bound to the lock record | **Confirmed · reproduced** |
+| W1-02 | **Critical** | Mint package asset identity is not bound — issuance inflation by substitution | **Confirmed · reproduced** |
 | W1-03 | High | `ethers` still loaded without Subresource Integrity | Open |
 | W1-04 | Medium | Verifier-side handshake allowance keyed on a caller-supplied string | Open |
 | W1-05 | Medium | A lock can be created that can never mint; the fee is spent regardless | Open |
@@ -24,6 +24,45 @@ Finding shape per the agreed standard: attacker · precondition · action · imp
 | W1-08 | Low | Stray ETH sent to a native-asset clone is permanently stuck | Accept candidate |
 
 **Checked and found sound:** six items, Section 3.
+
+### Reproduction — W1-01 and W1-02
+
+Both criticals are reproduced by an executed test, not by argument.
+
+**Test:** `base-contracts/test/25_w1_identity_binding.test.cjs`
+**Run:** `npx hardhat test test/25_w1_identity_binding.test.cjs`
+**Tree:** `redteam/prep` @ `bff9190`
+**Result:** 6 failing, 1 passing. The six failures are the finding. The single
+pass is the control, which proves the honest path still mints correctly and the
+six are therefore the defect rather than a broken fixture.
+
+```
+W1-01b   reverted: false
+         locker received:   0.0 VCLM
+         attacker received: 1150.0 VCLM
+         lock consumed:     true
+
+W1-02b   reverted: false
+         honest mint:     1150.0 VCLM
+         substituted:     1150000.0 VCLM
+         inflation ratio: 100000%
+```
+
+**Independently reproduced.** First run in a Linux review sandbox; second run by
+the project owner on Windows 10, Node/npm installed fresh, no shared state.
+Identical output both times. A finding reproduced on two machines by two parties
+is a different class of evidence from one reproduced by whoever wrote it.
+
+**W1-01c is worth reading closely.** It fails with `VF-COM-025: CHONX not
+activated` — an unrelated guard that happens to stand in front of the missing
+binding. A test written as a bare `.to.be.reverted` would have passed and
+recorded the hole as closed. The helper matches on the revert reason for
+exactly this reason.
+
+**Full suite at the same commit:** 293 passing, 6 failing. The tree was
+292 passing / 0 failing before this file was added.
+
+---
 
 ---
 

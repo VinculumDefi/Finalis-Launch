@@ -51,24 +51,6 @@ treating it as authoritative:
 
 ---
 
-## STOP — the construction gate
-
-**Before proposing that anything be built, answer all three. A reviewer who skips this gate will build phantoms.**
-
-Answer all three:
-
-1. **Which requirement in Revision 6 requires this?**
-2. **Which protocol invariant depends on it?**
-3. **Is this implementing Vinculum, or accommodating external infrastructure?**
-
-If the answer to (3) is "external infrastructure," it is configuration or
-tooling — not protocol construction. Axelar ITS looked like code for an entire
-session and was configuration all along.
-
----
-
----
-
 ## Which artifact answers which question
 
 | Question | Artifact |
@@ -121,6 +103,22 @@ governing architecture.
 
 **A document is not delivered until it appears in a commit.** Two registers
 were written, reported as delivered, and never reached the repository.
+
+---
+
+## Before proposing any new construction
+
+Answer all three:
+
+1. **Which requirement in Revision 6 requires this?**
+2. **Which protocol invariant depends on it?**
+3. **Is this implementing Vinculum, or accommodating external infrastructure?**
+
+If the answer to (3) is "external infrastructure," it is configuration or
+tooling — not protocol construction. Axelar ITS looked like code for an entire
+session and was configuration all along.
+
+---
 
 ## Classification and construction do not overlap
 
