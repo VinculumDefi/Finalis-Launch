@@ -1,6 +1,6 @@
 # Vinculum Project Evidence Index
 
-**Status: Derived Document · v3**
+**Status: Derived Document · v4**
 
 This index is a navigation and status aid only. It establishes nothing.
 
@@ -43,13 +43,15 @@ having. That distinction is inherited from
 | Field | Value |
 |---|---|
 | Branch | `redteam/prep` |
-| Commit at last full verification | `bff9190` |
+| Commit at last full verification | `af40537` (contracts unchanged since `bff9190`; only tests and documents added) |
 | Test totals at that commit | **293 passing · 8 failing** |
 | The 8 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
 | Session latch | `SESSION_LATCH.md` — paste at the top of a new chat before any review |
+| Full suite executed by | Claude (Linux sandbox) and the project owner (Windows 10) — same totals |
 | Recorded by | Claude, 30 August 2026, from a clone of `redteam/prep` |
 | v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. |
 | v3 revision | BASE-15 upgraded to Reproduced — W1-09a/b execute. Suite now 8 failing, 1 passing (control). BASE-14 still has no test. |
+| v4 revision | Full suite executed on two machines at `af40537`: 293 passing, 8 failing. Four rows upgraded 🟩 Read → 🟢 Tested against named suites. W1-04 partially retracted. BASE-14 remains the only defect row without a test. |
 | Full suite command | `npx hardhat test` |
 
 Every row below carries the commit at which it was verified. If the code has
@@ -63,9 +65,9 @@ That is the mechanism that keeps this file honest — not good intentions.
 | ID | Component | Requirement | Status | Source of truth | Evidence | Commit |
 |---|---|---|---|---|---|---|
 | BASE-01 | Commitment Vault | Creates a lock, routes fee, funds an isolated clone | 🟢 Tested | `contracts/VinculumFinalisBaseVault.sol` | `13_base_e2e` · `11_base_vault` | `bff9190` |
-| BASE-02 | Lock clone | Cannot be drained before maturity | 🟩 Read | `contracts/CommitmentLock.sol:96–120` | Wave 1 §3.1 | `bff9190` |
-| BASE-03 | Lock clone | Principal can only reach `releaseDestination` | 🟩 Read | `CommitmentLock.initialize/release` | Wave 1 §3.2 | `bff9190` |
-| BASE-04 | Lock clone | Fee-on-transfer assets fail closed at creation | 🟩 Read | `CommitmentLock.confirmFunded()` | Wave 1 §3.3 | `bff9190` |
+| BASE-02 | Lock clone | Cannot be drained before maturity | 🟢 Tested | `contracts/CommitmentLock.sol:96–120` | `11_base_vault` — "refuses to release before maturity" | `af40537` |
+| BASE-03 | Lock clone | Principal can only reach `releaseDestination` | 🟢 Tested | `CommitmentLock.initialize/release` | `11_base_vault` — bound destination, second release refused, releases without verifier/price/factory | `af40537` |
+| BASE-04 | Lock clone | Fee-on-transfer assets fail closed at creation | 🟢 Tested | `CommitmentLock.confirmFunded()` | `11_base_vault` · `22_evm_vault` — "rejects a fee-on-transfer asset" | `af40537` |
 | BASE-05 | Same-chain verifier | Facts come from vault storage, not the caller | 🟢 Tested | `chain-verifiers/BaseSameChainVerifier.sol` | `12_base_verifier` · `13_base_e2e` | `bff9190` |
 | BASE-06 | Issuance verifier | Replay protection — one lock, one mint | 🟢 Tested | `VinculumFinalisVerifier.sol:706,872` | `13_base_e2e` element 9 | `bff9190` |
 | BASE-07 | Issuance verifier | A forged package with no real lock cannot mint | 🟢 Tested | `VinculumFinalisVerifier.verifyAndMint` | `10_cl76_forged_package` · `13_base_e2e` | `bff9190` |
@@ -73,8 +75,8 @@ That is the mechanism that keeps this file honest — not good intentions.
 | **BASE-09** | **Package asset binding** | **Asset substitution is impossible (VF-REG-001, VF-COM-018)** | **🟥 Defect · 🟪 Reproduced** | `interfaces/IChainVerifier.sol` · `VinculumFinalisVerifier.sol:500–516` | **W1-02** · `25_w1_identity_binding` | `bff9190` |
 | **BASE-14** | **Valuation binding** | **Proof delay must not reprice the lock (VF-ORC-010, VF-XCH-009)** | **🟥 Defect** | `VinculumFinalisVerifier.sol:500–516` · `VinculumFinalisBaseVault.sol:285` | **W1-05** — reclassified from owner decision | `bff9190` |
 | **BASE-15** | **Emission-rate binding** | **Rate follows the Valuation Timestamp of the finalized source block (VF-ORC-011)** | **🟥 Defect · 🟪 Reproduced** | `VinculumFinalisVerifier._daysSinceLaunch:530–536` · discard at `:820` | **W1-09** · `25_w1_identity_binding` W1-09a/b | `bff9190` |
-| BASE-10 | Issuance verifier | Stale or unavailable price cannot mint | 🟩 Read | `VinculumFinalisVerifier.sol:503–509` | Wave 1 §3.4 | `bff9190` |
-| BASE-11 | Vault | Handshake allowance enforced per source address | 🟢 Tested | `VinculumFinalisBaseVault.sol:292` | `03_handshake` | `bff9190` |
+| BASE-10 | Issuance verifier | Stale or unavailable price cannot mint | 🟢 Tested | `VinculumFinalisVerifier.sol:503–509` | `02_oracle` CL-37 — 7 cases incl. the 48-hour boundary | `af40537` |
+| BASE-11 | Vault | Handshake allowance enforced per source address | 🟢 Tested | `VinculumFinalisBaseVault.sol:292` | `03_handshake` · `04_endtoend` CL-11 | `af40537` |
 | BASE-12 | Lifetime cap | Issuance rejected in full at the cap | 🟢 Tested | `contracts/VinculumFinalisCap.sol` | `24_cl84_lifetime_cap` | `bff9190` |
 | BASE-13 | Clone deployment | Clone address not predictable, so not pre-fundable | 🟩 Read | `VinculumFinalisBaseVault._cloneLock()` | Wave 1 §3.6 | `bff9190` |
 
@@ -118,7 +120,18 @@ timestamp, maturity, selected output, recipient, or calculated issuance.
 | BASE-14 / W1-05 | Critical — spec violation | **Yes** | reclassified; VF-ORC-010 |
 | BASE-15 / W1-09 | Critical — spec violation | **Yes** | register W1-09; VF-ORC-011 |
 | W1-03 ethers SRI | High | Site-side | same |
-| W1-04, W1-06 | Medium | No | same |
+| W1-04 | Medium — **partly retracted** | No | see note |
+| W1-06 | Medium | No | same |
+
+**W1-04 partial retraction.** Wave 1 recorded two concerns. The claim that
+`pkg.handshakeAllowanceCount` is trusted is **wrong** — `04_endtoend` CL-11
+"the caller's asserted allowance count is ignored entirely" mints once against
+a claimed allowance of 99 where the registry says 1, then rejects the second.
+`03_handshake` adds "the package field is no longer consulted anywhere in
+enforcement." That half is closed and was closed before Wave 1 was written.
+The remaining half stands: `handshakeIdentity` is a caller-supplied string, so
+an attacker minting their own lock can burn another account's verifier-side
+counter.
 | W1-07, W1-08 | Low | No | same |
 
 **Deployment gate.** No address enters `vinculum-site/config.js` while any
