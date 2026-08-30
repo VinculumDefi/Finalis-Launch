@@ -27,13 +27,13 @@ governs.
 
 **Date:** 30 August 2026
 
-**Session:** Wave 1 red team — Base identity binding
+**Session:** Wave 1 red team (Base identity binding) → Wave 2 opening (remedy path)
 
 **Repository:** `github.com/VinculumDefi/Finalis-Launch`
 
 **Branch:** `redteam/prep`
 
-**HEAD Commit:** `8cac1bc`
+**HEAD Commit:** `a91a23e`
 
 **Previous HEAD:** `2ae5704`
 
@@ -69,13 +69,25 @@ Two new documents entered the repository so this state survives without anyone
 remembering it: the Project Evidence Index, and the session latch that became
 this file.
 
+Wave 2 then opened with a source read rather than a patch, and it narrowed the
+defect. `VinculumFinalisEvmVault` already emits every VF-XCH-011 identity field
+in a second event, `CommitVaultLockDetail`, whose own comment names that
+requirement as its purpose. The Base-side verifiers never open it, because
+`EvmReceipt.findLog` matches one topic and every verifier passes the
+`CommitVaultLock` topic. It is a wiring gap, not a missing capability. The same
+read corrected the remedy from seven returned facts to six plus a Base-side
+valuation rule, because no source vault computes USD by design. And it produced
+W2-05: six UTXO environments specify no carrier for the Base recipient at all,
+so the interface change closes W1-01 for the EVM family and Solana but not
+protocol-wide. W1-03 was closed on the site side by vendoring `ethers` locally.
+
 ---
 
 # Repository State
 
 ## Current Phase
 
-Wave 1 Red Team — Base only. Complete as a review; fix not yet written.
+Wave 2 — remedy path established by source read. No patch written. No finding closed on the contract side.
 
 ---
 
@@ -92,12 +104,12 @@ undeployed contracts, an attack manual against live ones.
 
 ## Repository Health
 
-**Evidence Index Version:** v5
+**Evidence Index Version:** v6
 
 **Findings Register Version:** v16 — *not reviewed this session; the Wave 1
 report was updated instead. Whether v16 needs a corresponding entry is unresolved.*
 
-**Current Red Team Wave:** Wave 1 (Base) — closed as a review
+**Current Red Team Wave:** Wave 1 (Base) closed as a review · Wave 2 opened — remedy path established, no patch written
 
 **Master Specification Revision:** Rev 6 · `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` (hash verified this session)
 
@@ -157,7 +169,9 @@ All four findings recorded here came from reading contracts.
 
 ## Closed Findings
 
-None. No fix has been written.
+- **W1-03 · site.** `ethers` is now vendored into `vinculum-site` and served from the site's own origin, replacing the unpinned CDN load on `lock.html`. Hash of the npm 6.13.5 tarball build recorded in a comment above the tag: `sha384-NRAZj94DQk3dgtsOZzVYHbYVV1DFkF5QhL5RRxF0ILZLi6OQ7CsMlun748D42JbO`. **Not yet committed — `lock.html` and `ethers-6.13.5.umd.min.js` are pending in the `vinculum-site` tree and need a browser check that the wallet still connects.**
+
+No contract finding is closed. No patch has been written.
 
 ---
 
@@ -165,6 +179,7 @@ None. No fix has been written.
 
 - **W1-09** — emission rate from a caller-supplied Valuation Timestamp.
 - **W1-05 reclassified** from Medium / owner decision to Critical / specification violation.
+- **W2-05 · architecture.** Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash specify no carrier for the Base recipient or selected output token. C.8 states outright that Bitcoin Script cannot verify the Base recipient on-chain and defers preflight to Base — but deferring verification does not supply the value. Stellar C.11 solves the identical problem with a transaction `Memo`; C.8 has no equivalent and the five inheriting environments have none either. Whether C.8 gains an `OP_RETURN` is a specification question, not a red-team decision.
 
 ---
 
@@ -175,6 +190,7 @@ None. No fix has been written.
 - `25_w1_identity_binding.test.cjs` · W1-01a, W1-01b, W1-01c, W1-02a, W1-02b, W1-02c, W1-09a, W1-09b, and one control.
 - Helper `expectRevertMatching` asserts on the revert **reason**, not merely that a revert occurred.
 - Helper `advanceDaysAndRefreshPrices` republishes the price batch after time travel.
+- `26_w2_remote_evm_identity.test.cjs` · W2-01 through W2-04 plus one control. Builds an Ethereum receipt carrying **both** vault logs — what the vault actually emits — and asserts `extractFacts` surfaces the identity. 4 failing, 1 passing. W2-04 is the sharpest: extraction succeeds against a receipt binding no identity at all.
 
 ---
 
@@ -187,6 +203,7 @@ None. No fix has been written.
 | `25_w1_identity_binding` (owner, Windows) | 8 failing, 1 passing | `af40537` |
 | Full suite (sandbox) | 293 passing, 8 failing | `af40537` |
 | Full suite (owner, Windows) | 293 passing, 8 failing | `af40537` |
+| `26_w2_remote_evm_identity` (sandbox) | 4 failing, 1 passing | `36f2a9c` |
 
 ---
 
@@ -240,43 +257,56 @@ Requirements that answered questions previously believed to need owner input.
 | W1-02 / BASE-09 | Canonical asset id not bound at mint | Contract | Confirmed · reproduced |
 | W1-05 / BASE-14 | Verifier reprices at mint time | Contract | Confirmed · specification; **no test yet** |
 | W1-09 / BASE-15 | Emission rate from caller-supplied timestamp | Contract | Confirmed · reproduced |
-| W1-03 | `ethers` loaded without Subresource Integrity on `lock.html` | Site | Open |
+| W1-03 | `ethers` loaded without Subresource Integrity on `lock.html` | Site | **Fixed, uncommitted** |
+| W2-05 | Six UTXO environments bind no Base recipient | Architecture / specification | Open — not a deploy blocker for Base |
 
 All four contract blockers close with one change:
 
 ```
-extractFacts must additionally return —
+extractFacts must additionally return — SIX facts, corrected in Wave 2
   canonicalAssetId
   baseRecipient
   releaseDestination
   outputToken
-  verifiedGrossUsd
-  creationTimestamp
-  maturityTimestamp
+  creationTimestamp     already returned; stop discarding it
+  maturityTimestamp     already returned; stop discarding it
+
+verifiedGrossUsd is NOT among them. No source vault computes USD, by
+design (VF-ORC-007). W1-05 closes by a Base-side rule instead: select the
+price record at the Valuation Timestamp, never recompute from the current
+one (VF-ORC-009/010).
 ```
 
 Interface, then every implementer, then equality checks in `verifyAndMint`. Not a
 Base-only `require`.
 
+**Path A is the chosen route for the EVM family:** each verifier performs a
+second `findLog` against the `CommitVaultLockDetail` topic in the receipt it has
+already decoded. `baseRecipient` is `word(3)`, `releaseDestination` `word(4)`,
+`outputToken` `word(5)`, `canonicalAssetId` `topic(3)`. No change to
+`EvmReceipt.sol`. **`22_evm_vault` must keep passing unedited** — if a patch
+requires editing it, that patch is Path B wearing Path A's name.
+
 ---
 
 # Immediate Next Task
 
-Read the four written EVM verifiers and `VinculumFinalisEvmVault` on
-`redteam/prep`, and record whether identity can be bound the same way in each
-before modifying `IChainVerifier`.
+Extend `IChainVerifier.extractFacts` with the six facts and implement Path A in
+`BaseSameChainVerifier` first — it already reads the full `LockRecord` into
+memory and discards those fields, so it is roughly four lines and it turns the
+eight failures in `25_w1_identity_binding` green.
+
+Do not proceed to the four remote EVM verifiers until Base passes.
 
 ---
 
 # Required Reading Before That Task
 
+- `reviewers/red-team/Wave_2/REDTEAM_WAVE2_REMEDY_PATH.md` — the chosen path, the word offsets, and W2-05
 - `base-contracts/contracts/interfaces/IChainVerifier.sol`
-- `base-contracts/contracts/chain-verifiers/EthereumChainVerifier.sol`
-- `base-contracts/contracts/chain-verifiers/PolygonChainVerifier.sol`
-- `base-contracts/contracts/chain-verifiers/ArbitrumChainVerifier.sol`
-- `base-contracts/contracts/chain-verifiers/OpStackFaultProofVerifier.sol`
-- `base-contracts/contracts/VinculumFinalisEvmVault.sol`
-- Rev 6 §11.3 — VF-XCH-005, VF-XCH-011, VF-XCH-012
+- `base-contracts/contracts/chain-verifiers/BaseSameChainVerifier.sol` (lines 114–140)
+- `base-contracts/contracts/VinculumFinalisVerifier.sol` (lines 700–880)
+- Rev 6 — VF-XCH-005, VF-XCH-011, VF-XCH-012, VF-ORC-009/010/011
 
 Note: `22_evm_vault` already asserts the EVM vault *"emits exactly the six data
 words in the order EvmReceipt expects."* Any change to what verifiers extract
@@ -307,16 +337,19 @@ must be checked against that test.
 
 **Still open:**
 
+- Whether C.8 should gain an `OP_RETURN` output binding the Base recipient and output token, as C.11 Stellar does with a `Memo`. Affects six environments. Specification question — W2-05.
+- Whether C.10 XRP Ledger specifies a carrier for the Base recipient. Not read this session.
+
 ---
 
 # Session Snapshot
 
 **Repository:** `github.com/VinculumDefi/Finalis-Launch`
 **Branch:** `redteam/prep`
-**HEAD Commit:** `8cac1bc`
-**Evidence Index:** v5
+**HEAD Commit:** `a91a23e`
+**Evidence Index:** v6
 **Findings Register:** v16 (not updated this session)
-**Red Team Wave:** Wave 1 — Base, closed as a review
+**Red Team Wave:** Wave 1 closed · Wave 2 open (remedy path, no patch)
 **Deployment Status:** Deploy Blocked
 **Known Deployment Blockers:** W1-01, W1-02, W1-05, W1-09 (contract) · W1-03 (site)
 **Next Task:** Read the four EVM verifiers and the EVM vault before touching `IChainVerifier`
@@ -334,12 +367,16 @@ must be checked against that test.
 - `28c218e` — remove `SESSION_LATCH.md`
 - `cef5ca3` — add `LAST_SESSION_STATE.md`; repoint startup reading order
 - `8cac1bc` — lockfile from a fresh `npm install` on Windows; `solc`, `hardhat` and `ethers` unchanged, transitive dependencies only
+- `151ff7a` — session state current to `8cac1bc`; toolchain verification and paste kit
+- `36f2a9c` — Wave 2 remedy path; field set corrected to six facts plus a valuation rule
+- `2afb1ce` — W2 remote EVM identity tests (4 failing by design)
+- `a91a23e` — W2-05: six UTXO environments specify no carrier for the Base recipient
 
 ---
 
 # Staleness
 
-This file records the state at `8cac1bc`. If `git log -1` shows a later commit,
+This file records the state at `a91a23e`. If `git log -1` shows a later commit,
 this file is stale by that much. It is derived and loses to its sources — the
 Findings Register, the red-team reports, the source code, and executed tests all
 outrank it.
@@ -352,7 +389,8 @@ Regenerate it at the end of a session, not during one.
 
 Wave 1 is closed as a review. No fix has been written and no finding is closed.
 
-Eight tests fail on `redteam/prep` by design. A continuous-integration run will
+Twelve tests fail on `redteam/prep` by design — eight in `25_w1_identity_binding`
+and four in `26_w2_remote_evm_identity`. A continuous-integration run will
 show red; that is the recorded state, not a regression. The single passing case
 in `25_w1_identity_binding` is the control, and it is what establishes that the
 eight failures are the defect rather than a broken fixture. If the control ever
