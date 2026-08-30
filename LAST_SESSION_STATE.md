@@ -33,7 +33,7 @@ governs.
 
 **Branch:** `redteam/prep`
 
-**HEAD Commit:** `bc6578b`
+**HEAD Commit:** `8cac1bc`
 
 **Previous HEAD:** `2ae5704`
 
@@ -114,6 +114,18 @@ report was updated instead. Whether v16 needs a corresponding entry is unresolve
 
 Never begin by asking the owner what happened.
 
+**Minimum paste kit for a new chat:** this file, then
+`PROJECT_EVIDENCE_INDEX.md`, plus the repository URL and the branch name
+`redteam/prep`. Add the Wave 1 report for red-team work, the Rev 6 `.docx` for
+protocol questions, `product/PRODUCT_ARCHITECTURE_INDEX_v1.md` for website or
+application work. Do not paste the Master Specification by default — it is
+roughly 237,000 characters and will consume the context the work needs.
+
+**Ask any AI reviewer early:** did you clone `redteam/prep` and read the source,
+or are you reasoning from the documents pasted into this chat? A reviewer working
+from summaries will sound equally confident and will miss what is in the files.
+All four findings recorded here came from reading contracts.
+
 ---
 
 # Major Outcomes
@@ -123,6 +135,7 @@ Never begin by asking the owner what happened.
 - `base-contracts/test/25_w1_identity_binding.test.cjs` — nine cases, eight failing by design, one control passing.
 - Full suite executed at `af40537`: **293 passing, 8 failing.** Same totals on two machines, two operating systems.
 - W1-09 demonstration reproduced to eighteen decimal places across both machines (`924.248167728223589235`), establishing the fixture is deterministic.
+- **Toolchain confirmed identical across both machines.** A fresh `npm install` rewrote 1,185 lines of `base-contracts/package-lock.json`, but `lockfileVersion` is unchanged and `solc` still resolves to `solc-0.8.19.tgz`; `hardhat` and `ethers` entries were not touched at all. The churn is transitive dependencies. Both reproductions therefore ran on the same compiler, and the two-machine claim is two independent confirmations of one build rather than two runs on different builds.
 
 ---
 
@@ -287,8 +300,12 @@ must be checked against that test.
 # Questions Still Open
 
 - Whether Findings Register v16 requires entries corresponding to W1-01, W1-02, W1-05 and W1-09, or whether the Wave 1 report is the sole record. Not resolved this session.
-- Whether `base-contracts/package-lock.json`, modified by `npm install`, should be committed. It pins the toolchain that compiles the contracts, so it is a real decision.
-- Whether `SESSION_LATCH.md` — committed at `847c467` and referenced as row 0 of `00_PROJECT_START_HERE.md` — is superseded by this file and should be removed.
+**Resolved after this file was first written:**
+
+- `package-lock.json` — committed at `8cac1bc` after verifying the compiler did not move. Reproducibility is better served by a lockfile matching what was actually built with.
+- `SESSION_LATCH.md` — removed at `28c218e`, superseded by this file. `00_PROJECT_START_HERE.md` row 0 repointed at `cef5ca3`.
+
+**Still open:**
 
 ---
 
@@ -296,7 +313,7 @@ must be checked against that test.
 
 **Repository:** `github.com/VinculumDefi/Finalis-Launch`
 **Branch:** `redteam/prep`
-**HEAD Commit:** `bc6578b`
+**HEAD Commit:** `8cac1bc`
 **Evidence Index:** v5
 **Findings Register:** v16 (not updated this session)
 **Red Team Wave:** Wave 1 — Base, closed as a review
@@ -314,6 +331,20 @@ must be checked against that test.
 - `af40537` — W1-05 reclassified Critical (VF-ORC-010); W1-09 added and reproduced; suite 8 failing by design
 - `2dafc2b` — Evidence Index v4: full suite executed on two machines; 4 rows upgraded to Tested; W1-04 half retracted
 - `bc6578b` — W1-04 half retracted with citations; record what the suite already covered and the shape it missed
+- `28c218e` — remove `SESSION_LATCH.md`
+- `cef5ca3` — add `LAST_SESSION_STATE.md`; repoint startup reading order
+- `8cac1bc` — lockfile from a fresh `npm install` on Windows; `solc`, `hardhat` and `ethers` unchanged, transitive dependencies only
+
+---
+
+# Staleness
+
+This file records the state at `8cac1bc`. If `git log -1` shows a later commit,
+this file is stale by that much. It is derived and loses to its sources — the
+Findings Register, the red-team reports, the source code, and executed tests all
+outrank it.
+
+Regenerate it at the end of a session, not during one.
 
 ---
 
