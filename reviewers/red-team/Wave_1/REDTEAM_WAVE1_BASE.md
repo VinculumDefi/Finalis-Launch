@@ -18,12 +18,34 @@ Finding shape per the agreed standard: attacker · precondition · action · imp
 | W1-02 | **Critical** | Mint package asset identity is not bound — issuance inflation by substitution | **Confirmed · reproduced** |
 | W1-03 | High | `ethers` still loaded without Subresource Integrity | Open |
 | W1-04 | Medium | Verifier-side handshake allowance keyed on a caller-supplied string | Open |
-| W1-05 | Medium | A lock can be created that can never mint; the fee is spent regardless | Open |
+| W1-05 | **Critical** | Verifier reprices the lock at mint time — VF-ORC-010 violation | **Confirmed · specification** |
+| W1-09 | **Critical** | Emission rate taken from a caller-supplied Valuation Timestamp — VF-ORC-011 violation | **Confirmed · reproduced** |
 | W1-06 | Medium | Rebasing assets are checked only at creation | Open |
 | W1-07 | Low | Site performs no USD-bound preflight; guaranteed revert costs the user gas | Open |
 | W1-08 | Low | Stray ETH sent to a native-asset clone is permanently stuck | Accept candidate |
 
 **Checked and found sound:** six items, Section 3.
+
+### Root cause — one gap, four findings
+
+W1-01, W1-02, W1-05 and W1-09 are four consequences of one defect:
+
+> **`IChainVerifier.extractFacts` returns 7 facts. VF-XCH-011 requires evidence
+> to bind 19.** Every omitted field is accepted from the caller instead.
+
+`VinculumFinalisVerifier.sol:810` cites VF-XCH-011 by name in its own comment,
+then cross-checks five of the nineteen.
+
+VF-XCH-005 requires the *source mechanism* to bind user, release destination,
+asset, amount, creation timestamp and maturity — in all seventeen environments.
+Whether a UTXO or XRPL vault does so is therefore a conformance test against each
+native vault, not an open specification question.
+
+**Field set required to close all four:** `canonicalAssetId`, `baseRecipient`,
+`releaseDestination`, `outputToken`, `verifiedGrossUsd`, `creationTimestamp`,
+`maturityTimestamp`.
+
+---
 
 ### Reproduction — W1-01 and W1-02
 
@@ -32,7 +54,7 @@ Both criticals are reproduced by an executed test, not by argument.
 **Test:** `base-contracts/test/25_w1_identity_binding.test.cjs`
 **Run:** `npx hardhat test test/25_w1_identity_binding.test.cjs`
 **Tree:** `redteam/prep` @ `bff9190`
-**Result:** 6 failing, 1 passing. The six failures are the finding. The single
+**Result:** 8 failing, 1 passing. The six failures are the finding. The single
 pass is the control, which proves the honest path still mints correctly and the
 six are therefore the defect rather than a broken fixture.
 
@@ -59,7 +81,7 @@ binding. A test written as a bare `.to.be.reverted` would have passed and
 recorded the hole as closed. The helper matches on the revert reason for
 exactly this reason.
 
-**Full suite at the same commit:** 293 passing, 6 failing. The tree was
+**Full suite at the same commit:** 293 passing, 8 failing. The tree was
 292 passing / 0 failing before this file was added.
 
 ---
@@ -199,21 +221,113 @@ bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
 
 ---
 
-### W1-05 · A lock can be created that can never mint; the fee is spent regardless — Medium
+### W1-05 · Verifier reprices the lock at mint time — Critical
 
-**Attacker.** None — this fires against honest users. Listed because impact is the same.
+**Reclassified.** Wave 1 v1 recorded this as Medium and as a design decision for
+the owner. That was wrong. Rev 6 answers it outright and the entry should never
+have been framed as a choice.
 
-**Precondition.** A lock is created while the price record is fresh. By the time the user submits the mint package, the price record has aged past `MAX_PRICE_RECORD_AGE`, or the asset has been marked unavailable by a subsequent price batch, or the price has moved enough that `verifiedGrossUsdMicro` now falls below `STANDARD_USD_MIN`.
+> **VF-ORC-010:** A proof delay or retry does not reprice the Commitment Vault
+> Lock using a later market observation.
 
-**Evidence.** The vault computes and stores `verifiedGrossUsd` at creation (`VinculumFinalisBaseVault.sol:285`). `verifyAndMint` recomputes it from the *current* price record (`VinculumFinalisVerifier.sol:701` → `_verifiedGrossUsdMicro`), then re-applies the bound checks at Step 6. Nothing carries the creation-time valuation forward.
+> **VF-XCH-009:** Confirmation and proof-delivery delays do not alter the
+> original Valuation Timestamp, Commitment Vault Lock timestamp, maturity,
+> selected output, recipient, or calculated issuance.
 
-Twice-daily price refresh plus a 48-hour staleness window makes the timing window real, not theoretical.
+**Attacker.** None required. This fires against honest users through ordinary
+price drift. It is a conformance defect, not an exploit.
 
-**Impact.** Fee is transferred to the Dev Fund and is non-refundable. Principal is locked for the full duration. No issuance ever occurs. Rev 6 §5.2.2 is explicit that the non-refundable rule is a fail-safe for exceptional cases and *not an acceptable ordinary User experience* — this construction makes it an ordinary outcome driven by price drift.
+**Precondition.** A lock is created while the price record is fresh. By the time
+the mint package is submitted, the record has aged past `MAX_PRICE_RECORD_AGE`,
+or the asset has been marked unavailable by a later batch, or the price has
+moved enough that `verifiedGrossUsdMicro` now falls below `STANDARD_USD_MIN`.
 
-**Fix or accept.** Design decision, not a code bug. Either the verifier honours the valuation recorded at creation, or the site must state plainly that issuance can fail on price movement after locking and the fee is lost. VF-ORC-011/013 tie the emission rate to the Valuation Timestamp, which suggests the creation-time record is the intended basis — worth confirming against the specification before changing anything.
+**Evidence.** The vault computes and stores `verifiedGrossUsd` at creation —
+`VinculumFinalisBaseVault.sol:285`. `verifyAndMint` discards it and recomputes
+from the *current* price record — `VinculumFinalisVerifier.sol:701` →
+`_verifiedGrossUsdMicro:500–516` — then re-applies the bound checks. Nothing
+carries the creation-time valuation forward.
 
-**Missing test.** *Create a lock, advance time past the staleness window, attempt mint, assert the outcome someone deliberately chose.*
+Twice-daily price refresh against a 48-hour staleness window makes the timing
+window real rather than theoretical.
+
+**Impact.** Two distinct harms. Issuance is calculated from a price the
+specification says must not be used. And where the recomputed value falls out of
+bounds, the fee is spent, the principal is locked for the full duration, and no
+issuance ever occurs — making the §5.2.2 fail-safe an ordinary outcome driven by
+price drift.
+
+**Root cause.** The same as W1-01 and W1-02. `verifiedGrossUsd` exists in vault
+storage and `IChainVerifier.extractFacts` does not return it, so the consumer has
+no trustworthy path to it. Taking it from the package instead would recreate
+W1-02 in a new place.
+
+**Fix.** `verifiedGrossUsd` joins the returned fact set. Not a separate change.
+
+**Missing test.** *Create a lock, advance time past the staleness window, mint,
+and assert the issuance matches the creation-time valuation.*
+
+---
+
+### W1-09 · Emission rate taken from a caller-supplied Valuation Timestamp — Critical
+
+**Attacker.** Any address with gas. Same reach as W1-01.
+
+**Precondition.** Any real lock exists and has not yet minted. Emission has
+decayed measurably since launch, so the protocol has been running for some time.
+The defect is present from day one; its value to an attacker grows as decay
+deepens.
+
+**Action.** Build the package from the real lock as `protocol.js` does, then set
+`valuationTimestamp` to `launchTimestamp` — or any earlier date than the true
+creation block. Call `recordFeeAndRac`, then `verifyAndMint`.
+
+**Evidence.**
+
+```solidity
+// VinculumFinalisVerifier.sol:530-536
+function _daysSinceLaunch(ProofPackage calldata pkg)
+    internal view returns (uint256)
+{
+    require(pkg.valuationTimestamp >= launchTimestamp, "VF-ORC-011: valuation precedes launch");
+    require(pkg.valuationTimestamp <= block.timestamp,  "VF-ORC-011: valuation in future");
+    return (pkg.valuationTimestamp - launchTimestamp) / 1 days;
+}
+```
+
+Both requires bound the value to a window; neither ties it to the lock.
+`extractFacts` returns `creationTimestamp`, and `verifyAndMint` discards it with
+a bare comma in the destructuring at line 820. The emission rate that
+`_computeIssuance` applies therefore follows a number the caller chose.
+
+> **VF-ORC-011:** The Valuation Timestamp is the timestamp of the finalized
+> source-chain block containing the Commitment Vault Lock.
+
+**Impact.** Issuance inflated by the full decay differential between launch and
+the true creation date. Consumes lifetime VCLM capacity against value that was
+never committed. Unauthenticated and permissionless, like W1-01.
+
+**Fix.** `creationTimestamp` joins the returned fact set and
+`pkg.valuationTimestamp` must equal it.
+
+**Reproduction.** `25_w1_identity_binding.test.cjs`, cases W1-09a and W1-09b.
+Lock created 400 days after launch, package rewound to launch:
+
+```
+honest (day ~400):  924.248167728223589235 VCLM
+rewound to launch:  1150.0 VCLM
+reverted: false
+```
+
+Roughly 24% inflation at day 400, and it widens with every day of decay.
+
+**Fixture note, recorded because it nearly produced a false negative.** The first
+version of these two cases advanced 400 days without republishing the price
+batch, so `commitVaultLock` reverted on `PriceRecordStale()` inside the vault —
+before the finding was ever exercised. Written as a bare `.to.be.reverted`, both
+cases would have passed and recorded W1-09 as closed. This is the same failure
+mode W1-01c documents, met while writing the test that documents it. The fixture
+now republishes prices after time travel; see `advanceDaysAndRefreshPrices`.
 
 ---
 
@@ -285,7 +399,7 @@ Stated so the boundary is testable.
 1. **W1-01 and W1-02 together.** One interface change closes both. Nothing else on this list matters until they are closed — both are unauthenticated, both are remotely reachable by any address, and one of them fabricates supply.
 2. **Write the four adversarial tests first, watch them fail, then fix.** The suite's 85 tests all pass today against a codebase with two critical holes. That is the evidence for writing the test before the patch.
 3. **W1-03.** Ten minutes, unrelated to everything else.
-4. **W1-05.** Decide it, do not drift into it.
+4. **W1-05 and W1-09 need no separate decision.** Both close with the same field-set change as W1-01 and W1-02.
 5. Wave 2 only after Base is closed out.
 
 ---

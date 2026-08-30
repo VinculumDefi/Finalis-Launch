@@ -154,6 +154,19 @@ async function deployStack() {
            AID_REAL, AID_S1, AID_RICH };
 }
 
+// Advances the chain and republishes the price batch, so a lock can be created
+// long after launch without tripping the staleness guard. Without this the
+// W1-09 fixture reverts in the vault before the finding is reached.
+async function advanceDaysAndRefreshPrices(s, days, runId) {
+  await ethers.provider.send("evm_increaseTime", [days * 86400]);
+  await ethers.provider.send("evm_mine", []);
+  const ts = (await ethers.provider.getBlock("latest")).timestamp;
+  const ids    = [s.AID_REAL, s.AID_S1, s.AID_RICH];
+  const prices = [1_000_000n, 1_000_000n, 1_000_000_000n];
+  const sig = await signBatch(s.verifier, s.publisher, runId, ids, prices, ts);
+  await s.verifier.submitPriceBatch(runId, ids, prices, ts, sig);
+}
+
 // Creates a genuine lock owned by the honest user and returns the honest
 // package built from vault storage — the same construction protocol.js uses.
 async function realLockAndPackage(s, tag, gross = 100n * 10n ** 18n, duration = 30n * DAY) {
@@ -350,6 +363,68 @@ describe("W1 · identity fields must be bound to the lock record", function () {
       s.verifier.connect(s.attacker).verifyAndMint(upgraded),
       /VF-XCH-011|VF-REG-001|asset mismatch/i
     );
+  });
+
+  // ---------------------------------------------------------------------------
+  // W1-09 — emission rate follows a caller-supplied Valuation Timestamp.
+  //
+  // VF-ORC-011: the Valuation Timestamp is the timestamp of the finalized
+  // source-chain block containing the lock. _daysSinceLaunch bounds
+  // pkg.valuationTimestamp between launch and now, but never ties it to the
+  // lock, and verifyAndMint discards the creationTimestamp extractFacts
+  // returns. The emission rate therefore follows a number the caller picks.
+  // ---------------------------------------------------------------------------
+
+  it("W1-09a · a package with a rewound valuationTimestamp must not mint", async function () {
+    const s = await deployStack();
+    const launch = Number(await s.verifier.launchTimestamp());
+
+    // Move well past launch so decay has bitten, then lock.
+    await advanceDaysAndRefreshPrices(s, 400, 2n);
+
+    const { pkg } = await realLockAndPackage(s, "w1-valuation");
+
+    // One field changed. The lock was created ~400 days after launch; the
+    // package claims it was created on day zero, at the undecayed rate.
+    const rewound = { ...pkg, valuationTimestamp: launch };
+
+    await s.verifier.connect(s.attacker).recordFeeAndRac(rewound);
+    await expectRevertMatching(
+      s.verifier.connect(s.attacker).verifyAndMint(rewound),
+      /VF-XCH-011|VF-ORC-011|valuation mismatch/i
+    );
+  });
+
+  it("W1-09b · demonstration — issuance inflation by rewinding the clock", async function () {
+    const s = await deployStack();
+    const launch = Number(await s.verifier.launchTimestamp());
+
+    await advanceDaysAndRefreshPrices(s, 400, 2n);
+
+    // Honest baseline at the decayed rate.
+    const honest = await realLockAndPackage(s, "w1-val-honest");
+    await s.verifier.connect(s.attacker).recordFeeAndRac(honest.pkg);
+    await s.verifier.connect(s.attacker).verifyAndMint(honest.pkg);
+    const baseline = await s.vclm.balanceOf(s.user.address);
+
+    // Same lock size, clock rewound to launch.
+    const rigged = await realLockAndPackage(s, "w1-val-rigged");
+    const rewound = { ...rigged.pkg, valuationTimestamp: launch };
+
+    let reverted = false;
+    try {
+      await s.verifier.connect(s.attacker).recordFeeAndRac(rewound);
+      await s.verifier.connect(s.attacker).verifyAndMint(rewound);
+    } catch { reverted = true; }
+
+    const inflated = (await s.vclm.balanceOf(s.user.address)) - baseline;
+
+    console.log(`\n    reverted: ${reverted}`);
+    console.log(`    honest (day ~400):  ${ethers.formatUnits(baseline, 18)} VCLM`);
+    console.log(`    rewound to launch:  ${ethers.formatUnits(inflated, 18)} VCLM\n`);
+
+    expect(inflated, "rewound package minted at the undecayed emission rate")
+      .to.equal(0n);
   });
 
   // ---------------------------------------------------------------------------

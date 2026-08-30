@@ -1,6 +1,6 @@
 # Vinculum Project Evidence Index
 
-**Status: Derived Document · v2**
+**Status: Derived Document · v3**
 
 This index is a navigation and status aid only. It establishes nothing.
 
@@ -44,11 +44,12 @@ having. That distinction is inherited from
 |---|---|
 | Branch | `redteam/prep` |
 | Commit at last full verification | `bff9190` |
-| Test totals at that commit | **293 passing · 6 failing** |
-| The 6 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
+| Test totals at that commit | **293 passing · 8 failing** |
+| The 8 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
 | Session latch | `SESSION_LATCH.md` — paste at the top of a new chat before any review |
 | Recorded by | Claude, 30 August 2026, from a clone of `redteam/prep` |
-| v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. BASE-15 has no test yet. |
+| v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. |
+| v3 revision | BASE-15 upgraded to Reproduced — W1-09a/b execute. Suite now 8 failing, 1 passing (control). BASE-14 still has no test. |
 | Full suite command | `npx hardhat test` |
 
 Every row below carries the commit at which it was verified. If the code has
@@ -71,7 +72,7 @@ That is the mechanism that keeps this file honest — not good intentions.
 | **BASE-08** | **Package identity binding** | **Base recipient is bound at creation (VF-ARC-006)** | **🟥 Defect · 🟪 Reproduced** | `interfaces/IChainVerifier.sol` · `VinculumFinalisVerifier.sol:817–829` | **W1-01** · `25_w1_identity_binding` | `bff9190` |
 | **BASE-09** | **Package asset binding** | **Asset substitution is impossible (VF-REG-001, VF-COM-018)** | **🟥 Defect · 🟪 Reproduced** | `interfaces/IChainVerifier.sol` · `VinculumFinalisVerifier.sol:500–516` | **W1-02** · `25_w1_identity_binding` | `bff9190` |
 | **BASE-14** | **Valuation binding** | **Proof delay must not reprice the lock (VF-ORC-010, VF-XCH-009)** | **🟥 Defect** | `VinculumFinalisVerifier.sol:500–516` · `VinculumFinalisBaseVault.sol:285` | **W1-05** — reclassified from owner decision | `bff9190` |
-| **BASE-15** | **Emission-rate binding** | **Rate follows the Valuation Timestamp of the finalized source block (VF-ORC-011)** | **🟥 Defect** | `VinculumFinalisVerifier._daysSinceLaunch:530–536` · discard at `:820` | Spec read; no test yet | `bff9190` |
+| **BASE-15** | **Emission-rate binding** | **Rate follows the Valuation Timestamp of the finalized source block (VF-ORC-011)** | **🟥 Defect · 🟪 Reproduced** | `VinculumFinalisVerifier._daysSinceLaunch:530–536` · discard at `:820` | **W1-09** · `25_w1_identity_binding` W1-09a/b | `bff9190` |
 | BASE-10 | Issuance verifier | Stale or unavailable price cannot mint | 🟩 Read | `VinculumFinalisVerifier.sol:503–509` | Wave 1 §3.4 | `bff9190` |
 | BASE-11 | Vault | Handshake allowance enforced per source address | 🟢 Tested | `VinculumFinalisBaseVault.sol:292` | `03_handshake` | `bff9190` |
 | BASE-12 | Lifetime cap | Issuance rejected in full at the cap | 🟢 Tested | `contracts/VinculumFinalisCap.sol` | `24_cl84_lifetime_cap` | `bff9190` |
@@ -115,7 +116,7 @@ timestamp, maturity, selected output, recipient, or calculated issuance.
 | BASE-08 / W1-01 | Critical | **Yes** | `reviewers/red-team/Wave_1/REDTEAM_WAVE1_BASE.md` |
 | BASE-09 / W1-02 | Critical | **Yes** | same |
 | BASE-14 / W1-05 | Critical — spec violation | **Yes** | reclassified; VF-ORC-010 |
-| BASE-15 | Critical — spec violation | **Yes** | no register entry yet; VF-ORC-011 |
+| BASE-15 / W1-09 | Critical — spec violation | **Yes** | register W1-09; VF-ORC-011 |
 | W1-03 ethers SRI | High | Site-side | same |
 | W1-04, W1-06 | Medium | No | same |
 | W1-07, W1-08 | Low | No | same |
