@@ -215,3 +215,79 @@ caller-trust and fixed the half they noticed. The return set is the other half.
 `chain-verifiers/BaseSameChainVerifier.sol:114–140`,
 `chain-verifiers/UtxoChainVerifier.sol:136–186`, Rev 6 VF-XCH-005/011/012 and
 VF-ORC-009/010/011/012. Contracts confirmed unchanged between `bff9190` and HEAD.*
+
+---
+
+# Addendum · W2-05 — six UTXO environments have no carrier for the Base recipient
+
+**Added after the EVM read. This is an architecture finding, not an
+implementation one, and it changes the scope of the W1-01 remedy.**
+
+## The question
+
+Can `UtxoChainVerifier` return `baseRecipient` and `outputToken` the way Path A
+lets the EVM verifiers return them?
+
+## The answer, from C.8 itself
+
+> **Preflight (Repair 3/4):** Bitcoin Script cannot verify
+> price/registry/precision/CHONX/**Base-recipient**/Handshake on-chain, and a
+> User may construct a raw tx; however, an arbitrary raw tx creates no Vinculum
+> rights unless it satisfies the complete recognized source-event design.
+> Preflight is enforced in the Base proof-verification path.
+
+C.8's mechanism is three outputs: a fee output to the Dev Fund, a P2WSH CLTV
+principal output, and change. **None of them carries a Base recipient or a
+selected output token.**
+
+Moving preflight to Base resolves *verification*. It does not supply the
+*value*. Base can only check what the evidence binds, and for a C.8 transaction
+the evidence binds the release public key, the two output values, and the CLTV
+maturity operand. That is the VF-XCH-005 set. It is not the VF-XCH-011 set.
+
+## Stellar solves the identical problem; C.8 does not
+
+C.11 Stellar specifies a transaction **`Memo` binding lock id, Base recipient,
+output token, asset identity, and valuation reference**, alongside a
+`CreateClaimableBalance` with the release destination as sole claimant.
+
+Bitcoin's analogous carrier would be an `OP_RETURN` output. **C.8 specifies
+none.** Neither do C.13 Litecoin, C.14 Dogecoin, C.15 DigiByte, C.16 Zcash, nor
+C.17 Bitcoin Cash, all of which inherit the C.8 pattern.
+
+## Scope
+
+| Environment | Carrier for Base recipient and output token |
+|---|---|
+| Base, Ethereum, BNB, Avalanche, Polygon, Arbitrum, Optimism | `CommitVaultLockDetail` event — present |
+| Solana | Program verifies Base recipient on-chain — present |
+| Stellar | Transaction `Memo` — present |
+| XRP Ledger | Not specified in C.10 — **open** |
+| Cosmos Hub | Mechanism itself incomplete — out of scope |
+| **Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash** | **None specified — W2-05** |
+
+Six environments, seven counting XRPL.
+
+## Consequence for the W1-01 remedy
+
+Path A closes W1-01 for the eight environments whose source mechanism binds the
+identity. For the six UTXO environments it cannot: `extractFacts` has nothing to
+extract, because the transaction does not contain it.
+
+This does not block Wave 2. Those verifiers are already fail-closed, and
+`UtxoChainVerifier`'s Base verification path is `DESIGN DEFINED — DEPLOYABILITY
+EVIDENCE REQUIRED`. But it means the interface change must not be described as
+closing W1-01 protocol-wide. It closes W1-01 for the EVM family and Solana.
+
+## What this note does not decide
+
+Whether C.8 should gain an `OP_RETURN` output binding the Base recipient and
+output token, in the manner of C.11's Memo, is a specification question. It
+changes the recognized source-event design for six environments and is not
+something a red-team note settles.
+
+Recorded so it is not rediscovered, and so the Wave 2 patch is not written under
+the belief that it closes more than it does.
+
+**Evidence:** `Vinculum_Finalis_Architecture_Design.md` C.8, C.11, C.13–C.17 ·
+Rev 6 VF-XCH-005 (line 1154), VF-XCH-011 · `chain-verifiers/UtxoChainVerifier.sol:1–37`
