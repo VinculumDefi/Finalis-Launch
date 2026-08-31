@@ -27,15 +27,15 @@ governs.
 
 **Date:** 30 August 2026
 
-**Session:** Wave 1 red team (Base identity binding) → Wave 2 opening (remedy path)
+**Session:** Wave 1 red team (Base identity binding) → Wave 2 opening (remedy path) → website merge and style restoration
 
-**Repository:** `github.com/VinculumDefi/Finalis-Launch`
+**Repository:** `github.com/VinculumDefi/Finalis-Launch` (protocol) · `github.com/VinculumDefi/vinculum-protocol` (website, live at vinculumprotocol.com)
 
 **Branch:** `redteam/prep`
 
-**HEAD Commit:** `a91a23e`
+**HEAD Commit:** `fb8ae0c` on `Finalis-Launch/redteam/prep` · `de8a0f0` on `vinculum-protocol/main`
 
-**Previous HEAD:** `2ae5704`
+**Previous HEAD:** `2ae5704` · `abc7206`
 
 ---
 
@@ -79,7 +79,19 @@ read corrected the remedy from seven returned facts to six plus a Base-side
 valuation rule, because no source vault computes USD by design. And it produced
 W2-05: six UTXO environments specify no carrier for the Base recipient at all,
 so the interface change closes W1-01 for the EVM family and Solana but not
-protocol-wide. W1-03 was closed on the site side by vendoring `ethers` locally.
+protocol-wide. W1-03 was closed by vendoring `ethers` locally, verified in a browser, and is now live.
+
+The session then closed with website work in the second repository. A style
+drift was diagnosed and reversed: the dark-blue site had taken the hero
+gradient's first stop (`#060a10`) and two orb colours (`#00d4ff`, `#00e887`)
+from the original design and applied them as a global palette. Cause: pages
+rebuilt from memory rather than from a reference page. The Vinculum Style was
+re-extracted into a single stylesheet with its constraints written into the
+file header, a reference homepage was built, and 28,649 lines of superseded
+content were removed from the live site — including the published
+`PAUSER_ROLE`, `VinculumGovernor`, the mainnet admin console, and a deployment
+manifest advertising a 1-of-1 admin quorum. The twice-daily price workflow was
+not touched.
 
 ---
 
@@ -169,7 +181,8 @@ All four findings recorded here came from reading contracts.
 
 ## Closed Findings
 
-- **W1-03 · site.** `ethers` is now vendored into `vinculum-site` and served from the site's own origin, replacing the unpinned CDN load on `lock.html`. Hash of the npm 6.13.5 tarball build recorded in a comment above the tag: `sha384-NRAZj94DQk3dgtsOZzVYHbYVV1DFkF5QhL5RRxF0ILZLi6OQ7CsMlun748D42JbO`. **Not yet committed — `lock.html` and `ethers-6.13.5.umd.min.js` are pending in the `vinculum-site` tree and need a browser check that the wallet still connects.**
+- **W1-03 · site · CLOSED.** `ethers` is vendored and served from the site's own origin, replacing the unpinned CDN load. Hash of the npm 6.13.5 tarball build: `sha384-NRAZj94DQk3dgtsOZzVYHbYVV1DFkF5QhL5RRxF0ILZLi6OQ7CsMlun748D42JbO`. Verified by execution — `typeof ethers` returns `"object"` in the browser console.
+- **First assessment · CLOSED.** `contracts/` (five files carrying `PAUSER_ROLE`, `AccessControl` and `VinculumGovernor`), `test-console.html` (a publicly served mainnet admin console), and `deployed_base_mainnet_test.json` (admin address, 1-of-1 validator quorum) are removed from the live domain. These contradicted the immutability claim more concretely than any prose could defend it.
 
 No contract finding is closed. No patch has been written.
 
@@ -245,7 +258,10 @@ Requirements that answered questions previously believed to need owner input.
 - **Asked the owner to hand-edit two markdown files.** `00_PROJECT_START_HERE.md` already states *"Whole files, not line edits"* under Working conventions. Deliver complete files.
 - **Wrote W1-04 without checking whether the suite already covered it.** Half of it had been closed before Wave 1 was written.
 - **Issued a correction to the register that was itself wrong,** from misremembering a document rather than reading it.
-- **Recorded Wave 1 §3 items as source reads when named tests already existed.** Four rows were later upgraded to Tested once the suite was actually run.
+- **Recorded Wave 1 §3 items as source reads when named tests already existed.**
+- **Diagnosed a stale file twice from a guessed pattern instead of asking.** Blamed Windows download numbering, then guessed again. The real cause was a Desktop staging folder refreshed for one file and not the other. The owner knew his own workflow; theorising over it cost a round trip.
+- **Did not check a file's date before trusting its name.** A five-day-old `vinculum.css` already existed in the website repository, and the new one was assumed to have landed. `dir vinculum.css` takes two seconds and would have caught it. Multiple AIs generating files with identical uncreative names — `vinculum.css`, `index.html`, `nav.js`, `style.css`, `config.js` — makes this a recurring hazard, not a one-off.
+- **Did not ask whether the dark-blue site was a decision or a drift.** Spent an evening merging it before the owner mentioned the registry page was his true style. One question at the start would have replaced hours of work. Four rows were later upgraded to Tested once the suite was actually run.
 
 ---
 
@@ -257,7 +273,7 @@ Requirements that answered questions previously believed to need owner input.
 | W1-02 / BASE-09 | Canonical asset id not bound at mint | Contract | Confirmed · reproduced |
 | W1-05 / BASE-14 | Verifier reprices at mint time | Contract | Confirmed · specification; **no test yet** |
 | W1-09 / BASE-15 | Emission rate from caller-supplied timestamp | Contract | Confirmed · reproduced |
-| W1-03 | `ethers` loaded without Subresource Integrity on `lock.html` | Site | **Fixed, uncommitted** |
+| W1-03 | `ethers` loaded without Subresource Integrity | Site | **Closed — vendored, verified, live** |
 | W2-05 | Six UTXO environments bind no Base recipient | Architecture / specification | Open — not a deploy blocker for Base |
 
 All four contract blockers close with one change:
@@ -298,6 +314,12 @@ eight failures in `25_w1_identity_binding` green.
 
 Do not proceed to the four remote EVM verifiers until Base passes.
 
+**Website, separate track:** rebuild `how.html`, `tokens.html` and `status.html`
+by copying the structure of `index.html`. Their content already exists and is
+specification-correct in `Grok_Vinculum-site\vinculum-site`; only the structure
+around it changes. Check the frozen homepage artifacts first — see Questions
+Still Open.
+
 ---
 
 # Required Reading Before That Task
@@ -324,6 +346,10 @@ must be checked against that test.
 - Assert on revert reasons, not on the fact of a revert.
 - Deploy is blocked while any confirmed critical is open.
 - Fail-closed environments stay off the public site.
+- **The Vinculum Style is defined by `index.html` and `vinculum.css` in the website repository.** Never rebuild a page's styling from memory; copy the reference page. Four rules, written into the stylesheet header: dark is a section treatment and never the page background; orb colours never leave `.orb`; section padding never drops below `10rem`; every heading is Cormorant Garamond 300.
+- **No page carries its own `<style>` block.** Eleven pages each holding their own styles is how the drift happened.
+- **`asset-registry.html` stays wired to the live `vinculum_prices.json`.** The twice-daily workflow and `vinculum_price_fetcher_v9.py` are never moved or disturbed — Rev 6 §7 names that script as the protocol's established process.
+- **`git pull` before working in `vinculum-protocol`.** The price bot pushes twice daily and will be ahead of you.
 
 ---
 
@@ -339,17 +365,20 @@ must be checked against that test.
 
 - Whether C.8 should gain an `OP_RETURN` output binding the Base recipient and output token, as C.11 Stellar does with a `Memo`. Affects six environments. Specification question — W2-05.
 - Whether C.10 XRP Ledger specifies a carrier for the Base recipient. Not read this session.
+- Whether the remaining website pages — how-it-works, tokens, status, lock, stake — are rebuilt from `index.html` directly, or whether `product/HOMEPAGE_COPY_SPECIFICATION_v1.md` and the other frozen homepage artifacts govern their copy. Those artifacts were never applied to tonight's build.
+- Whether `Vinculum_NOW\vinculum-site` and `Grok_Vinculum-site\vinculum-site` on the Desktop should be archived now that the website lives in a repository. Two untracked copies with differing contents is the condition that caused tonight's confusion.
 
 ---
 
 # Session Snapshot
 
-**Repository:** `github.com/VinculumDefi/Finalis-Launch`
+**Repository:** `github.com/VinculumDefi/Finalis-Launch` (protocol) · `github.com/VinculumDefi/vinculum-protocol` (website, live at vinculumprotocol.com)
 **Branch:** `redteam/prep`
 **HEAD Commit:** `a91a23e`
 **Evidence Index:** v6
 **Findings Register:** v16 (not updated this session)
 **Red Team Wave:** Wave 1 closed · Wave 2 open (remedy path, no patch)
+**Website:** live at vinculumprotocol.com, restyled, superseded content removed
 **Deployment Status:** Deploy Blocked
 **Known Deployment Blockers:** W1-01, W1-02, W1-05, W1-09 (contract) · W1-03 (site)
 **Next Task:** Read the four EVM verifiers and the EVM vault before touching `IChainVerifier`
@@ -371,6 +400,12 @@ must be checked against that test.
 - `36f2a9c` — Wave 2 remedy path; field set corrected to six facts plus a valuation rule
 - `2afb1ce` — W2 remote EVM identity tests (4 failing by design)
 - `a91a23e` — W2-05: six UTXO environments specify no carrier for the Base recipient
+- `fb8ae0c` — session state current to `a91a23e`
+
+**`vinculum-protocol` (website), branch `main`:**
+
+- `86b23f7` — retire superseded contracts, admin console, deployment manifest and build config; fix `gitignore` filename
+- `de8a0f0` — restore the Vinculum Style: design system, reference homepage; retire superseded pages
 
 ---
 
