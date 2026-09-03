@@ -1,6 +1,6 @@
 # Vinculum Project Evidence Index
 
-**Status: Derived Document · v6**
+**Status: Derived Document · v7**
 
 This index is a navigation and status aid only. It establishes nothing.
 
@@ -46,11 +46,12 @@ having. That distinction is inherited from
 | Commit at last full verification | `151ff7a` (contracts unchanged since `bff9190`; only tests and documents added) |
 | Test totals at that commit | **293 passing · 8 failing** |
 | The 8 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
-| Session latch | `SESSION_LATCH.md` — paste at the top of a new chat before any review |
+| Session latch | `LAST_SESSION_STATE.md` — paste at the top of a new chat before any review |
 | Full suite executed by | Claude (Linux sandbox) and the project owner (Windows 10) — same totals |
 | Recorded by | Claude, 30 August 2026, from a clone of `redteam/prep` |
 | v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. |
 | v3 revision | BASE-15 upgraded to Reproduced — W1-09a/b execute. Suite now 8 failing, 1 passing (control). BASE-14 still has no test. |
+| v7 revision | Wave 2 closed. The four defect rows are reframed as evidence of one architectural deficiency. Citations repointed from the superseded remedy-path note to `WAVE_2_ARCHITECTURAL_ASSESSMENT.md`. No status changes. |
 | v6 revision | Field set corrected from seven to six returned facts plus a Base-side valuation rule; `verifiedGrossUsd` cannot be returned by any source verifier. Wave 2 remedy path recorded. No status changes. |
 | v5 revision | W1-04 retraction and the coverage-gap analysis written into the register, so index and register agree. No status changes. |
 | v4 revision | Full suite executed on two machines at `af40537`: 293 passing, 8 failing. Four rows upgraded 🟩 Read → 🟢 Tested against named suites. W1-04 partially retracted. BASE-14 remains the only defect row without a test. |
@@ -82,10 +83,15 @@ That is the mechanism that keeps this file honest — not good intentions.
 | BASE-12 | Lifetime cap | Issuance rejected in full at the cap | 🟢 Tested | `contracts/VinculumFinalisCap.sol` | `24_cl84_lifetime_cap` | `bff9190` |
 | BASE-13 | Clone deployment | Clone address not predictable, so not pre-fundable | 🟩 Read | `VinculumFinalisBaseVault._cloneLock()` | Wave 1 §3.6 | `bff9190` |
 
-### Root cause — one defect, four symptoms
+### Architectural deficiency — one finding, four pieces of evidence
 
-BASE-08, BASE-09, BASE-14 and BASE-15 are not four defects. They are four
-consequences of one:
+Per `reviewers/red-team/Wave_2/WAVE_2_ARCHITECTURAL_ASSESSMENT.md` §4:
+
+> **The independently verified immutable facts available to the consumer do not
+> match the evidence field set Rev 6 requires the consumer to validate.**
+
+BASE-08, BASE-09, BASE-14 and BASE-15 are evidence of that single deficiency,
+not four independent defects. The mechanism:
 
 > **`IChainVerifier.extractFacts` returns 7 facts. VF-XCH-011 requires evidence
 > to bind 19.** Every omitted field is accepted from the caller instead.
@@ -109,7 +115,7 @@ VF-XCH-009 independently settles BASE-14 and BASE-15: confirmation and
 proof-delivery delays do not alter the original Valuation Timestamp, lock
 timestamp, maturity, selected output, recipient, or calculated issuance.
 
-**Interface field set — corrected in Wave 2.** Six returned facts:
+**Interface field set — corrected in Wave 2, §4.3.** Six returned facts:
 `canonicalAssetId`, `baseRecipient`, `releaseDestination`, `outputToken`,
 `creationTimestamp`, `maturityTimestamp`. `verifiedGrossUsd` is **not** among
 them — no source vault computes USD, by design (VF-ORC-007). W1-05 closes by a
@@ -119,7 +125,16 @@ Base-side valuation rule instead.
 `CommitVaultLockDetail`, whose own comment names VF-XCH-011 as its purpose. The
 EVM verifiers never read it — `findLog` matches one topic0 and they all pass the
 `CommitVaultLock` topic. This is a wiring gap, not a missing capability. See
-`reviewers/red-team/Wave_2/REDTEAM_WAVE2_REMEDY_PATH.md`.
+`reviewers/red-team/Wave_2/WAVE_2_ARCHITECTURAL_ASSESSMENT.md`.
+
+**Scope, per Wave 2 §4.1–4.2.** The remedy applies to Base, Ethereum, Polygon,
+Arbitrum, OP-Stack and the fail-closed `EvmChainVerifier` environments. It does
+not apply to the six UTXO environments: an interface expansion cannot surface
+facts a source transaction does not carry.
+
+**Constraint, per Wave 2 §4.4.** `22_evm_vault` must pass unedited. A patch
+requiring it to change is altering the source event rather than reading the
+second log.
 
 ### Open at this commit
 
@@ -127,7 +142,7 @@ EVM verifiers never read it — `findLog` matches one topic0 and they all pass t
 |---|---|---|---|
 | BASE-08 / W1-01 | Critical | **Yes** | `reviewers/red-team/Wave_1/REDTEAM_WAVE1_BASE.md` |
 | BASE-09 / W1-02 | Critical | **Yes** | same |
-| BASE-14 / W1-05 | Critical — spec violation | **Yes** | reclassified; VF-ORC-010 |
+| BASE-14 / W1-05 | Critical — spec violation | **Yes** | reclassified; VF-ORC-010. Closes by a Base-side valuation rule, not a returned field |
 | BASE-15 / W1-09 | Critical — spec violation | **Yes** | register W1-09; VF-ORC-011 |
 | W1-03 ethers SRI | High | Site-side | same |
 | W1-04 | Medium — **partly retracted** | No | see note |

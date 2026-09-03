@@ -10,6 +10,24 @@ Finding shape per the agreed standard: attacker · precondition · action · imp
 
 ---
 
+> **Superseded architecturally by Wave 2 — read that before drawing conclusions.**
+>
+> `reviewers/red-team/Wave_2/WAVE_2_ARCHITECTURAL_ASSESSMENT.md` concludes that
+> W1-01, W1-02, W1-05 and W1-09 are best understood as four observable
+> consequences of a single architectural deficiency: the independently verified
+> immutable facts available to the consumer do not match the evidence field set
+> Rev 6 requires the consumer to validate.
+>
+> Wave 2 also narrows the remedy recorded below — six returned facts rather than
+> seven, plus a Base-side valuation rule — and limits its scope to the EVM
+> family and Solana.
+>
+> **This document is not amended to match.** It remains an accurate record of
+> the investigation performed during Wave 1, including the reasoning that was
+> later narrowed. Where it and Wave 2 differ on the remedy, Wave 2 governs.
+
+---
+
 ## Summary
 
 | ID | Severity | Title | Status |
@@ -49,7 +67,7 @@ facts, not seven: `canonicalAssetId`, `baseRecipient`, `releaseDestination`,
 computes no USD value — valuation lives on Base under VF-ORC-007 — so no source
 event carries it. W1-05 closes instead by a Base-side rule: select the price
 record at the Valuation Timestamp rather than recomputing from the current one.
-See `reviewers/red-team/Wave_2/REDTEAM_WAVE2_REMEDY_PATH.md`.
+See `reviewers/red-team/Wave_2/WAVE_2_ARCHITECTURAL_ASSESSMENT.md` §4.3.
 
 ---
 
