@@ -27,13 +27,13 @@ governs.
 
 **Date:** 30 August 2026
 
-**Session:** Wave 1 red team (Base identity binding) → Wave 2 opening (remedy path) → website merge and style restoration
+**Session:** Wave 1 red team (Base identity binding) → Wave 2 architectural assessment, closed → website merge and style restoration, live
 
 **Repository:** `github.com/VinculumDefi/Finalis-Launch` (protocol) · `github.com/VinculumDefi/vinculum-protocol` (website, live at vinculumprotocol.com)
 
 **Branch:** `redteam/prep`
 
-**HEAD Commit:** `fb8ae0c` on `Finalis-Launch/redteam/prep` · `de8a0f0` on `vinculum-protocol/main`
+**HEAD Commit:** `c1ce1a1` on `Finalis-Launch/redteam/prep` · `de8a0f0` on `vinculum-protocol/main`
 
 **Previous HEAD:** `2ae5704` · `abc7206`
 
@@ -69,8 +69,8 @@ Two new documents entered the repository so this state survives without anyone
 remembering it: the Project Evidence Index, and the session latch that became
 this file.
 
-Wave 2 then opened with a source read rather than a patch, and it narrowed the
-defect. `VinculumFinalisEvmVault` already emits every VF-XCH-011 identity field
+Wave 2 then closed with a source read rather than a patch, and it narrowed the
+defect twice. `VinculumFinalisEvmVault` already emits every VF-XCH-011 identity field
 in a second event, `CommitVaultLockDetail`, whose own comment names that
 requirement as its purpose. The Base-side verifiers never open it, because
 `EvmReceipt.findLog` matches one topic and every verifier passes the
@@ -121,7 +121,7 @@ undeployed contracts, an attack manual against live ones.
 **Findings Register Version:** v16 — *not reviewed this session; the Wave 1
 report was updated instead. Whether v16 needs a corresponding entry is unresolved.*
 
-**Current Red Team Wave:** Wave 1 (Base) closed as a review · Wave 2 opened — remedy path established, no patch written
+**Current Red Team Wave:** Wave 1 closed as a review · **Wave 2 closed** — architectural assessment accepted, no patch written · Wave 3 not started
 
 **Master Specification Revision:** Rev 6 · `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` (hash verified this session)
 
@@ -361,6 +361,14 @@ must be checked against that test.
 - `package-lock.json` — committed at `8cac1bc` after verifying the compiler did not move. Reproducibility is better served by a lockfile matching what was actually built with.
 - `SESSION_LATCH.md` — removed at `28c218e`, superseded by this file. `00_PROJECT_START_HERE.md` row 0 repointed at `cef5ca3`.
 
+**Coverage, stated plainly.** Roughly one environment of seventeen has been
+red-teamed, and zero of the four confirmed defects are patched. Untouched: the
+four written remote EVM verifiers, Solana, XRPL, Stellar, Cosmos and the six
+UTXO environments, the stake and cap and token contracts, the `_computeIssuance`
+arithmetic, the price publisher path, reentrancy across contract boundaries, and
+`src/lib/` (36 modules, 6,201 lines, `vfProofAdapter.js` marked NON-PRODUCTION in
+its own header). What two waves bought is a method, not coverage.
+
 **Still open:**
 
 - Whether C.8 should gain an `OP_RETURN` output binding the Base recipient and output token, as C.11 Stellar does with a `Memo`. Affects six environments. Specification question — W2-05.
@@ -377,7 +385,7 @@ must be checked against that test.
 **HEAD Commit:** `a91a23e`
 **Evidence Index:** v6
 **Findings Register:** v16 (not updated this session)
-**Red Team Wave:** Wave 1 closed · Wave 2 open (remedy path, no patch)
+**Red Team Wave:** Wave 1 closed · Wave 2 closed · Wave 3 not started
 **Website:** live at vinculumprotocol.com, restyled, superseded content removed
 **Deployment Status:** Deploy Blocked
 **Known Deployment Blockers:** W1-01, W1-02, W1-05, W1-09 (contract) · W1-03 (site)
@@ -401,6 +409,7 @@ must be checked against that test.
 - `2afb1ce` — W2 remote EVM identity tests (4 failing by design)
 - `a91a23e` — W2-05: six UTXO environments specify no carrier for the Base recipient
 - `fb8ae0c` — session state current to `a91a23e`
+- `c1ce1a1` — Wave 2 closes: architectural assessment supersedes the remedy path note; Index to v7; Wave 1 marked superseded; red-team README added
 
 **`vinculum-protocol` (website), branch `main`:**
 
@@ -411,7 +420,7 @@ must be checked against that test.
 
 # Staleness
 
-This file records the state at `a91a23e`. If `git log -1` shows a later commit,
+This file records the state at `c1ce1a1`. If `git log -1` shows a later commit,
 this file is stale by that much. It is derived and loses to its sources — the
 Findings Register, the red-team reports, the source code, and executed tests all
 outrank it.
