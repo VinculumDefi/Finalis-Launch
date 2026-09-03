@@ -33,7 +33,7 @@ governs.
 
 **Branch:** `redteam/prep`
 
-**HEAD Commit:** `c1ce1a1` on `Finalis-Launch/redteam/prep` · `de8a0f0` on `vinculum-protocol/main`
+**HEAD Commit:** `33a9c4b` on `Finalis-Launch/redteam/prep` · `de8a0f0` on `vinculum-protocol/main`
 
 **Previous HEAD:** `2ae5704` · `abc7206`
 
@@ -121,7 +121,7 @@ undeployed contracts, an attack manual against live ones.
 **Findings Register Version:** v16 — *not reviewed this session; the Wave 1
 report was updated instead. Whether v16 needs a corresponding entry is unresolved.*
 
-**Current Red Team Wave:** Wave 1 closed as a review · **Wave 2 closed** — architectural assessment accepted, no patch written · Wave 3 not started
+**Current Red Team Wave:** Wave 1 closed as a review · **Wave 2 closed** — architectural assessment accepted, no patch written · **Wave 3 ready to begin**
 
 **Master Specification Revision:** Rev 6 · `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` (hash verified this session)
 
@@ -307,12 +307,25 @@ requires editing it, that patch is Path B wearing Path A's name.
 
 # Immediate Next Task
 
-Extend `IChainVerifier.extractFacts` with the six facts and implement Path A in
-`BaseSameChainVerifier` first — it already reads the full `LockRecord` into
-memory and discards those fields, so it is roughly four lines and it turns the
-eight failures in `25_w1_identity_binding` green.
+**Wave 3 begins with tests, not code.**
 
-Do not proceed to the four remote EVM verifiers until Base passes.
+Execution order:
+
+1. Execute the remote EVM regression tests against the current tree.
+2. Confirm they fail for the expected identity-binding reasons, not for
+   incidental ones. Assert on revert reasons, never on the fact of a revert.
+3. Extend `IChainVerifier.extractFacts` with the six facts.
+4. Patch `BaseSameChainVerifier` only — it already reads the full `LockRecord`
+   into memory and discards those fields, so it is roughly four lines and it
+   turns the eight failures in `25_w1_identity_binding` green.
+5. Confirm `22_evm_vault` passes unmodified.
+6. Only then continue to the four remaining EVM verifiers.
+
+**Stop condition.** If `22_evm_vault` requires modification, the chosen
+architectural path is incorrect. That test asserts the vault emits exactly six
+data words in the order `EvmReceipt` expects; a patch needing it changed is
+altering the source event rather than reading the second log, which is the
+rejected Path B.
 
 **Website, separate track:** rebuild `how.html`, `tokens.html` and `status.html`
 by copying the structure of `index.html`. Their content already exists and is
@@ -385,7 +398,7 @@ its own header). What two waves bought is a method, not coverage.
 **HEAD Commit:** `a91a23e`
 **Evidence Index:** v6
 **Findings Register:** v16 (not updated this session)
-**Red Team Wave:** Wave 1 closed · Wave 2 closed · Wave 3 not started
+**Red Team Wave:** Wave 1 closed · Wave 2 closed · **Wave 3 ready to begin**
 **Website:** live at vinculumprotocol.com, restyled, superseded content removed
 **Deployment Status:** Deploy Blocked
 **Known Deployment Blockers:** W1-01, W1-02, W1-05, W1-09 (contract) · W1-03 (site)
@@ -409,6 +422,7 @@ its own header). What two waves bought is a method, not coverage.
 - `2afb1ce` — W2 remote EVM identity tests (4 failing by design)
 - `a91a23e` — W2-05: six UTXO environments specify no carrier for the Base recipient
 - `fb8ae0c` — session state current to `a91a23e`
+- `33a9c4b` — Wave 2 complete; living documents synchronized; Wave 3 opened with a regression-first workflow
 - `c1ce1a1` — Wave 2 closes: architectural assessment supersedes the remedy path note; Index to v7; Wave 1 marked superseded; red-team README added
 
 **`vinculum-protocol` (website), branch `main`:**
@@ -420,7 +434,7 @@ its own header). What two waves bought is a method, not coverage.
 
 # Staleness
 
-This file records the state at `c1ce1a1`. If `git log -1` shows a later commit,
+This file records the state at `33a9c4b`. If `git log -1` shows a later commit,
 this file is stale by that much. It is derived and loses to its sources — the
 Findings Register, the red-team reports, the source code, and executed tests all
 outrank it.
@@ -432,6 +446,14 @@ Regenerate it at the end of a session, not during one.
 # Closing Notes
 
 Wave 1 is closed as a review. No fix has been written and no finding is closed.
+
+All five living documents are synchronized: this file, the Evidence Index (v7),
+`00_PROJECT_START_HERE.md`, the Wave 1 report, and the Wave 2 assessment.
+
+Wave 2 is complete. The architectural remedy is established. The remaining work
+is implementation and verification rather than further analysis.
+
+Wave 3 opens with regression tests, not implementation.
 
 Twelve tests fail on `redteam/prep` by design — eight in `25_w1_identity_binding`
 and four in `26_w2_remote_evm_identity`. A continuous-integration run will
