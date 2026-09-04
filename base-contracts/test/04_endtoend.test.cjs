@@ -107,9 +107,14 @@ function buildPackage(o) {
   const lockId = o.lockId ?? ethers.keccak256(ethers.toUtf8Bytes("lock-1"));
   const valuationTs = o.valuationTs;
 
+  // CL-85. extractFacts now returns the four identity fields, so the proof the
+  // mock decodes must carry them. They match this package exactly, which is
+  // what this builder already promised to do.
   const proof = ethers.AbiCoder.defaultAbiCoder().encode(
-    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
-    [lockId, gross, fee, principal, duration, valuationTs, valuationTs + Number(duration)]
+    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256",
+     "bytes32", "address", "address", "uint8"],
+    [lockId, gross, fee, principal, duration, valuationTs, valuationTs + Number(duration),
+     ASSET, o.recipient, ethers.ZeroAddress, 0]
   );
 
   return {

@@ -19,6 +19,21 @@ const VAULT = "0x1111111111111111111111111111111111111111";
 const OTHER_VAULT = "0x2222222222222222222222222222222222222222";
 const TOPIC = ethers.keccak256(ethers.toUtf8Bytes("CommitVaultLock(bytes32,uint256)"));
 
+// CL-85. The vault emits two logs per lock. This fixture predates
+// CommitVaultLockDetail (test 133a4e5 at 10:20, event 15df4bf at 17:05 the
+// same day), so its receipt modelled a shape the vault has not emitted since.
+// The encoding below was verified byte-for-byte against the compiler's own
+// Interface.encodeEventLog output.
+const TOPIC_DETAIL = ethers.keccak256(ethers.toUtf8Bytes(
+  "CommitVaultLockDetail(bytes32,string,address,bytes32,address,address,address,address,uint8,bytes32,uint32,address)"));
+const D_ASSET   = ethers.getAddress("0xffffffffffffffffffffffffffffffffffffffff");
+const D_LOCKC   = ethers.getAddress("0xdddddddddddddddddddddddddddddddddddddddd");
+const D_RECIP   = ethers.getAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+const D_RELEASE = ethers.getAddress("0xcccccccccccccccccccccccccccccccccccccccc");
+const D_FEEDEST = ethers.getAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+const D_SRCACCT = ethers.getAddress("0x9999999999999999999999999999999999999999");
+const D_ASSETID = ethers.keccak256(ethers.toUtf8Bytes("ethereum:USDC"));
+
 // ---- RLP encoding ----------------------------------------------------------
 
 function rlpLen(len, offset) {
@@ -52,6 +67,16 @@ function word(v) {
 function lockData({ gross, fee, principal, duration, creation, maturity }) {
   return "0x" + word(gross) + word(fee) + word(principal) +
                 word(duration) + word(creation) + word(maturity);
+}
+
+function detailData({ env = "ethereum", outputToken = 0, allowanceCount = 3 } = {}) {
+  const envBytes = ethers.toUtf8Bytes(env);
+  const envPadded = ethers.hexlify(envBytes).slice(2).padEnd(64, "0");
+  const w = (n) => ethers.toBeHex(n, 32).slice(2);
+  const a = (x) => ethers.zeroPadValue(x, 32).slice(2);
+  return "0x" + w(0x120) + a(D_ASSET) + a(D_LOCKC) + a(D_RECIP) + a(D_RELEASE) +
+    w(outputToken) + ethers.ZeroHash.slice(2) + w(allowanceCount) + a(D_FEEDEST) +
+    w(envBytes.length) + envPadded;
 }
 
 function buildLog(emitter, topics, data) {
@@ -113,15 +138,20 @@ const FACTS = {
 };
 const VAULT_LOCK_ID = ethers.keccak256(ethers.toUtf8Bytes("vault-lock-1"));
 
-async function deploy({ status = 1, emitter = VAULT, topic0 = TOPIC } = {}) {
+async function deploy({ status = 1, emitter = VAULT, topic0 = TOPIC, includeDetail = true } = {}) {
   const M = await ethers.getContractFactory("MockL1Block");
   const mock = await M.deploy();
 
   const R = await ethers.getContractFactory("L1BlockRegistry");
   const registry = await R.deploy(await mock.getAddress());
 
-  const log = buildLog(emitter, [topic0, VAULT_LOCK_ID], lockData(FACTS));
-  const receipt = hex(buildReceipt({ status, logs: [log] }));
+  const logs = [buildLog(emitter, [topic0, VAULT_LOCK_ID], lockData(FACTS))];
+  if (includeDetail) {
+    logs.push(buildLog(emitter,
+      [TOPIC_DETAIL, VAULT_LOCK_ID, ethers.zeroPadValue(D_SRCACCT, 32), D_ASSETID],
+      detailData()));
+  }
+  const receipt = hex(buildReceipt({ status, logs }));
   const trie = buildTrie(receipt);
   const header = buildHeader(trie.root);
 
@@ -217,6 +247,15 @@ describe("EthereumChainVerifier — negative cases", function () {
     const s = await deploy({ status: 0 });
     await expect(s.verifier.verifyFinality(s.proof, "0x"))
       .to.be.revertedWithCustomError(s.verifier, "ReceiptFailed");
+  });
+
+  // CL-85. Fail-closed check for the missing identity log, verified here
+  // rather than implied. A receipt binding no identity cannot satisfy
+  // VF-XCH-011, so extraction must revert rather than fall back to
+  // caller-supplied values.
+  it("rejects a receipt carrying no identity Detail log", async function () {
+    const d = await deploy({ includeDetail: false });
+    await expect(d.verifier.extractFacts(d.proof)).to.be.reverted;
   });
 
   it("rejects an event emitted by a different contract", async function () {

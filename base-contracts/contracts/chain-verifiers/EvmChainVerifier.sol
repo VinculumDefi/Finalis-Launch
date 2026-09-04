@@ -100,7 +100,8 @@ contract EvmChainVerifier is IChainVerifier {
     function extractFacts(
         bytes calldata
     ) external view override returns (
-        bytes32, uint256, uint256, uint256, uint256, uint256, uint256
+        bytes32, uint256, uint256, uint256, uint256, uint256, uint256,
+        bytes32, address, address, uint8
     ) {
         revert VerifierNotImplemented("evm-remote");
     }

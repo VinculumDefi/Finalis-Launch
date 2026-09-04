@@ -73,6 +73,19 @@ interface IL1RegistryTimed {
 
 contract OpStackFaultProofVerifier is IChainVerifier {
 
+    /// @dev CL-85. Topic0 of the vault's second log. `CommitVaultLockDetail`
+    ///      carries the VF-XCH-011 identity fields; its comment in
+    ///      VinculumFinalisEvmVault names that requirement as its purpose. The
+    ///      vault emitted it from the start and no verifier opened it, because
+    ///      findLog matches a single topic and every verifier passed the
+    ///      CommitVaultLock topic. The identity was bound at the source and
+    ///      discarded at the boundary.
+    bytes32 internal constant DETAIL_TOPIC =
+        keccak256("CommitVaultLockDetail(bytes32,string,address,bytes32,address,address,address,address,uint8,bytes32,uint32,address)");
+
+    /// @dev Raised when the Detail log found does not belong to this lock.
+    error IdentityLogMissing(bytes32 vaultLockId);
+
     error ZeroAddress();
     error L1BlockNotRecorded(uint256 blockNumber);
     error ProvenBytesMismatch();
@@ -196,7 +209,11 @@ contract OpStackFaultProofVerifier is IChainVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        bytes32 canonicalAssetId,
+        address baseRecipient,
+        address releaseDestination,
+        uint8   outputToken
     ) {
         Proof memory pr = _decode(lockEventProof);
         bytes memory l2Receipt = _provenL2Receipt(pr);
@@ -219,6 +236,29 @@ contract OpStackFaultProofVerifier is IChainVerifier {
         }
 
         bytes32 vaultLockId = EvmReceipt.topic(lg, 1);
+
+        // CL-85. Second findLog against the Detail topic, in the receipt this
+        // function has already proven and decoded. Field positions come from
+        // the vault's event: canonicalAssetId is indexed topic 3; the leading
+        // dynamic `string sourceEnvironment` occupies data word 0 as an ABI
+        // head offset, so the fixed-width entries after it are not displaced —
+        // asset 1, lockContract 2, baseRecipient 3, releaseDestination 4,
+        // outputToken 5.
+        //
+        // findLog reverts with NoMatchingLog when the Detail log is absent, so
+        // a receipt binding no identity fails closed in the library. What
+        // still needs checking is that the log found belongs to this lock.
+        {
+            EvmReceipt.Log memory dl = EvmReceipt.findLog(l2Receipt, sourceVault, DETAIL_TOPIC);
+            if (EvmReceipt.topic(dl, 1) != vaultLockId) {
+                revert IdentityLogMissing(vaultLockId);
+            }
+            canonicalAssetId   = EvmReceipt.topic(dl, 3);
+            baseRecipient      = address(uint160(uint256(EvmReceipt.word(dl, 3))));
+            releaseDestination = address(uint160(uint256(EvmReceipt.word(dl, 4))));
+            outputToken        = uint8(uint256(EvmReceipt.word(dl, 5)));
+        }
+
         lockId = keccak256(abi.encodePacked(environmentId, sourceVault, vaultLockId));
     }
 

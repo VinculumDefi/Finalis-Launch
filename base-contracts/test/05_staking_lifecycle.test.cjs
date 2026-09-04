@@ -84,9 +84,12 @@ async function generateRac(s, tag, recipient) {
   const fee = (gross * 250n) / 10000n;
   const principal = gross - fee;
   const lockId = ethers.keccak256(ethers.toUtf8Bytes("lock-" + tag));
+  // CL-85. Identity fields added; they match the package built below.
   const proof = ethers.AbiCoder.defaultAbiCoder().encode(
-    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
-    [lockId, gross, fee, principal, duration, ts, ts + Number(duration)]);
+    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256",
+     "bytes32", "address", "address", "uint8"],
+    [lockId, gross, fee, principal, duration, ts, ts + Number(duration),
+     ASSET, recipient, ethers.ZeroAddress, 0]);
   const pkg = {
     sourceEnvironmentId: ENV, commitmentVaultLockId: lockId,
     handshakeIdentity: "MockChain:" + tag, handshakeAllowanceCount: 1,

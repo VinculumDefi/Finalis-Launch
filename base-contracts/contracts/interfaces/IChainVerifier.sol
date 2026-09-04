@@ -45,6 +45,19 @@ interface IChainVerifier {
     /// @return durationSecs Lock duration in seconds.
     /// @return creationTimestamp Source block timestamp at creation.
     /// @return maturityTimestamp Maturity timestamp.
+    /// @return canonicalAssetId Canonical identity of the locked asset.
+    /// @return baseRecipient Base address bound to receive issuance.
+    /// @return releaseDestination Destination bound for principal release.
+    /// @return outputToken Selected output token (0 = VCLM, 1 = CHONX).
+    ///
+    /// CL-85. The four identity fields were added to the original seven. The
+    /// seven alone were insufficient: VF-XCH-011 requires the consumer to
+    /// validate evidence binding the recipient, the asset, the release
+    /// destination and the output token, and none could be established from
+    /// this return set, so the consumer took them from the caller. That is the
+    /// defect CL-81 corrected one level down, applied to the return set rather
+    /// than to mutability. An implementation that cannot independently
+    /// establish an identity field must revert rather than return zero.
     function extractFacts(
         bytes calldata lockEventProof
     ) external view returns (
@@ -54,6 +67,10 @@ interface IChainVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        bytes32 canonicalAssetId,
+        address baseRecipient,
+        address releaseDestination,
+        uint8   outputToken
     );
 }

@@ -37,13 +37,13 @@ const VAULT = "0x1111111111111111111111111111111111111111";
 const TOPIC_LOCK = ethers.keccak256(ethers.toUtf8Bytes("CommitVaultLock(bytes32,uint256)"));
 const TOPIC_DETAIL = ethers.keccak256(ethers.toUtf8Bytes("CommitVaultLockDetail(bytes32,string,address,bytes32,address,address,address,address,uint8,bytes32,uint32,address)"));
 
-const HONEST_RECIPIENT = "0xAAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa";
-const ATTACKER        = "0xbBBBbbBBbBBBBbBbBbbbbBbBBbBBBBbbBbBbBbbB";
-const RELEASE_DEST    = "0xcCcCcccCCCCcCCCCcCcCCCCcCCcCCcCCcCcCcCCC";
-const LOCK_CONTRACT   = "0xDdDDDDdddDDdddDdDDddDdDDdDDdDDddDDDDDDDd";
-const FEE_DEST        = "0xEEeeEeEeeEEeeEeeEEeeEeEeeeEeEeEeEEeEeEEE";
-const ASSET           = "0xFfFffFFFfFfFffFfFFffFffFFFfffFFffFfFfFFf";
-const SOURCE_ACCOUNT  = "0x9999999999999999999999999999999999999999";
+const HONEST_RECIPIENT = ethers.getAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+const ATTACKER        = ethers.getAddress("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+const RELEASE_DEST    = ethers.getAddress("0xcccccccccccccccccccccccccccccccccccccccc");
+const LOCK_CONTRACT   = ethers.getAddress("0xdddddddddddddddddddddddddddddddddddddddd");
+const FEE_DEST        = ethers.getAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+const ASSET           = ethers.getAddress("0xffffffffffffffffffffffffffffffffffffffff");
+const SOURCE_ACCOUNT  = ethers.getAddress("0x9999999999999999999999999999999999999999");
 
 const CANONICAL_ASSET_ID = ethers.keccak256(ethers.toUtf8Bytes("ethereum:USDC"));
 const VAULT_LOCK_ID      = ethers.keccak256(ethers.toUtf8Bytes("vault-lock-w2"));
@@ -249,7 +249,9 @@ describe("W2 · remote EVM identity must be extractable from the source receipt"
     const s = await deployWithDetail({ outputToken: 0 });
     const f = await s.verifier.extractFacts(s.proof);
 
-    expect(f.outputToken, "no outputToken is returned").to.not.equal(undefined);
+    // The BigNumber matcher rejects a comparison against undefined for a
+    // numeric return, so the presence check is made directly.
+    expect(f.outputToken === undefined, "no outputToken is returned").to.equal(false);
     expect(Number(f.outputToken)).to.equal(0);
     expect(ethers.getAddress(f.releaseDestination)).to.equal(ethers.getAddress(RELEASE_DEST));
   });

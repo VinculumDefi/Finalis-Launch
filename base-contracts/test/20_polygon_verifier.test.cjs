@@ -100,6 +100,37 @@ const FACTS = {
 };
 const VAULT_LOCK_ID = ethers.keccak256(ethers.toUtf8Bytes("polygon-lock-1"));
 
+// CL-85. The vault emits two logs per lock. This fixture predates
+// CommitVaultLockDetail (event added in 15df4bf), so its receipt modelled a
+// shape the vault has not emitted since. The encoding below was verified
+// byte-for-byte against the compiler's own Interface.encodeEventLog output.
+const TOPIC_DETAIL = ethers.keccak256(ethers.toUtf8Bytes(
+  "CommitVaultLockDetail(bytes32,string,address,bytes32,address,address,address,address,uint8,bytes32,uint32,address)"));
+const D_ASSET   = ethers.getAddress("0xffffffffffffffffffffffffffffffffffffffff");
+const D_LOCKC   = ethers.getAddress("0xdddddddddddddddddddddddddddddddddddddddd");
+const D_RECIP   = ethers.getAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+const D_RELEASE = ethers.getAddress("0xcccccccccccccccccccccccccccccccccccccccc");
+const D_FEEDEST = ethers.getAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+const D_SRCACCT = ethers.getAddress("0x9999999999999999999999999999999999999999");
+const D_ASSETID = ethers.keccak256(ethers.toUtf8Bytes("source:USDC"));
+
+function detailData({ env = "src", outputToken = 0, allowanceCount = 3 } = {}) {
+  const envBytes = ethers.toUtf8Bytes(env);
+  const envPadded = ethers.hexlify(envBytes).slice(2).padEnd(64, "0");
+  const w = (n) => ethers.toBeHex(n, 32).slice(2);
+  const a = (x) => ethers.zeroPadValue(x, 32).slice(2);
+  return "0x" + w(0x120) + a(D_ASSET) + a(D_LOCKC) + a(D_RECIP) + a(D_RELEASE) +
+    w(outputToken) + ethers.ZeroHash.slice(2) + w(allowanceCount) + a(D_FEEDEST) +
+    w(envBytes.length) + envPadded;
+}
+
+function detailLog(emitter, lockId) {
+  return buildLog(emitter,
+    [TOPIC_DETAIL, lockId, ethers.zeroPadValue(D_SRCACCT, 32), D_ASSETID],
+    detailData());
+}
+
+
 function encodeProof(p) {
   return ethers.AbiCoder.defaultAbiCoder().encode(
     ["uint256", "bytes", "bytes", "bytes[]", "bytes",
@@ -123,7 +154,9 @@ async function build(opts = {}) {
     "0x" + word(FACTS.gross) + word(FACTS.fee) + word(FACTS.principal) +
            word(FACTS.duration) + word(FACTS.creation) + word(FACTS.maturity)
   );
-  const borReceipt = hex(buildReceipt({ status: opts.borStatus ?? 1, logs: [lockLog] }));
+  const borLogs = [lockLog];
+  if (opts.includeDetail !== false) borLogs.push(detailLog(VAULT, VAULT_LOCK_ID));
+  const borReceipt = hex(buildReceipt({ status: opts.borStatus ?? 1, logs: borLogs }));
   const borTrie = buildTrie(borReceipt);
 
   // The checkpoint leaf commits to that receiptRoot.
@@ -249,6 +282,15 @@ describe("PolygonChainVerifier — each link attacked", function () {
     const bad = encodeProof({ ...s.parts, borReceipt: swapped });
     await expect(s.verifier.verifyFinality(bad, "0x"))
       .to.be.revertedWithCustomError(s.verifier, "ProvenBytesMismatch");
+  });
+
+  // CL-85. Fail-closed check for the missing identity log, verified here
+  // rather than implied. A receipt binding no identity cannot satisfy
+  // VF-XCH-011, so extraction must revert rather than fall back to
+  // caller-supplied values.
+  it("rejects a receipt carrying no identity Detail log", async function () {
+    const s = await build({ includeDetail: false });
+    await expect(s.verifier.extractFacts(s.proof)).to.be.reverted;
   });
 
   it("rejects a failed L1 receipt", async function () {

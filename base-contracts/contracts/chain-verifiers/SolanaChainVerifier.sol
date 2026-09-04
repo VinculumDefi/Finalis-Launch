@@ -43,7 +43,8 @@ contract SolanaChainVerifier is IChainVerifier {
     function extractFacts(
         bytes calldata
     ) external pure override returns (
-        bytes32, uint256, uint256, uint256, uint256, uint256, uint256
+        bytes32, uint256, uint256, uint256, uint256, uint256, uint256,
+        bytes32, address, address, uint8
     ) {
         revert VerifierNotImplemented("solana");
     }

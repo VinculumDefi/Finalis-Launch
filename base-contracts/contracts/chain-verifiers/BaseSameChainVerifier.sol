@@ -124,13 +124,20 @@ contract BaseSameChainVerifier is IChainVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        bytes32 canonicalAssetId,
+        address baseRecipient,
+        address releaseDestination,
+        uint8   outputToken
     ) {
         bytes32 id = _lockIdOf(lockEventProof);
 
         IBaseVaultReader.LockRecord memory r = vault.getLock(id);
         if (!r.exists) revert LockNotFound(id);
 
+        // CL-85. The identity fields come from the same stored record as the
+        // numeric facts. They were already read into memory here and then
+        // discarded, which is why substitution was undetectable downstream.
         return (
             r.lockId,
             r.grossAmount,
@@ -138,7 +145,11 @@ contract BaseSameChainVerifier is IChainVerifier {
             r.principalAmount,
             uint256(r.durationSecs),
             uint256(r.creationTime),
-            uint256(r.maturityTime)
+            uint256(r.maturityTime),
+            r.canonicalAssetId,
+            r.baseRecipient,
+            r.releaseDestination,
+            r.outputToken
         );
     }
 

@@ -124,9 +124,12 @@ describe("CL-44 · output token discriminator is closed", function () {
     const gross = 20n*10n**18n, duration = 30n*86400n;
     const fee = (gross*500n)/10000n, principal = gross - fee;
     const lockId = ethers.keccak256(ethers.toUtf8Bytes(tag));
+    // CL-85. Identity fields added; they match the package returned below.
     const proof = ethers.AbiCoder.defaultAbiCoder().encode(
-      ["bytes32","uint256","uint256","uint256","uint256","uint256","uint256"],
-      [lockId, gross, fee, principal, duration, ts, ts+Number(duration)]);
+      ["bytes32","uint256","uint256","uint256","uint256","uint256","uint256",
+       "bytes32","address","address","uint8"],
+      [lockId, gross, fee, principal, duration, ts, ts+Number(duration),
+       A2, deployer.address, ethers.ZeroAddress, outputToken]);
     return { sourceEnvironmentId: ENV2, commitmentVaultLockId: lockId,
       handshakeIdentity: "MockChain:"+tag, handshakeAllowanceCount: 1,
       canonicalAssetId: A2, assetPrecision: 18, assetCustodyClass: 1,

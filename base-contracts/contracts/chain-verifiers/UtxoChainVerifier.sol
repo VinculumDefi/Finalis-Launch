@@ -142,7 +142,11 @@ contract UtxoChainVerifier is IChainVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        bytes32 canonicalAssetId,
+        address baseRecipient,
+        address releaseDestination,
+        uint8   outputToken
     ) {
         Proof memory pr = _decode(lockEventProof);
 

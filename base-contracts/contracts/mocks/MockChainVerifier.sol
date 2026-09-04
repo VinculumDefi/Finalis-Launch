@@ -71,12 +71,20 @@ contract MockChainVerifier is IChainVerifier {
             uint256 principalAmount,
             uint256 durationSecs,
             uint256 creationTimestamp,
-            uint256 maturityTimestamp
+            uint256 maturityTimestamp,
+            bytes32 canonicalAssetId,
+            address baseRecipient,
+            address releaseDestination,
+            uint8   outputToken
         )
     {
+        // CL-85. The mock moves with the interface so that suites exercising
+        // the identity cross-check bind identity the way a real source event
+        // does.
         return abi.decode(
             lockEventProof,
-            (bytes32, uint256, uint256, uint256, uint256, uint256, uint256)
+            (bytes32, uint256, uint256, uint256, uint256, uint256, uint256,
+             bytes32, address, address, uint8)
         );
     }
 }
