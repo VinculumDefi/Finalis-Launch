@@ -81,7 +81,7 @@ session and was configuration all along.
 | How is it architected? | `Vinculum_Finalis_Architecture_Design.md` |
 | What is implemented, and where? | Component Implementation Inventory |
 | Is an environment blocked by code or by architecture? | Build Classification |
-| What findings exist? | Findings Register |
+| What findings exist? | Findings Register — **search it before opening a new one; see the gate in `reviewers/red-team/README.md`** |
 | How do I start a new chat about this project? | `LAST_SESSION_STATE.md` — paste it first |
 | What is the one next task? | `LAST_SESSION_STATE.md` → Immediate Next Task |
 | What mistakes has this project already made? | `LAST_SESSION_STATE.md` → Process Corrections |

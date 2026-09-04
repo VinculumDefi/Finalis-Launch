@@ -9,6 +9,53 @@ Read in order. Where waves differ, the later one governs.
 
 ---
 
+## THE GATE — Evidence Reconciliation
+
+**No new finding identifier may be issued until all six questions below are
+answered "no", in writing, naming what was searched.**
+
+This gate exists because it has already failed. In Wave 4 a reviewer produced a
+specification citation, a code trace, and two reproductions — one under full
+production configuration — for a defect the Findings Register already carried as
+**CL-76, open, CRITICAL, resolution recorded as an operator design decision**.
+The register also already noted the duplicate contract tree the same wave
+reported as new. About an hour was spent rediscovering what the repository had
+written down weeks earlier.
+
+The startup document already required this. `00_PROJECT_START_HERE.md` states
+*Repository First* and *Evidence exhaustion*, and its artifact table maps "What
+findings exist?" to the Findings Register. The rule was not missing. It was read
+once at the start of a session and not applied at the moment a finding was
+opened. Hence a gate here, at the point of action, rather than another principle
+in a list.
+
+Before issuing an identifier, answer:
+
+1. **Is this already in the Findings Register?** Search for the affected
+   function, mechanism, requirement identifier and invariant — not for your
+   description of the symptom. CL-76 was found by searching `recordFeeAndRac`,
+   not by searching "reward basis".
+2. **Is this already in `PROJECT_EVIDENCE_INDEX.md`?**
+3. **Was it superseded** by a later wave or register revision?
+4. **Was it partially remediated?** A closed mint path does not close an
+   accounting path. Ask which half was fixed.
+5. **Was it intentionally accepted**, with the acceptance recorded?
+6. **Was it retracted**, and for what reason?
+
+If any answer is "yes", **extend the existing finding**. Do not issue a new
+identifier. An existing finding that gains a fresh reproduction, a narrowed
+scope, or a newly exposed residue is stronger evidence than a duplicate under a
+new name, and it keeps the history of how the conclusion was reached in one
+place.
+
+**Deployment state is not a finding.** Zero addresses in `config.js`, stubbed
+verifiers, unregistered handshake entries, placeholder Dev Fund and publisher
+keys, and uncompiled native vaults are the deliberate pre-deployment posture.
+Ask: *would this still exist if every address were filled in tomorrow?* If no,
+it is deployment state. Record it as status, not as a defect.
+
+---
+
 ## Wave 1 — Base defect discovery
 
 **Question:** If I ignore the website copy and talk only to the chain, what can
@@ -45,17 +92,42 @@ requiring no Master Specification revision.
 
 ## Wave 3 — Implementation verification
 
-**Question:** not yet opened.
+**Question:** Can the assessed remedy be implemented safely, tests first?
 
-**Expected first act:** regression tests for the remote EVM path that fail
-against the current tree, before any interface change.
+**Outcome:** CL-85. `IChainVerifier.extractFacts` returns four identity fields;
+`BaseSameChainVerifier` returns them from the lock record it already loaded; the
+four remote EVM verifiers read them from `CommitVaultLockDetail`, which the vault
+had always emitted and no verifier opened. The consumer cross-check moved from
+step 11 to step 2b, ahead of the registry lookup and valuation that previously
+consumed unvalidated identity. Suite 294/12 to 310/0. `22_evm_vault` passed
+unmodified, which was the stop condition. Reproduced independently from a clean
+clone before commit.
 
-**Status:** not started.
+**Status:** Closed. Commit `0ccf94d`.
+
+---
+
+## Wave 4 — Environment conformance
+
+**Question:** Did every implemented environment actually receive the CL-85
+architecture?
+
+**Outcome:** No new protocol defect. The wave's lead candidate was retracted at
+the gate above and reclassified as CL-76 residue — CL-85 closed the mint path and
+left the accounting path exactly where the register predicted: *"fail-closed
+removes the mint path; it does not supply verification."* Genuinely new: a
+production-configuration reproduction CL-76 never had, three missing
+per-environment assertions, a UTXO verifier returning zero where the CL-85
+interface requires a revert, a false status document at the repository root, and
+an uncompiled Solana vault that nothing records.
+
+**Status:** open.
 
 ---
 
 ## Standing rules
 
+- **The gate above is mandatory.** No identifier without evidence reconciliation.
 - A finding that cannot name a file is not a finding.
 - Every finding names the regression test that would catch it returning.
 - Every finding must be allowed to die. Before recording one, check whether an
@@ -65,3 +137,8 @@ against the current tree, before any interface change.
 - State what a wave did not cover.
 - If a requirement is in Rev 6, quote the VF identifier. It is not an owner
   decision.
+- A claim about one file is not a claim about an environment. Trace every layer —
+  native vault, lock mechanics, proof generation, transport, Base verifier,
+  tests — and classify each independently before summarising. Reading a single
+  stubbed verifier nearly produced "Solana is not implemented" for an environment
+  whose source mechanism binds every identity field Rev 6 requires.
