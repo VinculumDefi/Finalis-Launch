@@ -1,9 +1,11 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v16 · 2026-08-22
+## Reviewer column: CLAUDE · v17 · 2026-09-03
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
 **Supersedes:** Register v9 (2026-08-13). v10 records the CL-76 exploit test result, the fail-closed remediation, three reviewer-error corrections, and three new findings., v6 (2026-08-13) and v5 (2026-08-12 evening). v4 was never committed to the repository and remains superseded; see Corrections to v4.
+
+**Scope change since v16.** No new finding. v17 records what CL-85 (commit `0ccf94d`, red-team Wave 3) did and did not do to CL-76, and adds a **production-configuration reproduction** of CL-76's surviving half that v16 did not have. The minting path and the accounting path are separated for the first time. The finding remains **OPEN** and its resolution remains the operator's design decision, unchanged. v17 also records a weakness in CL-76's own regression test.
 
 **Method change since v2.** Every status below is now backed by a compiled contract and an executed test, not by reading. Toolchain: Hardhat 2.22.17, solc 0.8.19, optimizer 200 runs, `viaIR: true`.
 
@@ -313,6 +315,55 @@ Disproved on three independent points:
 **On the architecture claim.** `IChainVerifier` existing establishes that a **seam** was chosen, not a trust model. Its signature returns `bool finalized` and is silent on how that boolean is established; all five implementations establish it by asking the caller. The interface is equally compatible with a light client, an attestation quorum, or a proof protocol — and nothing in the codebase selects one. **The trust model remains undecided. Finding upheld without modification.**
 
 **Consequence for Brief §4.** The recorded calibration — invention finished, only verification remains — is **false in one specific respect**. The cross-chain trust model is undecided. Brief correction owed.
+
+---
+
+### CL-76 · UPDATE v17 (2026-09-03) — the two halves separated
+
+**The finding is narrowed, not closed.** v16 treated CL-76 as one defect. It has two halves, and only one of them has been addressed.
+
+**Half one — the minting path. Closed, and NOT by CL-85 alone.** v16's mechanism was that *"both sides originate from the same caller"*: `extractFacts` derived its facts from the caller's own proof, so the cross-check compared the caller's number to the caller's other number. That ceased to be true when real verifiers replaced placeholders. `BaseSameChainVerifier` reads `VinculumFinalisBaseVault` storage; the four remote EVM verifiers read a receipt proven against an authenticated header. The numeric cross-check (`extGross`, `extFee`, `extPrincipal`, `extDuration`) was therefore already comparing a derived quantity against the package **before CL-85**.
+
+What CL-85 contributed is narrower and should not be overstated: it added `canonicalAssetId`, `baseRecipient`, `releaseDestination` and `outputToken` to the independently-derived set, and moved the cross-check ahead of the registry lookup and valuation. That closed identity substitution against a **genuine** lock — Wave 1's W1-01, W1-02, W1-05 and W1-09 — which is a different attack from v16's fabricated package.
+
+Blocking mechanism, verified per family rather than assumed:
+
+| Family | What blocks a fabricated package | Introduced by |
+|---|---|---|
+| Base | `BaseSameChainVerifier` reverts `LockNotFound` — vault storage has no such lock | pre-CL-85 |
+| Ethereum, Polygon, Arbitrum, Optimism | receipt proof chain against an authenticated L1 header | pre-CL-85 |
+| Identity substitution on a genuine lock, all five above | CL-85 cross-check at step 2b | **CL-85** |
+| Solana, Stellar, XRPL, remote-EVM stub | `VerifierNotImplemented` | v10 fail-closed remediation |
+| Six UTXO environments | low-level revert inside `BitcoinTx` decoding of the forged transaction | pre-CL-85 |
+
+**Half two — the accounting path. OPEN, and now reproduced under production configuration.** v16 wrote: *"fail-closed removes the mint path; it does not supply verification."* That is exactly where the finding stands.
+
+`recordFeeAndRac` is `external onlyWhenFinalized`, callable by any address, and **consults no chain verifier at any point**. Its first line calls `_verifiedGrossUsdMicro(pkg)` — the function v16 identified as multiplying an authenticated price by a caller-supplied amount. It then writes `epochRewardBasis[epoch] += racCredit`, the figure `VinculumFinalisStake.closeEpoch` mints rewards from at `VinculumFinalisStake.sol:344`.
+
+Reproduced against the **production** stack — full deployment ceremony completed, real `BaseSameChainVerifier` registered, price batch published, called by an unprivileged relayer, for a lock that was never created:
+
+```
+ceremony finalized  : true
+verifier registered : 0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0
+basis before        : 0
+basis after         : 3000000000000000000
+verifyAndMint       : LockNotFound("0xef1633e5...")
+credit persisted    : true
+```
+
+`verifyAndMint` refuses correctly. The credit was already written, in a separate transaction, and stays. This answers the question v16 could not: the exposure is not an artifact of incomplete deployment. Filling in every address changes nothing, because the registered verifier — visible in that output — is never consulted.
+
+**No settlement step exists.** `epochRewardBasis` is written in exactly one place, `+=` at `VinculumFinalisVerifier.sol:690`, and is never decremented, reversed or confirmed. `racCredits` and `racEpoch` are written once and never read by any contract. `VinculumFinalisStake` **declares** `racCredits(bytes32)` and `racEpoch(bytes32)` in its verifier interface at lines 60–61 and calls neither — the per-credit accessors a settlement step would require exist and are unused. `verifyAndMint` checks only that the credit exists (`:717`), never that it was justified.
+
+**Specification position.** §9: *"Each **successfully verified** Commitment Vault fee creates a one-time numerical Reward-Accounting Credit."* VF-FEE-007 requires the proof to establish the actual fee and transfer. VF-FEE-008 requires fee-routing evidence and principal-lock evidence to refer to the same completed lock. VF-RAC-001 defines the credit against the fee *collected*. Where the specification permits fees and credits to diverge it does so by **denying** the credit — VF-FEE-012, VF-RAC-008, VF-SUP-012 — never by granting it in advance.
+
+The implementation comment justifies the split with VF-FEE-011, which governs the **non-refundability of fees**, not the persistence of credits. VF-FEE-012 governs the credit and states the opposite.
+
+**Recorded as sound.** Phase one correctly implements VF-RAC-008 capacity gating (`cap.cumulativeVclmIssued() < VCLM_HARD_CAP`), VF-RAC-004 accumulation, and the launch-relative epoch derivation. VF-COM-003's $0.95–$1.05 handshake bound still applies at `:615`, so per-call magnitude remains bounded as the v10 correction established.
+
+**Regression weakness in CL-76's own test.** `base-contracts/test/10_cl76_forged_package.test.cjs` asserts `.to.be.reverted` at lines 172 and 216 — bare, with no reason — and its header still states *"EXPECTED AFTER FAIL-CLOSED FIX: reverts with VerifierNotImplemented"*, which is stale: `UtxoChainVerifier` is now implemented and the observed revert carries no reason string at all. The test cannot distinguish which mechanism blocks the mint, and would report the hole closed if the blocking mechanism silently changed. This is the register's own standing rule — assert on revert reasons, not on the fact of a revert — violated in the test that certifies its most severe finding.
+
+**STATUS: CRITICAL — PRE-DEPLOYMENT — OPEN.** Narrowed to the accounting path. Resolution remains the operator's design decision as recorded in v10; nothing in this update proposes one.
 
 ---
 
