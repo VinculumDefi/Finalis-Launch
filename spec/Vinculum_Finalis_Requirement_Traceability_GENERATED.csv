@@ -1,6 +1,6 @@
 # GENERATED FILE — DO NOT EDIT BY HAND.
 # Tool: tools/generate_traceability_matrix.cjs v1.0.0
-# Commit: 38d3b77
+# Commit: 861f03c
 # Requirements: 209 | traced: 51 | implemented without a named test: 73 | not traced in code: 85
 #
 # The authored columns come from spec/Vinculum_Finalis_Requirement_Traceability.csv.
