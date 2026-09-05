@@ -1,14 +1,14 @@
 # Launch Certification — Rev 6 §16
 
 **Tree:** `github.com/VinculumDefi/Finalis-Launch` @ `redteam/prep`
-**Bound to:** `b1ae4b7`
+**Bound to:** `f193e8a`
 **Authority:** Master Specification Revision 6, SHA-256
 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`
 **Date:** 2026-09-03
 
 **Expiry.** VF-VER-006 makes evidence commit-bound. This document describes
-`b1ae4b7` and nothing else. Any change to contracts or tests invalidates it and
-requires re-issue against the new commit. Suite at this commit: **314 passing,
+`f193e8a` and nothing else. Any change to contracts or tests invalidates it and
+requires re-issue against the new commit. Suite at this commit: **315 passing,
 0 failing**, reproduced on a Linux sandbox and on the owner's Windows machine.
 
 **VF-VER-007 constrains what this document may claim.** It does not state that
@@ -22,7 +22,7 @@ evidence for individual items and is never a conclusion.
 
 | Requirement | Disposition |
 |---|---|
-| VF-VER-001 · Requirement traceability | **NOT DEMONSTRATED** |
+| VF-VER-001 · Requirement traceability | **PARTIALLY DEMONSTRATED** |
 | VF-VER-002 · Positive lifecycle tests | **PARTIALLY DEMONSTRATED** |
 | VF-VER-003 · Negative tests | **PARTIALLY DEMONSTRATED** |
 | VF-VER-004 · Boundary tests | **PARTIALLY DEMONSTRATED** |
@@ -31,17 +31,42 @@ evidence for individual items and is never a conclusion.
 | VF-VER-007 · No readiness claim from test counts | **DEMONSTRATED** |
 | VF-VER-008 · Code does not prevail | **DEMONSTRATED** |
 
-Three of eight demonstrated, one not demonstrated, four partial. Details below.
+Three of eight demonstrated, five partial. Details below.
 
 ---
 
-## VF-VER-001 · Requirement traceability — NOT DEMONSTRATED
+## VF-VER-001 · Requirement traceability — PARTIALLY DEMONSTRATED
 
 > Each numbered requirement maps to applicable contracts, source-environment
 > programs, functions, tests, and deployment checks.
 
-**No traceability matrix exists in the repository.** Measured citation coverage
-across 209 numbered requirements:
+**Correction issued 2026-09-03.** An earlier revision of this document stated
+that no traceability matrix exists in the repository. **That was false.**
+`spec/Vinculum_Finalis_Requirement_Traceability.csv` has been committed since
+`86d5fd1` (2026-08-08) and covers all 209 numbered requirements. The claim was
+made after searching contracts and tests for VF citations without searching
+`spec/` — the same failure the Evidence Reconciliation gate in
+`reviewers/red-team/README.md` exists to prevent, committed one day after that
+gate was written. Recorded rather than silently corrected.
+
+**What the existing matrix provides.** For each of 209 requirements: the
+specification section, the architecture component, a planned implementation
+location, a positive test obligation, a negative or boundary test obligation, a
+deployment verification obligation, and a status.
+
+**What it does not provide.** It names no implementation file, function, or
+test. A search across all 209 rows for `.sol` or `.test.cjs` returns zero
+matches. VF-VER-001 requires each requirement to map to *"applicable contracts,
+source-environment programs, functions, tests, and deployment checks"* — the
+obligation is recorded; the artifact satisfying it is not. It is also authored
+rather than generated, and predates CL-85, CL-86 and CL-87 by a month.
+
+**Disposition: PARTIAL.** The obligations half is demonstrated. The
+requirement-to-artifact half is not. Remaining work is to generate the file,
+function and test columns from the repository and merge them into the existing
+CSV, preserving the authored obligation columns.
+
+Measured citation coverage across 209 numbered requirements:
 
 | Family | In spec | Cited in contracts | Cited in tests |
 |---|---|---|---|
@@ -71,9 +96,8 @@ the requirement. The measurement establishes that no traceability artifact
 exists and that citation coverage is uneven; it does not establish that 65
 requirements are untested.
 
-**Disposition: OPEN.** Producing the matrix is the largest remaining
-certification task. Nothing else in this document can be completed without it,
-because VF-VER-002/003/004 are assessed against it.
+Producing the generated half is the largest remaining certification task.
+VF-VER-002/003/004 are assessed against it.
 
 ---
 
@@ -237,11 +261,10 @@ reentrancy vector exists.
 - **CL-09** · `allocateEpoch` unbounded. ≈14,473 gas per lifetime position,
   ceiling ≈2,062. Rev 6 permits a bounded strategy; the implementation has not
   adopted one. VF-IMM-006 forecloses repair after deployment.
-- **CL-16** · `VinculumFinalisStake.sol:435` mints `distributed`, not the complete
-  reward. VF-STK-014 says the complete Epoch Reward VCLM is minted once;
-  VF-STK-027 describes a remainder that *remains inaccessible in the contract*,
-  presupposing it was minted. Requires an owner ruling; not resolved by
-  assumption.
+**CL-16 — CLOSED** by owner decision 2026-09-03 and CL-87 at `f193e8a`. The
+complete Epoch Reward is now minted; the undistributable remainder is stranded
+permanently and unreachable by construction. Regression `28_cl87`; fails against
+`b1ae4b7`.
 
 **Deferred — environment not issuing:** CL-55, CL-60, CL-63–CL-73 (Solana; vault
 does not compile, six errors in `build_errors.txt`), CL-75 (Cosmos), CL-27
@@ -264,7 +287,7 @@ repository is deployment-ready.
 It asserts that for the commit named above, these eight requirements have the
 dispositions recorded, with evidence a reviewer can re-run.
 
-**Blocking completion:** VF-VER-001 has no artifact. CL-09 and CL-16 are open.
+**Blocking completion:** VF-VER-001's generated half does not exist. CL-09 is open.
 
 **Not blocking, but recorded:** `06_scaling`'s `allocateEpoch` case still reports
 `5=53293, 60=53293, ratio=1.00x` at this commit. That measurement is vacuous —

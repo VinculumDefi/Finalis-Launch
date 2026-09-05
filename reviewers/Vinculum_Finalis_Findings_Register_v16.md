@@ -1,9 +1,14 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v17 · 2026-09-03
+## Reviewer column: CLAUDE · v18 · 2026-09-03
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
 **Supersedes:** Register v9 (2026-08-13). v10 records the CL-76 exploit test result, the fail-closed remediation, three reviewer-error corrections, and three new findings., v6 (2026-08-13) and v5 (2026-08-12 evening). v4 was never committed to the repository and remains superseded; see Corrections to v4.
+
+**Scope change since v17.** CL-16 is CLOSED by owner decision and CL-87. CL-76's
+accounting path is CLOSED by CL-86. No new findings. Ten entries previously
+carried as Open are recorded below as remediated, verified against current code
+rather than against the index.
 
 **Scope change since v16.** No new finding. v17 records what CL-85 (commit `0ccf94d`, red-team Wave 3) did and did not do to CL-76, and adds a **production-configuration reproduction** of CL-76's surviving half that v16 did not have. The minting path and the accounting path are separated for the first time. The finding remains **OPEN** and its resolution remains the operator's design decision, unchanged. v17 also records a weakness in CL-76's own regression test.
 
@@ -1165,3 +1170,59 @@ The protocol-stack deployment sequence is duplicated across twenty-plus test sui
 ### MILESTONE
 `BASE-CAP` is the first of the architecture's **named components** to be implemented as such. A.12 existed on paper with nothing behind it. Lifetime-cap accounting is now enforced by the dedicated component rather than by individual issuance paths remembering to report.
 
+---
+
+## CL-16 · CLOSED — 2026-09-03, commit `f193e8a`
+
+**Original finding.** `VinculumFinalisStake.allocateEpoch` minted `distributed` —
+the rounded-down sum of position entitlements — rather than the complete Epoch
+Reward. VF-STK-014 requires *"The complete Epoch Reward VCLM is minted once to
+the immutable Treasury Reward Stake contract"*. VF-STK-027 describes a remainder
+that *"remains inaccessible in the immutable Treasury Reward Stake contract"*,
+which presupposes it was minted and stayed there. The economic outcome was
+identical — nobody receives the dust either way — but the mechanism differed
+from the one the specification describes. Recorded as requiring an owner ruling
+and explicitly not resolved by reviewer assumption.
+
+**Owner decision, 2026-09-03, quoted in full:**
+
+> The protocol SHALL mint the complete Epoch Reward VCLM exactly once to the
+> immutable Treasury Reward Stake contract, as required by VF-STK-014.
+> Individual position entitlements SHALL be calculated by rounding down to the
+> nearest representable amount. Any undistributable remainder ("dust") SHALL
+> remain permanently in the Treasury Reward Stake contract, inaccessible, never
+> reassigned, never redirected, never carried forward, and never distributed by
+> any special mechanism. Future distributions may occur only as a natural
+> consequence of the standard reward allocation algorithm. This interpretation
+> satisfies both VF-STK-014 and VF-STK-027 while preserving a simple,
+> deterministic, and immutable implementation.
+
+**Implementation — CL-87.** Three call sites moved together: the mint, the
+lifetime-cap record (`cap.recordVclmIssuance`), and `ep.mintedVclm`. All three
+now take `totalReward`. Changing only the mint would have left cap accounting
+inconsistent with supply.
+
+**The remainder is unreachable by construction, not by policy.**
+`claimableVclm` totals `distributed`, and no code path reads the contract's
+residual balance. No special mechanism was added, as the decision requires.
+
+**Regression:** `base-contracts/test/28_cl87_complete_epoch_reward.test.cjs`.
+Three positions at unequal durations (1.4x / 1.75x / 2.0x) make the division
+inexact. Measured at `f193e8a`:
+
+```
+minted (complete) : 150000000000000000
+sum of shares     : 149999999999999999
+stranded dust     : 1
+```
+
+Against the immediately preceding commit `b1ae4b7` the same test reports
+`mintedVclm` equal to the sum of shares and dust of zero, and fails. Verified by
+execution on both trees.
+
+**Coverage note.** No pre-existing test exercised the dust case. Equal-weight
+positions divide the reward exactly, so the change was invisible at 314 passing
+until the regression was written. Suite at `f193e8a`: **315 passing**,
+reproduced on a Linux sandbox and the owner's Windows machine.
+
+**STATUS: CLOSED.**
