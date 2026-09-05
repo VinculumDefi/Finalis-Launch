@@ -637,6 +637,14 @@ contract VinculumFinalisVerifier {
     function recordFeeAndRac(
         ProofPackage calldata pkg
     ) external onlyWhenFinalized {
+        // CL-86 / CL-76 (accounting path). Section 9: a Reward-Accounting Credit
+        // is created by a *successfully verified* Commitment Vault fee.
+        // VF-FEE-007 requires the proof to establish the fee and its transfer;
+        // VF-FEE-008 requires fee-routing and principal-lock evidence to refer
+        // to the same completed lock. Verification therefore precedes every
+        // write below. Before CL-86 no verifier was consulted here at all.
+        _verifySource(pkg);
+
         // CL-01 / VF-ORC-007: derived from the signed price record, never supplied.
         uint256 verifiedGrossUsdMicro = _verifiedGrossUsdMicro(pkg);
         // VF-RAC-001: RAC exact-once
@@ -692,33 +700,29 @@ contract VinculumFinalisVerifier {
         }
     }
 
-    // ===== Canonical verification entry point =====
+    // -------------------------------------------------------------------------
+    // Source verification (VF-XCH-006/010/011)
+    // -------------------------------------------------------------------------
 
-    /// @notice Phase 2: Verifies a normalized proof package and mints tokens if valid.
-    /// @dev Call recordFeeAndRac() first to persist RAC independently of issuance outcome.
-    /// @param pkg The normalized ProofPackage from any source environment.
-    /// @return success Whether verification succeeded and tokens were minted.
-    function verifyAndMint(
-        ProofPackage calldata pkg
-    ) external onlyWhenFinalized returns (bool success) {
-        // CL-01 / CL-10 — the two quantities that determine how many tokens
-        // are minted are DERIVED here, not accepted from the caller.
-        //   VF-ORC-007: gross USD comes from the signed price record.
-        //   VF-ORC-011/013: emission rate comes from the Valuation Timestamp.
-        uint256 verifiedGrossUsdMicro = _verifiedGrossUsdMicro(pkg);
-        uint256 daysSinceLaunch = _daysSinceLaunch(pkg);
-        bytes32 lockIdHash = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId));
-
-        // Step 1: Replay protection (VF-XCH-013)
-        require(!consumedLocks[lockIdHash], "VF-XCH-013: replay");
-
-        // Step 2: RAC must already be recorded (VF-FEE-011 two-phase pattern).
-        // If not yet recorded, the caller must call recordFeeAndRac() first.
-        require(recordedRacs[pkg.racIdentity], "VF-FEE-011: call recordFeeAndRac() first");
-
-        // Step 2b: Source finality + identity cross-check (VF-XCH-006/010/011)
+    /// @dev CL-86. Verifies source finality and cross-checks the package against
+    ///      facts extracted independently by the registered chain verifier.
+    ///
+    ///      Called by BOTH recordFeeAndRac and verifyAndMint. Rev 6 section 9
+    ///      states that a Reward-Accounting Credit is created by a *successfully
+    ///      verified* Commitment Vault fee, and VF-FEE-007/008 require the proof
+    ///      to establish the fee and tie it to the same completed lock. Before
+    ///      CL-86 the credit was written by recordFeeAndRac with no verifier
+    ///      consulted at all, so a package describing a lock that did not exist
+    ///      credited the epoch reward basis permanently (CL-76, accounting path).
+    ///
+    ///      A package that cannot yet be verified is rejected and may be
+    ///      resubmitted. Nothing is lost: the source lock persists, any address
+    ///      may submit, and section 10.3 processes rewards one epoch behind with
+    ///      eligibility fixed by scheduled timestamps, so a retry cannot change
+    ///      who qualifies.
+    function _verifySource(ProofPackage calldata pkg) internal view {
         //
-        // CL-85 ORDERING. This ran as step 11, after the asset registry
+        // CL-85 ORDERING. This ran as step 11 of verifyAndMint, after the registry
         // lookup, the USD valuation and the output-token eligibility gate had
         // already consumed the package's claimed identity. Validating identity
         // after acting on it left two consequences. A substituted output token
@@ -777,6 +781,39 @@ contract VinculumFinalisVerifier {
             // emission rate that has already decayed.
             require(extCreation == pkg.valuationTimestamp, "VF-XCH-011: valuation mismatch");
         }
+
+    }
+
+
+    // ===== Canonical verification entry point =====
+
+    /// @notice Phase 2: Verifies a normalized proof package and mints tokens if valid.
+    /// @dev Call recordFeeAndRac() first to persist RAC independently of issuance outcome.
+    /// @param pkg The normalized ProofPackage from any source environment.
+    /// @return success Whether verification succeeded and tokens were minted.
+    function verifyAndMint(
+        ProofPackage calldata pkg
+    ) external onlyWhenFinalized returns (bool success) {
+        // CL-01 / CL-10 — the two quantities that determine how many tokens
+        // are minted are DERIVED here, not accepted from the caller.
+        //   VF-ORC-007: gross USD comes from the signed price record.
+        //   VF-ORC-011/013: emission rate comes from the Valuation Timestamp.
+        uint256 verifiedGrossUsdMicro = _verifiedGrossUsdMicro(pkg);
+        uint256 daysSinceLaunch = _daysSinceLaunch(pkg);
+        bytes32 lockIdHash = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId));
+
+        // Step 1: Replay protection (VF-XCH-013)
+        require(!consumedLocks[lockIdHash], "VF-XCH-013: replay");
+
+        // Step 2: RAC must already be recorded (VF-FEE-011 two-phase pattern).
+        // If not yet recorded, the caller must call recordFeeAndRac() first.
+        require(recordedRacs[pkg.racIdentity], "VF-FEE-011: call recordFeeAndRac() first");
+
+        // Step 2b: Source finality + identity cross-check (VF-XCH-006/010/011)
+        // CL-86: the block that stood here is now _verifySource, so that
+        // recordFeeAndRac performs the identical check before writing a
+        // Reward-Accounting Credit. Behaviour here is unchanged.
+        _verifySource(pkg);
 
         // Step 3: Asset registry + precision (VF-REG-001, VF-QNORM)
         bytes32 assetKey = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));

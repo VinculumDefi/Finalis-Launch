@@ -114,7 +114,7 @@ function buildPackage(o) {
     ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256",
      "bytes32", "address", "address", "uint8"],
     [lockId, gross, fee, principal, duration, valuationTs, valuationTs + Number(duration),
-     ASSET, o.recipient, ethers.ZeroAddress, 0]
+     o.assetId ?? ASSET, o.recipient, ethers.ZeroAddress, 0]
   );
 
   return {
@@ -122,7 +122,7 @@ function buildPackage(o) {
     commitmentVaultLockId: lockId,
     handshakeIdentity: o.identity ?? "MockChain:alice",
     handshakeAllowanceCount: o.claimedAllowance ?? 99,   // deliberately absurd
-    canonicalAssetId: ASSET,
+    canonicalAssetId: o.assetId ?? ASSET,
     assetPrecision: DECIMALS,
     assetCustodyClass: 1,
     grossAmountSmallestUnits: gross,
@@ -158,8 +158,10 @@ describe("End-to-end · full verification pipeline via MockChainVerifier", funct
     const s = await deployConfigured(3);
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
     const other = ethers.keccak256(ethers.toUtf8Bytes("MockChain:UNPRICED"));
-    const pkg = buildPackage({ valuationTs: ts, recipient: s.deployer.address });
-    pkg.canonicalAssetId = other;
+    // CL-86: the identity cross-check now precedes the price lookup, so the
+    // proof must bind the same unpriced asset for the valuation failure to be
+    // the mechanism under test.
+    const pkg = buildPackage({ valuationTs: ts, recipient: s.deployer.address, assetId: other });
     await expect(s.verifier.recordFeeAndRac(pkg))
       .to.be.revertedWith("VF-ORC-005: no usable valuation for asset");
   });
@@ -188,8 +190,12 @@ describe("End-to-end · full verification pipeline via MockChainVerifier", funct
     await s.mock.setFinality(false);
     const ts = (await ethers.provider.getBlock("latest")).timestamp;
     const pkg = buildPackage({ valuationTs: ts, recipient: s.deployer.address });
-    await s.verifier.recordFeeAndRac(pkg);
-    await expect(s.verifier.verifyAndMint(pkg)).to.be.reverted;
+    // CL-86: an unfinalized source event is refused before any credit is written.
+    const before = await s.verifier.epochRewardBasis(1);
+    await expect(s.verifier.recordFeeAndRac(pkg))
+      .to.be.revertedWith("VF-XCH-006: source not finalized");
+    expect(await s.verifier.epochRewardBasis(1),
+      "an unfinalized lock must credit nothing").to.equal(before);
   });
 });
 
@@ -262,7 +268,9 @@ describe("CL-11 · handshake allowance consumption, end to end", function () {
       valuationTs: ts, recipient: s.deployer.address, identity: "erin",
       lockId: ethers.keccak256(ethers.toUtf8Bytes("erin-bad")),
     });
-    await s.verifier.recordFeeAndRac(bad);
+    // CL-86: the attempt now fails at recordFeeAndRac. VF-COM-008 still holds —
+    // a rejected attempt consumes no allowance, whichever phase rejects it.
+    await expect(s.verifier.recordFeeAndRac(bad)).to.be.reverted;
     await expect(s.verifier.verifyAndMint(bad)).to.be.reverted;
     // Two successes must still remain.
     await s.mock.setFinality(true);

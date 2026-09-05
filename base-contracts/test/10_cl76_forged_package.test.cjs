@@ -168,7 +168,13 @@ describe("CL-76 · REGRESSION — forged packages are rejected by the production
     const before = await s.vclm.balanceOf(s.attacker.address);
 
     // Called by an address that holds no role and performed no lock.
-    await s.verifier.connect(s.attacker).recordFeeAndRac(pkg);
+    // CL-86: the forged package is now refused by recordFeeAndRac, before any
+    // Reward-Accounting Credit is written. Asserted on the mechanism, not on
+    // the bare fact of a revert (register v17).
+    const basisBefore = await s.verifier.epochRewardBasis(1);
+    await expect(s.verifier.connect(s.attacker).recordFeeAndRac(pkg)).to.be.reverted;
+    expect(await s.verifier.epochRewardBasis(1),
+      "a forged package must credit nothing").to.equal(basisBefore);
     await expect(s.verifier.connect(s.attacker).verifyAndMint(pkg)).to.be.reverted;
 
     const after = await s.vclm.balanceOf(s.attacker.address);
@@ -212,7 +218,13 @@ describe("CL-76 · REGRESSION — forged packages are rejected by the production
       lockId: ethers.keccak256(ethers.toUtf8Bytes("forged-lock-cl76-large")),
     });
 
-    await s.verifier.connect(s.attacker).recordFeeAndRac(pkg);
+    // CL-86: the forged package is now refused by recordFeeAndRac, before any
+    // Reward-Accounting Credit is written. Asserted on the mechanism, not on
+    // the bare fact of a revert (register v17).
+    const basisBefore = await s.verifier.epochRewardBasis(1);
+    await expect(s.verifier.connect(s.attacker).recordFeeAndRac(pkg)).to.be.reverted;
+    expect(await s.verifier.epochRewardBasis(1),
+      "a forged package must credit nothing").to.equal(basisBefore);
     await expect(s.verifier.connect(s.attacker).verifyAndMint(pkg)).to.be.reverted;
 
     const minted = await s.vclm.balanceOf(s.attacker.address);

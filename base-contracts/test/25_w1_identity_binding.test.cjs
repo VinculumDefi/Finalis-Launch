@@ -233,9 +233,10 @@ describe("W1 · identity fields must be bound to the lock record", function () {
     // storage, so every cross-checked value still matches.
     const stolen = { ...pkg, baseRecipient: s.attacker.address };
 
-    await s.verifier.connect(s.attacker).recordFeeAndRac(stolen);
+    // CL-86: verification now precedes the Reward-Accounting Credit, so the
+    // package is rejected one call earlier, by the same cross-check.
     await expectRevertMatching(
-      s.verifier.connect(s.attacker).verifyAndMint(stolen),
+      s.verifier.connect(s.attacker).recordFeeAndRac(stolen),
       /VF-XCH-011|VF-ARC-006|recipient/i
     );
   });
@@ -245,10 +246,10 @@ describe("W1 · identity fields must be bound to the lock record", function () {
     const { lockId, pkg } = await realLockAndPackage(s, "w1-recipient-demo");
 
     const stolen = { ...pkg, baseRecipient: s.attacker.address };
-    await s.verifier.connect(s.attacker).recordFeeAndRac(stolen);
-
+    // CL-86: recordFeeAndRac verifies first, so the attempt fails there.
     let reverted = false;
     try {
+      await s.verifier.connect(s.attacker).recordFeeAndRac(stolen);
       await s.verifier.connect(s.attacker).verifyAndMint(stolen);
     } catch { reverted = true; }
 
@@ -274,9 +275,10 @@ describe("W1 · identity fields must be bound to the lock record", function () {
     // below is deliberately narrow.
     const swapped = { ...pkg, selectedOutputToken: 1 };
 
-    await s.verifier.connect(s.attacker).recordFeeAndRac(swapped);
+    // CL-86: verification now precedes the Reward-Accounting Credit, so the
+    // package is rejected one call earlier, by the same cross-check.
     await expectRevertMatching(
-      s.verifier.connect(s.attacker).verifyAndMint(swapped),
+      s.verifier.connect(s.attacker).recordFeeAndRac(swapped),
       /VF-XCH-011|VF-COM-020|output token mismatch/i
     );
   });
@@ -298,9 +300,10 @@ describe("W1 · identity fields must be bound to the lock record", function () {
       feeAssetId: s.AID_RICH,
     };
 
-    await s.verifier.connect(s.attacker).recordFeeAndRac(substituted);
+    // CL-86: verification now precedes the Reward-Accounting Credit, so the
+    // package is rejected one call earlier, by the same cross-check.
     await expectRevertMatching(
-      s.verifier.connect(s.attacker).verifyAndMint(substituted),
+      s.verifier.connect(s.attacker).recordFeeAndRac(substituted),
       /VF-XCH-011|VF-REG-001|asset mismatch/i
     );
   });
@@ -358,9 +361,10 @@ describe("W1 · identity fields must be bound to the lock record", function () {
       feeAssetId: s.AID_S1,
     };
 
-    await s.verifier.connect(s.attacker).recordFeeAndRac(upgraded);
+    // CL-86: verification now precedes the Reward-Accounting Credit, so the
+    // package is rejected one call earlier, by the same cross-check.
     await expectRevertMatching(
-      s.verifier.connect(s.attacker).verifyAndMint(upgraded),
+      s.verifier.connect(s.attacker).recordFeeAndRac(upgraded),
       /VF-XCH-011|VF-REG-001|asset mismatch/i
     );
   });
@@ -388,9 +392,10 @@ describe("W1 · identity fields must be bound to the lock record", function () {
     // package claims it was created on day zero, at the undecayed rate.
     const rewound = { ...pkg, valuationTimestamp: launch };
 
-    await s.verifier.connect(s.attacker).recordFeeAndRac(rewound);
+    // CL-86: verification now precedes the Reward-Accounting Credit, so the
+    // package is rejected one call earlier, by the same cross-check.
     await expectRevertMatching(
-      s.verifier.connect(s.attacker).verifyAndMint(rewound),
+      s.verifier.connect(s.attacker).recordFeeAndRac(rewound),
       /VF-XCH-011|VF-ORC-011|valuation mismatch/i
     );
   });

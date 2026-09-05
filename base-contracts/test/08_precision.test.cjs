@@ -42,9 +42,13 @@ describe("CL-41 PROOF OF EXPLOIT · unvalidated assetPrecision in recordFeeAndRa
       const fee = (gross * 500n)/10000n;
       const principal = gross - fee;
       const lockId = ethers.keccak256(ethers.toUtf8Bytes(tag));
+      // CL-86: recordFeeAndRac now verifies before recording, so the proof the
+      // mock decodes must carry the identity fields. They match this package.
       const proof = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["bytes32","uint256","uint256","uint256","uint256","uint256","uint256"],
-        [lockId, gross, fee, principal, duration, ts, ts + Number(duration)]);
+        ["bytes32","uint256","uint256","uint256","uint256","uint256","uint256",
+         "bytes32","address","address","uint8"],
+        [lockId, gross, fee, principal, duration, ts, ts + Number(duration),
+         ASSET, deployer.address, ethers.ZeroAddress, 0]);
       return { sourceEnvironmentId: ENV, commitmentVaultLockId: lockId,
         handshakeIdentity: "MockChain:"+tag, handshakeAllowanceCount: 1,
         canonicalAssetId: ASSET, assetPrecision: precision, assetCustodyClass: 1,
@@ -103,9 +107,12 @@ describe("CL-41 · pkg.assetPrecision is economically inert", function () {
       const gross = 20n * 10n**18n, duration = 30n*86400n;
       const fee = (gross*500n)/10000n, principal = gross - fee;
       const lockId = ethers.keccak256(ethers.toUtf8Bytes(tag));
+      // CL-86: identity fields added; they match this package.
       const proof = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["bytes32","uint256","uint256","uint256","uint256","uint256","uint256"],
-        [lockId, gross, fee, principal, duration, ts, ts+Number(duration)]);
+        ["bytes32","uint256","uint256","uint256","uint256","uint256","uint256",
+         "bytes32","address","address","uint8"],
+        [lockId, gross, fee, principal, duration, ts, ts+Number(duration),
+         ASSET, deployer.address, ethers.ZeroAddress, 0]);
       return { sourceEnvironmentId: ENV, commitmentVaultLockId: lockId,
         handshakeIdentity: "MockChain:"+tag, handshakeAllowanceCount: 1,
         canonicalAssetId: ASSET, assetPrecision: precision, assetCustodyClass: 1,
