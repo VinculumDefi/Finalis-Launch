@@ -81,6 +81,12 @@ proxy; it does not measure behaviour. Closing it is test-authoring work, and per
 the standing rule in `reviewers/red-team/README.md` a coverage gap is not a
 Findings Register entry.
 
+**Reading a regenerated diff.** The `# Commit:` header tracks the HEAD the tool
+was run against, so regenerating after any later commit — including
+documentation-only commits — moves that one line. **A one-line stamp difference
+is expected. A difference in any requirement row is not**, and means the code or
+the authored CSV changed since certification.
+
 **Disposition: DEMONSTRATED.** Every requirement maps to a row, every row states
 its traceability status, and the mapping regenerates from the repository.
 
@@ -180,6 +186,20 @@ verifier, the price feed, or the factory.
   production configuration with the real verifier registered.
 - **CL-86.** The four new properties were run against the *unpatched* contract:
   two fail, two pass. Recorded rather than assumed.
+
+**Third-machine reproduction, 3 Sep 2026.** An independent reviewer cloned
+`redteam/prep` at `71aa3b4` on a host that is neither the owner's nor the
+author's and ran the suite: **320 passing**, no failing line. The traceability
+generator produced a body-identical file, differing only in the `# Commit:`
+header. This converts the suite figure and the generator's determinism from
+self-report into reproduction, which is what this requirement asks for.
+
+**Qualification, recorded because it bounds the claim.** On that host `npm ci`
+against the repository's configured registry returned 502; `npm install` from
+`registry.npmjs.org` succeeded. The suite result was identical, but the
+toolchain was **not** proven bit-identical to the pinned `solc-0.8.19` path. The
+reproduction establishes that the suite is green at that commit on a third host.
+It does not establish a pinned-toolchain build.
 
 **Disposition: DEMONSTRATED.** This is the requirement the project satisfies most
 strongly.
