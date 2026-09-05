@@ -419,22 +419,36 @@ contract VinculumFinalisStake {
             }
         }
 
-        // VF-STK-027: Remainder inaccessible
-        ep.mintedVclm = distributed;
+        // CL-87 / VF-STK-014: the COMPLETE Epoch Reward VCLM is minted once,
+        // not the rounded-down sum of entitlements. Per-position shares round
+        // down (VF-STK-026), so `distributed` may be less than `totalReward`.
+        // The difference is dust.
+        //
+        // VF-STK-027: that dust remains permanently in this contract,
+        // inaccessible. It is never reassigned, redirected, carried forward,
+        // or distributed by any special mechanism — there is no code path that
+        // touches it. `claimableVclm` totals `distributed`, so the residue is
+        // unreachable by construction rather than by policy.
+        //
+        // Before CL-87 only `distributed` was minted, so the dust was never
+        // created. That satisfied VF-STK-027's outcome but not VF-STK-014's
+        // wording, which requires the complete reward to be minted. Resolved
+        // as an owner interpretation: mint complete, strand the remainder.
+        ep.mintedVclm = totalReward;
         ep.allocated = true;
         ep.allocateTimestamp = block.timestamp;
 
-        // CL-84 / VF-SUP-001: every authorized issuance path reconciles
-        // against the global lifetime hard cap. Record the amount actually
-        // minted — `distributed` rounds down and may be less than totalReward.
-        if (distributed > 0) {
-            cap.recordVclmIssuance(distributed);
+        // CL-84 / VF-SUP-001: every authorized issuance path reconciles against
+        // the global lifetime hard cap. The cap records what is minted, which
+        // is now the complete reward including the stranded dust.
+        if (totalReward > 0) {
+            cap.recordVclmIssuance(totalReward);
         }
 
         // Mint VCLM to this contract (VF-STK-004: rewards in newly minted VCLM)
-        vclmToken.mint(address(this), distributed);
+        vclmToken.mint(address(this), totalReward);
 
-        emit EpochAllocated(epochN, distributed, 0);
+        emit EpochAllocated(epochN, totalReward, 0);
     }
 
     // ===== VF-STK-016/017/018/019: Claim =====
