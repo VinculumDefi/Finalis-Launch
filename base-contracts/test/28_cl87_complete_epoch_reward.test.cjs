@@ -8,7 +8,7 @@
 // remainder that "remains inaccessible in the immutable Treasury Reward Stake
 // contract", which presupposes it was minted and stayed there.
 //
-// Resolved as a protocol decision by the owner, 2026-09-03:
+// Resolved as a protocol decision by the owner, 2026-09-05:
 //
 //   The protocol SHALL mint the complete Epoch Reward VCLM exactly once to the
 //   immutable Treasury Reward Stake contract, as required by VF-STK-014.

@@ -4,7 +4,7 @@
 **Bound to:** `21b5b29`
 **Authority:** Master Specification Revision 6, SHA-256
 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`
-**Date:** 2026-09-03
+**Date:** 2026-09-05
 
 **Expiry.** VF-VER-006 makes evidence commit-bound. This document describes
 that commit and nothing else. Any change to contracts or tests invalidates it and
@@ -187,7 +187,7 @@ verifier, the price feed, or the factory.
 - **CL-86.** The four new properties were run against the *unpatched* contract:
   two fail, two pass. Recorded rather than assumed.
 
-**Third-machine reproduction, 3 Sep 2026.** An independent reviewer cloned
+**Third-machine reproduction, 5 Sep 2026.** An independent reviewer cloned
 `redteam/prep` at `71aa3b4` on a host that is neither the owner's nor the
 author's and ran the suite: **320 passing**, no failing line. The traceability
 generator produced a body-identical file, differing only in the `# Commit:`
@@ -264,7 +264,7 @@ reentrancy vector exists.
 - **CL-09** · `allocateEpoch` unbounded. ≈14,473 gas per lifetime position,
   ceiling ≈2,062. Rev 6 permits a bounded strategy; the implementation has not
   adopted one. VF-IMM-006 forecloses repair after deployment.
-**CL-16 — CLOSED** by owner decision 2026-09-03 and CL-87 at `f193e8a`. The
+**CL-16 — CLOSED** by owner decision 2026-09-05 and CL-87 at `f193e8a`. The
 complete Epoch Reward is now minted; the undistributable remainder is stranded
 permanently and unreachable by construction. Regression `28_cl87`; fails against
 `b1ae4b7`.

@@ -1,5 +1,5 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v19 · 2026-09-03
+## Reviewer column: CLAUDE · v19 · 2026-09-05
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
@@ -1172,7 +1172,7 @@ The protocol-stack deployment sequence is duplicated across twenty-plus test sui
 
 ---
 
-## CL-16 · CLOSED — 2026-09-03, commit `f193e8a`
+## CL-16 · CLOSED — 2026-09-05, commit `f193e8a`
 
 **Original finding.** `VinculumFinalisStake.allocateEpoch` minted `distributed` —
 the rounded-down sum of position entitlements — rather than the complete Epoch
@@ -1184,7 +1184,7 @@ identical — nobody receives the dust either way — but the mechanism differed
 from the one the specification describes. Recorded as requiring an owner ruling
 and explicitly not resolved by reviewer assumption.
 
-**Owner decision, 2026-09-03, quoted in full:**
+**Owner decision, 2026-09-05, quoted in full:**
 
 > The protocol SHALL mint the complete Epoch Reward VCLM exactly once to the
 > immutable Treasury Reward Stake contract, as required by VF-STK-014.

@@ -61,7 +61,7 @@ and stop.
 
 **Dust.** Complete reward minted once (VF-STK-014); shares round down
 (VF-STK-026); remainder stays permanently in the stake contract, inaccessible,
-never reassigned or redirected (VF-STK-027). Owner decision, 3 Sep 2026, quoted
+never reassigned or redirected (VF-STK-027). Owner decision, 5 Sep 2026, quoted
 in full in the Findings Register.
 
 **Rewards run one epoch behind.** §10.3 and VF-STK-013 — entitlement for epoch N

@@ -72,7 +72,7 @@ A bounded, resumable allocation satisfies all four.
 4. **Same result regardless of batch count.** A participant receives exactly
    what a single-transaction allocation would have credited.
 5. **Forfeit on early withdrawal preserved.** Entombed as intentional,
-   2026-09-03. A position withdrawn before its epoch is allocated receives
+   2026-09-05. A position withdrawn before its epoch is allocated receives
    nothing. Under batching this becomes order-sensitive — see §7.
 
 ---
