@@ -1,5 +1,5 @@
 # Vinculum Finalis — Independent Review Findings Register
-## Reviewer column: CLAUDE · v18 · 2026-09-03
+## Reviewer column: CLAUDE · v19 · 2026-09-03
 
 **Governing authority:** `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 **Hash verified:** SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9` — re-verified 2026-08-03, unchanged.
@@ -1226,3 +1226,55 @@ until the regression was written. Suite at `f193e8a`: **315 passing**,
 reproduced on a Linux sandbox and the owner's Windows machine.
 
 **STATUS: CLOSED.**
+
+---
+
+## PROTOCOL RULE · Leave before the payout, get nothing — CLOSED
+
+**No identifier. Not a finding. Do not reopen.**
+
+**The rule.** A participant who withdraws before an epoch's rewards have been
+allocated forfeits that epoch's reward.
+
+**Specification basis — VF-STK-020:**
+
+> Withdrawal of matured staked tokens does not erase **accumulated** claimable
+> VCLM.
+
+The specification protects *accumulated* claimable VCLM — rewards already
+credited by a completed allocation. It extends no protection to an entitlement
+that has not been allocated. Withdrawing before the payout therefore forfeits it.
+VF-STK-013 makes an entitlement "fixed and **allocatable**" after the scheduled
+end of N+1; allocatable is not accumulated.
+
+**Mechanism.** `closeEpoch` freezes `ep.totalWeight` including the position
+(VF-STK-026). `_cancelFutureWeight` cuts at `lastClosedEpoch + 1`, so a closed
+epoch keeps the weight it closed with. `allocateEpoch` skips withdrawn positions.
+Denominator unchanged, numerator forfeited, share joins the stranded remainder
+(VF-STK-027, CL-87). Deliberate.
+
+**Regression.** `base-contracts/test/29_withdrawal_forfeit.test.cjs`. Measured:
+a position withdrawn before the payout receives `0`; one that stayed receives
+`75000000000000000`. Second test: credited VCLM survives withdrawal, per
+VF-STK-020's actual protection. Suite **317 passing**.
+
+**Consequence for CL-09.** Under a bounded allocator, a withdrawal between
+batches yields a different result depending on which batch the position was in.
+That remains an open design constraint for CL-09 and is recorded in §7 of
+`CL09_REMEDIATION_DESIGN.md`. It is not a reason to revisit this rule.
+
+**Reviewer process failure — recorded twice over.** The reviewer read a
+misleading comment in `withdrawPosition`, escalated intended behaviour to a
+specification violation, was told it was intentional, wrote it up correctly —
+then reopened the same question a second time, misread the owner's clarification,
+and briefly changed the contract to pay the withdrawer. Both errors came from
+arguing about intent instead of citing VF-STK-020, which was available the whole
+time and settles it in one sentence. The change was reverted; no trace remains in
+the contracts.
+
+**Rules added to `reviewers/red-team/README.md`:** ask whether behaviour is
+intended before treating a comment as evidence; and when a question about intent
+arises, find the governing requirement before asking the owner at all. The owner
+should not have to adjudicate what the specification already states.
+
+**STATUS: CLOSED. Cite VF-STK-020 and stop.**

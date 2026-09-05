@@ -14,6 +14,9 @@ Read in order. Where waves differ, the later one governs.
 **No new finding identifier may be issued until all six questions below are
 answered "no", in writing, naming what was searched.**
 
+*A new reproduction of an existing finding is valuable. A duplicate finding is
+not. Prefer strengthening existing evidence over creating new identifiers.*
+
 This gate exists because it has already failed. In Wave 4 a reviewer produced a
 specification citation, a code trace, and two reproductions — one under full
 production configuration — for a defect the Findings Register already carried as
@@ -43,10 +46,24 @@ Before issuing an identifier, answer:
 6. **Was it retracted**, and for what reason?
 
 If any answer is "yes", **extend the existing finding**. Do not issue a new
-identifier. An existing finding that gains a fresh reproduction, a narrowed
-scope, or a newly exposed residue is stronger evidence than a duplicate under a
-new name, and it keeps the history of how the conclusion was reached in one
-place.
+identifier. A fresh reproduction, a narrowed scope, or a newly exposed residue
+belongs on the finding it strengthens, so that the history of how the conclusion
+was reached stays in one place.
+
+**Ask before escalating.** When behaviour is simple, consistent, and looks
+deliberate, ask the owner whether it is intended before treating a code comment
+as evidence against the code. Comments describe intent unreliably; the owner
+describes it accurately. This rule exists because a reviewer read *"withdrawal
+does not erase entitlement already earned"* in `withdrawPosition`, found the
+code did not match that reading, and escalated a deliberate protocol rule to a
+specification violation. Asking costs one sentence. Not asking cost an afternoon.
+
+**And before asking at all, find the governing requirement.** The
+withdrawal question was settled by VF-STK-020 — *"does not erase **accumulated**
+claimable VCLM"* — which was available the whole time. Instead the reviewer
+argued from a code comment, escalated, was corrected, reopened the same question,
+misread the correction, and changed the contract before reverting it. The owner
+should never be asked to adjudicate what the specification already states. See the forfeit-on-early-withdrawal entry in the Findings Register.
 
 **Deployment state is not a finding.** Zero addresses in `config.js`, stubbed
 verifiers, unregistered handshake entries, placeholder Dev Fund and publisher

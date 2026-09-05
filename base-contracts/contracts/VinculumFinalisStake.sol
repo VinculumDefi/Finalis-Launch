@@ -144,9 +144,43 @@ contract VinculumFinalisStake {
         uint256 mintedVclm;
         uint256 closeTimestamp;
         uint256 allocateTimestamp;
+        // CL-89 bounded allocation.
+        uint256 allocStartTimestamp;  // set on the first batch; 0 = not started
+        uint256 allocCursor;          // next index into epochPositions[n]
+        uint256 distributedSoFar;     // running sum across batches
     }
 
     mapping(uint256 => Epoch) public epochs;
+
+    // ===== CL-89: bounded allocation =====
+    //
+    // Three rules, and nothing else:
+    //   1. everyone who earned a reward is paid,
+    //   2. nobody is paid twice,
+    //   3. no transaction is ever too large for a block.
+    //
+    // `epochPositions[n]` is the work list for epoch n, appended at
+    // registration. A position qualifies for a CONTIGUOUS range of epochs, and
+    // the maximum term is 120 days = 12 epochs, so registration appends at most
+    // 12 entries. That cost is paid ONCE per position. The previous design paid
+    // ~14,473 gas per lifetime position on EVERY allocation, forever.
+    //
+    // Allocation walks that list from `allocCursor` in bounded batches. One
+    // transaction or thirty-two makes no difference to the result.
+    mapping(uint256 => uint256[]) public epochPositions;
+
+    /// @notice Positions still to process for an epoch's allocation.
+    function remainingToAllocate(uint256 epochN) external view returns (uint256) {
+        uint256 total = epochPositions[epochN].length;
+        uint256 done = epochs[epochN].allocCursor;
+        return done >= total ? 0 : total - done;
+    }
+
+    // CL-89 / VF-STK-020. The moment a position was withdrawn, so allocation can
+    // tell "withdrew before the payout began" (forfeits) from "withdrew while
+    // the payout was running" (already earned; batch position is irrelevant).
+    // Without this the outcome would depend on which batch a position landed in.
+    mapping(uint256 => uint256) public withdrawnAt;
 
     // ===== CL-09: bounded epoch accounting via a difference array =====
     //
@@ -180,6 +214,7 @@ contract VinculumFinalisStake {
     event PositionExtended(uint256 indexed positionId, uint256 newEndTimestamp);
     event PositionWithdrawn(uint256 indexed positionId);
     event EpochClosed(uint256 indexed epoch, uint256 rewardBasis, uint256 totalWeight);
+    event EpochAllocationProgress(uint256 indexed epochN, uint256 processed, uint256 total);
     event EpochAllocated(uint256 indexed epoch, uint256 mintedVclm, uint256 distributions);
     event VclmClaimed(address indexed owner, uint256 amount);
     event TerminalStateEntered();
@@ -306,11 +341,23 @@ contract VinculumFinalisStake {
         // VF-STK-025: Without queued extension, position inactive at maturity
 
         pos.withdrawn = true;
+        withdrawnAt[positionId] = block.timestamp;   // CL-89
 
-        // CL-09: cancel any contribution from the first epoch not yet closed.
-        // Epochs already closed keep the weight they were closed with, which
-        // is what VF-STK-020 requires — withdrawal does not erase entitlement
-        // already earned.
+        // PROTOCOL RULE — leave before the payout, get nothing. INTENTIONAL.
+        // Do not "fix" this. Closed under VF-STK-020, which protects only
+        // ACCUMULATED claimable VCLM — rewards already credited by a completed
+        // allocation. An entitlement that has not yet been allocated is not
+        // protected, so withdrawing before the payout forfeits it. VF-STK-013
+        // makes an entitlement "fixed and allocatable" after the scheduled end
+        // of N+1; allocatable is not the same as accumulated.
+        //
+        // Mechanics: this cuts at `lastClosedEpoch + 1`, so a closed epoch keeps
+        // the weight it closed with (VF-STK-026 freezes the denominator).
+        // `allocateEpoch` skips withdrawn positions, so the share is credited to
+        // nobody and joins the stranded remainder (VF-STK-027, CL-87).
+        // Denominator unchanged, numerator forfeited — deliberate.
+        //
+        // Regression: 29_withdrawal_forfeit.test.cjs.
         _cancelFutureWeight(positionId);
 
         // Return staked tokens (VF-STK-030: immediately withdrawable at terminal state)
@@ -364,91 +411,116 @@ contract VinculumFinalisStake {
 
     // ===== BASE-EPOCH Phase 2: Allocate (VF-STK-013-015, VF-RAC-005/006) =====
 
-    function allocateEpoch(uint256 epochN) external {
-        // VF-STK-008: Permissionless
+    /// @notice Allocate an epoch's reward. May be called repeatedly until done.
+    /// @param maxCount Maximum positions to process in this call. 0 = no limit.
+    ///
+    /// CL-89. The reward is minted once, complete, on the FIRST call
+    /// (VF-STK-014, CL-87). Entitlements are then recorded over as many calls as
+    /// needed. VF-STK-028 prohibits partial epoch reward MINTING; it does not
+    /// prohibit recording entitlements across transactions, and no requirement
+    /// in Rev 6 mandates single-transaction allocation.
+    ///
+    /// The result is identical whether this takes one call or fifty:
+    ///   - `totalReward` and `ep.totalWeight` are both frozen before the first
+    ///     entitlement is recorded, so every share is computed against the same
+    ///     numerator and denominator (VF-STK-026);
+    ///   - the work list `epochPositions[epochN]` is fixed at registration;
+    ///   - `allocStartTimestamp` fixes who counts as withdrawn, so a withdrawal
+    ///     during allocation cannot change the outcome for anyone.
+    function allocateEpoch(uint256 epochN, uint256 maxCount) public {
         Epoch storage ep = epochs[epochN];
+        require(epochN >= 1, "VF-STK-011: epoch numbering begins at 1");
         require(ep.closed, "VFS: not closed");
         require(!ep.allocated, "VFS: already allocated");
 
-        // VF-STK-013: Only after scheduled end of N+1
         uint256 nPlus1End = launchTimestamp + ((epochN + 1) * EPOCH_DURATION_SECS);
         require(block.timestamp >= nPlus1End, "VF-STK-013: wait for N+1 end");
 
-        // VF-STK-015: Zero-eligible epoch
         if (ep.rewardBasis == 0 || ep.totalWeight == 0) {
+            // VF-STK-015: nothing to allocate.
             ep.allocated = true;
             ep.allocateTimestamp = block.timestamp;
             emit EpochAllocated(epochN, 0, 0);
             return;
         }
 
-        // VF-RAC-005: Permanent $0.10 Reward Reference Value
+        // VF-RAC-005: reward derived from the epoch basis at the permanent reference value.
         uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
 
-        // VF-STK-028: Cap check
-        // CL-84 / VF-SUP-002: Commitment Vault issuance and Treasury Reward
-        // Stake rewards draw from the same VCLM lifetime hard cap, owned by
-        // BASE-CAP. Previously this read the verifier and never consumed.
-        uint256 remaining = cap.remainingVclmCapacity();
+        // ---- first call only: mint once, complete, and freeze the payout ----
+        if (ep.allocStartTimestamp == 0) {
+            uint256 remaining = cap.remainingVclmCapacity();
 
-        // CL-08 / VF-STK-029: terminal state at zero remaining VCLM capacity.
-        if (remaining == 0 && !terminalState) {
-            terminalState = true;
-            emit TerminalStateEntered();
+            // CL-08 / VF-STK-029: terminal state at zero remaining capacity.
+            if (remaining == 0 && !terminalState) {
+                terminalState = true;
+                emit TerminalStateEntered();
+            }
+
+            if (totalReward > remaining) {
+                ep.allocated = true;
+                ep.allocateTimestamp = block.timestamp;
+                emit EpochAllocated(epochN, 0, 0);
+                return;
+            }
+
+            ep.allocStartTimestamp = block.timestamp;
+
+            // CL-87 / VF-STK-014: the COMPLETE Epoch Reward is minted once, not
+            // the rounded-down sum. Shares round down (VF-STK-026); the
+            // remainder stays permanently in this contract, inaccessible,
+            // never reassigned or redirected (VF-STK-027).
+            ep.mintedVclm = totalReward;
+            cap.recordVclmIssuance(totalReward);
+            vclmToken.mint(address(this), totalReward);
         }
 
-        if (totalReward > remaining) {
-            ep.allocated = true;
-            ep.allocateTimestamp = block.timestamp;
-            emit EpochAllocated(epochN, 0, 0);
-            return;
+        // ---- record entitlements, bounded ----
+        uint256[] storage work = epochPositions[epochN];
+        uint256 i = ep.allocCursor;
+        uint256 stop = work.length;
+        if (maxCount != 0 && i + maxCount < stop) {
+            stop = i + maxCount;
         }
 
-        // VF-STK-014/026: Proportional allocation; rounds down
-        uint256 distributed = 0;
-        for (uint256 i = 0; i < nextPositionId; i++) {
-            Position storage pos = positions[i];
-            if (!pos.withdrawn && _qualifiesForEpoch(pos, epochN)) {
-                uint256 weight = _getWeight(pos);
-                uint256 share = (totalReward * weight) / ep.totalWeight;
-                if (share > 0) {
-                    // VF-STK-016: Claimable accumulates
-                    claimableVclm[pos.owner] += share;
-                    distributed += share;
-                }
+        uint256 distributed = ep.distributedSoFar;
+        for (; i < stop; i++) {
+            uint256 id = work[i];
+            Position storage pos = positions[id];
+
+            // PROTOCOL RULE (VF-STK-020): leave before the payout, get nothing.
+            // The specification protects ACCUMULATED claimable VCLM only. A
+            // position withdrawn before this epoch's payout began is not paid.
+            // One withdrawn AFTER it began is paid, because the payout was
+            // already under way — which is also what makes the result
+            // independent of batch size.
+            if (pos.withdrawn && withdrawnAt[id] < ep.allocStartTimestamp) continue;
+
+            if (!_qualifiesForEpoch(pos, epochN)) continue;
+
+            uint256 weight = _getWeight(pos);
+            uint256 share = (totalReward * weight) / ep.totalWeight;
+            if (share > 0) {
+                claimableVclm[pos.owner] += share;   // VF-STK-016
+                distributed += share;
             }
         }
 
-        // CL-87 / VF-STK-014: the COMPLETE Epoch Reward VCLM is minted once,
-        // not the rounded-down sum of entitlements. Per-position shares round
-        // down (VF-STK-026), so `distributed` may be less than `totalReward`.
-        // The difference is dust.
-        //
-        // VF-STK-027: that dust remains permanently in this contract,
-        // inaccessible. It is never reassigned, redirected, carried forward,
-        // or distributed by any special mechanism — there is no code path that
-        // touches it. `claimableVclm` totals `distributed`, so the residue is
-        // unreachable by construction rather than by policy.
-        //
-        // Before CL-87 only `distributed` was minted, so the dust was never
-        // created. That satisfied VF-STK-027's outcome but not VF-STK-014's
-        // wording, which requires the complete reward to be minted. Resolved
-        // as an owner interpretation: mint complete, strand the remainder.
-        ep.mintedVclm = totalReward;
-        ep.allocated = true;
-        ep.allocateTimestamp = block.timestamp;
+        ep.allocCursor = i;
+        ep.distributedSoFar = distributed;
 
-        // CL-84 / VF-SUP-001: every authorized issuance path reconciles against
-        // the global lifetime hard cap. The cap records what is minted, which
-        // is now the complete reward including the stranded dust.
-        if (totalReward > 0) {
-            cap.recordVclmIssuance(totalReward);
+        if (i >= work.length) {
+            ep.allocated = true;
+            ep.allocateTimestamp = block.timestamp;
+            emit EpochAllocated(epochN, ep.mintedVclm, 0);
+        } else {
+            emit EpochAllocationProgress(epochN, i, work.length);
         }
+    }
 
-        // Mint VCLM to this contract (VF-STK-004: rewards in newly minted VCLM)
-        vclmToken.mint(address(this), totalReward);
-
-        emit EpochAllocated(epochN, totalReward, 0);
+    /// @notice Allocate an epoch in one call. Reverts if it would not fit.
+    function allocateEpoch(uint256 epochN) external {
+        allocateEpoch(epochN, 0);
     }
 
     // ===== VF-STK-016/017/018/019: Claim =====
@@ -538,6 +610,14 @@ contract VinculumFinalisStake {
         posLastEpoch[id] = last;
         weightAddedAt[first] += weight;
         weightRemovedAt[last + 1] += weight;
+
+        // CL-89: append to each qualifying epoch's work list. Bounded by
+        // maxTerm / EPOCH = 12. Extensions re-register with a range beginning at
+        // the previous end, so ranges never overlap and no position is listed
+        // twice for one epoch.
+        for (uint256 e = first; e <= last; e++) {
+            epochPositions[e].push(id);
+        }
     }
 
     /// @dev Removes a previously registered range in full. Used before
