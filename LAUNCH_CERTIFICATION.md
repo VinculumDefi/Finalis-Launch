@@ -1,7 +1,7 @@
 # Launch Certification — Rev 6 §16
 
 **Tree:** `github.com/VinculumDefi/Finalis-Launch` @ `redteam/prep`
-**Bound to:** `<FINAL COMMIT>`
+**Bound to:** `21b5b29`
 **Authority:** Master Specification Revision 6, SHA-256
 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`
 **Date:** 2026-09-03
