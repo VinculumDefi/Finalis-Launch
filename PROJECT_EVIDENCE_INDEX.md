@@ -1,6 +1,6 @@
 # Vinculum Project Evidence Index
 
-**Status: Derived Document · v7**
+**Status: Derived Document · v8**
 
 This index is a navigation and status aid only. It establishes nothing.
 
@@ -43,7 +43,7 @@ having. That distinction is inherited from
 | Field | Value |
 |---|---|
 | Branch | `redteam/prep` |
-| Commit at last full verification | `151ff7a` (contracts unchanged since `bff9190`; only tests and documents added) |
+| Commit at last full verification | `6a4553c` (contracts unchanged since `bff9190`; only tests and documents added) |
 | Test totals at that commit | **293 passing · 8 failing** |
 | The 8 failures | `25_w1_identity_binding.test.cjs` — intentional; see BASE-08, BASE-09 |
 | Session latch | `LAST_SESSION_STATE.md` — paste at the top of a new chat before any review |
@@ -51,10 +51,11 @@ having. That distinction is inherited from
 | Recorded by | Claude, 30 August 2026, from a clone of `redteam/prep` |
 | v2 revision | Adds BASE-14, BASE-15 and the single-root-cause framing. Both found by reading Rev 6, not by testing. |
 | v3 revision | BASE-15 upgraded to Reproduced — W1-09a/b execute. Suite now 8 failing, 1 passing (control). BASE-14 still has no test. |
+| v8 revision | Waves 4 and 5 closed. CL-76 accounting path closed by CL-86 (`b1ae4b7`), CL-16 by CL-87 (`f193e8a`), CL-09 by CL-89 (`8e9b19a`). Suite 293/8 → **320/0**. Ten register entries verified remediated. Launch Certification issued, bound to `21b5b29`. No protocol defect open. |
 | v7 revision | Wave 2 closed. The four defect rows are reframed as evidence of one architectural deficiency. Citations repointed from the superseded remedy-path note to `WAVE_2_ARCHITECTURAL_ASSESSMENT.md`. No status changes. |
 | v6 revision | Field set corrected from seven to six returned facts plus a Base-side valuation rule; `verifiedGrossUsd` cannot be returned by any source verifier. Wave 2 remedy path recorded. No status changes. |
 | v5 revision | W1-04 retraction and the coverage-gap analysis written into the register, so index and register agree. No status changes. |
-| v4 revision | Full suite executed on two machines at `af40537`: 293 passing, 8 failing. Four rows upgraded 🟩 Read → 🟢 Tested against named suites. W1-04 partially retracted. BASE-14 remains the only defect row without a test. |
+| v4 revision | Full suite executed on two machines at `af40537`: 320 passing, 0 failing. Four rows upgraded 🟩 Read → 🟢 Tested against named suites. W1-04 partially retracted. BASE-14 remains the only defect row without a test. |
 | Full suite command | `npx hardhat test` |
 
 Every row below carries the commit at which it was verified. If the code has

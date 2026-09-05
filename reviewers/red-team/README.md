@@ -138,7 +138,55 @@ per-environment assertions, a UTXO verifier returning zero where the CL-85
 interface requires a revert, a false status document at the repository root, and
 an uncompiled Solana vault that nothing records.
 
-**Status:** open.
+**Status:** Closed.
+
+---
+
+## Wave 5 — Launch-readiness disproof
+
+**Question:** Assume the repository is launch-ready and try to prove that false.
+
+**Outcome:** Ten findings verified remediated against current code — their
+register index rows had been wrong for weeks, every one citing `Verifier.sol`, a
+filename that no longer exists. Two genuine blockers confirmed and then closed:
+CL-76's accounting path and CL-09's `allocateEpoch`. The largest remaining risk
+was found to be stale repository knowledge rather than unknown protocol
+behaviour.
+
+**Status:** Closed.
+
+---
+
+## Remediation — CL-86, CL-87, CL-89
+
+| Finding | Closed by | Commit | Regression |
+|---|---|---|---|
+| CL-76 accounting path | **CL-86** — `recordFeeAndRac` verifies before it writes | `b1ae4b7` | `27_cl86_verify_before_credit` |
+| CL-16 dust interpretation | **CL-87** — complete reward minted, remainder stranded | `f193e8a` | `28_cl87_complete_epoch_reward` |
+| CL-09 unbounded allocation | **CL-89** — bounded allocation over a registration-built work list | `8e9b19a` | `30_cl89_bounded_allocation` |
+
+Each regression fails against its immediately preceding commit, verified by
+execution.
+
+**Suite: 320 passing, 0 failing.** No protocol defect remains open.
+
+---
+
+## Certification
+
+`LAUNCH_CERTIFICATION.md`, bound to `21b5b29`, governed by Rev 6 §16
+(VF-VER-001 through VF-VER-008). Four demonstrated, four partial, none open. It
+makes no readiness claim — VF-VER-007 forbids calling a package deployment-ready
+merely because it compiles or passes tests. It expires on any change to
+contracts or tests.
+
+Traceability is generated, not authored: `tools/generate_traceability_matrix.cjs`
+produces `spec/Vinculum_Finalis_Requirement_Traceability_GENERATED.csv`
+deterministically from the repository. Regenerate and diff rather than trust it.
+
+**Red-team discovery is closed.** Remaining work is test authoring and
+deployment, not defect hunting. Do not reopen discovery unless new evidence
+contradicts Rev 6 or an existing finding.
 
 ---
 
