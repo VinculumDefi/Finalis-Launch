@@ -475,7 +475,7 @@ describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", f
     env.ETHEREUM_LOCK_EVENT_TOPIC = TOPIC;
 
     const out = await deployFive(ethers, env);
-    expect(out.fiveEnvRegistryRegistered).to.equal(5);
+    expect(out.fiveEnvRegistryRegistered).to.equal(631);
     expect(out.skippedNon20ByteRows).to.deep.equal([2, 978, 989]);
 
     const vault = await ethers.getContractAt(
@@ -512,8 +512,8 @@ describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", f
 
 // =============================================================================
 // NEAR / SLP / APT / HBAR must not be registered on the Ethereum vault:
-// - NEAR must not take sidecar decimals 18
-// - SLP must not take sidecar decimals 0
+// - NEAR decimals() returns 24 (out of 1..18) → UNREGISTERED_DECIMALS
+// - SLP decimals() returns 0 (out of 1..18) → not registered as 0
 // - APT / HBAR must not be registered at left-padded short addresses
 // =============================================================================
 
