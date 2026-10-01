@@ -1,9 +1,22 @@
 # Requirement Evidence Register
 
 **Authority:** Master Specification Revision 6; `spec/Vinculum_Finalis_Requirement_Traceability.csv` (209 rows).
-**Branch:** `grok/ethereum-e2e` @ `5017498` (four-chain tests). Evidence commit supersedes the tip for this file.
+**Branch at evidence-commit parent tip:** `grok/ethereum-e2e` @ `69c757fdfd53fc28956674c6a9d836107ba0b7b2` (the current tip before this evidence commit).
 **Suite command:** `cd base-contracts && npx hardhat test` → **337 passing, 0 failing (2026-10-01)**.
 **Four-chain command:** `cd base-contracts && npx hardhat test test/35_deploy_five_guard.test.cjs test/36_deploy_five_poly_arb_op.test.cjs` → **13 passing (Ethereum+Polygon+Arbitrum+Optimism deployFive e2e + guards + refuse stubs)**.
+
+
+## Post-5017498 rerun citations
+
+These named tests were re-run on `grok/ethereum-e2e` after `5017498`; the commands and observed results below are the evidence citations for this update. No requirement status is upgraded unless the named test demonstrates that exact requirement; VF-VER-002/003/004 remain **Partial**.
+
+| Test file | Named test (`it` title) | Command | Result |
+|---|---|---|---|
+| `test/09_registration.test.cjs` | `a precision beyond safe arithmetic is rejected at registration` (including 78) | `cd base-contracts && npx hardhat test test/09_registration.test.cjs` | **8 passing** |
+| `test/39_deploy_five_ethereum_native_eth.test.cjs` | `locks 100 ETH, mints 1495 VCLM, fee 5 ETH, releases 95 ETH; early release reverts` | `cd base-contracts && npx hardhat test test/39_deploy_five_ethereum_native_eth.test.cjs` | **1 passing** |
+| `test/40_deploy_five_ethereum_near.test.cjs` | `locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts` | `cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs` | **1 passing** |
+| `test/42_deploy_five_ethereum_usdc_mainnet_fork.test.cjs` | `locks 100 real USDC on fork, mints 1725 VCLM, Dev Fund 5_000_000, releases 95_000_000` | `cd base-contracts && npx hardhat test test/42_deploy_five_ethereum_usdc_mainnet_fork.test.cjs` | **1 passing**; fork block `26100641` |
+| `test/43_deploy_five_poly_arb_op_base_mainnet_fork.test.cjs` | Polygon: `locks 100 real USDC_POL on fork, mints 1150 VCLM, Dev Fund 5_000_000, releases 95_000_000`; Arbitrum: same with `USDC_ARB`; Optimism: `locks 100 real OP on fork, mints 1150 VCLM, Dev Fund 5e18, releases 95e18`; Base: `locks 100 real cbETH on fork, BaseSameChainVerifier reads vault, mints 1150 VCLM, releases 95e18` | `cd base-contracts && npx hardhat test test/43_deploy_five_poly_arb_op_base_mainnet_fork.test.cjs` | **4 passing**; Polygon/Arbitrum/Optimism/Base fork blocks `94794725` / `510813352` / `157649463` / `52054330` |
 
 **Allowed statuses only:** Demonstrated · Partial · Refuses on purpose · Not authorized · Not code.
 
@@ -17,8 +30,8 @@
 
 | Status | Count |
 |---|---:|
-| Demonstrated | 62 |
-| Partial | 115 |
+| Demonstrated | 64 |
+| Partial | 113 |
 | Refuses on purpose | 0 |
 | Not authorized | 0 |
 | Not code | 32 |
@@ -96,8 +109,8 @@ Refuse-closed stubs evidenced by `test/36_deploy_five_poly_arb_op.test.cjs` —
 | VF-COM-008 | Demonstrated | test/04_endtoend.test.cjs | VF-COM-008: a rejected attempt consumes no allowance | cd base-contracts && npx hardhat test | Named in generated traceability matrix; covered by full suite run. |
 | VF-COM-009 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
 | VF-COM-010 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
-| VF-COM-011 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
-| VF-COM-012 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
+| VF-COM-011 | Demonstrated | test/40_deploy_five_ethereum_near.test.cjs | locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts | cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs | Verified 24-decimal precision produces the expected 5e24 fee. |
+| VF-COM-012 | Demonstrated | test/40_deploy_five_ethereum_near.test.cjs | locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts | cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs | Immutable 24-decimal precision yields 95e24 principal from 100 NEAR less 5e24 fee. |
 | VF-COM-013 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
 | VF-COM-014 | Partial |  |  |  | Not traced to a naming test; architecture may be implemented without citation. |
 | VF-COM-015 | Partial |  |  |  | Not traced to a naming test; architecture may be implemented without citation. |
