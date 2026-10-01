@@ -78,9 +78,12 @@
 //   - configureDevFund(envId, <ENV>_DEV_FUND lowercase)
 //   - registerHandshakeAllowance(envId, 3)
 //   - registerAssetPrecision + vault.registerAsset for the fixture MUSD asset
-//   - registerAssetPrecision + vault.registerAsset for every Approved Asset
-//     Registry record whose environment is one of those five (not BNB,
-//     Avalanche, Solana, Stellar, XRPL, Bitcoin, etc.)
+//   - registerAssetPrecision + vault.registerAsset ONLY for Approved Asset
+//     Registry rows (five envs) whose decimals already appear in
+//     ASSET_PRECISION_TABLE (src/lib/vfBaseRegistry.js) AND whose
+//     contract_or_native_identifier is an exact 20-byte hex address.
+//     Other approved rows stay unregistered. Non-20-byte ids are skipped
+//     and recorded (no left-pad, no decimal clamp).
 //   - vault.finalizeConfiguration()
 // It does NOT call VinculumFinalisVerifier.finalize() (protocol finalize).
 //
@@ -141,32 +144,24 @@ const FIVE_ENV_REGISTRY_NAMES = {
 const CLASS_TO_CUSTODY = { S1: 1, S2: 2, S3: 3 };
 
 
-/**
- * Normalize a registry contract_or_native_identifier to an address.
- * Native (non-0x) => zero address. Short/long hex is left-padded / truncated
- * to 20 bytes so ethers can encode it; the governing JSON bytes are not edited.
- */
-function registryTokenAddress(ident, ethers) {
+/** Exact 20-byte hex address (0x + 40 hex digits). No left-pad / truncate. */
+function isExact20ByteHexAddress(ident) {
   const s = String(ident || "");
-  if (!s.startsWith("0x")) return ZERO_ADDRESS;
-  let hex = "";
-  for (let i = 2; i < s.length; i++) {
+  if (s.length !== 42 || s[0] !== "0" || s[1] !== "x") return false;
+  for (let i = 2; i < 42; i++) {
     const c = s[i];
     if (
-      (c >= "0" && c <= "9") ||
-      (c >= "a" && c <= "f") ||
-      (c >= "A" && c <= "F")
+      !(
+        (c >= "0" && c <= "9") ||
+        (c >= "a" && c <= "f") ||
+        (c >= "A" && c <= "F")
+      )
     ) {
-      hex += c;
-    } else {
-      break;
+      return false;
     }
   }
-  if (hex.length > 40) hex = hex.slice(0, 40);
-  if (hex.length < 40) hex = hex.padStart(40, "0");
-  return ethers.getAddress(("0x" + hex).toLowerCase());
+  return true;
 }
-
 
 const REGISTRY_JSON_PATH = path.join(
   __dirname,
@@ -175,16 +170,74 @@ const REGISTRY_JSON_PATH = path.join(
   "spec",
   "Vinculum_Finalis_Approved_Asset_Registry.json"
 );
-const FIVE_ENV_DECIMALS_PATH = path.join(
+const VF_BASE_REGISTRY_PATH = path.join(
   __dirname,
-  "five-env-registry-decimals.json"
+  "..",
+  "..",
+  "src",
+  "lib",
+  "vfBaseRegistry.js"
 );
 
 /**
- * Load five-env assets from the committed Approved Asset Registry (exact bytes).
- * Decimals: prefer record.decimals when present; else sidecar by registry_row
- * (governing JSON has no decimals field — see evidence/IMPLEMENTATION_DOMAIN_AUDIT.md).
- * Skips BNB, Avalanche, Solana, Stellar, XRPL, Bitcoin, and other non-five envs.
+ * Parse ASSET_PRECISION_TABLE from vfBaseRegistry.js without executing ESM imports.
+ * Returns Map key `${environment}|${symbol}` → { decimals, custodyClass, custodyPath }.
+ */
+function loadAssetPrecisionTableIndex() {
+  const src = fs.readFileSync(VF_BASE_REGISTRY_PATH, "utf8");
+  const marker = "export const ASSET_PRECISION_TABLE = {";
+  const start = src.indexOf(marker);
+  if (start < 0) {
+    throw new Error("deploy-five: ASSET_PRECISION_TABLE not found in vfBaseRegistry.js");
+  }
+  const bodyStart = start + marker.length;
+  let depth = 1;
+  let i = bodyStart;
+  while (i < src.length && depth > 0) {
+    const ch = src[i];
+    if (ch === "{") depth += 1;
+    else if (ch === "}") depth -= 1;
+    i += 1;
+  }
+  const body = src.slice(bodyStart, i - 1);
+  const entryRe =
+    /'([^']+)':\s*\{\s*symbol:\s*'([^']+)',\s*decimals:\s*(\d+),\s*custodyClass:\s*'([^']+)',\s*custodyPath:\s*'([^']+)'/g;
+  const index = new Map();
+  let m;
+  while ((m = entryRe.exec(body)) !== null) {
+    const tableKey = m[1];
+    const slash = tableKey.indexOf("/");
+    if (slash < 0) continue;
+    const environment = tableKey.slice(0, slash);
+    const symbol = m[2];
+    const decimals = Number(m[3]);
+    const custodyClass = CLASS_TO_CUSTODY[m[4]];
+    const custodyPath = m[5] === "native" ? 0 : 1;
+    if (!custodyClass) {
+      throw new Error(
+        `deploy-five: unknown custodyClass ${m[4]} in ASSET_PRECISION_TABLE ${tableKey}`
+      );
+    }
+    index.set(`${environment}|${symbol}`, {
+      decimals,
+      custodyClass,
+      custodyPath,
+      tableKey,
+    });
+  }
+  if (index.size === 0) {
+    throw new Error("deploy-five: ASSET_PRECISION_TABLE parse yielded no entries");
+  }
+  return index;
+}
+
+/**
+ * Load five-env assets eligible for deployFive registration.
+ * Only rows whose (environment, symbol) already appear in ASSET_PRECISION_TABLE
+ * AND whose contract_or_native_identifier is an exact 20-byte hex address.
+ * Non-20-byte identifiers among five-env rows are skipped and listed in
+ * skippedNon20ByteRows. No decimal clamp; no address left-pad.
+ * Does not rewrite the governing registry JSON.
  */
 function loadFiveEnvRegistryAssets() {
   const raw = fs.readFileSync(REGISTRY_JSON_PATH);
@@ -195,9 +248,7 @@ function loadFiveEnvRegistryAssets() {
       `deploy-five: registry record count ${records.length} !== 1001`
     );
   }
-  const decimalsByRow = JSON.parse(
-    fs.readFileSync(FIVE_ENV_DECIMALS_PATH, "utf8")
-  );
+  const precisionIndex = loadAssetPrecisionTableIndex();
   const allowed = new Set(Object.values(FIVE_ENV_REGISTRY_NAMES));
   const byEnv = {
     Ethereum: [],
@@ -206,35 +257,30 @@ function loadFiveEnvRegistryAssets() {
     Optimism: [],
     Base: [],
   };
+  const skippedNon20ByteRows = [];
   for (const r of records) {
     if (!allowed.has(r.environment)) continue;
-    const custodyClass = CLASS_TO_CUSTODY[r.class];
-    if (!custodyClass) {
-      throw new Error(
-        `deploy-five: unknown custody class ${r.class} at row ${r.registry_row}`
-      );
-    }
-    let decimals =
-      r.decimals !== undefined && r.decimals !== null
-        ? Number(r.decimals)
-        : Number(decimalsByRow[String(r.registry_row)]);
-    if (!Number.isInteger(decimals) || decimals < 0 || decimals > 18) {
-      throw new Error(
-        `deploy-five: invalid decimals ${decimals} for row ${r.registry_row}`
-      );
-    }
     const ident = String(r.contract_or_native_identifier || "");
-    const isNative = !ident.startsWith("0x");
+    if (!isExact20ByteHexAddress(ident)) {
+      skippedNon20ByteRows.push(r.registry_row);
+      continue;
+    }
+    const precision = precisionIndex.get(`${r.environment}|${r.symbol}`);
+    if (!precision) {
+      // Approved but decimals not in ASSET_PRECISION_TABLE — stay unregistered.
+      continue;
+    }
     byEnv[r.environment].push({
       registryRow: r.registry_row,
       symbol: r.symbol,
-      decimals,
-      custodyClass,
-      custodyPath: isNative ? 0 : 1,
+      decimals: precision.decimals,
+      custodyClass: precision.custodyClass,
+      custodyPath: precision.custodyPath,
       contractOrNative: ident,
     });
   }
-  return byEnv;
+  skippedNon20ByteRows.sort((a, b) => a - b);
+  return { byEnv, skippedNon20ByteRows };
 }
 
 /** Non-empty string fields (environment ids). */
@@ -538,7 +584,8 @@ async function deployFive(ethers, env = process.env) {
     },
   ];
 
-  const registryByEnv = loadFiveEnvRegistryAssets();
+  const { byEnv: registryByEnv, skippedNon20ByteRows } =
+    loadFiveEnvRegistryAssets();
   const assetIds = {};
   let fiveEnvRegistryRegistered = 0;
 
@@ -585,7 +632,7 @@ async function deployFive(ethers, env = process.env) {
           asset.custodyPath
         )
       ).wait();
-      const tokenAddr = registryTokenAddress(asset.contractOrNative, ethers);
+      const tokenAddr = ethers.getAddress(asset.contractOrNative.toLowerCase());
       await (await spec.vault.registerAsset(tokenAddr, registryAid)).wait();
       fiveEnvRegistryRegistered += 1;
     }
@@ -613,6 +660,7 @@ async function deployFive(ethers, env = process.env) {
     assetSymbol: ASSET_SYMBOL,
     assetIds,
     fiveEnvRegistryRegistered,
+    skippedNon20ByteRows,
   };
 
   console.log(JSON.stringify(out, null, 2));

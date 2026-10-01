@@ -475,7 +475,8 @@ describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", f
     env.ETHEREUM_LOCK_EVENT_TOPIC = TOPIC;
 
     const out = await deployFive(ethers, env);
-    expect(out.fiveEnvRegistryRegistered).to.equal(667);
+    expect(out.fiveEnvRegistryRegistered).to.equal(5);
+    expect(out.skippedNon20ByteRows).to.deep.equal([2, 978, 989]);
 
     const vault = await ethers.getContractAt(
       "VinculumFinalisEvmVault",
@@ -506,5 +507,84 @@ describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", f
 
     expect(await rogue.balanceOf(user.address)).to.equal(before);
     expect(await rogue.balanceOf(ethDevFund.address)).to.equal(0n);
+  });
+});
+
+// =============================================================================
+// NEAR / SLP / APT / HBAR must not be registered on the Ethereum vault:
+// - NEAR must not take sidecar decimals 18
+// - SLP must not take sidecar decimals 0
+// - APT / HBAR must not be registered at left-padded short addresses
+// =============================================================================
+
+describe("35_deploy_five_guard — NEAR SLP APT HBAR absent after deployFive", function () {
+  it("leaves NEAR, SLP, APT, and HBAR unregistered on the Ethereum vault", async function () {
+    this.timeout(600000);
+
+    const signers = await ethers.getSigners();
+    const publisher = signers[9];
+    const ethDevFund = signers[8];
+    const polyDevFund = signers[7];
+    const arbDevFund = signers[6];
+    const opDevFund = signers[2];
+    const baseDevFund = signers[1];
+
+    const Token = await ethers.getContractFactory("VinculumFinalisToken");
+    const vclm  = await Token.deploy("Vinculum", "VCLM", 10_000_000_000n * 10n**18n);
+    const chonx = await Token.deploy("Chonx", "CHONX", 100_000_000_000n * 10n**18n);
+
+    const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap"))
+      .deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+
+    const Mock = await ethers.getContractFactory("MockERC20");
+    const token = await Mock.deploy("MockUSD", ASSET_SYMBOL, 18, 10n**30n);
+
+    const M = await ethers.getContractFactory("MockL1Block");
+    const mockL1 = await M.deploy();
+    const R = await ethers.getContractFactory("L1BlockRegistry");
+    const registry = await R.deploy(await mockL1.getAddress());
+
+    const EvmVault = await ethers.getContractFactory("VinculumFinalisEvmVault");
+    const TOPIC = EvmVault.interface.getEvent("CommitVaultLock").topicHash;
+
+    const env = validEnv();
+    env.VCLM_TOKEN = await vclm.getAddress();
+    env.CHONX_TOKEN = await chonx.getAddress();
+    env.PRICE_PUBLISHER = publisher.address;
+    env.LAUNCH_TIMESTAMP = String(launchTs);
+    env.CAP = await __cap.getAddress();
+    env.ASSET_TOKEN = await token.getAddress();
+    env.ETHEREUM_DEV_FUND = ethDevFund.address;
+    env.POLYGON_DEV_FUND = polyDevFund.address;
+    env.ARBITRUM_DEV_FUND = arbDevFund.address;
+    env.OPTIMISM_DEV_FUND = opDevFund.address;
+    env.BASE_DEV_FUND = baseDevFund.address;
+    env.ETHEREUM_REGISTRY = await registry.getAddress();
+    env.ETHEREUM_LOCK_EVENT_TOPIC = TOPIC;
+
+    const out = await deployFive(ethers, env);
+    expect(out.skippedNon20ByteRows).to.include.members([978, 989]);
+
+    const vault = await ethers.getContractAt(
+      "VinculumFinalisEvmVault",
+      out.vaults.ethereum
+    );
+
+    // Exact registry identifiers (NEAR/SLP are 20-byte; APT/HBAR are short).
+    const NEAR = ethers.getAddress("0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4");
+    const SLP = "0xCC8Fa225D80b9c7D42F96e9570156c65D6cAAa25";
+    // Left-padded forms the deleted sidecar path would have registered.
+    const APT_PADDED = ethers.getAddress(
+      ("0x" + "14f8b8ba1e427dc1deb44f42e59cba84e6a1c67".padStart(40, "0")).toLowerCase()
+    );
+    const HBAR_PADDED = ethers.getAddress(
+      ("0x" + "14ab470682Bc045336B1df6262d538Cb6c35eA2".padStart(40, "0")).toLowerCase()
+    );
+
+    expect(await vault.approvedAsset(NEAR)).to.equal(ethers.ZeroHash);
+    expect(await vault.approvedAsset(SLP)).to.equal(ethers.ZeroHash);
+    expect(await vault.approvedAsset(APT_PADDED)).to.equal(ethers.ZeroHash);
+    expect(await vault.approvedAsset(HBAR_PADDED)).to.equal(ethers.ZeroHash);
   });
 });
