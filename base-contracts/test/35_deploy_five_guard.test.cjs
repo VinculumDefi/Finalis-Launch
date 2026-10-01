@@ -99,7 +99,7 @@ describe("35_deploy_five_guard — assertDeployEnv", function () {
 
 describe("35_deploy_five_guard — deployFive vault wiring", function () {
   it("registers each chain verifier with the vault deployFive deployed", async function () {
-    this.timeout(120000);
+    this.timeout(600000);
 
     const env = validEnv();
     const out = await deployFive(ethers, env);
@@ -240,7 +240,7 @@ async function signBatch(verifier, signer, runId, ids, prices, fetchTs) {
 
 describe("35_deploy_five_guard — Ethereum e2e via deployFive", function () {
   it("locks 100 tokens, proves via Ethereum verifier, mints 1725 VCLM, releases 95%", async function () {
-    this.timeout(180000);
+    this.timeout(600000);
 
     const signers = await ethers.getSigners();
     const [deployer] = signers;
@@ -418,5 +418,93 @@ describe("35_deploy_five_guard — Ethereum e2e via deployFive", function () {
     expect(await token.balanceOf(record.lockContract)).to.equal(0n);
     expect(await token.balanceOf(boundDestination.address) - destBefore)
       .to.equal(expectedPrincipal);
+  });
+});
+
+// =============================================================================
+// Registry refuse: asset not in the Approved Asset Registry file is rejected
+// on the Ethereum vault from deployFive; user balance unchanged.
+// =============================================================================
+
+describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", function () {
+  it("refuses an asset not in the registry file; user balance unchanged", async function () {
+    this.timeout(600000);
+
+    const signers = await ethers.getSigners();
+    const [deployer] = signers;
+    const publisher = signers[9];
+    const user = signers[3];
+    const ethDevFund = signers[8];
+    const polyDevFund = signers[7];
+    const arbDevFund = signers[6];
+    const opDevFund = signers[2];
+    const baseDevFund = signers[1];
+
+    const Token = await ethers.getContractFactory("VinculumFinalisToken");
+    const vclm  = await Token.deploy("Vinculum", "VCLM", 10_000_000_000n * 10n**18n);
+    const chonx = await Token.deploy("Chonx", "CHONX", 100_000_000_000n * 10n**18n);
+
+    const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+    const __cap = await (await ethers.getContractFactory("VinculumFinalisCap"))
+      .deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+
+    const Mock = await ethers.getContractFactory("MockERC20");
+    const token = await Mock.deploy("MockUSD", ASSET_SYMBOL, 18, 10n**30n);
+
+    const M = await ethers.getContractFactory("MockL1Block");
+    const mockL1 = await M.deploy();
+    const R = await ethers.getContractFactory("L1BlockRegistry");
+    const registry = await R.deploy(await mockL1.getAddress());
+
+    const EvmVault = await ethers.getContractFactory("VinculumFinalisEvmVault");
+    const TOPIC = EvmVault.interface.getEvent("CommitVaultLock").topicHash;
+
+    const env = validEnv();
+    env.VCLM_TOKEN = await vclm.getAddress();
+    env.CHONX_TOKEN = await chonx.getAddress();
+    env.PRICE_PUBLISHER = publisher.address;
+    env.LAUNCH_TIMESTAMP = String(launchTs);
+    env.CAP = await __cap.getAddress();
+    env.ASSET_TOKEN = await token.getAddress();
+    env.ETHEREUM_DEV_FUND = ethDevFund.address;
+    env.POLYGON_DEV_FUND = polyDevFund.address;
+    env.ARBITRUM_DEV_FUND = arbDevFund.address;
+    env.OPTIMISM_DEV_FUND = opDevFund.address;
+    env.BASE_DEV_FUND = baseDevFund.address;
+    env.ETHEREUM_REGISTRY = await registry.getAddress();
+    env.ETHEREUM_LOCK_EVENT_TOPIC = TOPIC;
+
+    const out = await deployFive(ethers, env);
+    expect(out.fiveEnvRegistryRegistered).to.equal(667);
+
+    const vault = await ethers.getContractAt(
+      "VinculumFinalisEvmVault",
+      out.vaults.ethereum
+    );
+
+    // Token that is NOT in Vinculum_Finalis_Approved_Asset_Registry.json
+    const Rogue = await ethers.getContractFactory("MockERC20");
+    const rogue = await Rogue.deploy("NotInRegistry", "NIR", 18, 10n**30n);
+    const fund = 10n**22n;
+    await rogue.transfer(user.address, fund);
+    await rogue.connect(user).approve(out.vaults.ethereum, fund);
+
+    const before = await rogue.balanceOf(user.address);
+    const DAY = 86400n;
+    await expect(
+      vault.connect(user).createLock({
+        lockId: ethers.keccak256(ethers.toUtf8Bytes("refuse-non-registry")),
+        asset: await rogue.getAddress(),
+        grossAmount: 100n * 10n**18n,
+        durationSecs: 30n * DAY,
+        baseRecipient: user.address,
+        releaseDestination: user.address,
+        outputToken: 0,
+        chonxActivationReceipt: ethers.ZeroHash,
+      })
+    ).to.be.revertedWithCustomError(vault, "AssetNotInRegistry");
+
+    expect(await rogue.balanceOf(user.address)).to.equal(before);
+    expect(await rogue.balanceOf(ethDevFund.address)).to.equal(0n);
   });
 });

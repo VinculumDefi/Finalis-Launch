@@ -77,8 +77,11 @@
 // script also (for Base, Ethereum, Polygon, Arbitrum, Optimism):
 //   - configureDevFund(envId, <ENV>_DEV_FUND lowercase)
 //   - registerHandshakeAllowance(envId, 3)
-//   - registerAssetPrecision(envId, keccak256(envId+":MUSD"), "MUSD", 18, 1, 1)
-//   - vault.registerAsset(ASSET_TOKEN, that asset id) + vault.finalizeConfiguration()
+//   - registerAssetPrecision + vault.registerAsset for the fixture MUSD asset
+//   - registerAssetPrecision + vault.registerAsset for every Approved Asset
+//     Registry record whose environment is one of those five (not BNB,
+//     Avalanche, Solana, Stellar, XRPL, Bitcoin, etc.)
+//   - vault.finalizeConfiguration()
 // It does NOT call VinculumFinalisVerifier.finalize() (protocol finalize).
 //
 // Usage:
@@ -90,6 +93,9 @@
 // =============================================================================
 
 "use strict";
+
+const fs = require("fs");
+const path = require("path");
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const ZERO_BYTES32 =
@@ -122,6 +128,114 @@ const ASSET_DECIMALS = 18;
 const ASSET_CUSTODY_CLASS = 1;
 const ASSET_CUSTODY_PATH = 1;
 const HANDSHAKE_ALLOWANCE = 3;
+
+/** Registry environment display names for the five deployFive environments. */
+const FIVE_ENV_REGISTRY_NAMES = {
+  ethereum: "Ethereum",
+  polygon: "Polygon",
+  arbitrum: "Arbitrum",
+  optimism: "Optimism",
+  base: "Base",
+};
+
+const CLASS_TO_CUSTODY = { S1: 1, S2: 2, S3: 3 };
+
+
+/**
+ * Normalize a registry contract_or_native_identifier to an address.
+ * Native (non-0x) => zero address. Short/long hex is left-padded / truncated
+ * to 20 bytes so ethers can encode it; the governing JSON bytes are not edited.
+ */
+function registryTokenAddress(ident, ethers) {
+  const s = String(ident || "");
+  if (!s.startsWith("0x")) return ZERO_ADDRESS;
+  let hex = "";
+  for (let i = 2; i < s.length; i++) {
+    const c = s[i];
+    if (
+      (c >= "0" && c <= "9") ||
+      (c >= "a" && c <= "f") ||
+      (c >= "A" && c <= "F")
+    ) {
+      hex += c;
+    } else {
+      break;
+    }
+  }
+  if (hex.length > 40) hex = hex.slice(0, 40);
+  if (hex.length < 40) hex = hex.padStart(40, "0");
+  return ethers.getAddress(("0x" + hex).toLowerCase());
+}
+
+
+const REGISTRY_JSON_PATH = path.join(
+  __dirname,
+  "..",
+  "..",
+  "spec",
+  "Vinculum_Finalis_Approved_Asset_Registry.json"
+);
+const FIVE_ENV_DECIMALS_PATH = path.join(
+  __dirname,
+  "five-env-registry-decimals.json"
+);
+
+/**
+ * Load five-env assets from the committed Approved Asset Registry (exact bytes).
+ * Decimals: prefer record.decimals when present; else sidecar by registry_row
+ * (governing JSON has no decimals field — see evidence/IMPLEMENTATION_DOMAIN_AUDIT.md).
+ * Skips BNB, Avalanche, Solana, Stellar, XRPL, Bitcoin, and other non-five envs.
+ */
+function loadFiveEnvRegistryAssets() {
+  const raw = fs.readFileSync(REGISTRY_JSON_PATH);
+  const data = JSON.parse(raw.toString("utf8"));
+  const records = data.records || [];
+  if (records.length !== 1001) {
+    throw new Error(
+      `deploy-five: registry record count ${records.length} !== 1001`
+    );
+  }
+  const decimalsByRow = JSON.parse(
+    fs.readFileSync(FIVE_ENV_DECIMALS_PATH, "utf8")
+  );
+  const allowed = new Set(Object.values(FIVE_ENV_REGISTRY_NAMES));
+  const byEnv = {
+    Ethereum: [],
+    Polygon: [],
+    Arbitrum: [],
+    Optimism: [],
+    Base: [],
+  };
+  for (const r of records) {
+    if (!allowed.has(r.environment)) continue;
+    const custodyClass = CLASS_TO_CUSTODY[r.class];
+    if (!custodyClass) {
+      throw new Error(
+        `deploy-five: unknown custody class ${r.class} at row ${r.registry_row}`
+      );
+    }
+    let decimals =
+      r.decimals !== undefined && r.decimals !== null
+        ? Number(r.decimals)
+        : Number(decimalsByRow[String(r.registry_row)]);
+    if (!Number.isInteger(decimals) || decimals < 0 || decimals > 18) {
+      throw new Error(
+        `deploy-five: invalid decimals ${decimals} for row ${r.registry_row}`
+      );
+    }
+    const ident = String(r.contract_or_native_identifier || "");
+    const isNative = !ident.startsWith("0x");
+    byEnv[r.environment].push({
+      registryRow: r.registry_row,
+      symbol: r.symbol,
+      decimals,
+      custodyClass,
+      custodyPath: isNative ? 0 : 1,
+      contractOrNative: ident,
+    });
+  }
+  return byEnv;
+}
 
 /** Non-empty string fields (environment ids). */
 const STRING_KEYS = [
@@ -424,7 +538,10 @@ async function deployFive(ethers, env = process.env) {
     },
   ];
 
+  const registryByEnv = loadFiveEnvRegistryAssets();
   const assetIds = {};
+  let fiveEnvRegistryRegistered = 0;
+
   for (const spec of envSpecs) {
     const aid = ethers.keccak256(
       ethers.toUtf8Bytes(`${spec.id}:${ASSET_SYMBOL}`)
@@ -437,6 +554,8 @@ async function deployFive(ethers, env = process.env) {
     await (
       await verifier.registerHandshakeAllowance(spec.id, HANDSHAKE_ALLOWANCE)
     ).wait();
+
+    // Fixture custody-class-1 asset (keeps existing one-asset lock e2e working).
     await (
       await verifier.registerAssetPrecision(
         spec.id,
@@ -448,6 +567,29 @@ async function deployFive(ethers, env = process.env) {
       )
     ).wait();
     await (await spec.vault.registerAsset(assetToken, aid)).wait();
+
+    // Approved Asset Registry rows for this environment only (five EVM envs).
+    const regName = FIVE_ENV_REGISTRY_NAMES[spec.key];
+    const assets = registryByEnv[regName] || [];
+    for (const asset of assets) {
+      const registryAid = ethers.keccak256(
+        ethers.toUtf8Bytes(`${spec.id}:${asset.symbol}`)
+      );
+      await (
+        await verifier.registerAssetPrecision(
+          spec.id,
+          registryAid,
+          asset.symbol,
+          asset.decimals,
+          asset.custodyClass,
+          asset.custodyPath
+        )
+      ).wait();
+      const tokenAddr = registryTokenAddress(asset.contractOrNative, ethers);
+      await (await spec.vault.registerAsset(tokenAddr, registryAid)).wait();
+      fiveEnvRegistryRegistered += 1;
+    }
+
     await (await spec.vault.finalizeConfiguration()).wait();
   }
 
@@ -470,6 +612,7 @@ async function deployFive(ethers, env = process.env) {
     assetToken,
     assetSymbol: ASSET_SYMBOL,
     assetIds,
+    fiveEnvRegistryRegistered,
   };
 
   console.log(JSON.stringify(out, null, 2));
@@ -485,6 +628,7 @@ async function main() {
 module.exports = {
   assertDeployEnv,
   deployFive,
+  loadFiveEnvRegistryAssets,
   ADDRESS_KEYS,
   STRING_KEYS,
   BYTES32_KEYS,
@@ -493,6 +637,8 @@ module.exports = {
   ASSET_CUSTODY_CLASS,
   ASSET_CUSTODY_PATH,
   HANDSHAKE_ALLOWANCE,
+  FIVE_ENV_REGISTRY_NAMES,
+  REGISTRY_JSON_PATH,
 };
 
 if (require.main === module) {

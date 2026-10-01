@@ -396,7 +396,7 @@ async function assertMintAndRelease(s, {
 
 describe("36_deploy_five — Polygon e2e via deployFive", function () {
   it("locks, proves via PolygonChainVerifier, mints 1725 VCLM, releases 95%", async function () {
-    this.timeout(180000);
+    this.timeout(600000);
 
     const s = await deployFiveStack((env, { registry }) => {
       env.POLYGON_REGISTRY = registry;
@@ -481,7 +481,7 @@ describe("36_deploy_five — Polygon e2e via deployFive", function () {
 
 describe("36_deploy_five — Arbitrum e2e via deployFive", function () {
   it("locks, proves via ArbitrumChainVerifier, mints 1725 VCLM, releases 95%", async function () {
-    this.timeout(180000);
+    this.timeout(600000);
 
     const s = await deployFiveStack((env, { registry }) => {
       env.ARBITRUM_REGISTRY = registry;
@@ -553,7 +553,7 @@ describe("36_deploy_five — Arbitrum e2e via deployFive", function () {
 
 describe("36_deploy_five — Optimism e2e via deployFive", function () {
   it("locks, proves via OpStackFaultProofVerifier, mints 1725 VCLM, releases 95%", async function () {
-    this.timeout(180000);
+    this.timeout(600000);
 
     const s = await deployFiveStack((env, { registry }) => {
       env.OPTIMISM_REGISTRY = registry;
