@@ -2,8 +2,13 @@
 // deploy-five.cjs — deploy ONLY Base, Ethereum, Polygon, Arbitrum, Optimism
 //
 // Deploys VinculumFinalisVerifier, five vaults, and the five chain verifiers.
-// Every constructor address / param comes from environment variables. The
-// script validates the full env set BEFORE any deployment transaction.
+// Each chain verifier is constructed with the vault that THIS script just
+// deployed for that chain (not a separate vault address from the environment).
+// After the five verifiers deploy, registerChainVerifier is called for all five
+// on VinculumFinalisVerifier before the script returns.
+//
+// Every remaining constructor address / param comes from environment variables.
+// The script validates the full env set BEFORE any deployment transaction.
 //
 // Required environment variables
 // ------------------------------
@@ -17,36 +22,35 @@
 // Ethereum vault (VinculumFinalisEvmVault):
 //   ETHEREUM_ENVIRONMENT_ID string
 //   ETHEREUM_DEV_FUND       address
-// Ethereum verifier (EthereumChainVerifier):
+// Ethereum verifier (EthereumChainVerifier) — vault is the one deployFive
+// just deployed for Ethereum:
 //   ETHEREUM_REGISTRY           address
-//   ETHEREUM_SOURCE_VAULT       address
 //   ETHEREUM_LOCK_EVENT_TOPIC   bytes32
 //
 // Polygon vault:
 //   POLYGON_ENVIRONMENT_ID  string
 //   POLYGON_DEV_FUND        address
-// Polygon verifier (PolygonChainVerifier):
+// Polygon verifier (PolygonChainVerifier) — vault is deployFive's Polygon vault:
 //   POLYGON_REGISTRY              address
 //   POLYGON_CHECKPOINT_CONTRACT   address
 //   POLYGON_HEADER_BLOCK_TOPIC    bytes32
-//   POLYGON_SOURCE_VAULT          address
 //   POLYGON_LOCK_EVENT_TOPIC      bytes32
 //
 // Arbitrum vault:
 //   ARBITRUM_ENVIRONMENT_ID string
 //   ARBITRUM_DEV_FUND       address
-// Arbitrum verifier (ArbitrumChainVerifier):
+// Arbitrum verifier (ArbitrumChainVerifier) — vault is deployFive's Arbitrum vault:
 //   ARBITRUM_REGISTRY                   address
 //   ARBITRUM_ROLLUP_CONTRACT            address
 //   ARBITRUM_ASSERTION_CONFIRMED_TOPIC  bytes32
-//   ARBITRUM_SOURCE_VAULT               address
 //   ARBITRUM_LOCK_EVENT_TOPIC           bytes32
 //
 // Optimism vault:
 //   OPTIMISM_ENVIRONMENT_ID string
 //   OPTIMISM_DEV_FUND       address
 // Optimism verifier (OpStackFaultProofVerifier.Config — same fields as
-// 34_optimism_lock_prove_mint.test.cjs):
+// 34_optimism_lock_prove_mint.test.cjs; sourceVault is deployFive's Optimism
+// vault, not an env address):
 //   OPTIMISM_ENVIRONMENT_ID              string   environmentId
 //   OPTIMISM_REGISTRY                    address  registry
 //   OPTIMISM_DISPUTE_GAME_FACTORY        address  disputeGameFactory
@@ -56,15 +60,14 @@
 //       (0 = CANNON is valid; zero-check is skipped for this field)
 //   OPTIMISM_GAME_FINALITY_DELAY_SECONDS uint64   gameFinalityDelaySeconds
 //       (must be > 0)
-//   OPTIMISM_SOURCE_VAULT                address  sourceVault
 //   OPTIMISM_LOCK_EVENT_TOPIC            bytes32  lockEventTopic
 //
 // Base vault (VinculumFinalisBaseVault — constructor is verifier + devFund;
 // environment id is still required for the five-env inventory):
 //   BASE_ENVIRONMENT_ID string
 //   BASE_DEV_FUND       address
-// Base verifier (BaseSameChainVerifier):
-//   BASE_VAULT          address
+// Base verifier (BaseSameChainVerifier) — vault is deployFive's Base vault
+// (no separate BASE_VAULT env key).
 //
 // Usage:
 //   npx hardhat run scripts/deploy-five.cjs
@@ -88,21 +91,16 @@ const ADDRESS_KEYS = [
   "CAP",
   "ETHEREUM_DEV_FUND",
   "ETHEREUM_REGISTRY",
-  "ETHEREUM_SOURCE_VAULT",
   "POLYGON_DEV_FUND",
   "POLYGON_REGISTRY",
   "POLYGON_CHECKPOINT_CONTRACT",
-  "POLYGON_SOURCE_VAULT",
   "ARBITRUM_DEV_FUND",
   "ARBITRUM_REGISTRY",
   "ARBITRUM_ROLLUP_CONTRACT",
-  "ARBITRUM_SOURCE_VAULT",
   "OPTIMISM_DEV_FUND",
   "OPTIMISM_REGISTRY",
   "OPTIMISM_DISPUTE_GAME_FACTORY",
-  "OPTIMISM_SOURCE_VAULT",
   "BASE_DEV_FUND",
-  "BASE_VAULT",
 ];
 
 /** Non-empty string fields (environment ids). */
@@ -218,6 +216,10 @@ function assertDeployEnv(env) {
 
 /**
  * Deploy the five-environment stack. Calls assertDeployEnv first.
+ * Vaults deploy before chain verifiers; each verifier is constructed with the
+ * vault this function just deployed for that chain. Then registerChainVerifier
+ * is called for all five on VinculumFinalisVerifier.
+ *
  * @param {*} ethers  hardhat ethers
  * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [env]
  */
@@ -271,11 +273,17 @@ async function deployFive(ethers, env = process.env) {
   );
   await baseVault.waitForDeployment();
 
+  const ethereumVaultAddr = await ethereumVault.getAddress();
+  const polygonVaultAddr = await polygonVault.getAddress();
+  const arbitrumVaultAddr = await arbitrumVault.getAddress();
+  const optimismVaultAddr = await optimismVault.getAddress();
+  const baseVaultAddr = await baseVault.getAddress();
+
   const EthereumCV = await ethers.getContractFactory("EthereumChainVerifier");
   const ethereumVerifier = await EthereumCV.deploy(
     get("ETHEREUM_ENVIRONMENT_ID"),
     get("ETHEREUM_REGISTRY"),
-    get("ETHEREUM_SOURCE_VAULT"),
+    ethereumVaultAddr,
     get("ETHEREUM_LOCK_EVENT_TOPIC")
   );
   await ethereumVerifier.waitForDeployment();
@@ -286,7 +294,7 @@ async function deployFive(ethers, env = process.env) {
     get("POLYGON_REGISTRY"),
     get("POLYGON_CHECKPOINT_CONTRACT"),
     get("POLYGON_HEADER_BLOCK_TOPIC"),
-    get("POLYGON_SOURCE_VAULT"),
+    polygonVaultAddr,
     get("POLYGON_LOCK_EVENT_TOPIC")
   );
   await polygonVerifier.waitForDeployment();
@@ -297,7 +305,7 @@ async function deployFive(ethers, env = process.env) {
     get("ARBITRUM_REGISTRY"),
     get("ARBITRUM_ROLLUP_CONTRACT"),
     get("ARBITRUM_ASSERTION_CONFIRMED_TOPIC"),
-    get("ARBITRUM_SOURCE_VAULT"),
+    arbitrumVaultAddr,
     get("ARBITRUM_LOCK_EVENT_TOPIC")
   );
   await arbitrumVerifier.waitForDeployment();
@@ -311,30 +319,67 @@ async function deployFive(ethers, env = process.env) {
     gameResolvedTopic: get("OPTIMISM_GAME_RESOLVED_TOPIC"),
     respectedGameType: Number(get("OPTIMISM_RESPECTED_GAME_TYPE")),
     gameFinalityDelaySeconds: BigInt(get("OPTIMISM_GAME_FINALITY_DELAY_SECONDS")),
-    sourceVault: get("OPTIMISM_SOURCE_VAULT"),
+    sourceVault: optimismVaultAddr,
     lockEventTopic: get("OPTIMISM_LOCK_EVENT_TOPIC"),
   });
   await optimismVerifier.waitForDeployment();
 
   const BaseCV = await ethers.getContractFactory("BaseSameChainVerifier");
-  const baseVerifier = await BaseCV.deploy(get("BASE_VAULT"));
+  const baseVerifier = await BaseCV.deploy(baseVaultAddr);
   await baseVerifier.waitForDeployment();
+
+  const ethereumVerifierAddr = await ethereumVerifier.getAddress();
+  const polygonVerifierAddr = await polygonVerifier.getAddress();
+  const arbitrumVerifierAddr = await arbitrumVerifier.getAddress();
+  const optimismVerifierAddr = await optimismVerifier.getAddress();
+  const baseVerifierAddr = await baseVerifier.getAddress();
+
+  await (
+    await verifier.registerChainVerifier(
+      get("ETHEREUM_ENVIRONMENT_ID"),
+      ethereumVerifierAddr
+    )
+  ).wait();
+  await (
+    await verifier.registerChainVerifier(
+      get("POLYGON_ENVIRONMENT_ID"),
+      polygonVerifierAddr
+    )
+  ).wait();
+  await (
+    await verifier.registerChainVerifier(
+      get("ARBITRUM_ENVIRONMENT_ID"),
+      arbitrumVerifierAddr
+    )
+  ).wait();
+  await (
+    await verifier.registerChainVerifier(
+      get("OPTIMISM_ENVIRONMENT_ID"),
+      optimismVerifierAddr
+    )
+  ).wait();
+  await (
+    await verifier.registerChainVerifier(
+      get("BASE_ENVIRONMENT_ID"),
+      baseVerifierAddr
+    )
+  ).wait();
 
   const out = {
     verifier: await verifier.getAddress(),
     vaults: {
-      ethereum: await ethereumVault.getAddress(),
-      polygon: await polygonVault.getAddress(),
-      arbitrum: await arbitrumVault.getAddress(),
-      optimism: await optimismVault.getAddress(),
-      base: await baseVault.getAddress(),
+      ethereum: ethereumVaultAddr,
+      polygon: polygonVaultAddr,
+      arbitrum: arbitrumVaultAddr,
+      optimism: optimismVaultAddr,
+      base: baseVaultAddr,
     },
     chainVerifiers: {
-      ethereum: await ethereumVerifier.getAddress(),
-      polygon: await polygonVerifier.getAddress(),
-      arbitrum: await arbitrumVerifier.getAddress(),
-      optimism: await optimismVerifier.getAddress(),
-      base: await baseVerifier.getAddress(),
+      ethereum: ethereumVerifierAddr,
+      polygon: polygonVerifierAddr,
+      arbitrum: arbitrumVerifierAddr,
+      optimism: optimismVerifierAddr,
+      base: baseVerifierAddr,
     },
   };
 

@@ -1,12 +1,18 @@
 // =============================================================================
-// deploy-five env guard — refuses zero / missing params before any deploy
+// deploy-five env guard + vault wiring
 //
-// Calls assertDeployEnv only. No network, no keys, no real addresses committed.
+// - assertDeployEnv refuses zero / missing params before any deploy
+// - deployFive on Hardhat wires each chain verifier to the vault it deployed
+//   and registers all five via registerChainVerifier
+//
+// No keys, mnemonics, or real addresses committed.
 // =============================================================================
 
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
 const {
   assertDeployEnv,
+  deployFive,
   ADDRESS_KEYS,
   BYTES32_KEYS,
 } = require("../scripts/deploy-five.cjs");
@@ -39,17 +45,9 @@ describe("35_deploy_five_guard — assertDeployEnv", function () {
 
   it("refuses when an address is the zero address", function () {
     const env = validEnv();
-    env.ETHEREUM_SOURCE_VAULT = ZERO_ADDRESS;
+    env.ETHEREUM_REGISTRY = ZERO_ADDRESS;
     expect(() => assertDeployEnv(env)).to.throw(
-      /refusing to deploy.*ETHEREUM_SOURCE_VAULT/
-    );
-  });
-
-  it("refuses when BASE_VAULT is zero (no deploy attempted)", function () {
-    const env = validEnv();
-    env.BASE_VAULT = ZERO_ADDRESS;
-    expect(() => assertDeployEnv(env)).to.throw(
-      /refusing to deploy.*BASE_VAULT/
+      /refusing to deploy.*ETHEREUM_REGISTRY/
     );
   });
 
@@ -73,5 +71,43 @@ describe("35_deploy_five_guard — assertDeployEnv", function () {
     const env = validEnv();
     env.OPTIMISM_RESPECTED_GAME_TYPE = "0";
     expect(() => assertDeployEnv(env)).to.not.throw();
+  });
+});
+
+describe("35_deploy_five_guard — deployFive vault wiring", function () {
+  it("registers each chain verifier with the vault deployFive deployed", async function () {
+    this.timeout(120000);
+
+    const env = validEnv();
+    const out = await deployFive(ethers, env);
+
+    const finalis = await ethers.getContractAt(
+      "VinculumFinalisVerifier",
+      out.verifier
+    );
+
+    const ethCvAddr = await finalis.chainVerifiers(env.ETHEREUM_ENVIRONMENT_ID);
+    const polyCvAddr = await finalis.chainVerifiers(env.POLYGON_ENVIRONMENT_ID);
+    const arbCvAddr = await finalis.chainVerifiers(env.ARBITRUM_ENVIRONMENT_ID);
+    const opCvAddr = await finalis.chainVerifiers(env.OPTIMISM_ENVIRONMENT_ID);
+    const baseCvAddr = await finalis.chainVerifiers(env.BASE_ENVIRONMENT_ID);
+
+    expect(ethCvAddr).to.equal(out.chainVerifiers.ethereum);
+    expect(polyCvAddr).to.equal(out.chainVerifiers.polygon);
+    expect(arbCvAddr).to.equal(out.chainVerifiers.arbitrum);
+    expect(opCvAddr).to.equal(out.chainVerifiers.optimism);
+    expect(baseCvAddr).to.equal(out.chainVerifiers.base);
+
+    const ethCv = await ethers.getContractAt("EthereumChainVerifier", ethCvAddr);
+    const polyCv = await ethers.getContractAt("PolygonChainVerifier", polyCvAddr);
+    const arbCv = await ethers.getContractAt("ArbitrumChainVerifier", arbCvAddr);
+    const opCv = await ethers.getContractAt("OpStackFaultProofVerifier", opCvAddr);
+    const baseCv = await ethers.getContractAt("BaseSameChainVerifier", baseCvAddr);
+
+    expect(await ethCv.sourceVault()).to.equal(out.vaults.ethereum);
+    expect(await polyCv.sourceVault()).to.equal(out.vaults.polygon);
+    expect(await arbCv.sourceVault()).to.equal(out.vaults.arbitrum);
+    expect(await opCv.sourceVault()).to.equal(out.vaults.optimism);
+    expect(await baseCv.vault()).to.equal(out.vaults.base);
   });
 });
