@@ -272,12 +272,17 @@ describe("Ethereum end-to-end — real lock through EthereumChainVerifier to VCL
     // VF-COM-018: $100 × 10 × 1.5 × 1.15 = 1725 VCLM.
     const expectedMint = 1725n * 10n**18n;
     const expectedPrincipal = 95n * 10n**18n; // 5% fee (STANDARD_FEE_BPS)
+    const expectedFee = 5n * 10n**18n;
 
+    const devBefore = await s.token.balanceOf(s.devFund.address);
     const { pkg, commitmentVaultLockId, lockEventProof, record } =
       await realLockProveAndPackage(s, "eth-e2e-1");
 
     expect(record.principalAmount).to.equal(expectedPrincipal);
+    expect(record.feeAmount).to.equal(expectedFee);
     expect(await s.token.balanceOf(record.lockContract)).to.equal(expectedPrincipal);
+    // Dev fund received exactly 5% of the gross at lock time.
+    expect(await s.token.balanceOf(s.devFund.address) - devBefore).to.equal(expectedFee);
 
     // Sanity: the production verifier accepts the proof before we mint.
     const [finalized] = await s.ethVerifier.verifyFinality(lockEventProof, "0x");
@@ -298,18 +303,31 @@ describe("Ethereum end-to-end — real lock through EthereumChainVerifier to VCL
     console.log(`\n    Ethereum e2e: minted ${ethers.formatUnits(minted, 18)} VCLM against a real lock\n`);
     expect(minted).to.equal(expectedMint);
 
+    // The same lock cannot mint twice.
+    const second = { ...pkg, racIdentity: ethers.keccak256(ethers.toUtf8Bytes("rac-2")) };
+    await expect(s.verifier.connect(s.relayer).verifyAndMint(second))
+      .to.be.revertedWith("VF-XCH-013: replay");
+
+    const lock = await ethers.getContractAt("CommitmentLock", record.lockContract);
+
+    // Release before maturity reverts; principal remains in the lock.
+    await expect(lock.release()).to.be.revertedWithCustomError(lock, "NotMature");
+    expect(await s.token.balanceOf(record.lockContract)).to.equal(expectedPrincipal);
+
     // Advance to maturity and release principal to the bound destination.
     await ethers.provider.send("evm_increaseTime", [Number(30n * DAY)]);
     await ethers.provider.send("evm_mine", []);
 
     expect(await s.token.balanceOf(record.lockContract)).to.equal(expectedPrincipal);
 
-    const lock = await ethers.getContractAt("CommitmentLock", record.lockContract);
     const destBefore = await s.token.balanceOf(s.boundDestination.address);
     await lock.connect(s.relayer).release();
 
     expect(await s.token.balanceOf(record.lockContract)).to.equal(0n);
     expect(await s.token.balanceOf(s.boundDestination.address) - destBefore)
       .to.equal(expectedPrincipal);
+
+    // A second release reverts.
+    await expect(lock.release()).to.be.revertedWithCustomError(lock, "AlreadyReleased");
   });
 });
