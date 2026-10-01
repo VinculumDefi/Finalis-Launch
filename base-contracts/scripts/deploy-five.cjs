@@ -69,6 +69,18 @@
 // Base verifier (BaseSameChainVerifier) — vault is deployFive's Base vault
 // (no separate BASE_VAULT env key).
 //
+// Shared custody asset (one 18-decimal custody-class-1 asset, matching test 31):
+//   ASSET_TOKEN             address  ERC-20 registered on every vault
+//       (required, non-zero; refuse before any deploy if missing/zero)
+//
+// After vaults + chain verifiers deploy and registerChainVerifier runs, the
+// script also (for Base, Ethereum, Polygon, Arbitrum, Optimism):
+//   - configureDevFund(envId, <ENV>_DEV_FUND lowercase)
+//   - registerHandshakeAllowance(envId, 3)
+//   - registerAssetPrecision(envId, keccak256(envId+":MUSD"), "MUSD", 18, 1, 1)
+//   - vault.registerAsset(ASSET_TOKEN, that asset id) + vault.finalizeConfiguration()
+// It does NOT call VinculumFinalisVerifier.finalize() (protocol finalize).
+//
 // Usage:
 //   npx hardhat run scripts/deploy-five.cjs
 //
@@ -89,6 +101,7 @@ const ADDRESS_KEYS = [
   "CHONX_TOKEN",
   "PRICE_PUBLISHER",
   "CAP",
+  "ASSET_TOKEN",
   "ETHEREUM_DEV_FUND",
   "ETHEREUM_REGISTRY",
   "POLYGON_DEV_FUND",
@@ -102,6 +115,13 @@ const ADDRESS_KEYS = [
   "OPTIMISM_DISPUTE_GAME_FACTORY",
   "BASE_DEV_FUND",
 ];
+
+/** Match test 31: one 18-decimal custody-class-1 asset, handshake allowance 3. */
+const ASSET_SYMBOL = "MUSD";
+const ASSET_DECIMALS = 18;
+const ASSET_CUSTODY_CLASS = 1;
+const ASSET_CUSTODY_PATH = 1;
+const HANDSHAKE_ALLOWANCE = 3;
 
 /** Non-empty string fields (environment ids). */
 const STRING_KEYS = [
@@ -218,7 +238,9 @@ function assertDeployEnv(env) {
  * Deploy the five-environment stack. Calls assertDeployEnv first.
  * Vaults deploy before chain verifiers; each verifier is constructed with the
  * vault this function just deployed for that chain. Then registerChainVerifier
- * is called for all five on VinculumFinalisVerifier.
+ * is called for all five on VinculumFinalisVerifier. Then configureDevFund,
+ * registerHandshakeAllowance, registerAssetPrecision, vault registerAsset, and
+ * vault finalizeConfiguration for each of the five. Does not call protocol finalize().
  *
  * @param {*} ethers  hardhat ethers
  * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [env]
@@ -365,6 +387,70 @@ async function deployFive(ethers, env = process.env) {
     )
   ).wait();
 
+  // -------------------------------------------------------------------------
+  // Per-environment ceremony (match test 31 patterns). No protocol finalize().
+  // -------------------------------------------------------------------------
+  const assetToken = get("ASSET_TOKEN");
+  const envSpecs = [
+    {
+      key: "ethereum",
+      id: get("ETHEREUM_ENVIRONMENT_ID"),
+      vault: ethereumVault,
+      fund: get("ETHEREUM_DEV_FUND"),
+    },
+    {
+      key: "polygon",
+      id: get("POLYGON_ENVIRONMENT_ID"),
+      vault: polygonVault,
+      fund: get("POLYGON_DEV_FUND"),
+    },
+    {
+      key: "arbitrum",
+      id: get("ARBITRUM_ENVIRONMENT_ID"),
+      vault: arbitrumVault,
+      fund: get("ARBITRUM_DEV_FUND"),
+    },
+    {
+      key: "optimism",
+      id: get("OPTIMISM_ENVIRONMENT_ID"),
+      vault: optimismVault,
+      fund: get("OPTIMISM_DEV_FUND"),
+    },
+    {
+      key: "base",
+      id: get("BASE_ENVIRONMENT_ID"),
+      vault: baseVault,
+      fund: get("BASE_DEV_FUND"),
+    },
+  ];
+
+  const assetIds = {};
+  for (const spec of envSpecs) {
+    const aid = ethers.keccak256(
+      ethers.toUtf8Bytes(`${spec.id}:${ASSET_SYMBOL}`)
+    );
+    assetIds[spec.key] = aid;
+
+    await (
+      await verifier.configureDevFund(spec.id, spec.fund.toLowerCase())
+    ).wait();
+    await (
+      await verifier.registerHandshakeAllowance(spec.id, HANDSHAKE_ALLOWANCE)
+    ).wait();
+    await (
+      await verifier.registerAssetPrecision(
+        spec.id,
+        aid,
+        ASSET_SYMBOL,
+        ASSET_DECIMALS,
+        ASSET_CUSTODY_CLASS,
+        ASSET_CUSTODY_PATH
+      )
+    ).wait();
+    await (await spec.vault.registerAsset(assetToken, aid)).wait();
+    await (await spec.vault.finalizeConfiguration()).wait();
+  }
+
   const out = {
     verifier: await verifier.getAddress(),
     vaults: {
@@ -381,6 +467,9 @@ async function deployFive(ethers, env = process.env) {
       optimism: optimismVerifierAddr,
       base: baseVerifierAddr,
     },
+    assetToken,
+    assetSymbol: ASSET_SYMBOL,
+    assetIds,
   };
 
   console.log(JSON.stringify(out, null, 2));
@@ -399,6 +488,11 @@ module.exports = {
   ADDRESS_KEYS,
   STRING_KEYS,
   BYTES32_KEYS,
+  ASSET_SYMBOL,
+  ASSET_DECIMALS,
+  ASSET_CUSTODY_CLASS,
+  ASSET_CUSTODY_PATH,
+  HANDSHAKE_ALLOWANCE,
 };
 
 if (require.main === module) {

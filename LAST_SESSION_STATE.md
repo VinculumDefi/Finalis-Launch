@@ -5,6 +5,17 @@ later than the one below, this file is stale and the repository wins.
 
 ---
 
+## 2026-10-01 — grok/ethereum-e2e (supersedes snapshot below)
+
+The snapshot below is **superseded** by branch `grok/ethereum-e2e` at commit `b99cd633ec40bd1e5c652b6bf003cdbcf56300a9`.
+Tests **31–35** and `base-contracts/scripts/deploy-five.cjs` exist on this branch
+(`deployFive` now configures Dev Fund / handshake / asset precision and vault
+`finalizeConfiguration` for Base, Ethereum, Polygon, Arbitrum, Optimism; Ethereum
+lock→prove→mint via the deployFive stack asserts 1725 VCLM and 95% release).
+The other twelve environments are unchanged.
+
+---
+
 ## Snapshot
 
 | | |
