@@ -187,8 +187,10 @@ async function deployStack() {
   await token.transfer(user.address, 10n**24n);
   await token.connect(user).approve(await vault.getAddress(), 10n**24n);
 
+  const boundDestination = signers[4];
+
   return {
-    deployer, user, relayer, devFund, publisher,
+    deployer, user, relayer, devFund, publisher, boundDestination,
     verifier, vault, ethVerifier, mockL1, registry,
     token, vclm, AID, TOPIC,
   };
@@ -198,6 +200,7 @@ async function deployStack() {
 // the real receipt, and assemble the ProofPackage from vault state.
 async function realLockProveAndPackage(s, tag, gross = 100n * 10n**18n, duration = 30n * DAY) {
   const vaultLockId = ethers.keccak256(ethers.toUtf8Bytes(tag));
+  const releaseDestination = s.boundDestination.address;
 
   const tx = await s.vault.connect(s.user).createLock({
     lockId: vaultLockId,
@@ -205,7 +208,7 @@ async function realLockProveAndPackage(s, tag, gross = 100n * 10n**18n, duration
     grossAmount: gross,
     durationSecs: duration,
     baseRecipient: s.user.address,
-    releaseDestination: s.user.address,
+    releaseDestination,
     outputToken: 0,
     chonxActivationReceipt: ethers.ZeroHash,
   });
@@ -250,7 +253,7 @@ async function realLockProveAndPackage(s, tag, gross = 100n * 10n**18n, duration
     durationSecs: r.durationSecs,
     selectedOutputToken: 0,
     baseRecipient: r.baseRecipient,
-    releaseDestination: s.user.address.toLowerCase(),
+    releaseDestination: releaseDestination.toLowerCase(),
     chonxActivationReceipt: "0x",
     racIdentity: ethers.keccak256(ethers.toUtf8Bytes(`rac-${tag}`)),
     sourceFinalityProof: "0x",
@@ -262,9 +265,19 @@ async function realLockProveAndPackage(s, tag, gross = 100n * 10n**18n, duration
 
 describe("Ethereum end-to-end — real lock through EthereumChainVerifier to VCLM", function () {
 
-  it("locks on EvmVault, proves via EthereumChainVerifier, mints VCLM", async function () {
+  it("locks on EvmVault, proves via EthereumChainVerifier, mints VCLM, releases 95% principal", async function () {
     const s = await deployStack();
-    const { pkg, commitmentVaultLockId, lockEventProof } = await realLockProveAndPackage(s, "eth-e2e-1");
+    // Fixture: 100 whole tokens, price 1_000_000 micro-USD, 18 decimals,
+    // custody class 1, 30-day duration, zero days since launch.
+    // VF-COM-018: $100 × 10 × 1.5 × 1.15 = 1725 VCLM.
+    const expectedMint = 1725n * 10n**18n;
+    const expectedPrincipal = 95n * 10n**18n; // 5% fee (STANDARD_FEE_BPS)
+
+    const { pkg, commitmentVaultLockId, lockEventProof, record } =
+      await realLockProveAndPackage(s, "eth-e2e-1");
+
+    expect(record.principalAmount).to.equal(expectedPrincipal);
+    expect(await s.token.balanceOf(record.lockContract)).to.equal(expectedPrincipal);
 
     // Sanity: the production verifier accepts the proof before we mint.
     const [finalized] = await s.ethVerifier.verifyFinality(lockEventProof, "0x");
@@ -283,6 +296,20 @@ describe("Ethereum end-to-end — real lock through EthereumChainVerifier to VCL
 
     const minted = await s.vclm.balanceOf(s.user.address) - before;
     console.log(`\n    Ethereum e2e: minted ${ethers.formatUnits(minted, 18)} VCLM against a real lock\n`);
-    expect(minted).to.be.greaterThan(0n);
+    expect(minted).to.equal(expectedMint);
+
+    // Advance to maturity and release principal to the bound destination.
+    await ethers.provider.send("evm_increaseTime", [Number(30n * DAY)]);
+    await ethers.provider.send("evm_mine", []);
+
+    expect(await s.token.balanceOf(record.lockContract)).to.equal(expectedPrincipal);
+
+    const lock = await ethers.getContractAt("CommitmentLock", record.lockContract);
+    const destBefore = await s.token.balanceOf(s.boundDestination.address);
+    await lock.connect(s.relayer).release();
+
+    expect(await s.token.balanceOf(record.lockContract)).to.equal(0n);
+    expect(await s.token.balanceOf(s.boundDestination.address) - destBefore)
+      .to.equal(expectedPrincipal);
   });
 });
