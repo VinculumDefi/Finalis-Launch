@@ -475,8 +475,8 @@ describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", f
     env.ETHEREUM_LOCK_EVENT_TOPIC = TOPIC;
 
     const out = await deployFive(ethers, env);
-    expect(out.fiveEnvRegistryRegistered).to.equal(631);
-    expect(out.skippedNon20ByteRows).to.deep.equal([2, 978, 989]);
+    expect(out.fiveEnvRegistryRegistered).to.equal(633);
+    expect(out.skippedNon20ByteRows).to.deep.equal([978, 989]);
 
     const vault = await ethers.getContractAt(
       "VinculumFinalisEvmVault",
@@ -511,14 +511,14 @@ describe("35_deploy_five_guard — Ethereum vault refuses non-registry asset", f
 });
 
 // =============================================================================
-// NEAR / SLP / APT / HBAR must not be registered on the Ethereum vault:
-// - NEAR decimals() returns 24 (out of 1..18) → UNREGISTERED_DECIMALS
-// - SLP decimals() returns 0 (out of 1..18) → not registered as 0
+// SLP / APT / HBAR must not be registered on the Ethereum vault:
+// - SLP decimals() returns 0 (out of 1..77) → not registered as 0
 // - APT / HBAR must not be registered at left-padded short addresses
+// NEAR (24 decimals) IS registered after Verifier ceiling raised to 77.
 // =============================================================================
 
-describe("35_deploy_five_guard — NEAR SLP APT HBAR absent after deployFive", function () {
-  it("leaves NEAR, SLP, APT, and HBAR unregistered on the Ethereum vault", async function () {
+describe("35_deploy_five_guard — SLP APT HBAR absent after deployFive", function () {
+  it("leaves SLP, APT, and HBAR unregistered; NEAR is registered at 24", async function () {
     this.timeout(600000);
 
     const signers = await ethers.getSigners();
@@ -564,15 +564,21 @@ describe("35_deploy_five_guard — NEAR SLP APT HBAR absent after deployFive", f
     env.ETHEREUM_LOCK_EVENT_TOPIC = TOPIC;
 
     const out = await deployFive(ethers, env);
-    expect(out.skippedNon20ByteRows).to.include.members([978, 989]);
+    expect(out.skippedNon20ByteRows).to.deep.equal([978, 989]);
 
     const vault = await ethers.getContractAt(
       "VinculumFinalisEvmVault",
       out.vaults.ethereum
     );
+    const verifier = await ethers.getContractAt(
+      "VinculumFinalisVerifier",
+      out.verifier
+    );
 
-    // Exact registry identifiers (NEAR/SLP are 20-byte; APT/HBAR are short).
+    const ENV_ETH = "ethereum";
     const NEAR = ethers.getAddress("0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4");
+    const NEAR_AID = ethers.keccak256(ethers.toUtf8Bytes(`${ENV_ETH}:NEAR`));
+    const ETH_AID = ethers.keccak256(ethers.toUtf8Bytes(`${ENV_ETH}:ETH`));
     const SLP = "0xCC8Fa225D80b9c7D42F96e9570156c65D6cAAa25";
     // Left-padded forms the deleted sidecar path would have registered.
     const APT_PADDED = ethers.getAddress(
@@ -582,7 +588,15 @@ describe("35_deploy_five_guard — NEAR SLP APT HBAR absent after deployFive", f
       ("0x" + "14ab470682Bc045336B1df6262d538Cb6c35eA2".padStart(40, "0")).toLowerCase()
     );
 
-    expect(await vault.approvedAsset(NEAR)).to.equal(ethers.ZeroHash);
+    // Native ETH row 2 → address(0); NEAR row 975 → real address, decimals 24.
+    expect(await vault.approvedAsset(ethers.ZeroAddress)).to.equal(ETH_AID);
+    expect(await vault.approvedAsset(NEAR)).to.equal(NEAR_AID);
+    const nearKey = ethers.solidityPackedKeccak256(
+      ["string", "bytes32"],
+      [ENV_ETH, NEAR_AID]
+    );
+    expect((await verifier.assetPrecisionTable(nearKey)).decimals).to.equal(24);
+
     expect(await vault.approvedAsset(SLP)).to.equal(ethers.ZeroHash);
     expect(await vault.approvedAsset(APT_PADDED)).to.equal(ethers.ZeroHash);
     expect(await vault.approvedAsset(HBAR_PADDED)).to.equal(ethers.ZeroHash);

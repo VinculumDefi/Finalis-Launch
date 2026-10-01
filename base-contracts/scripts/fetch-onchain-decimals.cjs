@@ -157,7 +157,7 @@ async function ethCallDecimals(rpcUrl, address) {
         reason: `decode_failed: ${result}`,
       };
     }
-    if (!Number.isInteger(value) || value < 1 || value > 18) {
+    if (!Number.isInteger(value) || value < 1 || value > 77) {
       return {
         ok: false,
         retryable: false,
@@ -314,13 +314,13 @@ async function main() {
     "with an exact 20-byte `contract_or_native_identifier` whose `decimals()`"
   );
   lines.push(
-    "eth_call failed or returned a value outside integer range 1..18."
+    "eth_call failed or returned a value outside integer range 1..77."
   );
   lines.push("These rows are **not** registered by deployFive.");
   lines.push("");
   lines.push(`Generated: ${payload.generated_at}`);
   lines.push(`Qualifying exact-20-byte rows: ${qualifying.length}`);
-  lines.push(`Registered (decimals 1..18): ${payload.registered_count}`);
+  lines.push(`Registered (decimals 1..77): ${payload.registered_count}`);
   lines.push(`Unregistered: ${payload.unregistered_count}`);
   lines.push("");
   lines.push("| registry_row | chain | address | symbol | reason |");

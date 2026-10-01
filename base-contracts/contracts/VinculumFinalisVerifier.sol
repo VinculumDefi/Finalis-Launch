@@ -568,7 +568,9 @@ contract VinculumFinalisVerifier {
         // CL-43: precision is an exponent in every USD derivation. Values the
         // arithmetic cannot execute would register an asset into a permanently
         // unusable state with no post-deployment correction path.
-        require(decimals <= 18, "VF-REG: precision exceeds 18");
+        // Arithmetic-safety ceiling is 77 (evidence/IMPLEMENTATION_DOMAIN_AUDIT.md):
+        // above that 10 ** decimals exceeds uint256. EVM-convention 18 was provisional.
+        require(decimals <= 77, "VF-REG: precision exceeds 77");
 
         bytes32 key = keccak256(abi.encodePacked(environmentId, canonicalAssetId));
         assetPrecisionTable[key] = AssetPrecisionEntry({

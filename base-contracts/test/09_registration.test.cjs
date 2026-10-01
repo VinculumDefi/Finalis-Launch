@@ -56,18 +56,20 @@ describe("CL-42 · custody class must not silently default", function () {
 describe("CL-43 · asset precision must be within the executable domain", function () {
   it("a precision beyond safe arithmetic is rejected at registration", async function () {
     const v = await freshVerifier();
+    // Arithmetic-safety ceiling is 77 (IMPLEMENTATION_DOMAIN_AUDIT.md).
     // 10 ** 78 exceeds uint256. Such an asset could never be valued, and the
-    // registry is immutable after finalization.
-    for (const bad of [19, 78, 100, 255]) {
+    // registry is immutable after finalization. Decimal 78 still reverts.
+    for (const bad of [78, 100, 255]) {
       await expect(
         v.registerAssetPrecision(ENV, ASSET, "MOCK", bad, 1, 0)
-      ).to.be.revertedWith("VF-REG: precision exceeds 18");
+      ).to.be.revertedWith("VF-REG: precision exceeds 77");
     }
   });
 
   it("precisions across the real range are accepted", async function () {
     const v = await freshVerifier();
-    for (const ok of [0, 6, 8, 9, 18]) {
+    // Includes 24 (NEAR) and ceiling 77; stored as declared (24 stays 24).
+    for (const ok of [0, 6, 8, 9, 18, 24, 77]) {
       const id = ethers.keccak256(ethers.toUtf8Bytes("p-" + ok));
       await v.registerAssetPrecision(ENV, id, "MOCK", ok, 1, 0);
       const key = ethers.solidityPackedKeccak256(["string", "bytes32"], [ENV, id]);

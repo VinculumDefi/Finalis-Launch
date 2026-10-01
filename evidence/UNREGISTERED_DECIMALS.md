@@ -2,13 +2,13 @@
 
 Approved Asset Registry rows (Base / Ethereum / Polygon / Arbitrum / Optimism)
 with an exact 20-byte `contract_or_native_identifier` whose `decimals()`
-eth_call failed or returned a value outside integer range 1..18.
+eth_call failed or returned a value outside integer range 1..77.
 These rows are **not** registered by deployFive.
 
 Generated: 2026-10-01T19:25:14.575Z
 Qualifying exact-20-byte rows: 664
-Registered (decimals 1..18): 631
-Unregistered: 33
+Registered (decimals 1..77): 632
+Unregistered: 32
 
 | registry_row | chain | address | symbol | reason |
 |---:|---|---|---|---|
@@ -37,7 +37,6 @@ Unregistered: 33
 | 476 | Ethereum | `0x4200000000000000000000000000000000000042` | OP_ETH | empty_result |
 | 497 | Ethereum | `0xeAcE4FBf1EB4Fc2571e87E8F28E7D0553e258B01` | NXPC | empty_result |
 | 974 | Ethereum | `0x998abeb3e57409262ae5b751f60747921b33613e` | SUI | empty_result |
-| 975 | Ethereum | `0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4` | NEAR | out_of_range: 24 |
 | 981 | Ethereum | `0x054b8f19843a8293b49a4e4d7b55d3982e7cf63f` | ICP | empty_result |
 | 983 | Ethereum | `0xe7a6d3ff9f47e4e5d5e9e5f2d13b88e3a4e1b5c2` | ZEN | empty_result |
 | 984 | Ethereum | `0x9ebb5d9f01f4c36e0d0f17bfb9ccf7012b0a3441` | XTZ | empty_result |

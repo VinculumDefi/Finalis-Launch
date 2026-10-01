@@ -3,8 +3,8 @@
   "source": "eth_call decimals() via public RPCs",
   "selector": "0x313ce567",
   "qualifying_count": 664,
-  "registered_count": 631,
-  "unregistered_count": 33,
+  "registered_count": 632,
+  "unregistered_count": 32,
   "decimals_by_registry_row": {
     "1": 6,
     "6": 6,
@@ -622,6 +622,7 @@
     "969": 18,
     "971": 18,
     "972": 18,
+    "975": 24,
     "976": 9,
     "977": 18,
     "979": 18,
@@ -637,5 +638,6 @@
     "999": 9,
     "1000": 9,
     "1001": 18
-  }
+  },
+  "near_note": "Row 975 NEAR decimals 24 included after Verifier ceiling raised to 77 (was out_of_range under 18)."
 }
