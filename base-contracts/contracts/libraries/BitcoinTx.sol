@@ -15,6 +15,8 @@
 //   txid             double-SHA256 of the non-witness serialization
 //   release pubkey   the single key on the maturity-release branch (C.8
 //                    handshake_identity)
+//   nulldata payload lock id, Base recipient, output token, asset identity,
+//                    valuation reference (exactly one OP_RETURN output)
 //
 // THE P2WSH SUBTLETY
 //   A P2WSH output commits only to sha256(witnessScript); the script itself is
@@ -46,6 +48,10 @@ library BitcoinTx {
     error BadCltvOperand();
     error MaturityNotTimestamp(uint256 value);
     error DuplicateOutputIndex();
+    error MissingNulldata();
+    error AmbiguousNulldata();
+    error MalformedNulldata();
+    error ZeroBaseRecipient();
 
     /// Bitcoin's threshold between block-height and Unix-timestamp locktimes.
     uint256 internal constant LOCKTIME_THRESHOLD = 500_000_000;
@@ -155,6 +161,126 @@ library BitcoinTx {
         f.grossAmount = f.feeAmount + f.principalAmount;
         f.maturityTimestamp = maturity;
         f.releasePubKeyHash = pubKeyHash;
+    }
+
+    // -------------------------------------------------------------------------
+    // Nulldata (OP_RETURN) — C.8 identity payload
+    // -------------------------------------------------------------------------
+    //
+    // Exactly one nulldata output. Payload is a single packed push of 117 bytes:
+    //   bytes32 lockId
+    //   address baseRecipient          (20 bytes)
+    //   uint8   outputToken
+    //   bytes32 assetIdentity
+    //   bytes32 valuationReference
+    // Bitcoin Script does not verify these facts; Base reads them and refuses
+    // if the output is missing or ambiguous.
+
+    struct NulldataFacts {
+        bytes32 lockId;
+        address baseRecipient;
+        uint8   outputToken;
+        bytes32 assetIdentity;
+        bytes32 valuationReference;
+    }
+
+    /// @notice Read the single C.8 nulldata payload from a proven transaction.
+    function extractNulldataFacts(bytes memory rawTx)
+        internal pure returns (NulldataFacts memory n)
+    {
+        Output[] memory outs = parseOutputs(rawTx);
+
+        uint256 found = type(uint256).max;
+        for (uint256 i = 0; i < outs.length; i++) {
+            if (!_isNulldata(outs[i])) continue;
+            if (found != type(uint256).max) revert AmbiguousNulldata();
+            found = i;
+        }
+        if (found == type(uint256).max) revert MissingNulldata();
+
+        bytes memory payload = _nulldataPayload(outs[found]);
+        if (payload.length != 117) revert MalformedNulldata();
+
+        n.lockId = _wordAt(payload, 0);
+        n.baseRecipient = _addressAt(payload, 32);
+        n.outputToken = uint8(payload[52]);
+        n.assetIdentity = _wordAt(payload, 53);
+        n.valuationReference = _wordAt(payload, 85);
+
+        if (n.baseRecipient == address(0)) revert ZeroBaseRecipient();
+        if (n.lockId == bytes32(0)) revert MalformedNulldata();
+        if (n.assetIdentity == bytes32(0)) revert MalformedNulldata();
+        if (n.valuationReference == bytes32(0)) revert MalformedNulldata();
+    }
+
+    function _isNulldata(Output memory o) private pure returns (bool) {
+        return o.scriptLen >= 1 && _byteAt(o.scriptPtr) == 0x6a;
+    }
+
+    /// @dev Concatenate every data push after OP_RETURN. Any non-push opcode
+    ///      is malformed — standard nulldata is OP_RETURN followed by pushes.
+    function _nulldataPayload(Output memory o) private pure returns (bytes memory) {
+        uint256 p = o.scriptPtr + 1;                 // skip OP_RETURN
+        uint256 end = o.scriptPtr + o.scriptLen;
+
+        // First pass: measure.
+        uint256 measure = p;
+        uint256 total;
+        while (measure < end) {
+            (uint256 dataLen, uint256 adv) = _pushLength(measure, end);
+            measure += adv + dataLen;
+            total += dataLen;
+        }
+
+        bytes memory out = new bytes(total);
+        uint256 w;
+        while (p < end) {
+            (uint256 dataLen, uint256 adv) = _pushLength(p, end);
+            p += adv;
+            for (uint256 i = 0; i < dataLen; i++) {
+                out[w + i] = bytes1(_byteAt(p + i));
+            }
+            w += dataLen;
+            p += dataLen;
+        }
+        return out;
+    }
+
+    /// @dev Returns (payload length, bytes consumed for the push opcode).
+    function _pushLength(uint256 p, uint256 end)
+        private pure returns (uint256 dataLen, uint256 advance)
+    {
+        if (p >= end) revert MalformedNulldata();
+        uint8 op = _byteAt(p);
+        if (op > 0 && op <= 75) return (op, 1);
+        if (op == 0x4c) {                              // OP_PUSHDATA1
+            if (p + 2 > end) revert MalformedNulldata();
+            return (_byteAt(p + 1), 2);
+        }
+        if (op == 0x4d) {                              // OP_PUSHDATA2
+            if (p + 3 > end) revert MalformedNulldata();
+            return (
+                uint256(_byteAt(p + 1)) | (uint256(_byteAt(p + 2)) << 8),
+                3
+            );
+        }
+        revert MalformedNulldata();
+    }
+
+    function _wordAt(bytes memory b, uint256 offset) private pure returns (bytes32 w) {
+        assembly ("memory-safe") {
+            w := mload(add(add(b, 0x20), offset))
+        }
+    }
+
+    function _addressAt(bytes memory b, uint256 offset) private pure returns (address a) {
+        bytes32 w;
+        assembly ("memory-safe") {
+            w := mload(add(add(b, 0x20), offset))
+        }
+        // Packed 20-byte address starts at `offset`; mload reads 32 bytes, so
+        // the address occupies the high 20 bytes of that window.
+        a = address(uint160(uint256(w) >> 96));
     }
 
     // -------------------------------------------------------------------------

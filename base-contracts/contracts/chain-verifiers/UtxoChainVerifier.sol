@@ -18,15 +18,20 @@
 //     beyond the required confirmation depth. Depth comes from the header
 //     chain's state, not from the proof.
 //   extractFacts   — parses the transaction per C.8: fee output value,
-//     principal output value, and the CLTV maturity inside the witness script,
-//     which is checked against the hash the P2WSH output committed to.
+//     principal output value, the CLTV maturity inside the witness script
+//     (checked against the P2WSH commitment), and — for bitcoin — the Base
+//     recipient and related identity facts from the single nulldata output.
 //
 // C.8 CONFORMANCE
 //   Mechanism: single transaction with a Dev Fund fee output and a P2WSH
-//   CLTV principal output. Replay id: env + txid + principal output index.
+//   CLTV principal output, plus exactly one nulldata output binding lock id,
+//   Base recipient, output token, asset identity, and valuation reference.
+//   Replay id: env + txid + principal output index.
 //   Finality: depth(lock_tx) >= 6. Maturity: the CLTV operand, a timestamp.
 //   Release key: the single public key on the maturity-release branch;
 //   ambiguous or multi-key paths are rejected.
+//   Bitcoin only: Base reads the nulldata facts from the proven transaction
+//   and refuses if missing or ambiguous. Script does not verify them.
 //
 // TRUST ASSUMPTIONS (Verifier Completion Standard 3.7)
 //   Inherited from Sha256dHeaderChain: one immutable checkpoint header bound at
@@ -172,6 +177,18 @@ contract UtxoChainVerifier is IChainVerifier {
         grossAmount = uint256(f.grossAmount);
         feeAmount = uint256(f.feeAmount);
         principalAmount = uint256(f.principalAmount);
+
+        // C.8 Bitcoin only: identity facts come from the single nulldata output.
+        // Other UTXO environments sharing this verifier are unchanged.
+        if (_bitcoinEnvironment()) {
+            BitcoinTx.NulldataFacts memory n = BitcoinTx.extractNulldataFacts(pr.rawTx);
+            canonicalAssetId = n.assetIdentity;
+            baseRecipient = n.baseRecipient;
+            outputToken = n.outputToken;
+            // releaseDestination is not an EVM address on Bitcoin; the maturity
+            // release key is exposed separately via releaseKeyIdentity.
+            releaseDestination = address(0);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -205,6 +222,10 @@ contract UtxoChainVerifier is IChainVerifier {
     // -------------------------------------------------------------------------
     // Internal
     // -------------------------------------------------------------------------
+
+    function _bitcoinEnvironment() private view returns (bool) {
+        return keccak256(bytes(environmentId)) == keccak256(bytes("bitcoin"));
+    }
 
     function _requireIncluded(bytes32 id, Proof memory pr) private view {
         if (!headerChain.isKnown(pr.blockHash)) revert HeaderNotKnown(pr.blockHash);

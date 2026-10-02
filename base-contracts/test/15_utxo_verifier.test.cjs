@@ -47,7 +47,37 @@ function cltvScript(maturity, pubkeyHex) {
 
 const PUBKEY = "02" + "11".repeat(32);
 
-function buildLockTx({ feeSats, principalSats, maturity, principalScript = null }) {
+// C.8 nulldata payload: lockId | baseRecipient | outputToken | assetIdentity | valuationReference
+const PAYLOAD_LOCK_ID = ethers.id("vf-btc-lock-1");
+const PAYLOAD_RECIPIENT = "0x1111111111111111111111111111111111111111";
+const PAYLOAD_ASSET = ethers.id("bitcoin:BTC");
+const PAYLOAD_VALUATION = ethers.id("valuation-ref-1");
+const PAYLOAD_OUTPUT_TOKEN = 0;
+
+function buildNulldataPayload({
+  lockId = PAYLOAD_LOCK_ID,
+  baseRecipient = PAYLOAD_RECIPIENT,
+  outputToken = PAYLOAD_OUTPUT_TOKEN,
+  assetIdentity = PAYLOAD_ASSET,
+  valuationReference = PAYLOAD_VALUATION,
+} = {}) {
+  const recipient = ethers.getBytes(baseRecipient); // 20 bytes
+  const token = Uint8Array.from([outputToken & 0xff]);
+  return ethers.hexlify(ethers.concat([
+    lockId, recipient, token, assetIdentity, valuationReference,
+  ])).slice(2);
+}
+
+function opReturnScript(payloadHex) {
+  const len = payloadHex.length / 2;
+  if (len <= 75) return "6a" + len.toString(16).padStart(2, "0") + payloadHex;
+  if (len <= 255) return "6a4c" + len.toString(16).padStart(2, "0") + payloadHex;
+  throw new Error("nulldata payload too large");
+}
+
+function buildLockTx({
+  feeSats, principalSats, maturity, principalScript = null, nulldataPayload = undefined,
+}) {
   const script = principalScript ?? cltvScript(maturity, PUBKEY);
   const scriptHash = ethers.sha256("0x" + script).slice(2);
 
@@ -55,16 +85,29 @@ function buildLockTx({ feeSats, principalSats, maturity, principalScript = null 
   const prinSpk = "0020" + scriptHash;
   const changeSpk = "0014" + "33".repeat(20);
 
+  const outputs = [
+    le(feeSats, 8)       + varInt(feeSpk.length / 2)    + feeSpk,
+    le(principalSats, 8) + varInt(prinSpk.length / 2)   + prinSpk,
+    le(1000, 8)          + varInt(changeSpk.length / 2) + changeSpk,
+  ];
+
+  // undefined → include a valid C.8 payload; null → omit nulldata (refusal case)
+  if (nulldataPayload !== null) {
+    const payload = nulldataPayload === undefined
+      ? buildNulldataPayload()
+      : nulldataPayload;
+    const spk = opReturnScript(payload);
+    outputs.push(le(0, 8) + varInt(spk.length / 2) + spk);
+  }
+
   const tx =
     "01000000" +
     varInt(1) +
     "00".repeat(32) + "00000000" +
     "00" +
     "ffffffff" +
-    varInt(3) +
-    le(feeSats, 8)       + varInt(feeSpk.length / 2)    + feeSpk +
-    le(principalSats, 8) + varInt(prinSpk.length / 2)   + prinSpk +
-    le(1000, 8)          + varInt(changeSpk.length / 2) + changeSpk +
+    varInt(outputs.length) +
+    outputs.join("") +
     "00000000";
 
   return { tx, script, txid: dsha256(tx) };
@@ -114,6 +157,31 @@ describe("UtxoChainVerifier — C.8 fact extraction", function () {
       ["string", "bytes32", "uint256"], ["bitcoin", t.txid, 1]
     );
     expect(f.lockId).to.equal(expectedId);
+    expect(f.baseRecipient).to.equal(PAYLOAD_RECIPIENT);
+    expect(f.canonicalAssetId).to.equal(PAYLOAD_ASSET);
+    expect(f.outputToken).to.equal(PAYLOAD_OUTPUT_TOKEN);
+  });
+
+  it("returns the Base recipient bound in the nulldata payload", async function () {
+    const recipient = ethers.getAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    const payload = buildNulldataPayload({ baseRecipient: recipient });
+    const t = buildLockTx({
+      feeSats: 50000, principalSats: 950000, maturity: MATURITY, nulldataPayload: payload,
+    });
+    const s = await deployWith(t);
+
+    const f = await s.verifier.extractFacts(encodeProof(t, BLOCK, [], 0, 1, 0));
+    expect(f.baseRecipient).to.equal(recipient);
+  });
+
+  it("refuses a transaction with no nulldata output", async function () {
+    const t = buildLockTx({
+      feeSats: 50000, principalSats: 950000, maturity: MATURITY, nulldataPayload: null,
+    });
+    const s = await deployWith(t);
+
+    await expect(s.verifier.extractFacts(encodeProof(t, BLOCK, [], 0, 1, 0)))
+      .to.be.reverted;
   });
 
   it("rejects a witness script that does not match the output commitment", async function () {
