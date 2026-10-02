@@ -30,8 +30,8 @@ These named tests were re-run on `grok/ethereum-e2e` after `5017498`; the comman
 
 | Status | Count |
 |---|---:|
-| Demonstrated | 64 |
-| Partial | 113 |
+| Demonstrated | 62 |
+| Partial | 115 |
 | Refuses on purpose | 0 |
 | Not authorized | 0 |
 | Not code | 32 |
@@ -109,8 +109,8 @@ Refuse-closed stubs evidenced by `test/36_deploy_five_poly_arb_op.test.cjs` —
 | VF-COM-008 | Demonstrated | test/04_endtoend.test.cjs | VF-COM-008: a rejected attempt consumes no allowance | cd base-contracts && npx hardhat test | Named in generated traceability matrix; covered by full suite run. |
 | VF-COM-009 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
 | VF-COM-010 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
-| VF-COM-011 | Demonstrated | test/40_deploy_five_ethereum_near.test.cjs | locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts | cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs | Verified 24-decimal precision produces the expected 5e24 fee. |
-| VF-COM-012 | Demonstrated | test/40_deploy_five_ethereum_near.test.cjs | locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts | cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs | Immutable 24-decimal precision yields 95e24 principal from 100 NEAR less 5e24 fee. |
+| VF-COM-011 | Partial | test/40_deploy_five_ethereum_near.test.cjs | locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts | cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs | Verified 24-decimal precision produces the expected 5e24 fee. |
+| VF-COM-012 | Partial | test/40_deploy_five_ethereum_near.test.cjs | locks 100 NEAR, mints 1150 VCLM, fee 5e24, releases 95e24; early release reverts | cd base-contracts && npx hardhat test test/40_deploy_five_ethereum_near.test.cjs | Immutable 24-decimal precision yields 95e24 principal from 100 NEAR less 5e24 fee. |
 | VF-COM-013 | Partial |  |  |  | Implemented (or cited in code) without a requirement-naming test in the matrix. |
 | VF-COM-014 | Partial |  |  |  | Not traced to a naming test; architecture may be implemented without citation. |
 | VF-COM-015 | Partial |  |  |  | Not traced to a naming test; architecture may be implemented without citation. |
