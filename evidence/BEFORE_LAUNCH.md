@@ -8,4 +8,6 @@ Row 989, HBAR, Ethereum, stored 0x14ab470682Bc045336B1df6262d538Cb6c35eA2, prici
 Hedera published the wrapped HBAR contract as 0x14ab470682Bc045336B1df6262d538cB6c35eA2A. The registry copy is missing the final A. Padding a zero onto the left would be a different address. The missing Aptos digit has not been established here. Do not guess it.
 Before launch, correct both identifiers in the governing registry on purpose, then register those rows from the corrected bytes. Until that correction, these two rows stay unregistered.
 
-C.11 of the Vinculum Finalis architecture and Master Specification Revision 6 name the five Stellar memo bindings (lock id, Base recipient, output token, asset identity, and valuation reference) but specify no concrete byte layout or encoding that fits Stellar's ≤28-byte text or ≤32-byte hash memo limit; a Stellar lock cannot be built until that layout is specified, and no layout was invented here.
+Architecture C.11 alone names the five Stellar memo bindings (lock id, Base recipient, output token, asset identity, and valuation reference) but specifies no concrete byte layout or encoding that fits Stellar's ≤28-byte text or ≤32-byte hash memo limit; a Stellar lock cannot be built until that layout is specified, and no layout was invented here.
+
+Architecture C.10 does not establish a mainnet-available atomic batch and does not specify a single transaction that pays the 5% fee, locks the 95% principal, and removes early cancellation; an XRPL lock cannot be built until that construction is specified, and none was invented here.
