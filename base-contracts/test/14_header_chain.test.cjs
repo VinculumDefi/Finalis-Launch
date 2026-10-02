@@ -60,6 +60,25 @@ describe("Sha256dHeaderChain — proof of work", function () {
     expect(await c.bestTip()).to.equal(blockHash(H2));
   });
 
+  it("accepts Bitcoin mainnet height-1 header; rejects after one-bit flip", async function () {
+    // Real Bitcoin mainnet block at height 1 (hash
+    // 00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048).
+    // Checkpoint is genesis (height 0). H1 bytes are the raw 80-byte wire header.
+    const MAINNET_HEIGHT = 1;
+    const c = await deployAtGenesis();
+
+    await c.submitHeaders(hdr(H1));
+    expect(await c.isKnown(blockHash(H1))).to.equal(true);
+    expect(await c.bestHeight()).to.equal(BigInt(MAINNET_HEIGHT));
+
+    // Flip the least-significant bit of the last header byte (nonce LSB).
+    // Parent link is intact; only PoW fails.
+    const flipped = H1.slice(0, -2) +
+      (parseInt(H1.slice(-2), 16) ^ 0x01).toString(16).padStart(2, "0");
+    await expect(c.submitHeaders(hdr(flipped)))
+      .to.be.revertedWithCustomError(c, "InsufficientWork");
+  });
+
   it("rejects a header whose nonce has been altered", async function () {
     const c = await deployAtGenesis();
     // Same header, one byte of the nonce changed: the work no longer meets
