@@ -13,3 +13,5 @@ Architecture C.11 alone names the five Stellar memo bindings (lock id, Base reci
 Architecture C.10 does not establish a mainnet-available atomic batch and does not specify a single transaction that pays the 5% fee, locks the 95% principal, and removes early cancellation; an XRPL lock cannot be built until that construction is specified, and none was invented here.
 
 The Cosmos Hub feasibility report verdict is “CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW”; because it is not feasible now, a Cosmos Hub lock was not built.
+
+Cosmos Hub code upload is permissionless; a no-admin contract is still not a safe lock because governance can migrate it and migration can send the contract's funds, as in wasmd v0.60.7 x/wasm/keeper/authz_policy.go lines 66–67 and TestMigrateWithDispatchedMessage; a Cosmos Hub lock was not built.
