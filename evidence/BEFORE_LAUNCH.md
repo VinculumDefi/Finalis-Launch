@@ -26,3 +26,5 @@ Architecture C.16 does not specify how a transparent Zcash lock binds the Base r
 The Bitcoin principal release was checked for amount and locktime only; no signature was checked.
 
 The Bitcoin Cash test still registers headers through `testRegisterHeader`, and no confirmation count was chosen.
+
+A BNB mint stays refused because no validator-vote encoding is specified, and none was invented.
