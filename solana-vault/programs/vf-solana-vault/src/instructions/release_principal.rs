@@ -10,7 +10,6 @@
 // =============================================================================
 
 use anchor_lang::prelude::*;
-use anchor_lang::system_program;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer as SplTransfer};
 
 use crate::constants::*;
@@ -72,21 +71,21 @@ pub fn handler_native(
     let canonical_asset = lock_record.canonical_asset.clone();
     let release_dest = lock_record.release_destination;
 
-    // Transfer principal from lock_record PDA to release_destination.
-    let bump = [lock_record.bump];
-    let signer_seeds: &[&[u8]] = &[SEED_LOCK, &_lock_id_hash, &bump];
-    // Named binding: PDA signer seeds must outlive the CPI call (E0716).
-    let signer_seeds_arr = [signer_seeds];
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.system_program.to_account_info(),
-        system_program::Transfer {
-            from: lock_record.to_account_info(),
-            to: ctx.accounts.release_destination.to_account_info(),
-        },
-        &signer_seeds_arr,
-    );
+    // Move principal lamports from lock_record PDA to release_destination.
+    // System Program transfer cannot debit a program-owned PDA with data;
+    // adjust lamports directly (same amount as before).
     let principal_u64 = u64::try_from(principal).map_err(|_| ErrorCode::MathOverflow)?;
-    system_program::transfer(cpi_ctx, principal_u64)?;
+    let lock_info = lock_record.to_account_info();
+    let dest_info = ctx.accounts.release_destination.to_account_info();
+    let lock_lamports = lock_info.lamports();
+    require!(lock_lamports >= principal_u64, ErrorCode::MathOverflow);
+    **lock_info.try_borrow_mut_lamports()? = lock_lamports
+        .checked_sub(principal_u64)
+        .ok_or(ErrorCode::MathOverflow)?;
+    let dest_lamports = dest_info.lamports();
+    **dest_info.try_borrow_mut_lamports()? = dest_lamports
+        .checked_add(principal_u64)
+        .ok_or(ErrorCode::MathOverflow)?;
 
     // VF-PRI-002: Mark as released (single-release flag).
     lock_record.released = true;

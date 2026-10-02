@@ -112,11 +112,13 @@ fn consume_handshake(
     signer: &Pubkey,
     bump: u8,
 ) -> Result<()> {
-    // Initialize on first creation.
+    // Initialize on first creation (empty identity only — never re-init an existing account).
     if ha.identity.is_empty() {
         ha.identity = format!("({},{})", SOURCE_ENVIRONMENT, signer);
         ha.source_account = *signer;
         ha.bump = bump;
+        ha.allowance = HANDSHAKE_ALLOWANCE;
+        ha.remaining = HANDSHAKE_ALLOWANCE;
     }
 
     // VF-COM-007: Check remaining allowance before consuming.
@@ -235,20 +237,20 @@ pub fn handler_native(
     );
     system_program::transfer(gross_cpi, gross_u64)?;
 
-    // 2. Transfer fee from lock_record PDA to dev_fund.
-    let bump = [ctx.bumps.lock_record];
-    let signer_seeds: &[&[u8]] = &[SEED_LOCK, &params.lock_id_hash, &bump];
-    // Named binding: PDA signer seeds must outlive the CPI call (E0716).
-    let signer_seeds_arr = [signer_seeds];
-    let fee_cpi = CpiContext::new_with_signer(
-        ctx.accounts.system_program.to_account_info(),
-        system_program::Transfer {
-            from: ctx.accounts.lock_record.to_account_info(),
-            to: ctx.accounts.dev_fund.to_account_info(),
-        },
-        &signer_seeds_arr,
-    );
-    system_program::transfer(fee_cpi, fee_u64)?;
+    // 2. Move fee lamports from lock_record PDA to dev_fund.
+    // System Program transfer cannot debit a program-owned PDA with data;
+    // adjust lamports directly (same amounts as before).
+    let lock_info = ctx.accounts.lock_record.to_account_info();
+    let dev_info = ctx.accounts.dev_fund.to_account_info();
+    let lock_lamports = lock_info.lamports();
+    require!(lock_lamports >= fee_u64, ErrorCode::MathOverflow);
+    **lock_info.try_borrow_mut_lamports()? = lock_lamports
+        .checked_sub(fee_u64)
+        .ok_or(ErrorCode::MathOverflow)?;
+    let dev_lamports = dev_info.lamports();
+    **dev_info.try_borrow_mut_lamports()? = dev_lamports
+        .checked_add(fee_u64)
+        .ok_or(ErrorCode::MathOverflow)?;
 
     // --- Write lock record (VF-XCH-011 immutable facts) ---
     write_lock_record(
