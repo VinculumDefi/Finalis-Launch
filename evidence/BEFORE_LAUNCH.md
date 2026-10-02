@@ -28,3 +28,5 @@ The Bitcoin principal release was checked for amount and locktime only; no signa
 The Bitcoin Cash test still registers headers through `testRegisterHeader`, and no confirmation count was chosen.
 
 A BNB mint stays refused because no validator-vote encoding is specified, and none was invented.
+
+An Avalanche mint stays refused because no Snowman header encoding is specified, and none was invented.
