@@ -76,7 +76,8 @@ function opReturnScript(payloadHex) {
 }
 
 function buildLockTx({
-  feeSats, principalSats, maturity, principalScript = null, nulldataPayload = undefined,
+  feeSats, principalSats, maturity, principalScript = null,
+  nulldataPayload = undefined, secondNulldataPayload = null,
 }) {
   const script = principalScript ?? cltvScript(maturity, PUBKEY);
   const scriptHash = ethers.sha256("0x" + script).slice(2);
@@ -97,6 +98,10 @@ function buildLockTx({
       ? buildNulldataPayload()
       : nulldataPayload;
     const spk = opReturnScript(payload);
+    outputs.push(le(0, 8) + varInt(spk.length / 2) + spk);
+  }
+  if (secondNulldataPayload !== null) {
+    const spk = opReturnScript(secondNulldataPayload);
     outputs.push(le(0, 8) + varInt(spk.length / 2) + spk);
   }
 
@@ -177,6 +182,21 @@ describe("UtxoChainVerifier — C.8 fact extraction", function () {
   it("refuses a transaction with no nulldata output", async function () {
     const t = buildLockTx({
       feeSats: 50000, principalSats: 950000, maturity: MATURITY, nulldataPayload: null,
+    });
+    const s = await deployWith(t);
+
+    await expect(s.verifier.extractFacts(encodeProof(t, BLOCK, [], 0, 1, 0)))
+      .to.be.reverted;
+  });
+
+  it("refuses a transaction with two nulldata outputs", async function () {
+    const t = buildLockTx({
+      feeSats: 50000,
+      principalSats: 950000,
+      maturity: MATURITY,
+      secondNulldataPayload: buildNulldataPayload({
+        baseRecipient: "0x2222222222222222222222222222222222222222",
+      }),
     });
     const s = await deployWith(t);
 
