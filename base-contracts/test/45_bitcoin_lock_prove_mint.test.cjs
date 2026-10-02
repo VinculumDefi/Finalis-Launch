@@ -313,3 +313,81 @@ describe("Bitcoin end-to-end — real lock through UtxoChainVerifier to VCLM", f
     expect(await s.vclm.balanceOf(s.recipient.address)).to.equal(beforeNoNull);
   });
 });
+
+// Real Bitcoin mainnet headers from 14_header_chain.test.cjs (do not invent).
+const H0 =
+  "01000000" +
+  "0000000000000000000000000000000000000000000000000000000000000000" +
+  "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" +
+  "29ab5f49" + "ffff001d" + "1dac2b7c";
+
+const H1 =
+  "01000000" +
+  "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" +
+  "982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e" +
+  "61bc6649" + "ffff001d" + "01e36299";
+
+const H2 =
+  "01000000" +
+  "4860eb18bf1b1620e37e9490fc8a427514416fd75159ab86688e9a8300000000" +
+  "d5fdcc541e25de1c7a5addedf24858b8bb665c9f36ef744ee42c316022c90f9b" +
+  "b0bc6649" + "ffff001d" + "08d2bd61";
+
+function headerBlockHash(headerHex) {
+  return ethers.sha256(ethers.sha256(ethers.getBytes("0x" + headerHex)));
+}
+
+describe("Bitcoin — finality refused when confirmation depth < 6", function () {
+
+  it("checkpoints real genesis, submits H1+H2, lock at height 1; verifyFinality reverts (depth < 6)", async function () {
+    // Production-path header chain fixture (same Testable as bitcoin e2e) but
+    // checkpointed at real mainnet genesis — not a fabricated checkpoint hash.
+    const HC = await ethers.getContractFactory("Sha256dHeaderChainTestable");
+    const chain = await HC.deploy(headerBlockHash(H0), 0, 0x1d00ffff, 0x495fab29);
+
+    const UV = await ethers.getContractFactory("UtxoChainVerifier");
+    // Architecture C.8: minimum confirmations is 6. Do not lower below 6.
+    const utxoVerifier = await UV.deploy(ENV, 6, await chain.getAddress());
+    expect(await utxoVerifier.minConfirmations()).to.equal(6n);
+
+    // Build a Bitcoin lock the same way the e2e test does (C.8 CLTV + nulldata).
+    const creation = 0x4966bc61; // real H1 timestamp
+    const duration = 30n * DAY;
+    const maturity = creation + Number(duration);
+    const t = buildLockTx({
+      feeSats: 5_000,
+      principalSats: 95_000,
+      maturity,
+      nulldataPayload: buildNulldataPayload({
+        lockId: ethers.id("btc-depth-lt6"),
+        baseRecipient: "0x1111111111111111111111111111111111111111",
+      }),
+    });
+
+    const h1Hash = headerBlockHash(H1);
+
+    // Include the lock in height 1 the e2e way: single-tx block, merkle root = txid.
+    // Bind to the real height-1 block hash so subsequent real H2 links as parent.
+    await chain.testRegisterHeader(h1Hash, 1, t.txid, creation);
+
+    // Submit real mainnet height-1 and height-2 headers from 14_header_chain.
+    // H1 is already known (idempotent); H2 extends the tip → depth(H1) = 2.
+    await chain.submitHeaders("0x" + H1 + H2);
+    expect(await chain.bestHeight()).to.equal(2n);
+    expect(await chain.isKnown(h1Hash)).to.equal(true);
+    expect(await chain.isKnown(headerBlockHash(H2))).to.equal(true);
+
+    const depth = await chain.confirmations(h1Hash);
+    console.log(`\n    Observed confirmation depth for lock block (height 1): ${depth}\n`);
+    expect(depth).to.equal(2n);
+    expect(depth).to.be.lt(6n);
+
+    const lockEventProof = encodeProof(t, h1Hash, [], 0, 1, 0);
+
+    await expect(utxoVerifier.verifyFinality(lockEventProof, "0x"))
+      .to.be.revertedWithCustomError(utxoVerifier, "InsufficientConfirmations")
+      .withArgs(depth, 6n);
+
+    expect(await utxoVerifier.isFinal(lockEventProof)).to.equal(false);
+  });
+});
