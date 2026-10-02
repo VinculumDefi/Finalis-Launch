@@ -2,7 +2,7 @@
 
 **Authority:** Master Specification Revision 6; `spec/Vinculum_Finalis_Requirement_Traceability.csv` (209 rows).
 **Branch at evidence-commit parent tip:** `grok/ethereum-e2e` @ `69c757fdfd53fc28956674c6a9d836107ba0b7b2` (the current tip before this evidence commit).
-**Suite command:** `cd base-contracts && npx hardhat test` → **337 passing, 0 failing (2026-10-01)**.
+**Suite command:** `cd base-contracts && npx hardhat test` → **355 passing, 0 failing (2026-10-01)**.
 **Four-chain command:** `cd base-contracts && npx hardhat test test/35_deploy_five_guard.test.cjs test/36_deploy_five_poly_arb_op.test.cjs` → **13 passing (Ethereum+Polygon+Arbitrum+Optimism deployFive e2e + guards + refuse stubs)**.
 
 
@@ -278,4 +278,4 @@ Refuse-closed stubs evidenced by `test/36_deploy_five_poly_arb_op.test.cjs` —
 2. Else a curated citation to a known passing `it` (four-chain 1725 VCLM fixture, principal isolation, etc.).
 3. If neither exists → not Demonstrated.
 
-_Generated for commit 5017498; suite 337 passing, 0 failing (2026-10-01)._
+_Generated for commit 7dcebe9; suite 355 passing, 0 failing (2026-10-01)._
