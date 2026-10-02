@@ -19,19 +19,22 @@
 //     chain's state, not from the proof.
 //   extractFacts   — parses the transaction per C.8: fee output value,
 //     principal output value, the CLTV maturity inside the witness script
-//     (checked against the P2WSH commitment), and — for bitcoin — the Base
-//     recipient and related identity facts from the single nulldata output.
+//     (checked against the P2WSH commitment), and — for bitcoin and
+//     bitcoincash — the Base recipient and related identity facts from the
+//     single nulldata output.
 //
 // C.8 CONFORMANCE
 //   Mechanism: single transaction with a Dev Fund fee output and a P2WSH
 //   CLTV principal output, plus exactly one nulldata output binding lock id,
 //   Base recipient, output token, asset identity, and valuation reference.
 //   Replay id: env + txid + principal output index.
-//   Finality: depth(lock_tx) >= 6. Maturity: the CLTV operand, a timestamp.
-//   Release key: the single public key on the maturity-release branch;
-//   ambiguous or multi-key paths are rejected.
-//   Bitcoin only: Base reads the nulldata facts from the proven transaction
-//   and refuses if missing or ambiguous. Script does not verify them.
+//   Finality: depth(lock_tx) >= minConfirmations (constructor). Bitcoin's
+//   Architecture C.8 cites depth >= 6; Bitcoin Cash (C.17) has no official
+//   confirmation-count source — do not treat BTC's 6 as a BCH rule. Maturity:
+//   the CLTV operand, a timestamp. Release key: the single public key on the
+//   maturity-release branch; ambiguous or multi-key paths are rejected.
+//   Bitcoin and Bitcoin Cash: Base reads the nulldata facts from the proven
+//   transaction and refuses if missing or ambiguous. Script does not verify them.
 //
 // TRUST ASSUMPTIONS (Verifier Completion Standard 3.7)
 //   Inherited from Sha256dHeaderChain: one immutable checkpoint header bound at
@@ -108,7 +111,9 @@ contract UtxoChainVerifier is IChainVerifier {
     // -------------------------------------------------------------------------
 
     /// @notice Proves inclusion at or beyond the required confirmation depth.
-    /// @dev C.8: depth(lock_tx) >= 6. Depth is read from the header chain.
+    /// @dev depth(lock_tx) >= minConfirmations (or 6 if unset). Depth is read
+    ///      from the header chain. Caller configures the threshold; this is not
+    ///      an official Bitcoin Cash confirmation-count claim.
     function verifyFinality(
         bytes calldata lockEventProof,
         bytes calldata /* sourceFinalityProof — the lock proof carries everything */
@@ -178,15 +183,15 @@ contract UtxoChainVerifier is IChainVerifier {
         feeAmount = uint256(f.feeAmount);
         principalAmount = uint256(f.principalAmount);
 
-        // C.8 Bitcoin only: identity facts come from the single nulldata output.
-        // Other UTXO environments sharing this verifier are unchanged.
-        if (_bitcoinEnvironment()) {
+        // C.8 / C.17: bitcoin and bitcoincash identity facts come from the
+        // single nulldata output. Other UTXO environments are unchanged.
+        if (_nulldataEnvironment()) {
             BitcoinTx.NulldataFacts memory n = BitcoinTx.extractNulldataFacts(pr.rawTx);
             canonicalAssetId = n.assetIdentity;
             baseRecipient = n.baseRecipient;
             outputToken = n.outputToken;
-            // releaseDestination is not an EVM address on Bitcoin; the maturity
-            // release key is exposed separately via releaseKeyIdentity.
+            // releaseDestination is not an EVM address on these UTXO chains; the
+            // maturity release key is exposed separately via releaseKeyIdentity.
             releaseDestination = address(0);
         }
     }
@@ -223,8 +228,10 @@ contract UtxoChainVerifier is IChainVerifier {
     // Internal
     // -------------------------------------------------------------------------
 
-    function _bitcoinEnvironment() private view returns (bool) {
-        return keccak256(bytes(environmentId)) == keccak256(bytes("bitcoin"));
+    function _nulldataEnvironment() private view returns (bool) {
+        bytes32 id = keccak256(bytes(environmentId));
+        return id == keccak256(bytes("bitcoin"))
+            || id == keccak256(bytes("bitcoincash"));
     }
 
     function _requireIncluded(bytes32 id, Proof memory pr) private view {
