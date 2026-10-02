@@ -11,3 +11,5 @@ Before launch, correct both identifiers in the governing registry on purpose, th
 Architecture C.11 alone names the five Stellar memo bindings (lock id, Base recipient, output token, asset identity, and valuation reference) but specifies no concrete byte layout or encoding that fits Stellar's ≤28-byte text or ≤32-byte hash memo limit; a Stellar lock cannot be built until that layout is specified, and no layout was invented here.
 
 Architecture C.10 does not establish a mainnet-available atomic batch and does not specify a single transaction that pays the 5% fee, locks the 95% principal, and removes early cancellation; an XRPL lock cannot be built until that construction is specified, and none was invented here.
+
+The Cosmos Hub feasibility report verdict is “CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW”; because it is not feasible now, a Cosmos Hub lock was not built.
