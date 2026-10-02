@@ -117,6 +117,9 @@ boundary forever. `configureDevFund` is **per environment** and takes a `string`
 not one address for all. After `finalize()` the deployer is zeroed and every
 configuration function is permanently unreachable.
 
+**Before launch.** Read `evidence/BEFORE_LAUNCH.md` before launch; rows 978 and
+989 remain unregistered until both registry identifiers are corrected on purpose.
+
 ---
 
 ## Working conventions
