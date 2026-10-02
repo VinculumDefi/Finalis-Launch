@@ -391,3 +391,67 @@ describe("Bitcoin — finality refused when confirmation depth < 6", function ()
     expect(await utxoVerifier.isFinal(lockEventProof)).to.equal(false);
   });
 });
+
+// Headers mined from the real genesis checkpoint at bits 0x1d00ffff.
+// Height 1 commits to the lock below (merkle root = txid). Heights 2..7 are
+// successors on that same chain. Each header satisfies Sha256dHeaderChain's
+// proof-of-work check; none were registered through testRegisterHeader.
+const MINED = [
+  "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000d8a06abd948d7013e7eaeef4100cc7c725e8fce8c6d07c610f3c1892eea6aee681ad5f49ffff001dab7885c5",
+  "01000000133c50f77aeaef80535d7d484d4cd404560b048f9d366d0ff1894574000000000000000000000000000000000000000000000000000000000000000000000000bdad5f49ffff001d19c31289",
+  "01000000667d147d33528ffa5ceda2f0d9f813e435acb88668a9d5dd3e8ff570000000000000000000000000000000000000000000000000000000000000000000000000f9ad5f49ffff001ddf90640d",
+  "01000000af082c1c3555d76d40f33c92084c97c474a4dc75dc981e35e4db3b350000000000000000000000000000000000000000000000000000000000000000000000003aae5f49ffff001d65ff1a63",
+  "0100000058d3e9870a1697c7165709ecbd643054a1b7307cfedb904f3d21362700000000000000000000000000000000000000000000000000000000000000000000000076ae5f49ffff001dd6352527",
+  "010000005d9b47354b73a74a159484f4bed3ed21a35da6c9a4ec7c91d3cfda7e000000000000000000000000000000000000000000000000000000000000000000000000b2ae5f49ffff001d07b10a2d",
+  "01000000eb8116d9392f12b0d41c1f1ed175ad11b911f4229690814d0ee2644a000000000000000000000000000000000000000000000000000000000000000000000000eeae5f49ffff001dd654038d",
+];
+
+describe("Bitcoin — finality passes once mined confirmation depth >= 6", function () {
+
+  it("checkpoints real genesis, submits a mined lock block and six successors; verifyFinality passes", async function () {
+    const HC = await ethers.getContractFactory("Sha256dHeaderChainTestable");
+    const chain = await HC.deploy(headerBlockHash(H0), 0, 0x1d00ffff, 0x495fab29);
+
+    const UV = await ethers.getContractFactory("UtxoChainVerifier");
+    // Architecture C.8: minimum confirmations is 6. Do not lower below 6.
+    const utxoVerifier = await UV.deploy(ENV, 6, await chain.getAddress());
+    expect(await utxoVerifier.minConfirmations()).to.equal(6n);
+
+    const maturity = 1600000000;
+    const t = buildLockTx({
+      feeSats: 5_000,
+      principalSats: 95_000,
+      maturity,
+      nulldataPayload: buildNulldataPayload({
+        lockId: ethers.id("btc-pow-final-lock"),
+        baseRecipient: "0x1111111111111111111111111111111111111111",
+      }),
+    });
+
+    // Single-tx block: the mined height-1 merkle root is the lock txid.
+    const lockHeader = MINED[0];
+    expect(t.txid.slice(2)).to.equal(lockHeader.slice(72, 136));
+
+    await chain.submitHeaders("0x" + MINED.join(""));
+
+    const lockHash = headerBlockHash(lockHeader);
+    expect(await chain.bestHeight()).to.equal(7n);
+    expect(await chain.isKnown(headerBlockHash(H0))).to.equal(true);
+    for (const h of MINED) {
+      expect(await chain.isKnown(headerBlockHash(h))).to.equal(true);
+    }
+
+    const depth = await chain.confirmations(lockHash);
+    const headersAfterLock = (await chain.bestHeight()) - 1n;
+    console.log(`\n    Observed confirmation depth for mined lock block (height 1): ${depth}\n`);
+    expect(headersAfterLock).to.be.gte(6n);
+    expect(depth).to.be.gte(6n);
+
+    const lockEventProof = encodeProof(t, lockHash, [], 0, 1, 0);
+    const [finalized, sourceBlock, height] = await utxoVerifier.verifyFinality(lockEventProof, "0x");
+    expect(finalized).to.equal(true);
+    expect(sourceBlock).to.equal(lockHash);
+    expect(height).to.equal(1n);
+    expect(await utxoVerifier.isFinal(lockEventProof)).to.equal(true);
+  });
+});
