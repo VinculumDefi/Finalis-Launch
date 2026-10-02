@@ -15,3 +15,5 @@ Architecture C.10 does not establish a mainnet-available atomic batch and does n
 The Cosmos Hub feasibility report verdict is “CONDITIONALLY FEASIBLE — NOT FEASIBLE NOW”; because it is not feasible now, a Cosmos Hub lock was not built.
 
 Cosmos Hub code upload is permissionless; a no-admin contract is still not a safe lock because governance can migrate it and migration can send the contract's funds, as in wasmd v0.60.7 x/wasm/keeper/authz_policy.go lines 66–67 and TestMigrateWithDispatchedMessage; a Cosmos Hub lock was not built.
+
+Architecture C.13 does not specify how a Litecoin lock binds the Base recipient, and it does not establish the Litecoin header check needed for SPV verification; a Litecoin lock cannot be built until the Base-recipient binding and Litecoin header-check mechanism are specified, and no binding, header check, light client, confirmation count, or other Litecoin mechanism was invented here.
