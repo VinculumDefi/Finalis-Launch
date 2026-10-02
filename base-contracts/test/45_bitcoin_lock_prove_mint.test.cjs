@@ -455,3 +455,246 @@ describe("Bitcoin — finality passes once mined confirmation depth >= 6", funct
     expect(await utxoVerifier.isFinal(lockEventProof)).to.equal(true);
   });
 });
+
+// Issuance chain mined the same way as the depth-7 fixture: real genesis
+// checkpoint, lock transaction at height 1 (merkle root = txid), six successor
+// headers, bits 0x1d00ffff. The depth-7 headers themselves cannot be reused for
+// mint: their 2009 timestamp precedes launch (VF-ORC-011) and the CLTV duration
+// is not a permitted issuance duration. These headers keep that proof-of-work
+// shape and the Bitcoin e2e amounts (fee 5_000, principal 95_000). No
+// testRegisterHeader. minConfirmations stays 6.
+//
+// Lock-header timestamp is 2300000003. The test jumps the chain to 2300000000
+// and then deployPowStack's three token deployments land launch at 2300000003,
+// so valuation equals launch (daysSinceLaunch = 0) and the 30-day multiplier
+// matches the Bitcoin e2e mint of 1725 VCLM.
+const POW_TIME_ANCHOR = 2300000000;
+const POW_LOCK_TIME = 2300000003;
+const POW_DURATION = 2592000;
+const POW_MATURITY = POW_LOCK_TIME + POW_DURATION;
+const POW_RECIPIENT = "0x1111111111111111111111111111111111111111";
+// P2WPKH bound at lock-release time. Principal (95% of gross) is paid here.
+const BOUND_SPK = "0014" + "44".repeat(20);
+
+const POW_HEADERS = [
+  "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d61900000000005a79c1ec7efe13cd834240dc0374052a61811822e82c4f4c6cd63c201555ec3703371789ffff001d8a28bb64",
+  "010000006187580d327effa3339fb2550288d68223d68eaecc066e20f80288450000000000000000000000000000000000000000000000000000000000000000000000003f371789ffff001db5297806",
+  "0100000010b9b02dd450a24ba3cc7afade9c7a8c14ecbeddee9971eb7029f1170000000000000000000000000000000000000000000000000000000000000000000000007c371789ffff001d0bd67119",
+  "010000007b36f74c0c198325ba48bec88833a2f4583a5845d95c1d93f79fc1fb000000000000000000000000000000000000000000000000000000000000000000000000b7371789ffff001d6150ec51",
+  "0100000078665c8a4c0ba98e631e6d4310c4edef61a962aa7c4334674bedc7ae000000000000000000000000000000000000000000000000000000000000000000000000f6371789ffff001d769fd412",
+  "01000000956f1eedf985f4bee298b2d31d9997abd1654045cc12327a5f4c6f4100000000000000000000000000000000000000000000000000000000000000000000000031381789ffff001d6e8a78a2",
+  "01000000921f235f587ffb8d7216a846d250ea07254b0107ff451e182e3fe5450000000000000000000000000000000000000000000000000000000000000000000000006b381789ffff001d430a5674",
+];
+
+function buildReleaseTx({ prevTxid, nLockTime, value, spk }) {
+  return (
+    "01000000" +
+    "01" +
+    prevTxid.slice(2) +
+    le(1, 4) +
+    "00" +
+    "feffffff" +
+    "01" +
+    le(value, 8) +
+    varInt(spk.length / 2) +
+    spk +
+    le(nLockTime, 4)
+  );
+}
+
+async function deployPowStack() {
+  const signers = await ethers.getSigners();
+  const [deployer] = signers;
+  const publisher = signers[9];
+  const relayer = signers[5];
+  const recipient = signers[4];
+
+  const Token = await ethers.getContractFactory("VinculumFinalisToken");
+  const vclm  = await Token.deploy("Vinculum", "VCLM", 10_000_000_000n * 10n**18n);
+  const chonx = await Token.deploy("Chonx", "CHONX", 100_000_000_000n * 10n**18n);
+  const synth = await Token.deploy("Synth", "SYNTH", 10_000_000n * 10n**18n);
+
+  const launchTs = (await ethers.provider.getBlock("latest")).timestamp;
+  const __cap = await (await ethers.getContractFactory("VinculumFinalisCap"))
+    .deploy(10_000_000_000n * 10n ** 18n, 100_000_000_000n * 10n ** 18n);
+  const V = await ethers.getContractFactory("VinculumFinalisVerifier");
+  const verifier = await V.deploy(
+    await vclm.getAddress(), await chonx.getAddress(), publisher.address, launchTs,
+    await __cap.getAddress()
+  );
+
+  const Stake = await ethers.getContractFactory("VinculumFinalisStake");
+  const stake = await Stake.deploy(
+    await vclm.getAddress(), await chonx.getAddress(),
+    await synth.getAddress(), await verifier.getAddress(), launchTs,
+    await __cap.getAddress()
+  );
+  await __cap.initialize(await verifier.getAddress(), await stake.getAddress());
+
+  await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
+  await chonx.initialize(await verifier.getAddress(), ZERO);
+  await synth.initialize(await verifier.getAddress(), ZERO);
+
+  // Production header chain. Real genesis checkpoint. Not Testable, so there
+  // is no testRegisterHeader on this deployment.
+  const HC = await ethers.getContractFactory("Sha256dHeaderChain");
+  const chain = await HC.deploy(headerBlockHash(H0), 0, 0x1d00ffff, 0x495fab29);
+  const UV = await ethers.getContractFactory("UtxoChainVerifier");
+  const utxoVerifier = await UV.deploy(ENV, 6, await chain.getAddress());
+
+  await verifier.registerAssetPrecision(ENV, AID, "BTC", DECIMALS, 1, 0);
+  await verifier.registerChainVerifier(ENV, await utxoVerifier.getAddress());
+  await verifier.registerHandshakeAllowance(ENV, 1);
+  await verifier.configureDevFund(ENV, DEVFUND);
+  await verifier.finalize();
+
+  const ts = (await ethers.provider.getBlock("latest")).timestamp;
+  const sig = await signBatch(verifier, publisher, 1n, [AID], [PRICE_MICRO], ts);
+  await verifier.submitPriceBatch(1n, [AID], [PRICE_MICRO], ts, sig);
+
+  return {
+    deployer, publisher, relayer, recipient,
+    verifier, utxoVerifier, chain, vclm, launchTs,
+  };
+}
+
+describe("Bitcoin — mint and release on the mined depth-7 chain", function () {
+  this.timeout(180000);
+
+  after(async function () {
+    // The time jump is local to this test. Put the chain back so later files
+    // are not stuck in 2042.
+    await ethers.provider.send("hardhat_reset", []);
+  });
+
+  it("mints 1725 VCLM from the mined lock and releases the 95_000 sat principal; early release reverts", async function () {
+    // Three token deployments after this anchor block land launchTs on the
+    // mined lock header's timestamp.
+    await ethers.provider.send("evm_setNextBlockTimestamp", [POW_TIME_ANCHOR]);
+    await ethers.provider.send("evm_mine");
+
+    const s = await deployPowStack();
+    expect(Number(s.launchTs)).to.equal(POW_LOCK_TIME);
+    expect(await s.utxoVerifier.minConfirmations()).to.equal(6n);
+
+    const grossSats = 100_000n;
+    const expectedFee = 5_000n;
+    const expectedPrincipal = 95_000n;
+    const expectedMint = 1725n * 10n**18n;
+
+    const t = buildLockTx({
+      feeSats: Number(expectedFee),
+      principalSats: Number(expectedPrincipal),
+      maturity: POW_MATURITY,
+      nulldataPayload: buildNulldataPayload({
+        lockId: ethers.id("btc-pow-e2e-release-7"),
+        baseRecipient: POW_RECIPIENT,
+      }),
+    });
+
+    const lockHeader = POW_HEADERS[0];
+    expect(t.txid.slice(2)).to.equal(lockHeader.slice(72, 136));
+
+    await s.chain.submitHeaders("0x" + POW_HEADERS.join(""));
+
+    const lockHash = headerBlockHash(lockHeader);
+    expect(await s.chain.bestHeight()).to.equal(7n);
+    expect(await s.chain.isKnown(headerBlockHash(H0))).to.equal(true);
+    for (const h of POW_HEADERS) {
+      expect(await s.chain.isKnown(headerBlockHash(h))).to.equal(true);
+    }
+
+    const depth = await s.chain.confirmations(lockHash);
+    const headersAfterLock = (await s.chain.bestHeight()) - 1n;
+    expect(headersAfterLock).to.be.gte(6n);
+    expect(depth).to.be.gte(6n);
+
+    const lockEventProof = encodeProof(t, lockHash, [], 0, 1, 0);
+    const [finalized, sourceBlock, height] =
+      await s.utxoVerifier.verifyFinality(lockEventProof, "0x");
+    expect(finalized).to.equal(true);
+    expect(sourceBlock).to.equal(lockHash);
+    expect(height).to.equal(1n);
+
+    const facts = await s.utxoVerifier.extractFacts(lockEventProof);
+    const commitmentVaultLockId = ethers.solidityPackedKeccak256(
+      ["string", "bytes32", "uint256"], [ENV, t.txid, 1]
+    );
+    expect(facts.lockId).to.equal(commitmentVaultLockId);
+    expect(facts.feeAmount).to.equal(expectedFee);
+    expect(facts.principalAmount).to.equal(expectedPrincipal);
+    expect(facts.grossAmount).to.equal(grossSats);
+    // Dev Fund output is 5% of gross. Principal is the other 95%.
+    expect(facts.feeAmount * 10000n / facts.grossAmount).to.equal(500n);
+    expect(facts.principalAmount * 10000n / facts.grossAmount).to.equal(9500n);
+    expect(facts.canonicalAssetId).to.equal(AID);
+    expect(ethers.getAddress(facts.baseRecipient)).to.equal(POW_RECIPIENT);
+    expect(facts.durationSecs).to.equal(BigInt(POW_DURATION));
+    expect(facts.creationTimestamp).to.equal(BigInt(POW_LOCK_TIME));
+    expect(facts.maturityTimestamp).to.equal(BigInt(POW_MATURITY));
+
+    const pkg = {
+      sourceEnvironmentId: ENV,
+      commitmentVaultLockId,
+      handshakeIdentity: `${ENV}:${ethers.keccak256("0x" + PUBKEY).slice(2)}`,
+      handshakeAllowanceCount: 1,
+      canonicalAssetId: AID,
+      assetPrecision: DECIMALS,
+      assetCustodyClass: 1,
+      grossAmountSmallestUnits: grossSats,
+      actualFeeAmountSmallestUnits: expectedFee,
+      principalAmountSmallestUnits: expectedPrincipal,
+      feeAssetId: AID,
+      devFundDestination: DEVFUND,
+      feeTransferEvidence: ethers.keccak256(ethers.toUtf8Bytes("fee-btc-pow-e2e-release-7")),
+      valuationTimestamp: POW_LOCK_TIME,
+      maturityTimestamp: POW_MATURITY,
+      durationSecs: BigInt(POW_DURATION),
+      selectedOutputToken: 0,
+      baseRecipient: POW_RECIPIENT,
+      releaseDestination: "0x" + BOUND_SPK,
+      chonxActivationReceipt: "0x",
+      racIdentity: ethers.keccak256(ethers.toUtf8Bytes("rac-btc-pow-e2e-release-7")),
+      sourceFinalityProof: "0x",
+      lockEventProof,
+    };
+
+    const before = await s.vclm.balanceOf(POW_RECIPIENT);
+    await s.verifier.connect(s.relayer).recordFeeAndRac(pkg);
+    await s.verifier.connect(s.relayer).verifyAndMint(pkg);
+    const minted = await s.vclm.balanceOf(POW_RECIPIENT) - before;
+    console.log(`\n    Bitcoin mined-chain e2e: minted ${ethers.formatUnits(minted, 18)} VCLM\n`);
+    expect(minted).to.equal(expectedMint);
+
+    const Harness = await ethers.getContractFactory("BitcoinReleaseHarness");
+    const harness = await Harness.deploy();
+    const witness = "0x" + t.script;
+    const lockRaw = "0x" + t.tx;
+
+    const early = "0x" + buildReleaseTx({
+      prevTxid: t.txid,
+      nLockTime: POW_MATURITY - 1,
+      value: Number(expectedPrincipal),
+      spk: BOUND_SPK,
+    });
+    await expect(harness.release(early, lockRaw, witness, "0x" + BOUND_SPK))
+      .to.be.revertedWithCustomError(harness, "NotMature")
+      .withArgs(BigInt(POW_MATURITY), BigInt(POW_MATURITY - 1));
+    expect(await harness.released()).to.equal(false);
+    expect(await harness.releasedAmount()).to.equal(0n);
+
+    const mature = "0x" + buildReleaseTx({
+      prevTxid: t.txid,
+      nLockTime: POW_MATURITY,
+      value: Number(expectedPrincipal),
+      spk: BOUND_SPK,
+    });
+    await harness.release(mature, lockRaw, witness, "0x" + BOUND_SPK);
+    expect(await harness.released()).to.equal(true);
+    expect(await harness.releasedAmount()).to.equal(expectedPrincipal);
+    expect(await harness.boundScript()).to.equal("0x" + BOUND_SPK);
+
+    await expect(harness.release(mature, lockRaw, witness, "0x" + BOUND_SPK))
+      .to.be.revertedWithCustomError(harness, "AlreadyReleased");
+  });
+});
