@@ -48,25 +48,12 @@ function cltvScript(maturity, pubkeyHex) {
 const PUBKEY = "02" + "11".repeat(32);
 
 // C.8 nulldata payload: lockId | baseRecipient | outputToken | assetIdentity | valuationReference
-const PAYLOAD_LOCK_ID = ethers.id("vf-btc-lock-1");
-const PAYLOAD_RECIPIENT = "0x1111111111111111111111111111111111111111";
-const PAYLOAD_ASSET = ethers.id("bitcoin:BTC");
-const PAYLOAD_VALUATION = ethers.id("valuation-ref-1");
-const PAYLOAD_OUTPUT_TOKEN = 0;
-
-function buildNulldataPayload({
-  lockId = PAYLOAD_LOCK_ID,
-  baseRecipient = PAYLOAD_RECIPIENT,
-  outputToken = PAYLOAD_OUTPUT_TOKEN,
-  assetIdentity = PAYLOAD_ASSET,
-  valuationReference = PAYLOAD_VALUATION,
-} = {}) {
-  const recipient = ethers.getBytes(baseRecipient); // 20 bytes
-  const token = Uint8Array.from([outputToken & 0xff]);
-  return ethers.hexlify(ethers.concat([
-    lockId, recipient, token, assetIdentity, valuationReference,
-  ])).slice(2);
-}
+const {
+  buildNulldataPayload,
+  PAYLOAD_RECIPIENT,
+  PAYLOAD_ASSET,
+  PAYLOAD_OUTPUT_TOKEN,
+} = require("./lib/c8NulldataPayload.cjs");
 
 function opReturnScript(payloadHex) {
   const len = payloadHex.length / 2;
