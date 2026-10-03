@@ -16,7 +16,7 @@ The Cosmos Hub feasibility report verdict is “CONDITIONALLY FEASIBLE — NOT F
 
 Cosmos Hub code upload is permissionless; a no-admin contract is still not a safe lock because governance can migrate it and migration can send the contract's funds, as in wasmd v0.60.7 x/wasm/keeper/authz_policy.go lines 66–67 and TestMigrateWithDispatchedMessage; a Cosmos Hub lock was not built.
 
-Architecture C.13 does not specify how a Litecoin lock binds the Base recipient, and it does not establish the Litecoin header check needed for SPV verification; a Litecoin lock cannot be built until the Base-recipient binding and Litecoin header-check mechanism are specified, and no binding, header check, light client, confirmation count, or other Litecoin mechanism was invented here.
+A Litecoin lock pays a fee of exactly 5% and locks the remaining 95% to one key until maturity. The Base recipient is bound with the existing 117-byte C.8 nulldata payload. The header is checked with scrypt_1024_1_1_256 under Litecoin mainnet CheckProofOfWork (powLimit, genesis nBits 0x1e0ffff0), not with SHA256d, UtxoChainVerifier, or Sha256dHeaderChain. No Litecoin confirmation count was chosen.
 
 Architecture C.14 does not specify how a Dogecoin lock binds the Base recipient or establish the Dogecoin header check needed for SPV verification; a Dogecoin lock cannot be built until the Base-recipient binding and Dogecoin header-check mechanism are specified, and no binding, header check, light client, confirmation count, or other Dogecoin mechanism was invented here.
 
