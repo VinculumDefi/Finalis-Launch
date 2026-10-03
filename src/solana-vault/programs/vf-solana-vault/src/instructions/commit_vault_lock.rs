@@ -16,6 +16,7 @@ use crate::constants::*;
 use crate::error::ErrorCode;
 use crate::events::*;
 use crate::state::*;
+use super::lamports::{as_u64, move_lamports};
 
 // ---------------------------------------------------------------------------
 // Shared validation — VF-ARC-004: reject before assets move.
@@ -208,7 +209,7 @@ pub struct CommitVaultLockNative<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler_native(
+pub fn commit_native(
     ctx: Context<CommitVaultLockNative>,
     params: CommitVaultLockParams,
 ) -> Result<()> {
@@ -228,20 +229,15 @@ pub fn handler_native(
             to: ctx.accounts.lock_record.to_account_info(),
         },
     );
-    system_program::transfer(gross_cpi, params.gross_amount)?;
+    system_program::transfer(gross_cpi, as_u64(params.gross_amount)?)?;
 
-    // 2. Transfer fee from lock_record PDA to dev_fund.
-    let bump = [ctx.bumps.lock_record];
-    let signer_seeds: &[&[u8]] = &[SEED_LOCK, &params.lock_id_hash, &bump];
-    let fee_cpi = CpiContext::new_with_signer(
-        ctx.accounts.system_program.to_account_info(),
-        system_program::Transfer {
-            from: ctx.accounts.lock_record.to_account_info(),
-            to: ctx.accounts.dev_fund.to_account_info(),
-        },
-        &[signer_seeds],
-    );
-    system_program::transfer(fee_cpi, fee)?;
+    // 2. Move the fee off the program-owned lock PDA to the dev fund.
+    // system_program::transfer cannot debit a program-owned account.
+    move_lamports(
+        &ctx.accounts.lock_record.to_account_info(),
+        &ctx.accounts.dev_fund.to_account_info(),
+        as_u64(fee)?,
+    )?;
 
     // --- Write lock record (VF-XCH-011 immutable facts) ---
     write_lock_record(
@@ -356,7 +352,7 @@ pub struct CommitVaultLockSpl<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler_spl(
+pub fn commit_spl(
     ctx: Context<CommitVaultLockSpl>,
     params: CommitVaultLockParams,
 ) -> Result<()> {
@@ -377,11 +373,12 @@ pub fn handler_spl(
             authority: ctx.accounts.signer.to_account_info(),
         },
     );
-    token::transfer(gross_cpi, params.gross_amount)?;
+    token::transfer(gross_cpi, as_u64(params.gross_amount)?)?;
 
     // 2. Transfer fee tokens from vault to dev_fund (signed by lock_record PDA).
     let bump = [ctx.bumps.lock_record];
     let signer_seeds: &[&[u8]] = &[SEED_LOCK, &params.lock_id_hash, &bump];
+    let signer_seeds_arr = [signer_seeds];
     let fee_cpi = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         SplTransfer {
@@ -389,9 +386,9 @@ pub fn handler_spl(
             to: ctx.accounts.dev_fund_token_account.to_account_info(),
             authority: ctx.accounts.lock_record.to_account_info(),
         },
-        &[signer_seeds],
+        &signer_seeds_arr,
     );
-    token::transfer(fee_cpi, fee)?;
+    token::transfer(fee_cpi, as_u64(fee)?)?;
 
     // --- Write lock record (VF-XCH-011 immutable facts) ---
     write_lock_record(

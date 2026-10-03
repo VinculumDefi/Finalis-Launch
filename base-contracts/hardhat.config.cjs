@@ -11,4 +11,14 @@ module.exports = {
       viaIR: true,
     },
   },
+  networks: {
+    hardhat: {
+      // Equihash 200,9 checks 512 BLAKE2b-50 hashes per header. Eleven headers
+      // exceed the default 30,000,000 block gas limit. Base includes the
+      // EIP-152 precompile used by the checker.
+      hardfork: "cancun",
+      blockGasLimit: 200_000_000,
+    },
+  },
+  mocha: { timeout: 300000 },
 };

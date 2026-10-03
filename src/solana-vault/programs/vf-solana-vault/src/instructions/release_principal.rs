@@ -10,13 +10,13 @@
 // =============================================================================
 
 use anchor_lang::prelude::*;
-use anchor_lang::system_program;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer as SplTransfer};
 
 use crate::constants::*;
 use crate::error::ErrorCode;
 use crate::events::PrincipalReleased;
 use crate::state::*;
+use super::lamports::{as_u64, move_lamports};
 
 // ---------------------------------------------------------------------------
 // Native SOL release
@@ -54,7 +54,7 @@ pub struct ReleasePrincipalNative<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler_native(
+pub fn release_native(
     ctx: Context<ReleasePrincipalNative>,
     _lock_id: String,
     _lock_id_hash: [u8; 32],
@@ -72,21 +72,16 @@ pub fn handler_native(
     let canonical_asset = lock_record.canonical_asset.clone();
     let release_dest = lock_record.release_destination;
 
-    // Transfer principal from lock_record PDA to release_destination.
-    let bump = [lock_record.bump];
-    let signer_seeds: &[&[u8]] = &[SEED_LOCK, &_lock_id_hash, &bump];
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.system_program.to_account_info(),
-        system_program::Transfer {
-            from: lock_record.to_account_info(),
-            to: ctx.accounts.release_destination.to_account_info(),
-        },
-        &[signer_seeds],
-    );
-    system_program::transfer(cpi_ctx, principal)?;
-
-    // VF-PRI-002: Mark as released (single-release flag).
+    // VF-PRI-002: Mark released before the debit so a retry cannot double-pay.
     lock_record.released = true;
+
+    // Program-owned PDA: debit lamports directly. Only the bound destination
+    // account is accepted by the constraint above.
+    move_lamports(
+        &lock_record.to_account_info(),
+        &ctx.accounts.release_destination.to_account_info(),
+        as_u64(principal)?,
+    )?;
 
     emit!(PrincipalReleased {
         lock_id: lock_record.lock_id.clone(),
@@ -150,7 +145,7 @@ pub struct ReleasePrincipalSpl<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handler_spl(
+pub fn release_spl(
     ctx: Context<ReleasePrincipalSpl>,
     _lock_id: String,
     _lock_id_hash: [u8; 32],
@@ -171,6 +166,7 @@ pub fn handler_spl(
     // Transfer principal tokens from vault to release destination's token account.
     let bump = [lock_record.bump];
     let signer_seeds: &[&[u8]] = &[SEED_LOCK, &_lock_id_hash, &bump];
+    let signer_seeds_arr = [signer_seeds];
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         SplTransfer {
@@ -178,9 +174,9 @@ pub fn handler_spl(
             to: ctx.accounts.release_token_account.to_account_info(),
             authority: lock_record.to_account_info(),
         },
-        &[signer_seeds],
+        &signer_seeds_arr,
     );
-    token::transfer(cpi_ctx, principal)?;
+    token::transfer(cpi_ctx, as_u64(principal)?)?;
 
     // VF-PRI-002: Mark as released.
     lock_record.released = true;

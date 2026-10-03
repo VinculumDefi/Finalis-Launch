@@ -328,8 +328,7 @@ describe("vf-solana-vault", () => {
     const blockTime = (await provider.connection.getBlockTime(clock)) || 0;
 
     if (blockTime < Number(lock.maturityTimeSecs)) {
-      console.log("  [SKIP] Clock not yet at maturity — warp the validator to run this test");
-      return;
+      throw new Error("Clock not at maturity; use bankrun hold_release_bankrun.ts (no skips)");
     }
 
     await program.methods
