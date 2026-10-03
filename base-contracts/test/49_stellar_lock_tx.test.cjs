@@ -7,7 +7,9 @@
 //
 // The network case submits that same operation shape to a local standalone
 // stellar-core and claims the balance on a closed ledger. A predicate that
-// only appears in the XDR is not treated as payment.
+// only appears in the XDR is not treated as payment. An account that is not
+// the claimant cannot take the balance. A claim before maturity fails and
+// leaves it. The sole claimant is paid at maturity.
 //
 // The memo hash is SHA-256 of the existing C.8 Bitcoin nulldata payload
 // (test/lib/c8NulldataPayload.cjs). Amounts are the same 5%/95% split as that
@@ -21,6 +23,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
+const tcp = require("net");
 const {
   Account,
   Asset,
@@ -58,6 +61,8 @@ const SOURCE = keypairFromLabel("vf-stellar-test-source");
 const DEV_FUND = keypairFromLabel("vf-stellar-test-dev-fund");
 const RELEASE = keypairFromLabel("vf-stellar-test-release");
 const OTHER = keypairFromLabel("vf-stellar-test-other-claimant");
+// Funded on the local network so it can submit, but never a claimant.
+const STRANGER = keypairFromLabel("vf-stellar-test-stranger");
 
 function stroopsToAmount(stroops) {
   if (stroops < 0n) throw new Error("negative stroops");
@@ -390,9 +395,13 @@ describe("Stellar lock transaction — local network claim", function () {
     const metaPath = path.join(dir, "meta.xdr");
     const logPath = path.join(dir, "core.log");
     const port = 11926;
+    const queryPort = 11927;
     fs.writeFileSync(cfg, `
 HTTP_PORT=${port}
 PUBLIC_HTTP_PORT=false
+HTTP_QUERY_PORT=${queryPort}
+QUERY_THREAD_POOL_SIZE=2
+QUERY_SNAPSHOT_LEDGERS=8
 NODE_SEED="${node.secret()}"
 NODE_IS_VALIDATOR=true
 
@@ -531,7 +540,72 @@ VALIDATORS=["${node.publicKey()}"]
       }
     }
 
-    return { stop, readNewMeta, coreNow, closeLedger, submit, coreCmd, logTail };
+    const queryBase = `http://127.0.0.1:${queryPort}`;
+    // stellar-core's HTTP server rejects lower-case Content-Length, and Node's
+    // http client rewrites header names, so this writes the request itself.
+    function postForm(url, body) {
+      return new Promise((resolve, reject) => {
+        const target = new URL(url);
+        const payload =
+          `POST ${target.pathname} HTTP/1.0\r\n` +
+          `Host: ${target.host}\r\n` +
+          `Content-Type: application/x-www-form-urlencoded\r\n` +
+          `Content-Length: ${Buffer.byteLength(body)}\r\n` +
+          `Connection: close\r\n` +
+          `\r\n` +
+          body;
+        const sock = tcp.connect(Number(target.port), target.hostname);
+        const chunks = [];
+        sock.on("data", (chunk) => chunks.push(chunk));
+        sock.on("error", reject);
+        sock.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf8");
+          const headerEnd = raw.indexOf("\r\n\r\n");
+          if (headerEnd < 0) {
+            reject(new Error(`short HTTP response\n${raw}`));
+            return;
+          }
+          const head = raw.slice(0, headerEnd);
+          const status = Number(head.split(" ")[1]);
+          resolve({ status, text: raw.slice(headerEnd + 4) });
+        });
+        sock.end(payload);
+      });
+    }
+
+    async function claimableBalanceStroops(balanceIdHex) {
+      const balanceId = xdr.ClaimableBalanceId.fromXDR(Buffer.from(balanceIdHex, "hex"));
+      const key = xdr.LedgerKey.claimableBalance(
+        new xdr.LedgerKeyClaimableBalance({ balanceId })
+      );
+      const body = "key=" + encodeURIComponent(key.toXDR("base64"));
+      let text = "";
+      let status = 0;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        try {
+          const res = await postForm(queryBase + "/getledgerentry", body);
+          status = res.status;
+          text = res.text;
+          if (status === 200) break;
+        } catch (e) {
+          text = e.message;
+          status = 0;
+        }
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      if (status !== 200) {
+        throw new Error(`getledgerentry ${status}\n${text}`);
+      }
+      const parsed = JSON.parse(text);
+      const row = parsed.entries && parsed.entries[0];
+      if (!row || row.state !== "live" || !row.entry) {
+        throw new Error(`claimable balance is not live\n${text}`);
+      }
+      const entry = xdr.LedgerEntry.fromXDR(row.entry, "base64");
+      return BigInt(entry.data.claimableBalance.amount.toString());
+    }
+
+    return { stop, readNewMeta, coreNow, closeLedger, submit, coreCmd, logTail, claimableBalanceStroops };
   }
 
   function signed(tx, keypair) {
@@ -539,7 +613,7 @@ VALIDATORS=["${node.publicKey()}"]
     return tx;
   }
 
-  it("pays exactly the 95% principal when the sole claimant claims at maturity", async function () {
+  it("rejects a non-claimant before maturity, then pays exactly the 95% principal when the sole claimant claims", async function () {
     net = await startNetwork();
     const root = Keypair.fromRawEd25519Seed(
       crypto.createHash("sha256").update(LOCAL_PASSPHRASE).digest()
@@ -579,6 +653,10 @@ VALIDATORS=["${node.publicKey()}"]
         destination: RELEASE.publicKey(),
         startingBalance: STARTING_BALANCE_XLM,
       }))
+      .addOperation(Operation.createAccount({
+        destination: STRANGER.publicKey(),
+        startingBalance: STARTING_BALANCE_XLM,
+      }))
       .setTimeout(0)
       .build();
     fund.sign(root);
@@ -588,7 +666,7 @@ VALIDATORS=["${node.publicKey()}"]
     expect(fundMeta).to.have.length(1);
     const fundResult = txOutcome(fundMeta[0]).result;
     expect(fundResult.tx_success.map((op) => op.op_inner.create_account)).to.deep.equal([
-      "success", "success", "success",
+      "success", "success", "success", "success",
     ]);
 
     const sourceSequence = createdSequence(fundMeta, SOURCE.publicKey());
@@ -623,21 +701,41 @@ VALIDATORS=["${node.publicKey()}"]
     });
     expect(createdAmounts).to.deep.equal([950_000n]);
 
-    async function claim(sequence, explicitClose) {
-      const tx = new TransactionBuilder(new Account(RELEASE.publicKey(), sequence), {
+    async function claimFrom(account, sequence, explicitClose, label) {
+      const tx = new TransactionBuilder(new Account(account.publicKey(), sequence), {
         fee: "100",
         networkPassphrase: LOCAL_PASSPHRASE,
       })
         .addOperation(Operation.claimClaimableBalance({ balanceId }))
         .setTimeout(0)
         .build();
-      tx.sign(RELEASE);
-      await net.submit(tx, "claim");
+      tx.sign(account);
+      await net.submit(tx, label);
       const closeTime = await net.closeLedger(explicitClose);
       const metas = net.readNewMeta();
       expect(metas).to.have.length(1);
       return { tx, closeTime, meta: metas[0], outcome: txOutcome(metas[0]) };
     }
+
+    function claim(sequence, explicitClose) {
+      return claimFrom(RELEASE, sequence, explicitClose, "claim");
+    }
+
+    expect(STRANGER.publicKey()).to.not.equal(RELEASE.publicKey());
+    const strangerSequence = createdSequence(fundMeta, STRANGER.publicKey());
+    const wrong = await claimFrom(STRANGER, strangerSequence, null, "wrong-account claim");
+    expect(wrong.closeTime).to.be.below(maturity);
+    const wrongCode = claimCode(wrong.outcome.result);
+    expect(wrongCode.ok).to.equal(false);
+    console.log(`wrong-account claim failed with ${wrongCode.code}`);
+    expect(wrongCode).to.deep.equal({ ok: false, code: "cannot_claim" });
+    expect(removedClaimableAmounts(wrong.meta)).to.deep.equal([]);
+    expect(await net.claimableBalanceStroops(balanceId)).to.equal(950_000n);
+    const wrongBalances = accountBalances(wrong.meta, STRANGER.publicKey());
+    expect(wrongBalances[wrongBalances.length - 1] - wrongBalances[0]).to.equal(-NETWORK_FEE_PER_OP);
+    expect(wrong.outcome.feeCharged).to.equal(NETWORK_FEE_PER_OP);
+    const releaseDuringWrong = accountBalances(wrong.meta, RELEASE.publicKey());
+    expect(releaseDuringWrong).to.deep.equal([]);
 
     const early = await claim(releaseSequence, null);
     expect(early.closeTime).to.be.below(maturity);
