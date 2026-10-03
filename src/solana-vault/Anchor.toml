@@ -5,10 +5,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-vf_solana_vault = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+vf_solana_vault = "E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s"
 
 [programs.testnet]
-vf_solana_vault = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+vf_solana_vault = "E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s"
 
 [registry]
 url = "https://api.apr.dev"
