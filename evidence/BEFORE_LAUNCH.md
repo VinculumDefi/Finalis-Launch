@@ -23,8 +23,6 @@ Architecture C.14 does not specify how a Dogecoin lock binds the Base recipient 
 Architecture C.15 does not specify how a DigiByte lock binds the Base recipient or establish the DigiByte header check needed for SPV verification; a DigiByte lock cannot be built until the Base-recipient binding and DigiByte header-check mechanism are specified, and no binding, header check, light client, confirmation count, or other DigiByte mechanism was invented here.
 Architecture C.16 does not specify how a transparent Zcash lock binds the Base recipient or establish the Zcash header check needed for SPV verification; a Zcash lock cannot be built until the Base-recipient binding and Zcash header-check mechanism are specified. The confirmation count of 10 was left as written, and no binding, header check, light client, or other Zcash mechanism was invented here.
 
-The Bitcoin principal release was checked for amount and locktime only; no signature was checked.
-
 The Bitcoin Cash test still registers headers through `testRegisterHeader`, and no confirmation count was chosen.
 
 A BNB mint stays refused because no validator-vote encoding is specified, and none was invented.

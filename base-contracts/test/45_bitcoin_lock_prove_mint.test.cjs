@@ -11,6 +11,39 @@
 
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const bitcoin = require("bitcoinjs-lib");
+const ecc = require("tiny-secp256k1");
+const { ECPairFactory } = require("ecpair");
+const bitcore = require("bitcore-lib");
+
+bitcoin.initEccLib(ecc);
+const ECPair = ECPairFactory(ecc);
+
+// Generator point, private key 1. The mined lock's CLTV script commits to this
+// pubkey. BitcoinReleaseHarness is not the signature check: it never executes
+// script. This test signs with the key and evaluates the spend under Bitcoin
+// script rules (bitcore-lib's interpreter: witness program, CLTV, CHECKSIG).
+const RELEASE_PRIV = Buffer.concat([Buffer.alloc(31, 0), Buffer.from([1])]);
+const RELEASE_KEY = ECPair.fromPrivateKey(RELEASE_PRIV);
+const RELEASE_PUBKEY = Buffer.from(RELEASE_KEY.publicKey).toString("hex");
+
+// bitcore-lib applies SCRIPT_VERIFY_CLEANSTACK to the empty scriptSig stack of
+// a native witness program and would reject every P2WSH spend. The witness
+// program itself still requires the executed script to leave exactly one true
+// stack element. The other flags are Bitcoin consensus script rules.
+const BTC_SCRIPT_FLAGS = [
+  "SCRIPT_VERIFY_P2SH",
+  "SCRIPT_VERIFY_WITNESS",
+  "SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY",
+  "SCRIPT_VERIFY_CHECKSEQUENCEVERIFY",
+  "SCRIPT_VERIFY_DERSIG",
+  "SCRIPT_VERIFY_LOW_S",
+  "SCRIPT_VERIFY_STRICTENC",
+  "SCRIPT_VERIFY_MINIMALDATA",
+  "SCRIPT_VERIFY_NULLDUMMY",
+  "SCRIPT_VERIFY_NULLFAIL",
+  "SCRIPT_VERIFY_WITNESS_PUBKEYTYPE",
+].reduce((flags, name) => flags | bitcore.Script.Interpreter[name], 0);
 
 const ENV = "bitcoin";
 const ZERO = "0x0000000000000000000000000000000000000000";
@@ -461,8 +494,9 @@ describe("Bitcoin — finality passes once mined confirmation depth >= 6", funct
 // headers, bits 0x1d00ffff. The depth-7 headers themselves cannot be reused for
 // mint: their 2009 timestamp precedes launch (VF-ORC-011) and the CLTV duration
 // is not a permitted issuance duration. These headers keep that proof-of-work
-// shape and the Bitcoin e2e amounts (fee 5_000, principal 95_000). No
-// testRegisterHeader. minConfirmations stays 6.
+// shape and the Bitcoin e2e amounts (fee 5_000, principal 95_000). The lock's
+// CLTV script commits to RELEASE_PUBKEY, so the height-1 merkle root is that
+// transaction's txid. No testRegisterHeader. minConfirmations stays 6.
 //
 // Lock-header timestamp is 2300000003. The test jumps the chain to 2300000000
 // and then deployPowStack's three token deployments land launch at 2300000003,
@@ -477,29 +511,79 @@ const POW_RECIPIENT = "0x1111111111111111111111111111111111111111";
 const BOUND_SPK = "0014" + "44".repeat(20);
 
 const POW_HEADERS = [
-  "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d61900000000005a79c1ec7efe13cd834240dc0374052a61811822e82c4f4c6cd63c201555ec3703371789ffff001d8a28bb64",
-  "010000006187580d327effa3339fb2550288d68223d68eaecc066e20f80288450000000000000000000000000000000000000000000000000000000000000000000000003f371789ffff001db5297806",
-  "0100000010b9b02dd450a24ba3cc7afade9c7a8c14ecbeddee9971eb7029f1170000000000000000000000000000000000000000000000000000000000000000000000007c371789ffff001d0bd67119",
-  "010000007b36f74c0c198325ba48bec88833a2f4583a5845d95c1d93f79fc1fb000000000000000000000000000000000000000000000000000000000000000000000000b7371789ffff001d6150ec51",
-  "0100000078665c8a4c0ba98e631e6d4310c4edef61a962aa7c4334674bedc7ae000000000000000000000000000000000000000000000000000000000000000000000000f6371789ffff001d769fd412",
-  "01000000956f1eedf985f4bee298b2d31d9997abd1654045cc12327a5f4c6f4100000000000000000000000000000000000000000000000000000000000000000000000031381789ffff001d6e8a78a2",
-  "01000000921f235f587ffb8d7216a846d250ea07254b0107ff451e182e3fe5450000000000000000000000000000000000000000000000000000000000000000000000006b381789ffff001d430a5674",
+  "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000dfd1201264abacd041d29751b09248e6f68d6465d6e988a2af83d04e75e2924103371789ffff001d97f9c113",
+  "010000006ca1fc20ebf635486208b0bf1bd86596eeaab5c0b56e1571b01f3bb50000000001000000000000000000000000000000000000000000000000000000000000003f371789ffff001d4edbf066",
+  "0100000099b060b1fce63e3f9ff3a7a0f43728d4a843a54c33d836da10bf60700000000001000000000000000000000000000000000000000000000000000000000000007c371789ffff001dc3cae426",
+  "01000000a544e8ad673d9ec507c05172b68a6a70d21e47848c4feb5f6bbee29d000000000000000000000000000000000000000000000000000000000000000000000000b7371789ffff001d15e1037b",
+  "01000000f5531833164f71e786918c7083df0fb01b597d3d1df6cb383f2aaabf000000000000000000000000000000000000000000000000000000000000000000000000f6371789ffff001d0e01b512",
+  "0100000077f516da95020121be2f83b312d749bf570b97d9e865f4a7a7b59a7c00000000000000000000000000000000000000000000000000000000000000000000000031381789ffff001d93a151aa",
+  "01000000d9f7f98fa2fb24712f5c4d90a19c288c231bc091623cf6b43416ab870000000001000000000000000000000000000000000000000000000000000000000000006b381789ffff001dbc055b19"
 ];
 
-function buildReleaseTx({ prevTxid, nLockTime, value, spk }) {
-  return (
-    "01000000" +
-    "01" +
-    prevTxid.slice(2) +
-    le(1, 4) +
-    "00" +
-    "feffffff" +
-    "01" +
-    le(value, 8) +
-    varInt(spk.length / 2) +
-    spk +
-    le(nLockTime, 4)
+// P2WSH spend of the principal output. witness = <sig> <witnessScript>.
+// An empty witness is a real transaction with no script.
+function buildSignedPrincipalSpend({
+  prevTxid, witnessScript, prevValue, lockTime, spk, value, sign = true,
+}) {
+  const tx = new bitcoin.Transaction();
+  tx.version = 2;
+  tx.locktime = lockTime >>> 0;
+  tx.addInput(Buffer.from(prevTxid.slice(2), "hex"), 1, 0xfffffffe);
+  tx.addOutput(Buffer.from(spk, "hex"), value);
+  if (sign) {
+    const wscript = Buffer.from(witnessScript, "hex");
+    const sighash = tx.hashForWitnessV0(
+      0, wscript, prevValue, bitcoin.Transaction.SIGHASH_ALL
+    );
+    const sig = bitcoin.script.signature.encode(
+      Buffer.from(RELEASE_KEY.sign(sighash)),
+      bitcoin.Transaction.SIGHASH_ALL
+    );
+    tx.setWitness(0, [sig, wscript]);
+  }
+  return tx.toHex();
+}
+
+// Always runs the script interpreter. A spend is accepted only when the
+// interpreter accepts it, the principal outpoint is still unspent, and the
+// single output pays exactly prevValue sats to BOUND_SPK.
+function judgePrincipalSpend(spendHex, prevSpkHex, prevValue, unspent) {
+  const tx = new bitcore.Transaction(spendHex);
+  const interp = new bitcore.Script.Interpreter();
+  const witness = tx.inputs[0].witnesses || [];
+  const scriptOk = interp.verify(
+    tx.inputs[0].script,
+    bitcore.Script(Buffer.from(prevSpkHex, "hex")),
+    tx,
+    0,
+    BTC_SCRIPT_FLAGS,
+    witness,
+    prevValue
   );
+  const out = tx.outputs[0];
+  const spk = out.script.toHex();
+  // bitcore reports the outpoint hash reversed from the serialized internal
+  // byte order. The lock txid and the unspent set use internal order.
+  const rawPrev = Buffer.from(tx.inputs[0].prevTxId);
+  const prev = Buffer.from(rawPrev).reverse().toString("hex");
+  const key = prev + ":" + tx.inputs[0].outputIndex;
+  const available = unspent.has(key);
+  const paysExact = tx.outputs.length === 1
+    && tx.inputs.length === 1
+    && out.satoshis === prevValue
+    && spk === BOUND_SPK;
+  const accept = scriptOk === true && paysExact && available;
+  if (accept) unspent.delete(key);
+  return {
+    accept,
+    scriptOk: scriptOk === true,
+    err: interp.errstr || "",
+    paysExact,
+    available,
+    value: out.satoshis,
+    spk,
+    key,
+  };
 }
 
 async function deployPowStack() {
@@ -567,7 +651,7 @@ describe("Bitcoin — mint and release on the mined depth-7 chain", function () 
     await ethers.provider.send("hardhat_reset", []);
   });
 
-  it("mints 1725 VCLM from the mined lock and releases the 95_000 sat principal; early release reverts", async function () {
+  it("mints 1725 VCLM from the mined lock; Bitcoin script rules reject an empty or early spend and accept one mature 95_000 sat release", async function () {
     // Three token deployments after this anchor block land launchTs on the
     // mined lock header's timestamp.
     await ethers.provider.send("evm_setNextBlockTimestamp", [POW_TIME_ANCHOR]);
@@ -582,15 +666,18 @@ describe("Bitcoin — mint and release on the mined depth-7 chain", function () 
     const expectedPrincipal = 95_000n;
     const expectedMint = 1725n * 10n**18n;
 
+    const witnessScript = cltvScript(POW_MATURITY, RELEASE_PUBKEY);
     const t = buildLockTx({
       feeSats: Number(expectedFee),
       principalSats: Number(expectedPrincipal),
       maturity: POW_MATURITY,
+      principalScript: witnessScript,
       nulldataPayload: buildNulldataPayload({
         lockId: ethers.id("btc-pow-e2e-release-7"),
         baseRecipient: POW_RECIPIENT,
       }),
     });
+    expect(t.script).to.equal(witnessScript);
 
     const lockHeader = POW_HEADERS[0];
     expect(t.txid.slice(2)).to.equal(lockHeader.slice(72, 136));
@@ -636,7 +723,7 @@ describe("Bitcoin — mint and release on the mined depth-7 chain", function () 
     const pkg = {
       sourceEnvironmentId: ENV,
       commitmentVaultLockId,
-      handshakeIdentity: `${ENV}:${ethers.keccak256("0x" + PUBKEY).slice(2)}`,
+      handshakeIdentity: `${ENV}:${ethers.keccak256("0x" + RELEASE_PUBKEY).slice(2)}`,
       handshakeAllowanceCount: 1,
       canonicalAssetId: AID,
       assetPrecision: DECIMALS,
@@ -666,35 +753,79 @@ describe("Bitcoin — mint and release on the mined depth-7 chain", function () 
     console.log(`\n    Bitcoin mined-chain e2e: minted ${ethers.formatUnits(minted, 18)} VCLM\n`);
     expect(minted).to.equal(expectedMint);
 
-    const Harness = await ethers.getContractFactory("BitcoinReleaseHarness");
-    const harness = await Harness.deploy();
-    const witness = "0x" + t.script;
-    const lockRaw = "0x" + t.tx;
+    expect(await s.utxoVerifier.releaseKeyIdentity(lockEventProof))
+      .to.equal(ethers.keccak256("0x" + RELEASE_PUBKEY));
 
-    const early = "0x" + buildReleaseTx({
+    // Principal output scriptPubKey is P2WSH of the CLTV witness script.
+    const prevSpk = "0020" + ethers.sha256("0x" + t.script).slice(2);
+    const prevValue = Number(expectedPrincipal);
+    const unspent = new Set([t.txid.slice(2) + ":1"]);
+
+    const emptyHex = buildSignedPrincipalSpend({
       prevTxid: t.txid,
-      nLockTime: POW_MATURITY - 1,
-      value: Number(expectedPrincipal),
+      witnessScript: t.script,
+      prevValue,
+      lockTime: POW_MATURITY,
       spk: BOUND_SPK,
+      value: prevValue,
+      sign: false,
     });
-    await expect(harness.release(early, lockRaw, witness, "0x" + BOUND_SPK))
-      .to.be.revertedWithCustomError(harness, "NotMature")
-      .withArgs(BigInt(POW_MATURITY), BigInt(POW_MATURITY - 1));
-    expect(await harness.released()).to.equal(false);
-    expect(await harness.releasedAmount()).to.equal(0n);
+    const empty = judgePrincipalSpend(emptyHex, prevSpk, prevValue, unspent);
+    expect(empty.scriptOk).to.equal(false);
+    expect(empty.err).to.equal("SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY");
+    expect(empty.accept).to.equal(false);
+    expect(unspent.has(t.txid.slice(2) + ":1")).to.equal(true);
 
-    const mature = "0x" + buildReleaseTx({
+    const earlyHex = buildSignedPrincipalSpend({
       prevTxid: t.txid,
-      nLockTime: POW_MATURITY,
-      value: Number(expectedPrincipal),
+      witnessScript: t.script,
+      prevValue,
+      lockTime: POW_MATURITY - 1,
       spk: BOUND_SPK,
+      value: prevValue,
     });
-    await harness.release(mature, lockRaw, witness, "0x" + BOUND_SPK);
-    expect(await harness.released()).to.equal(true);
-    expect(await harness.releasedAmount()).to.equal(expectedPrincipal);
-    expect(await harness.boundScript()).to.equal("0x" + BOUND_SPK);
+    const early = judgePrincipalSpend(earlyHex, prevSpk, prevValue, unspent);
+    expect(early.scriptOk).to.equal(false);
+    expect(early.err).to.equal("SCRIPT_ERR_UNSATISFIED_LOCKTIME");
+    expect(early.accept).to.equal(false);
+    expect(unspent.has(t.txid.slice(2) + ":1")).to.equal(true);
 
-    await expect(harness.release(mature, lockRaw, witness, "0x" + BOUND_SPK))
-      .to.be.revertedWithCustomError(harness, "AlreadyReleased");
+    const shortHex = buildSignedPrincipalSpend({
+      prevTxid: t.txid,
+      witnessScript: t.script,
+      prevValue,
+      lockTime: POW_MATURITY,
+      spk: BOUND_SPK,
+      value: prevValue - 1,
+    });
+    const shortPay = judgePrincipalSpend(shortHex, prevSpk, prevValue, unspent);
+    expect(shortPay.scriptOk).to.equal(true);
+    expect(shortPay.paysExact).to.equal(false);
+    expect(shortPay.value).to.equal(prevValue - 1);
+    expect(shortPay.accept).to.equal(false);
+    expect(unspent.has(t.txid.slice(2) + ":1")).to.equal(true);
+
+    const matureHex = buildSignedPrincipalSpend({
+      prevTxid: t.txid,
+      witnessScript: t.script,
+      prevValue,
+      lockTime: POW_MATURITY,
+      spk: BOUND_SPK,
+      value: prevValue,
+    });
+    const mature = judgePrincipalSpend(matureHex, prevSpk, prevValue, unspent);
+    expect(mature.scriptOk).to.equal(true);
+    expect(mature.err).to.equal("");
+    expect(mature.paysExact).to.equal(true);
+    expect(mature.value).to.equal(prevValue);
+    expect(mature.spk).to.equal(BOUND_SPK);
+    expect(mature.accept).to.equal(true);
+    expect(unspent.has(t.txid.slice(2) + ":1")).to.equal(false);
+
+    const second = judgePrincipalSpend(matureHex, prevSpk, prevValue, unspent);
+    expect(second.scriptOk).to.equal(true);
+    expect(second.available).to.equal(false);
+    expect(second.accept).to.equal(false);
+    expect(unspent.size).to.equal(0);
   });
 });
