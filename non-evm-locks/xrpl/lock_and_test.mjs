@@ -10,6 +10,17 @@
  *
  * Requires a local xrpld. This file starts one in standalone mode.
  */
+
+// XRP Ledger lock cannot keep a per-identity handshake count.
+const COUNTS_PER_IDENTITY = false;
+function handshakeAllowance(countsPerIdentity) {
+  return countsPerIdentity ? 3 : 1;
+}
+if (handshakeAllowance(COUNTS_PER_IDENTITY) !== 1) {
+  throw new Error("XRP Ledger allowance must be derived as 1");
+}
+
+
 import { spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs";

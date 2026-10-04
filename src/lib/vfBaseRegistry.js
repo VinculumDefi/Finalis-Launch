@@ -19,6 +19,12 @@
 
 import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfRevision6Authority';
 
+// VF-COM-006: capable mechanisms get 3, mechanisms that cannot count get 1.
+export function handshakeAllowanceFor(countsPerIdentity) {
+  if (countsPerIdentity == null) return null;
+  return countsPerIdentity ? 3 : 1;
+}
+
 // ---------------------------------------------------------------------------
 // VF-XCH-001/002/003: 17 supported source environments
 // Each entry carries the environment identity, family, Handshake allowance
@@ -29,27 +35,27 @@ import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfRevision6Authority';
 // not present in the governing constants.
 // ---------------------------------------------------------------------------
 
-export const ENVIRONMENTS = [
+const ENVIRONMENT_ROWS = [
   // --- EVM family (7) — 3-use Handshake, source-enforced ---
-  { id: 'Ethereum',  family: 'EVM',  registryName: 'Ethereum',       handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'PoS finalized', verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'BNB',       family: 'EVM',  registryName: 'BNB Smart Chain', handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'FFF',            verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Avalanche', family: 'EVM',  registryName: 'Avalanche',      handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'Snowman',        verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Polygon',   family: 'EVM',  registryName: 'Polygon',        handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'Heimdall v2',   verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Arbitrum',  family: 'EVM',  registryName: 'Arbitrum',       handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'Optimistic',    verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Base',      family: 'EVM',  registryName: 'Base',           handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'OP Stack',       verificationStatus: 'RESOLVED_SAME_CHAIN' },
-  { id: 'Optimism',  family: 'EVM',  registryName: 'Optimism',       handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'OP Stack',       verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Ethereum',  family: 'EVM',  registryName: 'Ethereum',       countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'PoS finalized', verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'BNB',       family: 'EVM',  registryName: 'BNB Smart Chain', countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'FFF',            verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Avalanche', family: 'EVM',  registryName: 'Avalanche',      countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'Snowman',        verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Polygon',   family: 'EVM',  registryName: 'Polygon',        countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'Heimdall v2',   verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Arbitrum',  family: 'EVM',  registryName: 'Arbitrum',       countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'Optimistic',    verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Base',      family: 'EVM',  registryName: 'Base',           countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'OP Stack',       verificationStatus: 'RESOLVED_SAME_CHAIN' },
+  { id: 'Optimism',  family: 'EVM',  registryName: 'Optimism',       countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'OP Stack',       verificationStatus: 'DESIGN_DEFINED' },
   // --- Non-EVM programmable (1) — 3-use, source-enforced ---
-  { id: 'Solana',    family: 'Non-EVM', registryName: 'Solana', handshakeAllowance: 3, handshakeEnforcement: 'source', finality: 'finalized slot',  verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Solana',    family: 'Non-EVM', registryName: 'Solana', countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'finalized slot',  verificationStatus: 'DESIGN_DEFINED' },
   // --- Non-EVM UTXO family (6) — 1-use per canonical release public key, Base-enforced ---
-  { id: 'Bitcoin',     family: 'UTXO', registryName: 'Bitcoin',      handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Litecoin',    family: 'UTXO', registryName: 'Litecoin',     handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Dogecoin',    family: 'UTXO', registryName: 'Dogecoin',      handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'DigiByte',    family: 'UTXO', registryName: 'DigiByte',      handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Zcash',       family: 'UTXO', registryName: 'Zcash',         handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'depth>=10',    verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'BitcoinCash', family: 'UTXO', registryName: 'Bitcoin Cash',  handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Bitcoin',     family: 'UTXO', registryName: 'Bitcoin',      countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Litecoin',    family: 'UTXO', registryName: 'Litecoin',     countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Dogecoin',    family: 'UTXO', registryName: 'Dogecoin',      countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'DigiByte',    family: 'UTXO', registryName: 'DigiByte',      countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Zcash',       family: 'UTXO', registryName: 'Zcash',         countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=10',    verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'BitcoinCash', family: 'UTXO', registryName: 'Bitcoin Cash',  countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
   // --- Non-EVM account-model (2) — 1-use per account (unless deployable stateful), Base-enforced ---
-  { id: 'XRPL',        family: 'XRPL',   registryName: 'XRP Ledger', handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'validated ledger', verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Stellar',     family: 'Stellar', registryName: 'Stellar',   handshakeAllowance: 1, handshakeEnforcement: 'base', finality: 'SCP closed',      verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'XRPL',        family: 'XRPL',   registryName: 'XRP Ledger', countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'validated ledger', verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Stellar',     family: 'Stellar', registryName: 'Stellar',   countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'SCP closed',      verificationStatus: 'DESIGN_DEFINED' },
   // --- Non-EVM CometBFT (1) — supported environment (VF-XCH-001; one of 17), held in
   //     EVIDENCE REQUIRED — CHAIN-NATIVE FEASIBILITY ANALYSIS INCOMPLETE per governing spec
   //     (Architecture Design §C.12 / §Q.5). Source mechanism, preflight, and Handshake
@@ -59,8 +65,14 @@ export const ENVIRONMENTS = [
   //     OWNER DECISION is reserved for when the complete analysis shows no design works).
   //     The verifier gates proofs at Step 3 until a mechanism is established. Do not clear
   //     these values without resolving the six-step feasibility conditionals.
-  { id: 'CosmosHub',   family: 'CometBFT', registryName: 'Cosmos', handshakeAllowance: null, handshakeEnforcement: 'dependent', finality: 'CometBFT instant', verificationStatus: 'EVIDENCE_REQUIRED' },
+  { id: 'CosmosHub',   family: 'CometBFT', registryName: 'Cosmos', countsPerIdentity: null, handshakeEnforcement: 'dependent', finality: 'CometBFT instant', verificationStatus: 'EVIDENCE_REQUIRED' },
 ];
+
+export const ENVIRONMENTS = ENVIRONMENT_ROWS.map((row) => ({
+  ...row,
+  handshakeAllowance: handshakeAllowanceFor(row.countsPerIdentity),
+}));
+
 
 export const ENVIRONMENT_COUNT = ENVIRONMENTS.length; // 17
 
@@ -84,12 +96,12 @@ export function findEnvironment(envId) {
 export const ASSET_PRECISION_TABLE = {
   // --- EVM native assets (Section P) ---
   'Ethereum/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
-  'BNB/native-BNB':       { symbol: 'BNB',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'binancecoin', contract: null },
-  'Avalanche/native-AVAX':{ symbol: 'AVAX', decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'avalanche-2', contract: null },
-  'Polygon/native-POL':   { symbol: 'POL',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'matic-network', contract: null },
-  'Arbitrum/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
-  'Base/native-ETH':      { symbol: 'ETH',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
-  'Optimism/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
+  'BNB/native-BNB':       { symbol: 'BNB',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'binancecoin', contract: null },
+  'Avalanche/native-AVAX':{ symbol: 'AVAX', decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'avalanche-2', contract: null },
+  'Polygon/native-POL':   { symbol: 'POL',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'matic-network', contract: null },
+  'Arbitrum/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
+  'Base/native-ETH':      { symbol: 'ETH',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
+  'Optimism/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
 
   // --- EVM canonical tokens (S1 class — USDC/USDT) ---
   'Ethereum/USDC':        { symbol: 'USDC', decimals: 6,  custodyClass: 'S1', custodyPath: 'token', pricing_identifier: 'usd-coin',  contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' },

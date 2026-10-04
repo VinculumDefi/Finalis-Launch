@@ -185,7 +185,7 @@ export const REQUIREMENTS = [
   // VF-STK (31)
   { id: 'VF-STK-001', category: 'Staking', title: 'Stake active from launch', status: STATUS.IMPLEMENTED, trace: 'StakingEngine — no CHONX gating on createStakePosition()' },
   { id: 'VF-STK-002', category: 'Staking', title: 'Only VCLM/CHONX/SYNTH', status: STATUS.IMPLEMENTED, trace: 'createStakePosition() validates token' },
-  { id: 'VF-STK-003', category: 'Staking', title: 'Only listed multipliers', status: STATUS.IMPLEMENTED, trace: 'STAKE_DURATIONS (4 entries)' },
+  { id: 'VF-STK-003', category: 'Staking', title: 'Only listed multipliers', status: STATUS.IMPLEMENTED, trace: 'STAKE_DURATIONS is the sixteen COMMITMENT_DURATIONS rows' },
   { id: 'VF-STK-004', category: 'Staking', title: 'Rewards in newly minted VCLM', status: STATUS.IMPLEMENTED, trace: 'allocateEpoch() mints VCLM to claimableVclm' },
   { id: 'VF-STK-005', category: 'Staking', title: 'S1/S2/S3 never affects Weight', status: STATUS.IMPLEMENTED, trace: 'getWeight() = amount * multiplierBps — no custody class' },
   { id: 'VF-STK-006', category: 'Staking', title: 'Epoch = 10 days', status: STATUS.IMPLEMENTED, trace: 'EPOCH_SECS = 10 * 86400; EPOCH_DURATION_SECS' },
@@ -203,7 +203,7 @@ export const REQUIREMENTS = [
   { id: 'VF-STK-018', category: 'Staking', title: 'Claims transfer, no re-mint', status: STATUS.IMPLEMENTED, trace: 'claimVclm() transfers from accumulated' },
   { id: 'VF-STK-019', category: 'Staking', title: 'Claims only to owner', status: STATUS.IMPLEMENTED, trace: 'claimVclm(owner) keyed by owner' },
   { id: 'VF-STK-020', category: 'Staking', title: 'Withdrawal preserves claimable', status: STATUS.IMPLEMENTED, trace: 'withdrawPosition() sets withdrawn=true, no claimable change' },
-  { id: 'VF-STK-021', category: 'Staking', title: 'Queue one future term 30/60/90/120d', status: STATUS.IMPLEMENTED, trace: 'queueExtension() — STAKE_DURATIONS has 30/60/90/120' },
+  { id: 'VF-STK-021', category: 'Staking', title: 'Queue one future term 30/60/90/120d', status: STATUS.IMPLEMENTED, trace: 'queueExtension() — sixteen COMMITMENT_DURATIONS rows' },
   { id: 'VF-STK-022', category: 'Staking', title: 'Queued begins at scheduled end', status: STATUS.IMPLEMENTED, trace: 'applyExtensionIfMatured() — startTimestamp = endTimestamp' },
   { id: 'VF-STK-023', category: 'Staking', title: 'Only one queued at a time', status: STATUS.IMPLEMENTED, trace: 'if (pos.queuedExtension) return error' },
   { id: 'VF-STK-024', category: 'Staking', title: 'Extension adds/removes no tokens, no fee', status: STATUS.IMPLEMENTED, trace: 'queueExtension() only stores duration' },

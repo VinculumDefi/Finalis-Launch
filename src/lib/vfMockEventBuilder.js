@@ -1,6 +1,7 @@
 // Mock event builders for the Base verifier test harness.
 // Each builds a simulated finalized source event for a different environment family.
 
+import { findAssetPrecision } from './vfBaseRegistry';
 import { OUTPUT_TOKEN } from './vfProofNormalizer';
 import { HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority';
 
@@ -137,14 +138,24 @@ export function buildEvmMockEvent(env, duration, outputToken) {
   const gross = 1000000000000000000n; // 1 ETH (18 dec)
   const bps = feeBpsForDuration(duration);
   const fee = (gross * bps) / 10000n;
-  const sym = env === 'BNB' ? 'BNB' : env === 'Avalanche' ? 'AVAX' : env === 'Polygon' ? 'POL' : 'ETH';
+  const nativeId = {
+    Ethereum: 'native-ETH',
+    Base: 'native-ETH',
+    Optimism: 'native-ETH',
+    Arbitrum: 'native-ETH',
+    BNB: 'native-BNB',
+    Avalanche: 'native-AVAX',
+    Polygon: 'native-POL',
+  }[env] || 'native-ETH';
+  const listed = findAssetPrecision(env, nativeId);
+  const sym = listed ? listed.symbol : 'ETH';
   return {
     lockId: `vf-${env.toLowerCase()}-${Date.now()}`,
     sourceAccount: '0x' + 'a'.repeat(40),
     isNative: true,
     assetSymbol: sym,
-    assetDecimals: 18,
-    custodyClass: 'S2',
+    assetDecimals: listed ? listed.decimals : 18,
+    custodyClass: listed ? listed.custodyClass : 'S3',
     grossAmount: gross.toString(),
     feeAmount: fee.toString(),
     principalAmount: (gross - fee).toString(),

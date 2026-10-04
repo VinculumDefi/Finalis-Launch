@@ -25,8 +25,9 @@
  *   DEPLOYER_ADDRESS=0x... npx hardhat run scripts/deployBaseMainnet.cjs --network base
  */
 const { ethers } = require("hardhat");
+const { EVM_DEV_FUND } = require("../deployment/representativeBase.cjs");
 
-const DEV_FUND = "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a";
+const DEV_FUND = EVM_DEV_FUND;
 const ENVIRONMENT_ID = "Base";
 const BASE_CHAIN_ID = 8453n;
 

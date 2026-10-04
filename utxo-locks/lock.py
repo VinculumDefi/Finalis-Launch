@@ -37,6 +37,42 @@ from tx import (
 )
 
 FEE_BPS = 500
+
+# The CLTV redeem script cannot keep a per-identity counter (VF-COM-006).
+COUNTS_PER_IDENTITY = False
+
+# Exact COMMITMENT_DURATIONS rows. Seconds, multiplier bps. No range.
+PERMITTED_DURATIONS = (
+    (3600, 10000),
+    (604800, 10000),
+    (2592000, 11500),
+    (5184000, 13000),
+    (7776000, 15000),
+    (15552000, 20000),
+    (31536000, 25000),
+    (63072000, 38000),
+    (94608000, 50000),
+    (126144000, 57500),
+    (157680000, 65000),
+    (189216000, 68000),
+    (220752000, 71000),
+    (252288000, 74000),
+    (283824000, 77000),
+    (315360000, 80000),
+)
+
+
+def handshake_allowance(counts_per_identity: bool) -> int:
+    """Capable mechanisms get 3. Mechanisms that cannot count get 1."""
+    return 3 if counts_per_identity else 1
+
+
+def multiplier_bps(duration_secs: int) -> int:
+    for secs, bps in PERMITTED_DURATIONS:
+        if secs == duration_secs:
+            return bps
+    raise ValueError(f"duration {duration_secs} is not one of the sixteen rows")
+
 GROSS_SATS = 1_000_000
 FEE_SATS = GROSS_SATS * FEE_BPS // 10_000  # 50_000
 PRINCIPAL_SATS = GROSS_SATS - FEE_SATS  # 950_000

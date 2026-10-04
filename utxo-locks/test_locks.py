@@ -19,13 +19,17 @@ from finality import (
     enforce_confirmation_depth,
 )
 from lock import (
+    COUNTS_PER_IDENTITY,
     FEE_SATS,
     FINGERPRINT_BINDING_CHAINS,
     GROSS_SATS,
     P2PKH_DUST_MINIMUM,
+    PERMITTED_DURATIONS,
     PRINCIPAL_SATS,
     RAW_BINDING_CHAINS,
     LockFixture,
+    handshake_allowance,
+    multiplier_bps,
     split_outputs,
 )
 from script import ScriptError, p2pkh_script
@@ -246,6 +250,17 @@ class LockTests(unittest.TestCase):
         self.assertEqual(GROSS_SATS, 1_000_000)
         self.assertEqual(FEE_SATS, 50_000)
         self.assertEqual(PRINCIPAL_SATS, 950_000)
+
+    def test_sixteen_durations_and_derived_handshake_allowance(self):
+        self.assertEqual(len(PERMITTED_DURATIONS), 16)
+        self.assertEqual(multiplier_bps(3600), 10000)
+        self.assertEqual(multiplier_bps(315360000), 80000)
+        with self.assertRaises(ValueError):
+            multiplier_bps(8 * 86400)
+        self.assertFalse(COUNTS_PER_IDENTITY)
+        self.assertEqual(handshake_allowance(COUNTS_PER_IDENTITY), 1)
+        self.assertEqual(handshake_allowance(True), 3)
+        self.assertEqual(handshake_allowance(False), 1)
 
 
 if __name__ == "__main__":

@@ -43,6 +43,8 @@
 
 pragma solidity 0.8.19;
 
+import "./CommitmentDurations.sol";
+
 // ---------------------------------------------------------------------------
 // Interfaces for per-environment finality verifiers (Section O)
 // Each environment provides its own verifier contract implementing this
@@ -584,7 +586,7 @@ contract VinculumFinalisVerifier {
         uint8 custodyClass,
         uint256 durationSecs,
         uint256 daysSinceLaunch
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         // Emission rate with decay
         uint256 emissionRate = _computeEmissionRate(outputToken, daysSinceLaunch);
 
@@ -607,7 +609,7 @@ contract VinculumFinalisVerifier {
         return step;
     }
 
-    function _computeEmissionRate(uint8 outputToken, uint256 daysSinceLaunch) internal view returns (uint256) {
+    function _computeEmissionRate(uint8 outputToken, uint256 daysSinceLaunch) internal pure returns (uint256) {
         uint256 initialRate = outputToken == 0 ? VCLM_INITIAL_RATE : CHONX_INITIAL_RATE;
         uint256 floorRate = outputToken == 0 ? VCLM_FLOOR_RATE : CHONX_FLOOR_RATE;
 
@@ -624,32 +626,13 @@ contract VinculumFinalisVerifier {
         return rate;
     }
 
-    // Permitted durations (16 entries from Revision 6)
+    // Permitted durations: the sixteen COMMITMENT_DURATIONS rows. Exact match.
     function _isPermittedDuration(uint256 secs) internal pure returns (bool) {
-        return secs == 3600 || secs == 604800 || secs == 2592000 || secs == 5184000
-            || secs == 7776000 || secs == 15552000 || secs == 31536000 || secs == 63072000
-            || secs == 94608000 || secs == 126144000 || secs == 157680000 || secs == 189216000
-            || secs == 220752000 || secs == 252288000 || secs == 283824000 || secs == 315360000;
+        return CommitmentDurations.multiplierBps(secs) != 0;
     }
 
     function _getDurationMultiplierBps(uint256 secs) internal pure returns (uint32) {
-        if (secs == 3600) return 10000;
-        if (secs == 604800) return 10000;
-        if (secs == 2592000) return 11500;
-        if (secs == 5184000) return 13000;
-        if (secs == 7776000) return 15000;
-        if (secs == 15552000) return 20000;
-        if (secs == 31536000) return 25000;
-        if (secs == 63072000) return 38000;
-        if (secs == 94608000) return 50000;
-        if (secs == 126144000) return 57500;
-        if (secs == 157680000) return 65000;
-        if (secs == 189216000) return 68000;
-        if (secs == 220752000) return 71000;
-        if (secs == 252288000) return 74000;
-        if (secs == 283824000) return 77000;
-        if (secs == 315360000) return 80000;
-        return 0;
+        return uint32(CommitmentDurations.multiplierBps(secs));
     }
 
     // ===== View functions =====
@@ -672,5 +655,25 @@ contract VinculumFinalisVerifier {
 
     function getRemainingChonxCap() external view returns (uint256) {
         return CHONX_HARD_CAP - cumulativeChonxIssued;
+    }
+
+    function previewEmissionRate(uint8 outputToken, uint256 daysSinceLaunch) external pure returns (uint256) {
+        return _computeEmissionRate(outputToken, daysSinceLaunch);
+    }
+
+    function previewIssuance(
+        uint256 verifiedGrossUsdMicro,
+        uint8 outputToken,
+        uint8 custodyClass,
+        uint256 durationSecs,
+        uint256 daysSinceLaunch
+    ) external pure returns (uint256) {
+        return _computeIssuance(
+            verifiedGrossUsdMicro,
+            outputToken,
+            custodyClass,
+            durationSecs,
+            daysSinceLaunch
+        );
     }
 }

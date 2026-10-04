@@ -4,10 +4,27 @@ const { deploySystem } = require("./00_smoke.test.cjs");
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const DAY = 86400n;
-const D30 = 30n * DAY, D60 = 60n * DAY, D90 = 90n * DAY, D120 = 120n * DAY;
+const D30 = 30n * DAY;
 
-// Spec Master Revision 6 §10.1 — staking duration multipliers.
-const SPEC_10_1_DURATION_BPS = { [D30]: 10000n, [D60]: 14000n, [D90]: 17500n, [D120]: 20000n };
+// Sixteen COMMITMENT_DURATIONS rows. Not the retired 30/60/90/120 ladder.
+const COMMITMENT_DURATION_BPS = [
+  [3600n, 10000n],
+  [604800n, 10000n],
+  [2592000n, 11500n],
+  [5184000n, 13000n],
+  [7776000n, 15000n],
+  [15552000n, 20000n],
+  [31536000n, 25000n],
+  [63072000n, 38000n],
+  [94608000n, 50000n],
+  [126144000n, 57500n],
+  [157680000n, 65000n],
+  [189216000n, 68000n],
+  [220752000n, 71000n],
+  [252288000n, 74000n],
+  [283824000n, 77000n],
+  [315360000n, 80000n],
+];
 
 // After finalization the only minters are the Verifier and (for VCLM) Stake.
 // Tests obtain tokens by impersonating the Verifier — the same path production
@@ -20,18 +37,29 @@ async function mintAs(token, verifierAddr, to, amount) {
   await ethers.provider.send("hardhat_stopImpersonatingAccount", [verifierAddr]);
 }
 
-describe("CL-04 · stake duration multipliers must match §10.1", function () {
-  for (const [secs, expected] of Object.entries(SPEC_10_1_DURATION_BPS)) {
-    it(`duration ${Number(secs) / 86400}d multiplier is ${Number(expected) / 10000}x`, async function () {
-      const { vclm, stake, verifier, deployer } = await deploySystem();
-      const amt = 1000n * 10n ** 18n;
-      await mintAs(vclm, await verifier.getAddress(), deployer.address, amt);
-      await vclm.approve(await stake.getAddress(), amt);
-      await stake.createPosition(0, 100n * 10n ** 18n, BigInt(secs));
-      const pos = await stake.positions(0);
+describe("CL-04 · stake durations are the sixteen commitment rows", function () {
+  it("table length is 16 and each row stores that row's multiplier", async function () {
+    const { vclm, stake, verifier, deployer } = await deploySystem();
+    expect(await stake.stakeDurationCount()).to.equal(16n);
+    expect(COMMITMENT_DURATION_BPS).to.have.length(16);
+    const amt = 1000n * 10n ** 18n;
+    await mintAs(vclm, await verifier.getAddress(), deployer.address, amt * 16n);
+    await vclm.approve(await stake.getAddress(), amt * 16n);
+    for (let i = 0; i < COMMITMENT_DURATION_BPS.length; i++) {
+      const [secs, expected] = COMMITMENT_DURATION_BPS[i];
+      expect(await stake.stakeMultiplierBps(secs)).to.equal(expected);
+      await stake.createPosition(0, 100n * 10n ** 18n, secs);
+      const pos = await stake.positions(i);
       expect(pos.multiplierBps).to.equal(expected);
-    });
-  }
+      expect(pos.durationSecs).to.equal(secs);
+    }
+    await expect(stake.createPosition(0, 100n * 10n ** 18n, 120n * DAY)).to.be.revertedWith(
+      "VF-STK-003: duration not permitted"
+    );
+    await expect(stake.createPosition(0, 100n * 10n ** 18n, 8n * DAY)).to.be.revertedWith(
+      "VF-STK-003: duration not permitted"
+    );
+  });
 });
 
 describe("CL-02 · VF-IMM-001/VF-DEP-006: authority terminated at finalization", function () {
@@ -110,8 +138,9 @@ describe("CL-03 · §10.1 token multipliers (VCLM 1.0x / CHONX 2.0x / SYNTH 4.0x
     return await stake.getPositionWeight(0);
   }
 
-  it("VCLM weight at 30d is amount x 1.0 x 1.0", async function () {
-    expect(await weightFor(0)).to.equal(AMT);
+  it("VCLM weight at 30d is amount x 1.0 x 1.15", async function () {
+    // 30-day commitment row is 11500 bps, not the retired 1.0x stake step.
+    expect(await weightFor(0)).to.equal((AMT * 11500n) / 10000n);
   });
 
   it("CHONX weight is exactly twice VCLM at equal amount and duration", async function () {

@@ -99,19 +99,10 @@ export const COMMITMENT_DURATIONS = [
 // VF-COM-003/026: The one-hour duration is only a qualifying Handshake.
 export const HANDSHAKE_DURATION_SECS = 3600;
 
-// Treasury Reward Stake durations and multipliers (VF-STK-003/021)
-// VF-STK-021: "queue one future term 30/60/90/120d"
-// VF-STK-003: "only listed token+duration multipliers apply"
-// These are the stake-specific durations. Multipliers for 30/60/90 days match
-// the commitment vault duration pattern; the 120-day multiplier is derived from
-// the governing constants pattern and must be verified against the protocol
-// constants JSON when re-provisioned.
-export const STAKE_DURATIONS = [
-  { label: '30 days',  secs: 2592000,  multiplier_bps: 11500, role: 'Short stake' },
-  { label: '60 days',  secs: 5184000,  multiplier_bps: 13000, role: 'Medium stake' },
-  { label: '90 days',  secs: 7776000,  multiplier_bps: 15000, role: 'Long stake' },
-  { label: '120 days', secs: 10368000, multiplier_bps: 17000, role: 'Extended stake' },
-];
+// Treasury Reward Stake durations (VF-STK-003).
+// The stake ladder is the sixteen COMMITMENT_DURATIONS rows above.
+// No separate 30/60/90/120 table and no interpolated multiplier.
+export const STAKE_DURATIONS = COMMITMENT_DURATIONS;
 
 // VF-RAC-005: Permanent $0.10 Reward Reference Value for epoch reward VCLM.
 // This rate NEVER decays — it is distinct from the VCLM emission rate.

@@ -18,7 +18,11 @@ const ENVIRONMENTS = [
 const HOUR = 60n * 60n;
 const DAY = 24n * HOUR;
 const SEVEN_DAYS = 7n * DAY;
-const MAX_STANDARD = 3650n * DAY;
+const MAX_STANDARD = 3650n * DAY; // exact ten-year row, 315_360_000 seconds
+const EIGHT_DAYS = 8n * DAY; // inside the old range, not a table row
+const USD = 10n ** 18n;
+const HANDSHAKE_USD = USD; // $1.00, inside $0.95–$1.05
+const STANDARD_USD = 10n * USD;
 const GROSS = 10_000n; // divisible by 10_000 so floor(gross * bps / 10_000) is exact
 const STANDARD_FEE = 500n; // 5.00% of 10_000
 const STANDARD_PRINCIPAL = 9_500n;
@@ -41,7 +45,7 @@ async function deployVault(environmentId) {
   return { vault, devFund, destination };
 }
 
-function bindingArgs(releaseDestination, duration) {
+function bindingArgs(releaseDestination, duration, verifiedGrossUsd) {
   return {
     lockId: ethers.hexlify(ethers.randomBytes(32)),
     baseRecipient: ethers.Wallet.createRandom().address, // test fixture recipient
@@ -50,6 +54,7 @@ function bindingArgs(releaseDestination, duration) {
     valuationReference: ethers.id("test-fixture-valuation"),
     releaseDestination,
     duration,
+    verifiedGrossUsd: verifiedGrossUsd ?? (duration === HOUR ? HANDSHAKE_USD : STANDARD_USD),
   };
 }
 
@@ -72,6 +77,7 @@ async function createNative(vault, signer, args, value) {
     args.valuationReference,
     args.releaseDestination,
     args.duration,
+    args.verifiedGrossUsd,
     { value }
   );
   const receipt = await tx.wait();
@@ -178,7 +184,8 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
           args.releaseDestination,
           args.duration,
           await token.getAddress(),
-          GROSS
+          GROSS,
+          args.verifiedGrossUsd
         );
 
         expect(await token.balanceOf(devFund)).to.equal(STANDARD_FEE);
@@ -228,7 +235,7 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
           expect(await vault.foreignHeaderFinalized(ethers.id("header"), 12)).to.equal(false);
         });
 
-        it("charges 2.50% on a one-hour lock and rejects durations outside the bounds", async function () {
+        it("charges 2.50% on a one-hour lock and rejects durations that are not exact rows", async function () {
           const hour = bindingArgs(await destination.getAddress(), HOUR);
           await createNative(vault, creator, hour, GROSS);
           const record = await vault.lockRecord(hour.lockId);
@@ -244,9 +251,14 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
           const tooLong = bindingArgs(await destination.getAddress(), MAX_STANDARD + 1n);
           await expect(createNative(vault, creator, tooLong, GROSS)).to.be.revertedWith("CVL: duration");
 
+          const interpolated = bindingArgs(await destination.getAddress(), EIGHT_DAYS);
+          await expect(createNative(vault, creator, interpolated, GROSS)).to.be.revertedWith("CVL: duration");
+
           const maxed = bindingArgs(await destination.getAddress(), MAX_STANDARD);
           await createNative(vault, creator, maxed, GROSS);
           expect((await vault.lockRecord(maxed.lockId)).fee).to.equal(STANDARD_FEE);
+          expect((await vault.lockRecord(maxed.lockId)).multiplierBps).to.equal(80000n);
+          expect((await vault.lockRecord(hour.lockId)).multiplierBps).to.equal(10000n);
           expect(await ethers.provider.getBalance(await vault.getAddress())).to.equal(
             HANDSHAKE_PRINCIPAL + STANDARD_PRINCIPAL
           );
@@ -279,7 +291,8 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
             args.releaseDestination,
             args.duration,
             await token.getAddress(),
-            GROSS
+            GROSS,
+            args.verifiedGrossUsd
           );
 
           const received = 9_900n; // 10_000 - 1%
@@ -293,7 +306,16 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
           expect(await token.balanceOf(await vault.getAddress())).to.equal(principal);
         });
 
-        it("allows three one-hour locks per source account and rejects the fourth", async function () {
+        it("derives three Handshakes because this contract counts per identity, and rejects the fourth", async function () {
+          expect(await vault.countsPerIdentity()).to.equal(true);
+          expect(await vault.handshakeAllowance()).to.equal(3n);
+          const Probe = await ethers.getContractFactory("HandshakeCapabilityProbe");
+          const probe = await Probe.deploy();
+          await probe.waitForDeployment();
+          expect(await probe.allowance(true)).to.equal(3n);
+          expect(await probe.allowance(false)).to.equal(1n);
+          expect(await vault.handshakeAllowance()).to.equal(await probe.allowance(await vault.countsPerIdentity()));
+
           for (let i = 0; i < 3; i++) {
             const args = bindingArgs(await destination.getAddress(), HOUR);
             await createNative(vault, creator, args, GROSS);

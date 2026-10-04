@@ -39,9 +39,13 @@ pub const CHONX_ACTIVATION_THRESHOLD: u128 = 10_000_000u128 * SCALE;
 pub const VCLM_HARD_CAP: u128 = 10_000_000_000u128 * SCALE;
 pub const CHONX_HARD_CAP: u128 = 100_000_000_000u128 * SCALE;
 
-/// VF-COM-006: Account-model mechanism with persistent per-identity state → three-use allowance.
-/// Solana PDAs maintain atomic persistent per-identity state, qualifying for three.
-pub const HANDSHAKE_ALLOWANCE: u32 = 3;
+/// This program keeps a HandshakeAllowance PDA per source account.
+pub const COUNTS_PER_IDENTITY: bool = true;
+
+/// VF-COM-006: capable mechanisms get 3. Mechanisms that cannot count get 1.
+pub fn handshake_allowance(counts_per_identity: bool) -> u32 {
+    if counts_per_identity { 3 } else { 1 }
+}
 
 /// VF-XCH-013: Lock ID maximum length (bytes).
 /// Revision 6 does not specify a maximum. 128 bytes is a practical limit that fits

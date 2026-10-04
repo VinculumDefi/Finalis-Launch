@@ -168,16 +168,18 @@ pub struct CommitVaultLockParams {
 }
 
 /// Default for HandshakeAllowance — init_if_needed uses this when creating the account.
-/// remaining and allowance are initialized to HANDSHAKE_ALLOWANCE (3).
+/// Allowance is handshake_allowance(COUNTS_PER_IDENTITY), not a stored 3.
 impl Default for HandshakeAllowance {
     fn default() -> Self {
+        let allowance = crate::constants::handshake_allowance(crate::constants::COUNTS_PER_IDENTITY);
         Self {
             identity: String::new(),
             source_account: Pubkey::default(),
             used: 0,
-            remaining: crate::constants::HANDSHAKE_ALLOWANCE,
-            allowance: crate::constants::HANDSHAKE_ALLOWANCE,
+            remaining: allowance,
+            allowance,
             bump: 0,
         }
     }
+}
 }

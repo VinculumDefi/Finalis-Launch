@@ -78,12 +78,7 @@ contract VinculumFinalisStake {
     // VF-RAC-005: Permanent $0.10 Reward Reference Value
     uint256 public constant REWARD_REFERENCE_CENTS = 10;
 
-    // VF-STK-003: Stake durations and multipliers
-    // 30d=11500, 60d=13000, 90d=15000, 120d=17000 (bps)
-    uint256 private constant DUR_30D = 30 days;
-    uint256 private constant DUR_60D = 60 days;
-    uint256 private constant DUR_90D = 90 days;
-    uint256 private constant DUR_120D = 120 days;
+    // VF-STK-003: the sixteen COMMITMENT_DURATIONS rows. No 120-day ladder.
 
     // ===== Storage =====
 
@@ -102,8 +97,8 @@ contract VinculumFinalisStake {
         uint256 durationSecs;
         uint256 startTimestamp;
         uint256 endTimestamp;
-        uint16 multiplierBps;
-        uint16 queuedExtensionBps;  // 0 = no extension
+        uint32 multiplierBps;
+        uint32 queuedExtensionBps;  // 0 = no extension
         uint256 queuedExtensionSecs;
         bool withdrawn;
     }
@@ -163,7 +158,7 @@ contract VinculumFinalisStake {
         require(amount > 0, "VF-STK-031: zero amount");
 
         // VF-STK-003: Only listed durations
-        uint16 multBps = _getStakeMultiplier(durationSecs);
+        uint32 multBps = _getStakeMultiplier(durationSecs);
         require(multBps > 0, "VF-STK-003: duration not permitted");
 
         // Transfer staked tokens from caller
@@ -199,7 +194,7 @@ contract VinculumFinalisStake {
         // VF-STK-023: Only one future term at a time
         require(pos.queuedExtensionBps == 0, "VF-STK-023: already queued");
 
-        uint16 multBps = _getStakeMultiplier(durationSecs);
+        uint32 multBps = _getStakeMultiplier(durationSecs);
         require(multBps > 0, "VF-STK-003: duration not permitted");
 
         // VF-STK-024: Extension adds/removes no tokens, charges no fee
@@ -355,11 +350,27 @@ contract VinculumFinalisStake {
         return block.timestamp / EPOCH_DURATION_SECS;
     }
 
-    function _getStakeMultiplier(uint256 durationSecs) internal pure returns (uint16) {
-        if (durationSecs == DUR_30D) return 11500;
-        if (durationSecs == DUR_60D) return 13000;
-        if (durationSecs == DUR_90D) return 15000;
-        if (durationSecs == DUR_120D) return 17000;
+    function stakeDurationCount() external pure returns (uint256) {
+        return 16;
+    }
+
+    function _getStakeMultiplier(uint256 durationSecs) internal pure returns (uint32) {
+        if (durationSecs == 3600) return 10000;
+        if (durationSecs == 604800) return 10000;
+        if (durationSecs == 2592000) return 11500;
+        if (durationSecs == 5184000) return 13000;
+        if (durationSecs == 7776000) return 15000;
+        if (durationSecs == 15552000) return 20000;
+        if (durationSecs == 31536000) return 25000;
+        if (durationSecs == 63072000) return 38000;
+        if (durationSecs == 94608000) return 50000;
+        if (durationSecs == 126144000) return 57500;
+        if (durationSecs == 157680000) return 65000;
+        if (durationSecs == 189216000) return 68000;
+        if (durationSecs == 220752000) return 71000;
+        if (durationSecs == 252288000) return 74000;
+        if (durationSecs == 283824000) return 77000;
+        if (durationSecs == 315360000) return 80000;
         return 0;
     }
 

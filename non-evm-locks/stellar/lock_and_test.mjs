@@ -13,6 +13,17 @@
  *
  * Closed-ledger proof: see CLOSED_LEDGER_PROOF.md.
  */
+
+// Stellar lock cannot keep a per-identity handshake count.
+const COUNTS_PER_IDENTITY = false;
+function handshakeAllowance(countsPerIdentity) {
+  return countsPerIdentity ? 3 : 1;
+}
+if (handshakeAllowance(COUNTS_PER_IDENTITY) !== 1) {
+  throw new Error("Stellar allowance must be derived as 1");
+}
+
+
 import { spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs";

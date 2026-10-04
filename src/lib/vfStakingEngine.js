@@ -31,7 +31,7 @@
 //   VF-STK-018: Claims transfer minted VCLM; no re-mint/recalc/capacity
 //   VF-STK-019: Claims only to owner or bound reward destination
 //   VF-STK-020: Withdrawal of matured staked tokens does not erase claimable VCLM
-//   VF-STK-021: Queue one future term 30/60/90/120d
+//   VF-STK-021: Queue one future term from the sixteen commitment durations
 //   VF-STK-022: Queued term begins at scheduled end of current; current multiplier until then
 //   VF-STK-023: Only one future term queued at a time
 //   VF-STK-024: Extension adds/removes no tokens and charges no fee
@@ -77,7 +77,10 @@ export class StakePosition {
 
     // Multiplier from the stake duration table
     const dur = STAKE_DURATIONS.find((d) => d.secs === this.durationSecs);
-    this.multiplierBps = dur ? dur.multiplier_bps : 10000;
+    if (!dur) {
+      throw new Error(`VF-STK-003: duration ${this.durationSecs}s not permitted`);
+    }
+    this.multiplierBps = dur.multiplier_bps;
 
     // Queued extension (VF-STK-021/023: only one at a time)
     this.queuedExtension = null; // { durationSecs, multiplierBps }

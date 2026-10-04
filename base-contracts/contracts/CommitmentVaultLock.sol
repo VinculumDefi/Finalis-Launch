@@ -28,23 +28,33 @@
 //     lock id 32, Base recipient 20, output token 1, asset identity 32,
 //     valuation reference 32.
 //
-// Maturity is block.timestamp + duration. The duration gate is exactly
-// 1 hours, or any duration in the closed range [7 days, 3650 days].
+// Maturity is block.timestamp + duration. The duration gate is an exact
+// match against the sixteen COMMITMENT_DURATIONS rows. No range and no
+// interpolated multiplier. The one-hour row is the Handshake ($0.95 to
+// $1.05, fee 2.50%). The other fifteen charge 5.00% and require at least
+// $10.00. This contract keeps handshakeUses per source account, so
+// VF-COM-006 derives an allowance of 3. It does not store the number 3.
 // =============================================================================
 
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 pragma solidity 0.8.19;
+
+import "./CommitmentDurations.sol";
+import "./HandshakeCapability.sol";
 
 contract CommitmentVaultLock {
     uint256 public constant HANDSHAKE_FEE_BPS = 250;
     uint256 public constant STANDARD_FEE_BPS = 500;
     uint256 public constant BPS_DENOMINATOR = 10000;
     uint256 public constant HANDSHAKE_DURATION = 1 hours;
-    uint256 public constant MIN_STANDARD_DURATION = 7 days;
-    uint256 public constant MAX_STANDARD_DURATION = 3650 days;
-    // Account-model state can track the allowance (VF-COM-006). Three
-    // successful one-hour locks per source account on this environment.
-    uint8 public constant HANDSHAKE_ALLOWANCE = 3;
+    // VF-COM-003: $0.95 to $1.05 inclusive, 18-decimal USD.
+    uint256 public constant HANDSHAKE_USD_MIN = 0.95e18;
+    uint256 public constant HANDSHAKE_USD_MAX = 1.05e18;
+    // VF-COM-009: at least $10.00 for every non-handshake duration.
+    uint256 public constant STANDARD_USD_MIN = 10e18;
+    // This contract stores handshakeUses per source account. The allowance
+    // is HandshakeCapability.allowance(countsPerIdentity), not a literal 3.
+    bool public constant countsPerIdentity = true;
 
     /// @notice Environment name supplied at deployment. Not a chain id guess.
     string public environmentId;
@@ -64,6 +74,7 @@ contract CommitmentVaultLock {
         uint256 fee;
         uint256 principal;
         uint256 duration;
+        uint256 multiplierBps;
         uint256 createdAt;
         uint256 maturity;
         bytes32 assetIdentity;
@@ -126,6 +137,10 @@ contract CommitmentVaultLock {
         return blockHash != bytes32(0) && height != 0 && false;
     }
 
+    function handshakeAllowance() public pure returns (uint256) {
+        return HandshakeCapability.allowance(countsPerIdentity);
+    }
+
     function createNativeLock(
         bytes32 lockId,
         address baseRecipient,
@@ -133,10 +148,12 @@ contract CommitmentVaultLock {
         bytes32 assetIdentity,
         bytes32 valuationReference,
         address releaseDestination,
-        uint256 duration
+        uint256 duration,
+        uint256 verifiedGrossUsd
     ) external payable nonReentrant returns (uint256 fee, uint256 principal) {
         require(msg.value > 0, "CVL: zero gross");
-        (fee, principal) = _split(msg.value, duration);
+        uint256 multiplierBps;
+        (fee, principal, multiplierBps) = _quote(msg.value, duration, verifiedGrossUsd);
         require(fee > 0 && principal > 0, "CVL: zero fee or principal");
         _open(
             lockId,
@@ -149,7 +166,8 @@ contract CommitmentVaultLock {
             address(0),
             msg.value,
             fee,
-            principal
+            principal,
+            multiplierBps
         );
         (bool ok, ) = devFund.call{value: fee}("");
         require(ok, "CVL: fee");
@@ -168,13 +186,14 @@ contract CommitmentVaultLock {
         address releaseDestination,
         uint256 duration,
         address token,
-        uint256 amount
+        uint256 amount,
+        uint256 verifiedGrossUsd
     ) external nonReentrant returns (uint256 fee, uint256 principal) {
         require(token != address(0), "CVL: token");
         require(amount > 0, "CVL: zero gross");
         // Reject a stated amount that cannot clear the fee and principal
         // floors before tokens move. The received delta is checked again.
-        (uint256 previewFee, uint256 previewPrincipal) = _split(amount, duration);
+        (uint256 previewFee, uint256 previewPrincipal, ) = _quote(amount, duration, verifiedGrossUsd);
         require(previewFee > 0 && previewPrincipal > 0, "CVL: zero fee or principal");
 
         uint256 beforeBal = _balanceOf(token, address(this));
@@ -183,7 +202,8 @@ contract CommitmentVaultLock {
             "CVL: transferFrom"
         );
         uint256 received = _balanceOf(token, address(this)) - beforeBal;
-        (fee, principal) = _split(received, duration);
+        uint256 multiplierBps;
+        (fee, principal, multiplierBps) = _quote(received, duration, verifiedGrossUsd);
         require(fee > 0 && principal > 0, "CVL: zero fee or principal");
 
         _open(
@@ -197,7 +217,8 @@ contract CommitmentVaultLock {
             token,
             received,
             fee,
-            principal
+            principal,
+            multiplierBps
         );
         require(
             _erc20(token, abi.encodeWithSelector(IERC20Minimal.transfer.selector, devFund, fee)),
@@ -242,14 +263,15 @@ contract CommitmentVaultLock {
         address asset,
         uint256 gross,
         uint256 fee,
-        uint256 principal
+        uint256 principal,
+        uint256 multiplierBps
     ) internal {
         require(baseRecipient != address(0), "CVL: recipient");
         require(releaseDestination != address(0), "CVL: destination");
         require(!_locks[lockId].exists, "CVL: lock exists");
 
         if (duration == HANDSHAKE_DURATION) {
-            require(handshakeUses[msg.sender] < HANDSHAKE_ALLOWANCE, "CVL: handshake allowance");
+            require(handshakeUses[msg.sender] < handshakeAllowance(), "CVL: handshake allowance");
             handshakeUses[msg.sender] += 1;
         }
 
@@ -275,6 +297,7 @@ contract CommitmentVaultLock {
             fee: fee,
             principal: principal,
             duration: duration,
+            multiplierBps: multiplierBps,
             createdAt: createdAt,
             maturity: createdAt + duration,
             assetIdentity: assetIdentity,
@@ -294,14 +317,22 @@ contract CommitmentVaultLock {
         );
     }
 
-    function _split(uint256 gross, uint256 duration) internal pure returns (uint256 fee, uint256 principal) {
+    function _quote(uint256 gross, uint256 duration, uint256 verifiedGrossUsd)
+        internal
+        pure
+        returns (uint256 fee, uint256 principal, uint256 multiplierBps)
+    {
+        multiplierBps = CommitmentDurations.multiplierBps(duration);
+        if (multiplierBps == 0) revert("CVL: duration");
         uint256 bps;
         if (duration == HANDSHAKE_DURATION) {
+            if (verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX) {
+                revert("CVL: handshake usd");
+            }
             bps = HANDSHAKE_FEE_BPS;
-        } else if (duration >= MIN_STANDARD_DURATION && duration <= MAX_STANDARD_DURATION) {
-            bps = STANDARD_FEE_BPS;
         } else {
-            revert("CVL: duration");
+            if (verifiedGrossUsd < STANDARD_USD_MIN) revert("CVL: standard usd");
+            bps = STANDARD_FEE_BPS;
         }
         fee = (gross * bps) / BPS_DENOMINATOR;
         principal = gross - fee;
