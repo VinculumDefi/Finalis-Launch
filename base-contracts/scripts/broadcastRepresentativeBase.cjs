@@ -1,27 +1,32 @@
 /**
  * Deploy the updated Base contracts to Base mainnet (chain id 8453).
  *
- * Deploys only:
- *   CommitmentVaultLock("Base", 0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a)
- *   VinculumFinalisVerifier(VCLM, CHONX)
- *   VinculumFinalisSynth(verifier, VCLM, CHONX)
- *   VinculumFinalisStake(VCLM, CHONX, synth, verifier, launchTimestamp)
+ * Order:
+ *   1. VCLM  (VinculumFinalisToken)
+ *   2. CHONX (VinculumFinalisToken)
+ *   3. CommitmentVaultLock("Base", Dev Fund)
+ *   4. VinculumFinalisVerifier(vclm, chonx)
+ *   5. VinculumFinalisSynth(verifier, vclm, chonx)
+ *   6. VinculumFinalisStake(vclm, chonx, synth, verifier, vclmBlockTimestamp)
+ *
+ * Stake is after synth because its constructor takes the synth address.
+ * The launch time is the timestamp of the block that included the VCLM deploy.
+ * Addresses come from those receipts. Nothing is read from the environment.
  *
  * Cosmos Hub is not deployed.
  * The signer comes from a wallet prompt (eth_requestAccounts).
  * This script does not read a private key, a seed phrase, or a key file.
  * Each deploy is sent only after the wallet signs it.
  *
- * VCLM and CHONX are constructor inputs, not contracts this script deploys.
- * Set the public addresses and a nonzero launch timestamp. Do not pass a key.
- *   VCLM_ADDRESS=0x... CHONX_ADDRESS=0x... LAUNCH_TIMESTAMP=... \
- *     npx hardhat run scripts/broadcastRepresentativeBase.cjs --network base
+ *   npx hardhat run scripts/broadcastRepresentativeBase.cjs --network base
  */
 const { ethers } = require("hardhat");
 
 const DEV_FUND = "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a";
 const ENVIRONMENT_ID = "Base";
 const BASE_CHAIN_ID = 8453n;
+const VCLM_HARD_CAP = 10_000_000_000n * 10n ** 18n;
+const CHONX_HARD_CAP = 100_000_000_000n * 10n ** 18n;
 
 const OMITTED = [
   "EthereumFinalityChecker",
@@ -47,16 +52,6 @@ function refuseKeyMaterial() {
       throw new Error(`Refusing to run: ${key} is set. Use the wallet prompt.`);
     }
   }
-}
-
-function requireAddress(name) {
-  const value = process.env[name];
-  if (!value || !ethers.isAddress(value) || ethers.getAddress(value) === ethers.ZeroAddress) {
-    throw new Error(
-      `Set ${name} to the public token address. Do not pass a private key. Nothing was broadcast.`
-    );
-  }
-  return ethers.getAddress(value);
 }
 
 async function walletAccount() {
@@ -87,7 +82,7 @@ async function deploy(from, name, args) {
   }
   const address = ethers.getAddress(receipt.contractAddress);
   console.log(`${name} ${address}`);
-  return address;
+  return { address, receipt };
 }
 
 async function main() {
@@ -96,16 +91,6 @@ async function main() {
   if (DEV_FUND !== "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a") {
     throw new Error("Dev Fund address was modified");
   }
-
-  const launchTimestamp = process.env.LAUNCH_TIMESTAMP;
-  if (!/^[1-9][0-9]*$/.test(launchTimestamp || "")) {
-    throw new Error(
-      "Set LAUNCH_TIMESTAMP to a nonzero unix time. Do not pass a private key. Nothing was broadcast."
-    );
-  }
-
-  const vclm = requireAddress("VCLM_ADDRESS");
-  const chonx = requireAddress("CHONX_ADDRESS");
 
   const network = await ethers.provider.getNetwork();
   if (network.chainId !== BASE_CHAIN_ID) {
@@ -118,15 +103,43 @@ async function main() {
   console.log(`chainId: ${network.chainId}`);
   console.log(`signer: ${from}`);
   console.log(`Dev Fund: ${ethers.getAddress(DEV_FUND)}`);
-  console.log(`VCLM: ${vclm}`);
-  console.log(`CHONX: ${chonx}`);
-  console.log(`launchTimestamp: ${launchTimestamp}`);
   console.log("Waiting for the wallet to sign each deploy. Nothing is sent before that.");
 
+  const vclm = await deploy(from, "VinculumFinalisToken", [
+    "Vinculum",
+    "VCLM",
+    VCLM_HARD_CAP,
+  ]);
+  const vclmBlock = await ethers.provider.getBlock(vclm.receipt.blockNumber);
+  if (!vclmBlock || !vclmBlock.timestamp) {
+    throw new Error("VCLM deploy block has no timestamp. Stopping.");
+  }
+  const launchTimestamp = vclmBlock.timestamp;
+  console.log(`launchTimestamp: ${launchTimestamp}`);
+
+  const chonx = await deploy(from, "VinculumFinalisToken", [
+    "Chonx",
+    "CHONX",
+    CHONX_HARD_CAP,
+  ]);
+
   await deploy(from, "CommitmentVaultLock", [ENVIRONMENT_ID, DEV_FUND]);
-  const verifier = await deploy(from, "VinculumFinalisVerifier", [vclm, chonx]);
-  const synth = await deploy(from, "VinculumFinalisSynth", [verifier, vclm, chonx]);
-  await deploy(from, "VinculumFinalisStake", [vclm, chonx, synth, verifier, launchTimestamp]);
+  const verifier = await deploy(from, "VinculumFinalisVerifier", [
+    vclm.address,
+    chonx.address,
+  ]);
+  const synth = await deploy(from, "VinculumFinalisSynth", [
+    verifier.address,
+    vclm.address,
+    chonx.address,
+  ]);
+  await deploy(from, "VinculumFinalisStake", [
+    vclm.address,
+    chonx.address,
+    synth.address,
+    verifier.address,
+    launchTimestamp,
+  ]);
 }
 
 main().catch((err) => {
