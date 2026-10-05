@@ -363,11 +363,12 @@ describe("CL-01 / VF-ORC · Ethereum USDC/USDT priced from scheduled runs", func
     }
   });
 
-  it("last successful price below $0.95 is unavailable until a later run >= $0.95", async function () {
+  it("Handshake: last successful price below $0.95 is unavailable until a later run >= $0.95", async function () {
     const { recipient, vclm, verifier, usdt } = await deployStableFixture();
-    const gross = 20_000_000n;
+    // 1 USDT Handshake; fee 2.50% => 25_000 / 975_000
+    const gross = 1_000_000n;
     await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 949_999_999_999_999_999n, runId: 1n });
-    const pkg = stablePkg({ assetId: usdt, lockName: "usdt-depeg", gross, recipient: recipient.address });
+    const pkg = stablePkg({ assetId: usdt, lockName: "usdt-hs-depeg", gross, duration: HOUR, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(STABLE_BELOW);
 
     // Failed run keeps it unavailable (fail closed).
@@ -378,12 +379,27 @@ describe("CL-01 / VF-ORC · Ethereum USDC/USDT priced from scheduled runs", func
     await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 900_000_000_000_000_000n, runId: 3n });
     await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(STABLE_BELOW);
 
-    // Exactly $0.95 restores availability; valued at $0.95, not $1.
+    // Exactly $0.95 restores Handshake availability; valued at $0.95, not $1.
     const p95 = 950_000_000_000_000_000n;
     await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: p95, runId: 4n });
     await verifier.recordFeeAndRac(pkg);
     await verifier.verifyAndMint(pkg, 0);
-    const expected = await verifier.previewIssuance((20n * SCALE * p95) / SCALE, 0, 1, DAY30, 0);
+    const expected = await verifier.previewIssuance((1n * SCALE * p95) / SCALE, 0, 1, HOUR, 0);
+    expect(await vclm.balanceOf(recipient.address)).to.equal(expected);
+  });
+
+  it("standard locks take a sub-$0.95 scheduled price; $10 minimum still applies", async function () {
+    const { recipient, vclm, verifier, usdc } = await deployStableFixture();
+    const p80 = 800_000_000_000_000_000n; // $0.80
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: p80, runId: 1n });
+    // 12 USDC x $0.80 = $9.60 < $10
+    const low = stablePkg({ assetId: usdc, lockName: "usdc-std-low", gross: 12_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(low)).to.be.revertedWith("VF-COM-009: standard USD below $10.00");
+    // 13 USDC x $0.80 = $10.40 >= $10; valued at $0.80, not $1
+    const ok = stablePkg({ assetId: usdc, lockName: "usdc-std-ok", gross: 13_000_000n, recipient: recipient.address });
+    await verifier.recordFeeAndRac(ok);
+    await verifier.verifyAndMint(ok, 0);
+    const expected = await verifier.previewIssuance((13n * SCALE * p80) / SCALE, 0, 1, DAY30, 0);
     expect(await vclm.balanceOf(recipient.address)).to.equal(expected);
   });
 
@@ -396,9 +412,19 @@ describe("CL-01 / VF-ORC · Ethereum USDC/USDT priced from scheduled runs", func
 
     await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 800_000_000_000_000_000n, runId: 2n });
 
-    // New lock: unavailable.
-    const fresh = stablePkg({ assetId: usdc, lockName: "usdc-fresh", gross: 20_000_000n, recipient: recipient.address });
-    await expect(verifier.recordFeeAndRac(fresh)).to.be.revertedWith(STABLE_BELOW);
+    // New Handshake: unavailable (floor is Handshake-only).
+    const freshHs = stablePkg({
+      assetId: usdc,
+      lockName: "usdc-fresh-hs",
+      gross: 1_000_000n,
+      duration: HOUR,
+      recipient: recipient.address,
+    });
+    await expect(verifier.recordFeeAndRac(freshHs)).to.be.revertedWith(STABLE_BELOW);
+
+    // New standard lock: takes $0.80 (no stable floor); 20 USDC x $0.80 = $16 >= $10.
+    const freshStd = stablePkg({ assetId: usdc, lockName: "usdc-fresh-std", gross: 20_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(freshStd)).to.not.be.reverted;
 
     // Bound lock: still mints at its $1.00 lock-creation reference.
     await verifier.verifyAndMint(bound, 0);

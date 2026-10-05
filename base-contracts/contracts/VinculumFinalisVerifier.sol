@@ -195,7 +195,8 @@ contract VinculumFinalisVerifier {
     uint256 public constant STANDARD_USD_MIN = 10e18;
 
     // Ethereum USDC/USDT: a last successful scheduled price below $0.95 makes
-    // the asset unavailable for new valuations until a later run is >= $0.95.
+    // the asset unavailable for a new Handshake valuation until a later run
+    // is >= $0.95. Standard locks have no price floor beyond STANDARD_USD_MIN.
     uint256 public constant USD_STABLE_MIN_PRICE = 0.95e18;
 
     // VF-COM-019: decay
@@ -737,7 +738,7 @@ contract VinculumFinalisVerifier {
     // Every asset, including Ethereum USDC/USDT: registry last successful
     // scheduled price, read and bound at first lock valuation
     // (VF-ORC-008/009/010). No deployment price hash. No admin invent-price
-    // setter. No $1 substitute for USDC/USDT: below $0.95 they fail closed.
+    // setter. No $1 substitute. The $0.95 floor is Handshake-only.
 
     function _isEthereumUsdStable(string memory envId, string memory symbol) internal pure returns (bool) {
         if (keccak256(bytes(envId)) != keccak256("Ethereum")) return false;
@@ -764,9 +765,13 @@ contract VinculumFinalisVerifier {
             );
             ScheduledPriceEntry memory sp = scheduledPrices[assetKey];
             require(sp.usable && sp.priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
-            // Ethereum USDC/USDT below $0.95: unavailable until a later run is
-            // at or above $0.95. Fail closed; never substitute $1.
-            if (_isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol)) {
+            // Ethereum USDC/USDT below $0.95: unavailable for a new Handshake
+            // until a later run is at or above $0.95. Standard locks take the
+            // scheduled price with no floor. Fail closed; never substitute $1.
+            if (
+                _isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol) &&
+                pkg.durationSecs == HANDSHAKE_DURATION_SECS
+            ) {
                 require(
                     sp.priceUsd18 >= USD_STABLE_MIN_PRICE,
                     "VF-ORC-005: USDC/USDT scheduled price below $0.95"
