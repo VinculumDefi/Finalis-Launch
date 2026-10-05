@@ -43,6 +43,8 @@
 
 pragma solidity 0.8.19;
 
+import "./HandshakeCapability.sol";
+
 // ---------------------------------------------------------------------------
 // Interfaces for per-environment finality verifiers (Section O)
 // Each environment provides its own verifier contract implementing this
@@ -152,6 +154,10 @@ struct ProofPackage {
     // RAC identity (pre-computed by SRC-EVID from immutable facts)
     bytes32 racIdentity;
 
+    // Price record (VF-ORC / CL-01): raw bytes whose keccak256 must match the
+    // price hash registered for the asset, except Ethereum USDC/USDT which are $1.
+    bytes priceRecord;
+
     // Chain-specific proofs (opaque to normalizer, consumed by IChainVerifier)
     bytes sourceFinalityProof;
     bytes lockEventProof;
@@ -238,6 +244,10 @@ contract VinculumFinalisVerifier {
     // keccak256(environmentId, canonicalAssetId) => AssetPrecisionEntry
     mapping(bytes32 => AssetPrecisionEntry) public assetPrecisionTable;
 
+    // Registered price-record hashes. Not an oracle.
+    // keccak256(environmentId, canonicalAssetId) => keccak256(priceRecord)
+    mapping(bytes32 => bytes32) public assetPriceHashes;
+
     // Per-environment verifier registry (Section O)
     // environmentId => IChainVerifier
     mapping(string => IChainVerifier) public chainVerifiers;
@@ -311,6 +321,18 @@ contract VinculumFinalisVerifier {
         });
     }
 
+    /// @notice Registers the expected keccak256 of the price record for an asset.
+    /// @dev Not an oracle. Same configuration gate as registerAssetPrecision.
+    function registerAssetPriceHash(
+        string calldata environmentId,
+        bytes32 canonicalAssetId,
+        bytes32 priceHash
+    ) external onlyAuthority {
+        require(priceHash != bytes32(0), "VF-ORC-001: zero price hash");
+        bytes32 key = keccak256(abi.encodePacked(environmentId, canonicalAssetId));
+        assetPriceHashes[key] = priceHash;
+    }
+
     function registerChainVerifier(string calldata environmentId, address verifier) external onlyAuthority {
         chainVerifiers[environmentId] = IChainVerifier(verifier);
     }
@@ -338,15 +360,22 @@ contract VinculumFinalisVerifier {
     /// @dev Can be called independently of verifyAndMint(). Persists RAC even if
     ///      issuance later fails (VF-FEE-011). Idempotent — reverts if RAC already recorded.
     function recordFeeAndRac(
-        ProofPackage calldata pkg,
-        uint256 verifiedGrossUsdMicro
+        ProofPackage calldata pkg
     ) external {
         // VF-RAC-001: RAC exact-once
         require(!recordedRacs[pkg.racIdentity], "VF-RAC-001: RAC already recorded");
 
         // VF-REG-001: Asset must be in registry (validates asset identity)
         bytes32 assetKey = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));
-        require(assetPrecisionTable[assetKey].canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
+        AssetPrecisionEntry memory entry = assetPrecisionTable[assetKey];
+        require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
+
+        // VF-COM-006: package allowance must match the registered mechanism lookup
+        uint256 expectedAllowance = _expectedHandshakeAllowance(pkg.sourceEnvironmentId);
+        require(
+            uint256(pkg.handshakeAllowanceCount) == expectedAllowance,
+            "VF-COM-006: handshake allowance mismatch"
+        );
 
         // VF-COM-011/012/013: Fee math verification
         uint256 gross = pkg.grossAmountSmallestUnits;
@@ -361,6 +390,9 @@ contract VinculumFinalisVerifier {
 
         // VF-COM-001/002: Duration must be permitted
         require(_isPermittedDuration(pkg.durationSecs), "VF-COM-002: duration not permitted");
+
+        // CL-01: derive USD; never trust a caller-supplied verifiedGrossUsdMicro
+        uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry);
 
         // VF-COM-003/009: USD value bounds
         if (isHandshake) {
@@ -391,12 +423,10 @@ contract VinculumFinalisVerifier {
     /// @notice Phase 2: Verifies a normalized proof package and mints tokens if valid.
     /// @dev Call recordFeeAndRac() first to persist RAC independently of issuance outcome.
     /// @param pkg The normalized ProofPackage from any source environment.
-    /// @param verifiedGrossUsdMicro The verified gross USD value (18-decimal fixed-point).
     /// @param daysSinceLaunch Days since protocol launch (for emission decay).
     /// @return success Whether verification succeeded and tokens were minted.
     function verifyAndMint(
         ProofPackage calldata pkg,
-        uint256 verifiedGrossUsdMicro,
         uint256 daysSinceLaunch
     ) external returns (bool success) {
         bytes32 lockIdHash = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId));
@@ -428,7 +458,8 @@ contract VinculumFinalisVerifier {
         // Step 5: Duration (VF-COM-001/002)
         require(_isPermittedDuration(pkg.durationSecs), "VF-COM-002: duration not permitted");
 
-        // Step 6: USD value bounds (VF-COM-003/009)
+        // Step 6: USD value — derived, never caller-supplied (CL-01)
+        uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry);
         if (isHandshake) {
             require(
                 verifiedGrossUsdMicro >= HANDSHAKE_USD_MIN && verifiedGrossUsdMicro <= HANDSHAKE_USD_MAX,
@@ -445,19 +476,12 @@ contract VinculumFinalisVerifier {
             require(pkg.chonxActivationReceipt.length > 0, "VF-COM-025: missing activation receipt");
         }
 
-        // Step 8: Handshake allowance (VF-COM-006/007)
-        // Source-enforced environments (EVM, Solana) trust the source counter.
-        // Base-enforced environments (UTXO, XRPL, Stellar) consume here.
-        bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
-        // The handshakeAllowanceCount in the package determines enforcement.
-        // For Base-enforced (allowanceCount == 1), check and consume.
-        if (pkg.handshakeAllowanceCount == 1) {
-            require(
-                handshakeUsage[handshakeKey] < pkg.handshakeAllowanceCount,
-                "VF-COM-007: handshake allowance exhausted"
-            );
-            handshakeUsage[handshakeKey] += 1;
-        }
+        // Step 8: Handshake allowance lookup (VF-COM-006/007 / CL-11)
+        uint256 expectedAllowance = _expectedHandshakeAllowance(pkg.sourceEnvironmentId);
+        require(
+            uint256(pkg.handshakeAllowanceCount) == expectedAllowance,
+            "VF-COM-006: handshake allowance mismatch"
+        );
 
         // Step 9: Base recipient (VF-ARC-006)
         require(pkg.baseRecipient != address(0), "VF-ARC-006: zero base recipient");
@@ -512,7 +536,17 @@ contract VinculumFinalisVerifier {
         }
 
         // ===== All checks passed — authorize issuance =====
-        // RAC already recorded at fee verification (step 6) above.
+        // RAC already recorded at fee verification above.
+
+        // VF-COM-006/007: consume handshake allowance only on 1h Handshake success
+        if (isHandshake) {
+            bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
+            require(
+                handshakeUsage[handshakeKey] < expectedAllowance,
+                "VF-COM-007: handshake allowance exhausted"
+            );
+            handshakeUsage[handshakeKey] += 1;
+        }
 
         // Mint tokens (BASE-EMIT)
         if (pkg.selectedOutputToken == 0) { // VCLM
@@ -535,6 +569,58 @@ contract VinculumFinalisVerifier {
 
         emit VerificationSucceeded(lockIdHash, pkg.sourceEnvironmentId, pkg.baseRecipient, pkg.selectedOutputToken, issuanceAmount);
         return true;
+    }
+
+    // ===== Handshake mechanism lookup (VF-COM-006 / CL-11) =====
+    function _expectedHandshakeAllowance(string calldata envId) internal pure returns (uint256) {
+        bytes32 h = keccak256(bytes(envId));
+        if (
+            h == keccak256("Base") ||
+            h == keccak256("Ethereum") ||
+            h == keccak256("Polygon") ||
+            h == keccak256("Optimism") ||
+            h == keccak256("Arbitrum") ||
+            h == keccak256("BNB Smart Chain") ||
+            h == keccak256("Avalanche") ||
+            h == keccak256("Solana")
+        ) {
+            return HandshakeCapability.allowance(true);
+        }
+        if (
+            h == keccak256("Bitcoin") ||
+            h == keccak256("Bitcoin Cash") ||
+            h == keccak256("Litecoin") ||
+            h == keccak256("Dogecoin") ||
+            h == keccak256("DigiByte") ||
+            h == keccak256("Zcash") ||
+            h == keccak256("Stellar") ||
+            h == keccak256("XRP Ledger")
+        ) {
+            return HandshakeCapability.allowance(false);
+        }
+        revert("VF-COM-006: unknown environment");
+    }
+
+    function _isEthereumUsdStable(string calldata envId, string memory symbol) internal pure returns (bool) {
+        if (keccak256(bytes(envId)) != keccak256("Ethereum")) return false;
+        bytes32 s = keccak256(bytes(symbol));
+        return s == keccak256("USDC") || s == keccak256("USDT");
+    }
+
+    function _resolveVerifiedGrossUsd(
+        ProofPackage calldata pkg,
+        AssetPrecisionEntry memory entry
+    ) internal view returns (uint256) {
+        if (_isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol)) {
+            return (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+        }
+        bytes32 assetKey = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));
+        bytes32 registered = assetPriceHashes[assetKey];
+        require(registered != bytes32(0), "VF-ORC-001: no price hash registered");
+        require(keccak256(pkg.priceRecord) == registered, "VF-ORC-001: price hash mismatch");
+        uint256 priceUsd18 = abi.decode(pkg.priceRecord, (uint256));
+        uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+        return (assetUnitsFp * priceUsd18) / SCALE;
     }
 
     // ===== Issuance calculation (BASE-ISSUE + BASE-EMIT + BASE-MULT) =====

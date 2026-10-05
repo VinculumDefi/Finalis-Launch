@@ -229,10 +229,10 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
         });
 
         it("does not return finalized for an empty hash or height 0", async function () {
-          expect(await vault.foreignHeaderFinalized(ethers.ZeroHash, 0)).to.equal(false);
-          expect(await vault.foreignHeaderFinalized(ethers.ZeroHash, 1)).to.equal(false);
-          expect(await vault.foreignHeaderFinalized(ethers.id("header"), 0)).to.equal(false);
-          expect(await vault.foreignHeaderFinalized(ethers.id("header"), 12)).to.equal(false);
+          expect(await vault.foreignHeaderFinalityNotDecided(ethers.ZeroHash, 0)).to.equal(false);
+          expect(await vault.foreignHeaderFinalityNotDecided(ethers.ZeroHash, 1)).to.equal(false);
+          expect(await vault.foreignHeaderFinalityNotDecided(ethers.id("header"), 0)).to.equal(false);
+          expect(await vault.foreignHeaderFinalityNotDecided(ethers.id("header"), 12)).to.equal(false);
         });
 
         it("charges 2.50% on a one-hour lock and rejects durations that are not exact rows", async function () {

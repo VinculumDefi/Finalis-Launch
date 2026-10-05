@@ -133,7 +133,8 @@ contract CommitmentVaultLock {
     /// @notice Foreign header finality is not decided here. An empty hash or
     ///         height 0 is not finalized. No other input is finalized either,
     ///         because release waits only on the maturity timestamp.
-    function foreignHeaderFinalized(bytes32 blockHash, uint256 height) external pure returns (bool) {
+    ///         Name deliberately does not claim to decide finality.
+    function foreignHeaderFinalityNotDecided(bytes32 blockHash, uint256 height) external pure returns (bool) {
         return blockHash != bytes32(0) && height != 0 && false;
     }
 
