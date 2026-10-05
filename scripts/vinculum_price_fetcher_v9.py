@@ -3,7 +3,10 @@
 Vinculum Protocol — Universal Price Fetcher v9
 ===============================================
 Reference price lookup for vault mint ratio calculations.
-Run 2x/day. Target: within a few percent. Not for trading.
+Run twice per day (VF-ORC-001). Target: within a few percent. Not for trading.
+First valid cascade source wins per asset; later sources are not consulted (VF-ORC-002).
+No two-source/spread/median/TWAP/10-min freshness extras (VF-ORC-003).
+No hardcoded substitute prices (VF-ORC-004). Miss => asset unavailable until a later run (VF-ORC-005).
 
 Built against: approved_assets_final.json (1001 assets, clean)
 

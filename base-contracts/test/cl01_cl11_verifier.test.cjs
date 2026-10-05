@@ -50,12 +50,24 @@ async function deployVerifierFixture({ finalize = true } = {}) {
   await verifier.configureDevFund("Bitcoin", deployer.address);
   await verifier.configureDevFund("Ethereum", deployer.address);
   await verifier.configureDevFund("Base", deployer.address);
+  await verifier.setScheduledPricePoster(deployer.address);
 
   if (finalize) {
     await verifier.finalize();
   }
 
   return { deployer, recipient, vclm, chonx, verifier, mock, stake };
+}
+
+async function writeScheduledPrice(verifier, { env, assetId, priceUsd18, runId = 1n, success = true }) {
+  await verifier.applyScheduledPriceRun(runId, [
+    {
+      environmentId: env,
+      canonicalAssetId: assetId,
+      priceUsd18: success ? priceUsd18 : 0n,
+      success,
+    },
+  ]);
 }
 
 async function registerAsset(verifier, { env, assetId, symbol, decimals, custodyClass = 3, custodyPath = 0 }) {
@@ -135,10 +147,11 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     const assetId = ethers.id("BTC");
     await verifier.registerAssetPrecision("Bitcoin", assetId, "BTC", 8, 2, 0);
     const priceRecord = encodePrice(30000n * SCALE);
-    await verifier.registerAssetPriceHash("Bitcoin", assetId, ethers.keccak256(priceRecord));
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
     await verifier.finalize();
+    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
 
     // Bitcoin mechanism allowance is 1; package claims 3
     const gross = 100000n; // 0.001 BTC * $30k = $30
@@ -186,10 +199,11 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     await verifier.registerAssetPrecision("Bitcoin", assetId, "BTC", 8, 2, 0);
     // Handshake needs ~$1: 3334 sat * $30000 ≈ $1.0002
     const priceRecord = encodePrice(30000n * SCALE);
-    await verifier.registerAssetPriceHash("Bitcoin", assetId, ethers.keccak256(priceRecord));
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
     await verifier.finalize();
+    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
 
     const identity = "btc-handshake-id";
     const hsGross = 3334n;
@@ -256,8 +270,8 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
   });
 });
 
-describe("CL-01 · USD derived from token amount or registered price hash", function () {
-  it("USDC/USDT use token amount at one dollar", async function () {
+describe("CL-01 / VF-ORC · USD from $1 stables or scheduled registry price", function () {
+  it("USDC/USDT use token amount at one dollar without scheduled price", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await Token.deploy("V", "V", 10n ** 30n);
@@ -280,9 +294,9 @@ describe("CL-01 · USD derived from token amount or registered price hash", func
 
     const usdc = ethers.id("USDC");
     await verifier.registerAssetPrecision("Ethereum", usdc, "USDC", 6, 1, 1);
-    // No price hash registered — USDC must still work at $1
     await verifier.registerChainVerifier("Ethereum", await mock.getAddress());
     await verifier.configureDevFund("Ethereum", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
     await verifier.finalize();
 
     const gross = 20_000_000n; // $20.00
@@ -305,7 +319,7 @@ describe("CL-01 · USD derived from token amount or registered price hash", func
     expect(await vclm.balanceOf(recipient.address)).to.be.gt(0n);
   });
 
-  it("other asset without registered price hash reverts", async function () {
+  it("other asset without usable scheduled price reverts (VF-ORC-005)", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await Token.deploy("V", "V", 10n ** 30n);
@@ -330,6 +344,7 @@ describe("CL-01 · USD derived from token amount or registered price hash", func
     await verifier.registerAssetPrecision("Bitcoin", assetId, "BTC", 8, 2, 0);
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
     await verifier.finalize();
 
     const pkg = buildPkg({
@@ -347,11 +362,11 @@ describe("CL-01 · USD derived from token amount or registered price hash", func
       priceRecord: encodePrice(30000n * SCALE),
     });
     await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(
-      "VF-ORC-001: no price hash registered"
+      "VF-ORC-005: no usable scheduled price"
     );
   });
 
-  it("mismatched price hash reverts", async function () {
+  it("scheduled success then failed run marks asset unavailable (VF-ORC-008)", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await Token.deploy("V", "V", 10n ** 30n);
@@ -374,11 +389,152 @@ describe("CL-01 · USD derived from token amount or registered price hash", func
 
     const assetId = ethers.id("BTC");
     await verifier.registerAssetPrecision("Bitcoin", assetId, "BTC", 8, 2, 0);
-    const registered = encodePrice(30000n * SCALE);
-    await verifier.registerAssetPriceHash("Bitcoin", assetId, ethers.keccak256(registered));
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
     await verifier.finalize();
+
+    await writeScheduledPrice(verifier, {
+      env: "Bitcoin",
+      assetId,
+      priceUsd18: 30000n * SCALE,
+      runId: 1n,
+    });
+    // Failed next run: fail closed, do not keep older price usable
+    await writeScheduledPrice(verifier, {
+      env: "Bitcoin",
+      assetId,
+      priceUsd18: 0n,
+      runId: 2n,
+      success: false,
+    });
+
+    const pkg = buildPkg({
+      env: "Bitcoin",
+      lockId: ethers.id("lock-stale"),
+      identity: "btc-stale",
+      allowance: 1,
+      assetId,
+      precision: 8,
+      custodyClass: 2,
+      gross: 100000n,
+      duration: DAY30,
+      recipient: recipient.address,
+      racIdentity: ethers.id("rac-stale"),
+      priceRecord: encodePrice(30000n * SCALE),
+    });
+    await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(
+      "VF-ORC-005: no usable scheduled price"
+    );
+  });
+
+  it("lock retains creation reference price across later registry change (VF-ORC-009/010)", async function () {
+    const [deployer, recipient] = await ethers.getSigners();
+    const Token = await ethers.getContractFactory("VinculumFinalisToken");
+    const vclm = await Token.deploy("V", "V", 10n ** 30n);
+    const chonx = await Token.deploy("C", "C", 10n ** 30n);
+    const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
+    const verifier = await Verifier.deploy(await vclm.getAddress(), await chonx.getAddress());
+    const Mock = await ethers.getContractFactory("MockAlwaysFinalizedVerifier");
+    const mock = await Mock.deploy();
+    const Stake = await ethers.getContractFactory("VinculumFinalisStake");
+    const t0 = (await ethers.provider.getBlock("latest")).timestamp;
+    const stake = await Stake.deploy(
+      await vclm.getAddress(),
+      await chonx.getAddress(),
+      await vclm.getAddress(),
+      await verifier.getAddress(),
+      t0
+    );
+    await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
+    await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
+
+    const assetId = ethers.id("BTC");
+    await verifier.registerAssetPrecision("Bitcoin", assetId, "BTC", 8, 2, 0);
+    await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
+    await verifier.configureDevFund("Bitcoin", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
+    await verifier.finalize();
+
+    const price1 = 30000n * SCALE;
+    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: price1, runId: 1n });
+
+    const pkg = buildPkg({
+      env: "Bitcoin",
+      lockId: ethers.id("lock-retain"),
+      identity: "btc-retain",
+      allowance: 1,
+      assetId,
+      precision: 8,
+      custodyClass: 2,
+      gross: 100000n,
+      duration: DAY30,
+      recipient: recipient.address,
+      racIdentity: ethers.id("rac-retain"),
+      priceRecord: encodePrice(price1),
+    });
+    await verifier.recordFeeAndRac(pkg);
+
+    // Later scheduled run changes the market price and even fails closed —
+    // already-bound lock must not reprice.
+    await writeScheduledPrice(verifier, {
+      env: "Bitcoin",
+      assetId,
+      priceUsd18: 31000n * SCALE,
+      runId: 2n,
+    });
+    await writeScheduledPrice(verifier, {
+      env: "Bitcoin",
+      assetId,
+      priceUsd18: 0n,
+      runId: 3n,
+      success: false,
+    });
+
+    await expect(verifier.verifyAndMint(pkg, 0)).to.not.be.reverted;
+    const binding = await verifier.lockReferencePrices(
+      ethers.keccak256(
+        ethers.solidityPacked(["string", "bytes32"], ["Bitcoin", ethers.id("lock-retain")])
+      )
+    );
+    expect(binding.bound).to.equal(true);
+    expect(binding.priceUsd18).to.equal(price1);
+    expect(await vclm.balanceOf(recipient.address)).to.be.gt(0n);
+  });
+
+  it("mismatched package price record reverts (VF-ORC-007)", async function () {
+    const [deployer, recipient] = await ethers.getSigners();
+    const Token = await ethers.getContractFactory("VinculumFinalisToken");
+    const vclm = await Token.deploy("V", "V", 10n ** 30n);
+    const chonx = await Token.deploy("C", "C", 10n ** 30n);
+    const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
+    const verifier = await Verifier.deploy(await vclm.getAddress(), await chonx.getAddress());
+    const Mock = await ethers.getContractFactory("MockAlwaysFinalizedVerifier");
+    const mock = await Mock.deploy();
+    const Stake = await ethers.getContractFactory("VinculumFinalisStake");
+    const t0 = (await ethers.provider.getBlock("latest")).timestamp;
+    const stake = await Stake.deploy(
+      await vclm.getAddress(),
+      await chonx.getAddress(),
+      await vclm.getAddress(),
+      await verifier.getAddress(),
+      t0
+    );
+    await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
+    await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
+
+    const assetId = ethers.id("BTC");
+    await verifier.registerAssetPrecision("Bitcoin", assetId, "BTC", 8, 2, 0);
+    await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
+    await verifier.configureDevFund("Bitcoin", deployer.address);
+    await verifier.setScheduledPricePoster(deployer.address);
+    await verifier.finalize();
+    await writeScheduledPrice(verifier, {
+      env: "Bitcoin",
+      assetId,
+      priceUsd18: 30000n * SCALE,
+      runId: 1n,
+    });
 
     const wrong = encodePrice(29999n * SCALE);
     const pkg = buildPkg({
@@ -396,20 +552,17 @@ describe("CL-01 · USD derived from token amount or registered price hash", func
       priceRecord: wrong,
     });
     await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(
-      "VF-ORC-001: price hash mismatch"
+      "VF-ORC-007: price record mismatch"
     );
   });
-});
 
-describe("foreignHeaderFinalityNotDecided · renamed stub stays false", function () {
-  it("renamed function stays false", async function () {
-    const Vault = await ethers.getContractFactory("CommitmentVaultLock");
-    const [deployer] = await ethers.getSigners();
-    const vault = await Vault.deploy("Base", deployer.address);
-    expect(await vault.foreignHeaderFinalityNotDecided(ethers.ZeroHash, 0)).to.equal(false);
-    expect(await vault.foreignHeaderFinalityNotDecided(ethers.ZeroHash, 1)).to.equal(false);
-    expect(await vault.foreignHeaderFinalityNotDecided(ethers.id("header"), 0)).to.equal(false);
-    expect(await vault.foreignHeaderFinalityNotDecided(ethers.id("header"), 12)).to.equal(false);
-    expect(vault.foreignHeaderFinalized).to.equal(undefined);
+  it("no deployment-time registerAssetPriceHash remains", async function () {
+    const Token = await ethers.getContractFactory("VinculumFinalisToken");
+    const vclm = await Token.deploy("V", "V", 10n ** 30n);
+    const chonx = await Token.deploy("C", "C", 10n ** 30n);
+    const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
+    const verifier = await Verifier.deploy(await vclm.getAddress(), await chonx.getAddress());
+    expect(verifier.registerAssetPriceHash).to.equal(undefined);
+    expect(await verifier.scheduledPricePoster()).to.equal(ethers.ZeroAddress);
   });
 });

@@ -154,8 +154,10 @@ struct ProofPackage {
     // RAC identity (pre-computed by SRC-EVID from immutable facts)
     bytes32 racIdentity;
 
-    // Price record (VF-ORC / CL-01): raw bytes whose keccak256 must match the
-    // price hash registered for the asset, except Ethereum USDC/USDT which are $1.
+    // Price record (VF-ORC): optional encoding of the lock-creation reference
+    // price. Non-stable valuation reads the registry's last successful scheduled
+    // price at first lock valuation and retains it (VF-ORC-008/009/010).
+    // Ethereum USDC/USDT are $1 and do not use scheduled prices.
     bytes priceRecord;
 
     // Chain-specific proofs (opaque to normalizer, consumed by IChainVerifier)
@@ -244,9 +246,29 @@ contract VinculumFinalisVerifier {
     // keccak256(environmentId, canonicalAssetId) => AssetPrecisionEntry
     mapping(bytes32 => AssetPrecisionEntry) public assetPrecisionTable;
 
-    // Registered price-record hashes. Not an oracle.
-    // keccak256(environmentId, canonicalAssetId) => keccak256(priceRecord)
-    mapping(bytes32 => bytes32) public assetPriceHashes;
+    // VF-ORC scheduled prices (PRICE-DELIVER). Not a deployment-time price hash.
+    // keccak256(environmentId, canonicalAssetId) => last scheduled-run result.
+    // usable=false means no new Commitment Vault valuation until a later success.
+    struct ScheduledPriceEntry {
+        uint256 priceUsd18;
+        bool usable;
+    }
+    mapping(bytes32 => ScheduledPriceEntry) public scheduledPrices;
+
+    // VF-ORC-009/010: lock-creation reference price retained per lock.
+    // keccak256(env, lockId) => bound price (bound=true after first valuation).
+    struct LockPriceBinding {
+        uint256 priceUsd18;
+        bool bound;
+    }
+    mapping(bytes32 => LockPriceBinding) public lockReferencePrices;
+
+    // Only this address may write scheduled-run results (not an invent-price admin).
+    address public scheduledPricePoster;
+    uint64 public lastScheduledRunId;
+
+    // VF-ORC-011/013: emission rate uses Valuation Timestamp vs protocol launch.
+    uint256 public protocolLaunchTimestamp;
 
     // Per-environment verifier registry (Section O)
     // environmentId => IChainVerifier
@@ -285,6 +307,16 @@ contract VinculumFinalisVerifier {
     event ChonxActivated(uint256 activationBlock);
 
     event DevFundConfigured(string environmentId, address devFundDestination);
+    event ScheduledPricePosterSet(address poster);
+    event ScheduledPriceRunApplied(uint64 indexed runId, uint256 updateCount);
+    event ScheduledPriceUpdated(
+        bytes32 indexed assetKey,
+        string environmentId,
+        bytes32 canonicalAssetId,
+        uint256 priceUsd18,
+        bool usable,
+        uint64 runId
+    );
 
     // ===== Modifiers =====
 
@@ -321,16 +353,19 @@ contract VinculumFinalisVerifier {
         });
     }
 
-    /// @notice Registers the expected keccak256 of the price record for an asset.
-    /// @dev Not an oracle. Same configuration gate as registerAssetPrecision.
-    function registerAssetPriceHash(
-        string calldata environmentId,
-        bytes32 canonicalAssetId,
-        bytes32 priceHash
-    ) external onlyAuthority {
-        require(priceHash != bytes32(0), "VF-ORC-001: zero price hash");
-        bytes32 key = keccak256(abi.encodePacked(environmentId, canonicalAssetId));
-        assetPriceHashes[key] = priceHash;
+    /// @notice Sets the address authorized to write scheduled price runs (VF-ORC-007).
+    /// @dev Not an admin setter that invents ad-hoc prices outside a scheduled run.
+    function setScheduledPricePoster(address poster) external onlyAuthority {
+        require(poster != address(0), "VF-ORC-007: zero price poster");
+        scheduledPricePoster = poster;
+        emit ScheduledPricePosterSet(poster);
+    }
+
+    /// @notice Records protocol launch time for VF-ORC-011/013 emission selection.
+    function setProtocolLaunchTimestamp(uint256 timestamp) external onlyAuthority {
+        require(timestamp > 0, "VF: zero launch");
+        require(protocolLaunchTimestamp == 0, "VF: launch already set");
+        protocolLaunchTimestamp = timestamp;
     }
 
     function registerChainVerifier(string calldata environmentId, address verifier) external onlyAuthority {
@@ -341,6 +376,51 @@ contract VinculumFinalisVerifier {
         require(devFundDestination != address(0), "VF: zero dev fund");
         devFundDestinations[environmentId] = devFundDestination;
         emit DevFundConfigured(environmentId, devFundDestination);
+    }
+
+    // ===== Scheduled price delivery (VF-ORC-001/004/005/007/008) =====
+
+    struct ScheduledPriceUpdate {
+        string environmentId;
+        bytes32 canonicalAssetId;
+        uint256 priceUsd18;
+        bool success;
+    }
+
+    function applyScheduledPriceRun(
+        uint64 runId,
+        ScheduledPriceUpdate[] calldata updates
+    ) external {
+        require(msg.sender == scheduledPricePoster, "VF-ORC-007: not price poster");
+        require(runId > lastScheduledRunId, "VF-ORC-001: run id must advance");
+        lastScheduledRunId = runId;
+
+        for (uint256 i = 0; i < updates.length; i++) {
+            ScheduledPriceUpdate calldata u = updates[i];
+            bytes32 key = keccak256(abi.encodePacked(u.environmentId, u.canonicalAssetId));
+            AssetPrecisionEntry memory entry = assetPrecisionTable[key];
+            require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
+            require(
+                !_isEthereumUsdStable(u.environmentId, entry.symbol),
+                "VF-ORC-004: stable needs no scheduled price"
+            );
+
+            if (u.success) {
+                require(u.priceUsd18 > 0, "VF-ORC-004: zero price");
+                scheduledPrices[key] = ScheduledPriceEntry({
+                    priceUsd18: u.priceUsd18,
+                    usable: true
+                });
+                emit ScheduledPriceUpdated(key, u.environmentId, u.canonicalAssetId, u.priceUsd18, true, runId);
+            } else {
+                scheduledPrices[key] = ScheduledPriceEntry({
+                    priceUsd18: 0,
+                    usable: false
+                });
+                emit ScheduledPriceUpdated(key, u.environmentId, u.canonicalAssetId, 0, false, runId);
+            }
+        }
+        emit ScheduledPriceRunApplied(runId, updates.length);
     }
 
     // ===== Two-phase verification: RAC recording independent of issuance =====
@@ -518,12 +598,15 @@ contract VinculumFinalisVerifier {
         require(extDuration == pkg.durationSecs, "VF-XCH-011: duration mismatch");
 
         // Step 12: Issuance calculation (VF-COM-018/019)
+        // VF-ORC-011/013: emission rate from Valuation Timestamp, not caller-supplied age.
+        uint256 emissionDays = _daysSinceLaunchFromValuation(pkg.valuationTimestamp);
+        daysSinceLaunch;
         uint256 issuanceAmount = _computeIssuance(
             verifiedGrossUsdMicro,
             pkg.selectedOutputToken,
             entry.custodyClass,
             pkg.durationSecs,
-            daysSinceLaunch
+            emissionDays
         );
 
         // Step 13: Hard cap (VF-SUP-015)
@@ -601,7 +684,7 @@ contract VinculumFinalisVerifier {
         revert("VF-COM-006: unknown environment");
     }
 
-    function _isEthereumUsdStable(string calldata envId, string memory symbol) internal pure returns (bool) {
+    function _isEthereumUsdStable(string memory envId, string memory symbol) internal pure returns (bool) {
         if (keccak256(bytes(envId)) != keccak256("Ethereum")) return false;
         bytes32 s = keccak256(bytes(symbol));
         return s == keccak256("USDC") || s == keccak256("USDT");
@@ -610,17 +693,45 @@ contract VinculumFinalisVerifier {
     function _resolveVerifiedGrossUsd(
         ProofPackage calldata pkg,
         AssetPrecisionEntry memory entry
-    ) internal view returns (uint256) {
+    ) internal returns (uint256) {
         if (_isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol)) {
             return (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
         }
-        bytes32 assetKey = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));
-        bytes32 registered = assetPriceHashes[assetKey];
-        require(registered != bytes32(0), "VF-ORC-001: no price hash registered");
-        require(keccak256(pkg.priceRecord) == registered, "VF-ORC-001: price hash mismatch");
-        uint256 priceUsd18 = abi.decode(pkg.priceRecord, (uint256));
+
+        bytes32 lockIdHash = keccak256(
+            abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId)
+        );
+        LockPriceBinding storage binding = lockReferencePrices[lockIdHash];
+        uint256 priceUsd18;
+
+        if (binding.bound) {
+            priceUsd18 = binding.priceUsd18;
+        } else {
+            bytes32 assetKey = keccak256(
+                abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId)
+            );
+            ScheduledPriceEntry memory sp = scheduledPrices[assetKey];
+            require(sp.usable && sp.priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
+            priceUsd18 = sp.priceUsd18;
+            binding.priceUsd18 = priceUsd18;
+            binding.bound = true;
+        }
+
+        if (pkg.priceRecord.length > 0) {
+            uint256 recorded = abi.decode(pkg.priceRecord, (uint256));
+            require(recorded == priceUsd18, "VF-ORC-007: price record mismatch");
+        }
+
         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
         return (assetUnitsFp * priceUsd18) / SCALE;
+    }
+
+    function _daysSinceLaunchFromValuation(uint256 valuationTimestamp) internal view returns (uint256) {
+        uint256 launch = protocolLaunchTimestamp;
+        if (launch == 0 || valuationTimestamp <= launch) {
+            return 0;
+        }
+        return (valuationTimestamp - launch) / 1 days;
     }
 
     // ===== Issuance calculation (BASE-ISSUE + BASE-EMIT + BASE-MULT) =====

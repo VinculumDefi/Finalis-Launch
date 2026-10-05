@@ -1,3 +1,8 @@
+/**
+ * Universal Price Fetcher cascade (VF-ORC-001..006 / Section 7.1).
+ * Twice-daily cadence is the publication schedule, not an on-chain age cutoff.
+ * First valid source wins; no hardcoded fallback prices.
+ */
 // =============================================================================
 // vfPriceCascade — Price lookup cascade ported from vinculum_price_fetcher_v9.py
 //
