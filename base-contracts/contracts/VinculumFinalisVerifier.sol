@@ -156,9 +156,9 @@ struct ProofPackage {
     bytes32 racIdentity;
 
     // Price record (VF-ORC): optional encoding of the lock-creation reference
-    // price. Non-stable valuation reads the registry's last successful scheduled
+    // price. Every valuation reads the registry's last successful scheduled
     // price at first lock valuation and retains it (VF-ORC-008/009/010).
-    // Ethereum USDC/USDT are $1 and do not use scheduled prices.
+    // Ethereum USDC/USDT use the same scheduled prices as every other asset.
     bytes priceRecord;
 
     // Chain-specific proofs (opaque to normalizer, consumed by IChainVerifier)
@@ -193,6 +193,10 @@ contract VinculumFinalisVerifier {
     uint256 public constant HANDSHAKE_USD_MIN = 0.95e18;
     uint256 public constant HANDSHAKE_USD_MAX = 1.05e18;
     uint256 public constant STANDARD_USD_MIN = 10e18;
+
+    // Ethereum USDC/USDT: a last successful scheduled price below $0.95 makes
+    // the asset unavailable for new valuations until a later run is >= $0.95.
+    uint256 public constant USD_STABLE_MIN_PRICE = 0.95e18;
 
     // VF-COM-019: decay
     uint256 public constant DECAY_SURVIVAL_FP = 983330000000000000; // 0.98333
@@ -417,7 +421,7 @@ contract VinculumFinalisVerifier {
     //
     // Off-chain PRICE-FETCH runs twice per day (VF-ORC-001) with first-valid
     // cascade (VF-ORC-002/003/006). This function is the sole on-chain write
-    // path for non-stable prices. A failed asset in a run is marked unusable
+    // path for prices. A failed asset in a run is marked unusable
     // (fail closed); prior successful prices are not kept usable (VF-ORC-008).
 
     struct ScheduledPriceUpdate {
@@ -441,12 +445,6 @@ contract VinculumFinalisVerifier {
             bytes32 key = keccak256(abi.encodePacked(u.environmentId, u.canonicalAssetId));
             AssetPrecisionEntry memory entry = assetPrecisionTable[key];
             require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
-            // Ethereum USDC/USDT stay $1; scheduled writes must not invent substitutes.
-            require(
-                !_isEthereumUsdStable(u.environmentId, entry.symbol),
-                "VF-ORC-004: stable needs no scheduled price"
-            );
-
             if (u.success) {
                 require(u.priceUsd18 > 0, "VF-ORC-004: zero price");
                 scheduledPrices[key] = ScheduledPriceEntry({
@@ -736,10 +734,10 @@ contract VinculumFinalisVerifier {
     }
 
     // ===== USD resolution (VF-ORC / CL-01) =====
-    // Ethereum USDC/USDT: token amount at $1.
-    // Every other asset: registry last successful scheduled price, read and
-    // bound at first lock valuation (VF-ORC-008/009/010). No deployment price
-    // hash. No admin invent-price setter.
+    // Every asset, including Ethereum USDC/USDT: registry last successful
+    // scheduled price, read and bound at first lock valuation
+    // (VF-ORC-008/009/010). No deployment price hash. No admin invent-price
+    // setter. No $1 substitute for USDC/USDT: below $0.95 they fail closed.
 
     function _isEthereumUsdStable(string memory envId, string memory symbol) internal pure returns (bool) {
         if (keccak256(bytes(envId)) != keccak256("Ethereum")) return false;
@@ -751,10 +749,6 @@ contract VinculumFinalisVerifier {
         ProofPackage calldata pkg,
         AssetPrecisionEntry memory entry
     ) internal returns (uint256) {
-        if (_isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol)) {
-            return (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
-        }
-
         bytes32 lockIdHash = keccak256(
             abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId)
         );
@@ -770,6 +764,14 @@ contract VinculumFinalisVerifier {
             );
             ScheduledPriceEntry memory sp = scheduledPrices[assetKey];
             require(sp.usable && sp.priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
+            // Ethereum USDC/USDT below $0.95: unavailable until a later run is
+            // at or above $0.95. Fail closed; never substitute $1.
+            if (_isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol)) {
+                require(
+                    sp.priceUsd18 >= USD_STABLE_MIN_PRICE,
+                    "VF-ORC-005: USDC/USDT scheduled price below $0.95"
+                );
+            }
             priceUsd18 = sp.priceUsd18;
             binding.priceUsd18 = priceUsd18;
             binding.bound = true;

@@ -270,55 +270,170 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
   });
 });
 
-describe("CL-01 / VF-ORC · USD from $1 stables or scheduled registry price", function () {
-  it("USDC/USDT use token amount at one dollar without scheduled price", async function () {
-    const [deployer, recipient] = await ethers.getSigners();
-    const Token = await ethers.getContractFactory("VinculumFinalisToken");
-    const vclm = await Token.deploy("V", "V", 10n ** 30n);
-    const chonx = await Token.deploy("C", "C", 10n ** 30n);
-    const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
-    const verifier = await Verifier.deploy(await vclm.getAddress(), await chonx.getAddress());
-    const Mock = await ethers.getContractFactory("MockAlwaysFinalizedVerifier");
-    const mock = await Mock.deploy();
-    const Stake = await ethers.getContractFactory("VinculumFinalisStake");
-    const t0 = (await ethers.provider.getBlock("latest")).timestamp;
-    const stake = await Stake.deploy(
-      await vclm.getAddress(),
-      await chonx.getAddress(),
-      await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
-    );
-    await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
-    await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
+// Ethereum USDC/USDT: scheduled prices like every other asset; no $1 substitute.
+async function deployStableFixture() {
+  const [deployer, recipient] = await ethers.getSigners();
+  const Token = await ethers.getContractFactory("VinculumFinalisToken");
+  const vclm = await Token.deploy("V", "V", 10n ** 30n);
+  const chonx = await Token.deploy("C", "C", 10n ** 30n);
+  const Verifier = await ethers.getContractFactory("VinculumFinalisVerifier");
+  const verifier = await Verifier.deploy(await vclm.getAddress(), await chonx.getAddress());
+  const Mock = await ethers.getContractFactory("MockAlwaysFinalizedVerifier");
+  const mock = await Mock.deploy();
+  const Stake = await ethers.getContractFactory("VinculumFinalisStake");
+  const t0 = (await ethers.provider.getBlock("latest")).timestamp;
+  const stake = await Stake.deploy(
+    await vclm.getAddress(),
+    await chonx.getAddress(),
+    await vclm.getAddress(),
+    await verifier.getAddress(),
+    t0
+  );
+  await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
+  await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
 
-    const usdc = ethers.id("USDC");
-    await verifier.registerAssetPrecision("Ethereum", usdc, "USDC", 6, 1, 1);
-    await verifier.registerChainVerifier("Ethereum", await mock.getAddress());
-    await verifier.configureDevFund("Ethereum", deployer.address);
-    await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+  const usdc = ethers.id("USDC");
+  const usdt = ethers.id("USDT");
+  await verifier.registerAssetPrecision("Ethereum", usdc, "USDC", 6, 1, 1);
+  await verifier.registerAssetPrecision("Ethereum", usdt, "USDT", 6, 1, 1);
+  await verifier.registerChainVerifier("Ethereum", await mock.getAddress());
+  await verifier.configureDevFund("Ethereum", deployer.address);
+  await verifier.setScheduledPricePoster(deployer.address);
+  await verifier.finalize();
+  return { deployer, recipient, vclm, verifier, usdc, usdt };
+}
 
-    const gross = 20_000_000n; // $20.00
-    const pkg = buildPkg({
-      env: "Ethereum",
-      lockId: ethers.id("lock-usdc"),
-      identity: "eth-usdc-user",
-      allowance: 3,
-      assetId: usdc,
-      precision: 6,
-      custodyClass: 1,
-      gross,
-      duration: DAY30,
-      recipient: recipient.address,
-      racIdentity: ethers.id("rac-usdc"),
-      priceRecord: "0x",
-    });
-    await verifier.recordFeeAndRac(pkg);
-    await expect(verifier.verifyAndMint(pkg, 0)).to.not.be.reverted;
-    expect(await vclm.balanceOf(recipient.address)).to.be.gt(0n);
+function stablePkg({ assetId, lockName, gross, duration = DAY30, recipient, priceRecord = "0x" }) {
+  return buildPkg({
+    env: "Ethereum",
+    lockId: ethers.id(lockName),
+    identity: `eth-${lockName}`,
+    allowance: 3,
+    assetId,
+    precision: 6,
+    custodyClass: 1,
+    gross,
+    duration,
+    recipient,
+    racIdentity: ethers.id(`rac-${lockName}`),
+    priceRecord,
+  });
+}
+
+function lockKey(env, lockName) {
+  return ethers.keccak256(ethers.solidityPacked(["string", "bytes32"], [env, ethers.id(lockName)]));
+}
+
+const STABLE_BELOW = "VF-ORC-005: USDC/USDT scheduled price below $0.95";
+
+describe("CL-01 / VF-ORC · Ethereum USDC/USDT priced from scheduled runs", function () {
+  it("USDC without a scheduled price fails closed; no $1 substitute", async function () {
+    const { recipient, verifier, usdc } = await deployStableFixture();
+    const pkg = stablePkg({ assetId: usdc, lockName: "usdc-noprice", gross: 20_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
   });
 
+  it("USDC/USDT value = token amount x scheduled price; S1 stays 1.5x", async function () {
+    const { recipient, vclm, verifier, usdc, usdt } = await deployStableFixture();
+    const usdcPrice = 999_000_000_000_000_000n; // $0.999
+    const usdtPrice = 1_002_000_000_000_000_000n; // $1.002
+    await verifier.applyScheduledPriceRun(1n, [
+      { environmentId: "Ethereum", canonicalAssetId: usdc, priceUsd18: usdcPrice, success: true },
+      { environmentId: "Ethereum", canonicalAssetId: usdt, priceUsd18: usdtPrice, success: true },
+    ]);
+    expect(await verifier.S1_MULTIPLIER_BPS()).to.equal(15000n);
+
+    for (const [assetId, price, name] of [
+      [usdc, usdcPrice, "usdc-priced"],
+      [usdt, usdtPrice, "usdt-priced"],
+    ]) {
+      const gross = 20_000_000n; // 20 tokens
+      const pkg = stablePkg({ assetId, lockName: name, gross, recipient: recipient.address, priceRecord: encodePrice(price) });
+      const before = await vclm.balanceOf(recipient.address);
+      await verifier.recordFeeAndRac(pkg);
+      await verifier.verifyAndMint(pkg, 0);
+      const usd = (20n * SCALE * price) / SCALE;
+      const expected = await verifier.previewIssuance(usd, 0, 1, DAY30, 0);
+      // $1-flat valuation would give a different amount; the scheduled price decides.
+      expect(expected).to.not.equal(await verifier.previewIssuance(20n * SCALE, 0, 1, DAY30, 0));
+      expect((await vclm.balanceOf(recipient.address)) - before).to.equal(expected);
+      const binding = await verifier.lockReferencePrices(lockKey("Ethereum", name));
+      expect(binding.bound).to.equal(true);
+      expect(binding.priceUsd18).to.equal(price);
+    }
+  });
+
+  it("last successful price below $0.95 is unavailable until a later run >= $0.95", async function () {
+    const { recipient, vclm, verifier, usdt } = await deployStableFixture();
+    const gross = 20_000_000n;
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 949_999_999_999_999_999n, runId: 1n });
+    const pkg = stablePkg({ assetId: usdt, lockName: "usdt-depeg", gross, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(STABLE_BELOW);
+
+    // Failed run keeps it unavailable (fail closed).
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 0n, runId: 2n, success: false });
+    await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
+
+    // Still below on the next successful run.
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 900_000_000_000_000_000n, runId: 3n });
+    await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(STABLE_BELOW);
+
+    // Exactly $0.95 restores availability; valued at $0.95, not $1.
+    const p95 = 950_000_000_000_000_000n;
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: p95, runId: 4n });
+    await verifier.recordFeeAndRac(pkg);
+    await verifier.verifyAndMint(pkg, 0);
+    const expected = await verifier.previewIssuance((20n * SCALE * p95) / SCALE, 0, 1, DAY30, 0);
+    expect(await vclm.balanceOf(recipient.address)).to.equal(expected);
+  });
+
+  it("a lock already bound keeps its lock-creation price after a sub-$0.95 run", async function () {
+    const { recipient, vclm, verifier, usdc } = await deployStableFixture();
+    const p1 = 1_000_000_000_000_000_000n;
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: p1, runId: 1n });
+    const bound = stablePkg({ assetId: usdc, lockName: "usdc-bound", gross: 20_000_000n, recipient: recipient.address });
+    await verifier.recordFeeAndRac(bound);
+
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 800_000_000_000_000_000n, runId: 2n });
+
+    // New lock: unavailable.
+    const fresh = stablePkg({ assetId: usdc, lockName: "usdc-fresh", gross: 20_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(fresh)).to.be.revertedWith(STABLE_BELOW);
+
+    // Bound lock: still mints at its $1.00 lock-creation reference.
+    await verifier.verifyAndMint(bound, 0);
+    const binding = await verifier.lockReferencePrices(lockKey("Ethereum", "usdc-bound"));
+    expect(binding.priceUsd18).to.equal(p1);
+    expect(await vclm.balanceOf(recipient.address)).to.equal(
+      await verifier.previewIssuance(20n * SCALE, 0, 1, DAY30, 0)
+    );
+  });
+
+  it("$10 standard floor applies to the priced dollar value", async function () {
+    const { recipient, verifier, usdc } = await deployStableFixture();
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 990_000_000_000_000_000n, runId: 1n });
+    // 10 USDC x $0.99 = $9.90 < $10.00 (would pass if priced at $1).
+    const low = stablePkg({ assetId: usdc, lockName: "usdc-floor-low", gross: 10_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(low)).to.be.revertedWith("VF-COM-009: standard USD below $10.00");
+    // 10.11 USDC x $0.99 = $10.0089 >= $10.00
+    const ok = stablePkg({ assetId: usdc, lockName: "usdc-floor-ok", gross: 10_110_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(ok)).to.not.be.reverted;
+  });
+
+  it("Handshake $0.95-$1.05 band applies to the priced dollar value", async function () {
+    const { recipient, verifier, usdt } = await deployStableFixture();
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 1_040_000_000_000_000_000n, runId: 1n });
+    // 1.02 USDT x $1.04 = $1.0608 > $1.05 (would pass if priced at $1).
+    const high = stablePkg({ assetId: usdt, lockName: "usdt-hs-high", gross: 1_020_000n, duration: HOUR, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(high)).to.be.revertedWith("VF-COM-003: handshake USD outside $0.95-$1.05");
+    // 1.00 USDT x $1.04 = $1.04
+    const ok = stablePkg({ assetId: usdt, lockName: "usdt-hs-ok", gross: 1_000_000n, duration: HOUR, recipient: recipient.address });
+    await verifier.recordFeeAndRac(ok);
+    await expect(verifier.verifyAndMint(ok, 0)).to.not.be.reverted;
+  });
+});
+
+describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
   it("other asset without usable scheduled price reverts (VF-ORC-005)", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
