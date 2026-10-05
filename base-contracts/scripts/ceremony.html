@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Base post-deploy ceremony</title>
+</head>
+<body>
+<p>Connects MetaMask to Base (chain id 8453) and runs the post-deploy steps on the deployed VinculumFinalisVerifier. Each transaction opens its own MetaMask popup and waits for your approval. Nothing is sent before you sign. Finalize is never sent by the steps button.</p>
+<p>Verifier <code id="verifierAddr"></code></p>
+<p>
+<label for="baseVerifier">Base chain verifier address (step 3, an EvmChainVerifier for "Base" that is already deployed)</label><br>
+<input id="baseVerifier" type="text" size="46" placeholder="0x..." autocomplete="off">
+</p>
+<button id="go" type="button">Connect and run steps 1-4</button>
+<pre id="log"></pre>
+<hr>
+<p>Step 5 stops here. Finalize closes configuration on the Verifier for good and cannot be undone. To enable the button, type <code id="phraseText"></code> exactly.</p>
+<input id="confirmText" type="text" size="46" autocomplete="off">
+<button id="finalize" type="button" disabled>Finalize</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js"></script>
+<script>
+const BASE_CHAIN = "0x2105";
+const CONTRACTS = {
+  VCLM: "0x6FdF43c396cefDa15630E628F160563563C84Af1",
+  CHONX: "0x8Be366686006d6340e1fa32d8aF3BCd8fca78248",
+  Lock: "0xE727981580A9CbD6ff7b0d38c17a4876F5a56a8D",
+  Verifier: "0x4e4D2d233812F513f7BAca618C35AA93799F0Df1",
+  Forge: "0x91D8Ee15FAB6c194a96f2d51742b2bEE6B0e7682",
+  Stake: "0x177182975853B5A39850d242F411b657CDFf0ED8",
+};
+const FINALIZE_PHRASE = "FINALIZE VERIFIER";
+// ABI fragments copied from artifacts/contracts/VinculumFinalisVerifier.sol and
+// artifacts/contracts/chain-verifiers/EvmChainVerifier.sol (only what this page calls).
+const ABI = {"verifier":[{"inputs":[],"name":"deployer","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"configurationFinalized","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"assetPrecisionTable","outputs":[{"internalType":"bytes32","name":"canonicalAssetId","type":"bytes32"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"},{"internalType":"uint8","name":"custodyClass","type":"uint8"},{"internalType":"uint8","name":"custodyPath","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"","type":"string"}],"name":"chainVerifiers","outputs":[{"internalType":"contract IChainVerifier","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"environmentId","type":"string"},{"internalType":"bytes32","name":"canonicalAssetId","type":"bytes32"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"},{"internalType":"uint8","name":"custodyClass","type":"uint8"},{"internalType":"uint8","name":"custodyPath","type":"uint8"}],"name":"registerAssetPrecision","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"environmentId","type":"string"},{"internalType":"address","name":"verifier","type":"address"}],"name":"registerChainVerifier","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"finalize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"scheduledPricePoster","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"poster","type":"address"}],"name":"setScheduledPricePoster","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"scheduledPrices","outputs":[{"internalType":"uint256","name":"priceUsd18","type":"uint256"},{"internalType":"bool","name":"usable","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastScheduledRunId","outputs":[{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint64","name":"runId","type":"uint64"},{"components":[{"internalType":"string","name":"environmentId","type":"string"},{"internalType":"bytes32","name":"canonicalAssetId","type":"bytes32"},{"internalType":"uint256","name":"priceUsd18","type":"uint256"},{"internalType":"bool","name":"success","type":"bool"}],"internalType":"struct VinculumFinalisVerifier.ScheduledPriceUpdate[]","name":"updates","type":"tuple[]"}],"name":"applyScheduledPriceRun","outputs":[],"stateMutability":"nonpayable","type":"function"}],"evmChainVerifier":[{"inputs":[],"name":"environmentId","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"sameChain","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}]};
+const VERIFIER = new ethers.Interface(ABI.verifier);
+const EVM_CHAIN_VERIFIER = new ethers.Interface(ABI.evmChainVerifier);
+
+// Test assets. environmentId, asset id, symbol, decimals, custody class and path come
+// from src/lib/vfBaseRegistry.js ASSET_PRECISION_TABLE. custodyClass 1=S1 2=S2 3=S3;
+// custodyPath 0=native 1=token (VinculumFinalisVerifier.sol AssetPrecisionEntry).
+// canonicalAssetId = keccak256(abi.encodePacked(environmentId, assetId)), as the
+// AssetPrecisionEntry comment in VinculumFinalisVerifier.sol describes.
+const ASSETS = [
+  { label: "Ethereum USDC", env: "Ethereum", assetId: "USDC",       symbol: "USDC", decimals: 6,  custodyClass: 1, custodyPath: 1 },
+  { label: "Ethereum USDT", env: "Ethereum", assetId: "USDT",       symbol: "USDT", decimals: 6,  custodyClass: 1, custodyPath: 1 },
+  { label: "native ETH",    env: "Ethereum", assetId: "native-ETH", symbol: "ETH",  decimals: 18, custodyClass: 2, custodyPath: 0 },
+  { label: "native BTC",    env: "Bitcoin",  assetId: "native-BTC", symbol: "BTC",  decimals: 8,  custodyClass: 2, custodyPath: 0 },
+  { label: "Ethereum AAVE", env: "Ethereum", assetId: "AAVE",       symbol: "AAVE", decimals: 18, custodyClass: 2, custodyPath: 1 },
+  { label: "Ethereum LINK", env: "Ethereum", assetId: "LINK",       symbol: "LINK", decimals: 18, custodyClass: 2, custodyPath: 1 },
+  { label: "Ethereum UNI",  env: "Ethereum", assetId: "UNI",        symbol: "UNI",  decimals: 18, custodyClass: 2, custodyPath: 1 },
+].map((a) => {
+  const canonicalAssetId = ethers.solidityPackedKeccak256(["string", "string"], [a.env, a.assetId]);
+  const key = ethers.solidityPackedKeccak256(["string", "bytes32"], [a.env, canonicalAssetId]);
+  return { ...a, canonicalAssetId, key };
+});
+
+const logEl = document.getElementById("log");
+function log(line) {
+  logEl.textContent += line + "\n";
+}
+
+document.getElementById("verifierAddr").textContent = CONTRACTS.Verifier;
+document.getElementById("phraseText").textContent = FINALIZE_PHRASE;
+
+async function requireBase() {
+  const eth = window.ethereum;
+  if (!eth) throw new Error("MetaMask is not installed.");
+  await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN }] });
+  const chainId = await eth.request({ method: "eth_chainId" });
+  if (chainId !== BASE_CHAIN) throw new Error("Wallet is not on Base. Nothing was sent.");
+  const accounts = await eth.request({ method: "eth_requestAccounts" });
+  if (!accounts || !accounts[0]) throw new Error("MetaMask returned no account. Nothing was sent.");
+  return { eth, from: ethers.getAddress(accounts[0]) };
+}
+
+async function read(eth, iface, to, name, args = []) {
+  const data = iface.encodeFunctionData(name, args);
+  const out = await eth.request({ method: "eth_call", params: [{ to, data }, "latest"] });
+  return iface.decodeFunctionResult(name, out);
+}
+
+// The deployed bytecode must contain the selector; otherwise the call can only revert.
+async function hasFunction(eth, name) {
+  const code = (await eth.request({ method: "eth_getCode", params: [CONTRACTS.Verifier, "latest"] })).toLowerCase();
+  return code.includes(VERIFIER.getFunction(name).selector.slice(2));
+}
+
+async function send(eth, from, label, name, args) {
+  const data = VERIFIER.encodeFunctionData(name, args);
+  const tx = { from, to: CONTRACTS.Verifier, data, value: "0x0" };
+  try {
+    await eth.request({ method: "eth_call", params: [tx, "latest"] });
+  } catch (err) {
+    throw new Error(label + " would revert (" + (err.message || String(err)) + "). Nothing was sent. Stopping.");
+  }
+  log("Waiting for MetaMask: " + label);
+  const hash = await eth.request({ method: "eth_sendTransaction", params: [tx] });
+  log(label + " tx " + hash);
+  let receipt = null;
+  while (!receipt) {
+    receipt = await eth.request({ method: "eth_getTransactionReceipt", params: [hash] });
+    if (!receipt) await new Promise((r) => setTimeout(r, 2000));
+  }
+  if (receipt.status !== "0x1") throw new Error(label + " failed on-chain. Stopping.");
+  log(label + " confirmed in block " + BigInt(receipt.blockNumber).toString());
+  return receipt;
+}
+
+async function preflight(eth, from) {
+  const code = await eth.request({ method: "eth_getCode", params: [CONTRACTS.Verifier, "latest"] });
+  if (!code || code === "0x") throw new Error("No contract at Verifier " + CONTRACTS.Verifier + ". Nothing was sent.");
+  const [finalized] = await read(eth, VERIFIER, CONTRACTS.Verifier, "configurationFinalized");
+  const [deployer] = await read(eth, VERIFIER, CONTRACTS.Verifier, "deployer");
+  log("configurationFinalized " + finalized);
+  log("deployer " + deployer);
+  return { finalized, deployer: ethers.getAddress(deployer) };
+}
+
+async function step1RegisterAssets(eth, from) {
+  log("");
+  log("Step 1: register test assets");
+  for (const a of ASSETS) {
+    log(a.label + " env=" + a.env + " canonicalAssetId=" + a.canonicalAssetId);
+    const entry = await read(eth, VERIFIER, CONTRACTS.Verifier, "assetPrecisionTable", [a.key]);
+    if (entry.canonicalAssetId === a.canonicalAssetId && entry.symbol === a.symbol &&
+        Number(entry.decimals) === a.decimals && Number(entry.custodyClass) === a.custodyClass &&
+        Number(entry.custodyPath) === a.custodyPath) {
+      log(a.label + " already registered with these values. Skipped.");
+      continue;
+    }
+    await send(eth, from, "registerAssetPrecision " + a.label, "registerAssetPrecision",
+      [a.env, a.canonicalAssetId, a.symbol, a.decimals, a.custodyClass, a.custodyPath]);
+  }
+}
+
+async function step2SetPoster(eth, from) {
+  log("");
+  log("Step 2: set price poster to " + from);
+  if (!(await hasFunction(eth, "setScheduledPricePoster"))) {
+    log("The deployed Verifier has no setScheduledPricePoster(address). Step 2 not sent.");
+    return false;
+  }
+  const [poster] = await read(eth, VERIFIER, CONTRACTS.Verifier, "scheduledPricePoster");
+  if (ethers.getAddress(poster) === from) {
+    log("Price poster is already " + from + ". Skipped.");
+    return true;
+  }
+  await send(eth, from, "setScheduledPricePoster", "setScheduledPricePoster", [from]);
+  return true;
+}
+
+async function step3RegisterBaseVerifier(eth, from) {
+  log("");
+  log("Step 3: register the Base chain verifier");
+  const raw = document.getElementById("baseVerifier").value.trim();
+  if (!raw) {
+    log("No Base chain verifier address entered. Step 3 not sent.");
+    return;
+  }
+  if (!ethers.isAddress(raw)) {
+    log("Not an address: " + raw + ". Step 3 not sent.");
+    return;
+  }
+  const addr = ethers.getAddress(raw);
+  if (Object.values(CONTRACTS).includes(addr)) {
+    log(addr + " is one of the six launch contracts, not a chain verifier. Step 3 not sent.");
+    return;
+  }
+  const code = await eth.request({ method: "eth_getCode", params: [addr, "latest"] });
+  if (!code || code === "0x") {
+    log("No contract at " + addr + " on Base. Step 3 not sent.");
+    return;
+  }
+  let envId, sameChain;
+  try {
+    [envId] = await read(eth, EVM_CHAIN_VERIFIER, addr, "environmentId");
+    [sameChain] = await read(eth, EVM_CHAIN_VERIFIER, addr, "sameChain");
+  } catch (err) {
+    log(addr + " does not answer environmentId()/sameChain() like EvmChainVerifier. Step 3 not sent.");
+    return;
+  }
+  if (envId !== "Base" || sameChain !== true) {
+    log(addr + " reports environmentId=" + envId + " sameChain=" + sameChain + ". Expected Base / true. Step 3 not sent.");
+    return;
+  }
+  const [current] = await read(eth, VERIFIER, CONTRACTS.Verifier, "chainVerifiers", ["Base"]);
+  if (ethers.getAddress(current) === addr) {
+    log("Base chain verifier is already " + addr + ". Skipped.");
+    return;
+  }
+  await send(eth, from, "registerChainVerifier Base", "registerChainVerifier", ["Base", addr]);
+}
+
+async function step4PostPrices(eth, from) {
+  log("");
+  log("Step 4: post one scheduled price per asset from the registry's last successful scheduled price");
+  if (!(await hasFunction(eth, "applyScheduledPriceRun"))) {
+    log("The deployed Verifier has no applyScheduledPriceRun or scheduledPrices. No price exists on-chain to read.");
+    for (const a of ASSETS) log(a.label + ": no last successful scheduled price on-chain. Not posted; no price invented.");
+    return;
+  }
+  const [finalized] = await read(eth, VERIFIER, CONTRACTS.Verifier, "configurationFinalized");
+  const [poster] = await read(eth, VERIFIER, CONTRACTS.Verifier, "scheduledPricePoster");
+  const posterOk = ethers.getAddress(poster) === from;
+  if (!finalized) log("applyScheduledPriceRun requires configurationFinalized. Nothing will be sent before Finalize.");
+  if (!posterOk) log("Connected wallet is not the scheduled price poster. Nothing will be sent.");
+  for (const a of ASSETS) {
+    const sp = await read(eth, VERIFIER, CONTRACTS.Verifier, "scheduledPrices", [a.key]);
+    if (!sp.usable || sp.priceUsd18 === 0n) {
+      log(a.label + ": no last successful scheduled price on-chain. Not posted; no price invented.");
+      continue;
+    }
+    log(a.label + ": last successful scheduled price " + ethers.formatUnits(sp.priceUsd18, 18) + " USD");
+    if (!finalized || !posterOk) {
+      log(a.label + ": not sent.");
+      continue;
+    }
+    const [lastRun] = await read(eth, VERIFIER, CONTRACTS.Verifier, "lastScheduledRunId");
+    const runId = lastRun + 1n;
+    await send(eth, from, "applyScheduledPriceRun " + runId + " " + a.label, "applyScheduledPriceRun",
+      [runId, [{ environmentId: a.env, canonicalAssetId: a.canonicalAssetId, priceUsd18: sp.priceUsd18, success: true }]]);
+  }
+}
+
+const goBtn = document.getElementById("go");
+const finalizeBtn = document.getElementById("finalize");
+const confirmEl = document.getElementById("confirmText");
+
+confirmEl.oninput = () => {
+  finalizeBtn.disabled = confirmEl.value !== FINALIZE_PHRASE;
+};
+
+goBtn.onclick = async () => {
+  goBtn.disabled = true;
+  try {
+    const { eth, from } = await requireBase();
+    log("signer " + from);
+    const { finalized, deployer } = await preflight(eth, from);
+    if (finalized) throw new Error("Configuration is already finalized. Steps 1-3 are closed. Nothing was sent.");
+    if (deployer !== from) throw new Error("Connected wallet is not the Verifier deployer " + deployer + ". Nothing was sent.");
+    await step1RegisterAssets(eth, from);
+    await step2SetPoster(eth, from);
+    await step3RegisterBaseVerifier(eth, from);
+    await step4PostPrices(eth, from);
+    log("");
+    log("Stopped before Finalize. Finalize was not sent.");
+  } catch (err) {
+    log(err.message || String(err));
+  } finally {
+    goBtn.disabled = false;
+  }
+};
+
+finalizeBtn.onclick = async () => {
+  if (confirmEl.value !== FINALIZE_PHRASE) {
+    finalizeBtn.disabled = true;
+    return;
+  }
+  finalizeBtn.disabled = true;
+  try {
+    const { eth, from } = await requireBase();
+    const { finalized, deployer } = await preflight(eth, from);
+    if (finalized) throw new Error("Already finalized. Nothing was sent.");
+    if (deployer !== from) throw new Error("Connected wallet is not the Verifier deployer " + deployer + ". Nothing was sent.");
+    await send(eth, from, "finalize", "finalize", []);
+    log("Finalized.");
+  } catch (err) {
+    log(err.message || String(err));
+  } finally {
+    confirmEl.value = "";
+  }
+};
+</script>
+</body>
+</html>
