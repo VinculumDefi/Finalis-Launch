@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vinculum Protocol - XRP Ledger deploy plan</title>
+</head>
+<body>
+<h1>Vinculum Protocol - XRP Ledger deploy plan</h1>
+<p>Network: <b>XRP Ledger mainnet</b>. Environment id: <b>XRP Ledger</b>. Built from Finalis-Launch source at commit <code>214883a6d3777f04dd581f780a0410ed191c093f</code> (origin/main). This page stops before finalize.</p>
+
+<p>The XRP Ledger is not EVM. No wallet step. The page prints the lock, its destinations, and stops.</p>
+<pre id="log">Network: XRP Ledger mainnet
+Environment id: XRP Ledger
+Lock: EscrowCreate FinishAfter (non-evm-locks/xrpl/lock_and_test.mjs)
+Dev Fund (XRP Ledger): raNwavDEycJ8XtAN71eezNMM6fQbMh1rJt
+Handshake allowance: 1 (escrow finish cannot keep a per-identity count)
+
+Per lock, two objects bound by SHA-256 of the 117-byte payload:
+  Payment of floor(gross * 500 / 10000) drops to the Dev Fund raNwavDEycJ8XtAN71eezNMM6fQbMh1rJt
+  EscrowCreate of the principal to the release account; FinishAfter set; CancelAfter omitted.
+  The release account has Deposit Authorization so a non-destination EscrowFinish is rejected.
+
+Deployment: nothing to deploy on the XRP Ledger. There is no contract and no deploy transaction.
+No transaction is printed here because none exists until a user locks.
+
+Stopped before finalize.</pre>
+<h2>Approved Asset Registry rows for XRP Ledger</h2>
+<p>Written to the Base Verifier by base.html, not on the XRP Ledger.</p>
+<table border="1" cellpadding="3" cellspacing="0"><tr><th>row</th><th>symbol</th><th>assetId</th><th>canonicalAssetId</th><th>decimals</th><th>class</th><th>path</th><th>Base Verifier registry</th></tr><tr><td>12</td><td>XRP</td><td>native-XRP</td><td><code>0x6f8cbd21769db3fbde2544b11800d82e17de13dcc932bd924874514bc817a51a</code></td><td>6</td><td>S3</td><td>native</td><td>written on the Base page</td></tr></table>
+</body>
+</html>

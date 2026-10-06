@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vinculum Protocol - Stellar deploy plan</title>
+</head>
+<body>
+<h1>Vinculum Protocol - Stellar deploy plan</h1>
+<p>Network: <b>Stellar public network</b>. Environment id: <b>Stellar</b>. Built from Finalis-Launch source at commit <code>214883a6d3777f04dd581f780a0410ed191c093f</code> (origin/main). This page stops before finalize.</p>
+
+<p>Stellar is not EVM. No wallet step. The page prints the lock, its destinations, and stops.</p>
+<pre id="log">Network: Stellar public network (passphrase &quot;Public Global Stellar Network ; September 2015&quot;)
+Environment id: Stellar
+Lock: claimable balance predicate (non-evm-locks/stellar/lock_and_test.mjs)
+Dev Fund (Stellar): GAN5TFL7YMDL6Z7WEDVRTDFTERFA5YASYJYXOTLEVOAKUMRIMZZMAZDL
+Handshake allowance: 1 (claimable-balance predicate cannot keep a per-identity count)
+
+Per lock, one transaction:
+  Payment of 5% of gross to the Dev Fund GAN5TFL7YMDL6Z7WEDVRTDFTERFA5YASYJYXOTLEVOAKUMRIMZZMAZDL
+  CreateClaimableBalance of the principal; sole claimant = the bound release destination;
+  predicate: not before absolute maturity; memo = SHA-256 of the 117-byte binding payload.
+
+Deployment: nothing to deploy on Stellar. There is no contract and no deploy transaction.
+No transaction is printed here because none exists until a user locks.
+
+Stopped before finalize.</pre>
+<h2>Approved Asset Registry rows for Stellar</h2>
+<p>Written to the Base Verifier by base.html, not on Stellar.</p>
+<table border="1" cellpadding="3" cellspacing="0"><tr><th>row</th><th>symbol</th><th>assetId</th><th>canonicalAssetId</th><th>decimals</th><th>class</th><th>path</th><th>Base Verifier registry</th></tr><tr><td>518</td><td>XLM</td><td>native-XLM</td><td><code>0x80e1df6ecb2df13f0bc238d314e955c867900bd581b557cf5bd98bfc6de409b8</code></td><td>7</td><td>S3</td><td>native</td><td>written on the Base page</td></tr></table>
+</body>
+</html>

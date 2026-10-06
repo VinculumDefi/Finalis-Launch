@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vinculum Protocol - DigiByte deploy plan</title>
+</head>
+<body>
+<h1>Vinculum Protocol - DigiByte deploy plan</h1>
+<p>Network: <b>DigiByte mainnet</b>. Environment id: <b>DigiByte</b>. Built from Finalis-Launch source at commit <code>214883a6d3777f04dd581f780a0410ed191c093f</code> (origin/main). This page stops before finalize.</p>
+
+<p>DigiByte is not EVM. There is no wallet step on this page and no chain-id check to make. It prints the lock this environment uses, its destinations, and stops.</p>
+<pre id="log">Network: DigiByte mainnet
+Environment id: DigiByte
+Lock: utxo-locks CLTV P2SH (utxo-locks/lock.py, utxo-locks/script.py)
+Dev Fund (DigiByte): dgb1q6wznekwjk5fgtcyqgpj54hsh4g9qg92ccgnm3l
+Handshake allowance: 1 (CLTV script cannot keep a per-identity count)
+Confirmations required: 10 (utxo-locks/finality.py)
+Fee: 500 bps of gross to the Dev Fund; P2PKH dust minimum 5460 smallest units (utxo-locks/lock.py)
+Binding: SHA-256 of the 117-byte payload (32 bytes) in OP_RETURN
+Principal: P2SH(OP_CHECKLOCKTIMEVERIFY OP_DROP &lt;release pubkey&gt; OP_CHECKSIG)
+
+Deployment: nothing to deploy on DigiByte mainnet. There is no contract and no deploy transaction.
+Each lock is one transaction a user builds at lock time from their own coin, release key and maturity.
+No transaction is printed here because none exists until a user locks.
+
+Stopped before finalize.</pre>
+<h2>Approved Asset Registry rows for DigiByte</h2>
+<p>Written to the Base Verifier by base.html, not on DigiByte mainnet.</p>
+<table border="1" cellpadding="3" cellspacing="0"><tr><th>row</th><th>symbol</th><th>assetId</th><th>canonicalAssetId</th><th>decimals</th><th>class</th><th>path</th><th>Base Verifier registry</th></tr><tr><td>100</td><td>DGB</td><td>native-DGB</td><td><code>0xd8395798156f432d46a41e88b171ba88bee06fe26c23df08887d7531428ffaca</code></td><td>8</td><td>S3</td><td>native</td><td>written on the Base page</td></tr></table>
+</body>
+</html>

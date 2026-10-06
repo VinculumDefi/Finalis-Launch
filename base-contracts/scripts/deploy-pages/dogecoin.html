@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vinculum Protocol - Dogecoin deploy plan</title>
+</head>
+<body>
+<h1>Vinculum Protocol - Dogecoin deploy plan</h1>
+<p>Network: <b>Dogecoin mainnet</b>. Environment id: <b>Dogecoin</b>. Built from Finalis-Launch source at commit <code>214883a6d3777f04dd581f780a0410ed191c093f</code> (origin/main). This page stops before finalize.</p>
+
+<p>Dogecoin is not EVM. There is no wallet step on this page and no chain-id check to make. It prints the lock this environment uses, its destinations, and stops.</p>
+<pre id="log">Network: Dogecoin mainnet
+Environment id: Dogecoin
+Lock: utxo-locks CLTV P2SH (utxo-locks/lock.py, utxo-locks/script.py)
+Dev Fund (Dogecoin): D8LkDKudBwvFs9Jwg6Hq2RSb63Z7uwkk9h
+Handshake allowance: 1 (CLTV script cannot keep a per-identity count)
+Confirmations required: 60 (utxo-locks/finality.py)
+Fee: 500 bps of gross to the Dev Fund; P2PKH dust minimum 100000 smallest units (utxo-locks/lock.py)
+Binding: SHA-256 of the 117-byte payload (32 bytes) in OP_RETURN
+Principal: P2SH(OP_CHECKLOCKTIMEVERIFY OP_DROP &lt;release pubkey&gt; OP_CHECKSIG)
+
+Deployment: nothing to deploy on Dogecoin mainnet. There is no contract and no deploy transaction.
+Each lock is one transaction a user builds at lock time from their own coin, release key and maturity.
+No transaction is printed here because none exists until a user locks.
+
+Stopped before finalize.</pre>
+<h2>Approved Asset Registry rows for Dogecoin</h2>
+<p>Written to the Base Verifier by base.html, not on Dogecoin mainnet.</p>
+<table border="1" cellpadding="3" cellspacing="0"><tr><th>row</th><th>symbol</th><th>assetId</th><th>canonicalAssetId</th><th>decimals</th><th>class</th><th>path</th><th>Base Verifier registry</th></tr><tr><td>4</td><td>DOGE</td><td>native-DOGE</td><td><code>0x37908daca1c4295e80385ddc2b9c7cc53c782a5f76d4c047a5e35e7a9f1b9f92</code></td><td>8</td><td>S3</td><td>native</td><td>written on the Base page</td></tr></table>
+</body>
+</html>
