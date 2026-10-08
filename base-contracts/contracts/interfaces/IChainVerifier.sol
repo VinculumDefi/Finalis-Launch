@@ -10,6 +10,11 @@
 // VF-XCH-006/010: verifyFinality — objective chain-native finality check.
 // VF-XCH-011:     extractFacts  — independent fact extraction from raw proof.
 //
+// 2026-10-08: extractFacts is view, not pure. A Base reader must read
+// lockRecord. A pure interface makes that read impossible. An implementation
+// that only decodes may still be pure. Do not register a reader that trusts
+// caller-supplied facts.
+//
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
 // =============================================================================
@@ -38,7 +43,7 @@ interface IChainVerifier {
     /// @return maturityTimestamp Maturity timestamp.
     function extractFacts(
         bytes calldata lockEventProof
-    ) external pure returns (
+    ) external view returns (
         bytes32 lockId,
         uint256 grossAmount,
         uint256 feeAmount,
