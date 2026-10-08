@@ -11,15 +11,9 @@
 // duration, creation, and maturity come from lockRecord. sourceFinalityProof
 // is not read.
 //
-// COMPILE GATE. main IChainVerifier.extractFacts is pure. A storage read
-// cannot implement pure. Do not register this contract until that interface
-// function is view. VinculumFinalisVerifier already calls it on a contract
-// instance, so the caller does not require pure.
 //
-// REMAINING HOLE. The consumer at cf7e577 cross-checks lock id, gross, fee,
-// principal, and duration only. It does not cross-check baseRecipient or
-// output token. This reader cannot close that hole. The interface does not
-// return those fields. Do not describe this file as a complete mint fix.
+// Recipient and output token are returned from lockRecord. The consumer
+// must require both. This file does not register itself and does not deploy.
 //
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // =============================================================================
@@ -41,7 +35,9 @@ interface IBaseLockRecordVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        address baseRecipient,
+        uint8 outputToken
     );
 }
 
@@ -107,13 +103,15 @@ contract BaseLockRecordVerifier is IBaseLockRecordVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        address baseRecipient,
+        uint8 outputToken
     ) {
         bytes32 id = _lockIdOf(lockEventProof);
         ICommitmentVaultLockReader.LockRecord memory r = vault.lockRecord(id);
         if (!r.exists) revert LockNotFound(id);
         _requireBinding(id, r.bindingPayload);
-        return (id, r.gross, r.fee, r.principal, r.duration, r.createdAt, r.maturity);
+        return (id, r.gross, r.fee, r.principal, r.duration, r.createdAt, r.maturity, r.baseRecipient, r.outputToken);
     }
 
     function _lockIdOf(bytes calldata lockEventProof) private pure returns (bytes32) {

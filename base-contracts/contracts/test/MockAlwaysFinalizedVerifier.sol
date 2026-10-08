@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import "../interfaces/IChainVerifier.sol";
 
-/// @dev Test double: always reports finalized and echoes facts from lockEventProof.
+/// @dev Test double: always reports finalized and echoes facts from lockEventProof, including recipient and output token.
 contract MockAlwaysFinalizedVerifier is IChainVerifier {
     function verifyFinality(
         bytes calldata,
@@ -21,11 +21,13 @@ contract MockAlwaysFinalizedVerifier is IChainVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        address baseRecipient,
+        uint8 outputToken
     ) {
         return abi.decode(
             lockEventProof,
-            (bytes32, uint256, uint256, uint256, uint256, uint256, uint256)
+            (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8)
         );
     }
 }

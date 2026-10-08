@@ -10,6 +10,9 @@
 // VF-XCH-006/010: verifyFinality — objective chain-native finality check.
 // VF-XCH-011:     extractFacts  — independent fact extraction from raw proof.
 //
+// 2026-10-08: extractFacts also returns baseRecipient and outputToken.
+// A Base reader supplies both from lockRecord. A reader that cannot
+// supply them returns the zero address and zero. The consumer rejects those.
 // 2026-10-08: extractFacts is view, not pure. A Base reader must read
 // lockRecord. A pure interface makes that read impossible. An implementation
 // that only decodes may still be pure. Do not register a reader that trusts
@@ -50,6 +53,8 @@ interface IChainVerifier {
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        address baseRecipient,
+        uint8 outputToken
     );
 }

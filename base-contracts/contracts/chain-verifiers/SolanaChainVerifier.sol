@@ -42,8 +42,15 @@ contract SolanaChainVerifier is IChainVerifier {
     ) external pure override returns (
         bytes32 lockId, uint256 grossAmount, uint256 feeAmount,
         uint256 principalAmount, uint256 durationSecs,
-        uint256 creationTimestamp, uint256 maturityTimestamp
+        uint256 creationTimestamp, uint256 maturityTimestamp,
+        address baseRecipient, uint8 outputToken
     ) {
-        return abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256));
+        (
+            lockId, grossAmount, feeAmount, principalAmount,
+            durationSecs, creationTimestamp, maturityTimestamp
+        ) = abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256));
+        // These files do not read a source chain. Recipient and output are not
+        // in the stored proof. Empty fails the consumer check. Do not echo a caller value.
+        return (lockId, grossAmount, feeAmount, principalAmount, durationSecs, creationTimestamp, maturityTimestamp, address(0), 0);
     }
 }

@@ -11,10 +11,10 @@ function feeOf(gross, bps) {
   return (gross * bps) / 10000n;
 }
 
-function encodeLockProof({ lockId, gross, fee, principal, duration, created = 1n, maturity = 2n }) {
+function encodeLockProof({ lockId, gross, fee, principal, duration, created = 1n, maturity = 2n, recipient, outputToken = 0 }) {
   return ethers.AbiCoder.defaultAbiCoder().encode(
-    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
-    [lockId, gross, fee, principal, duration, created, maturity]
+    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8"],
+    [lockId, gross, fee, principal, duration, created, maturity, recipient, outputToken]
   );
 }
 
@@ -93,7 +93,7 @@ function buildPkg({
   const bps = duration === HOUR ? HANDSHAKE_BPS : STANDARD_BPS;
   const fee = feeOf(gross, bps);
   const principal = gross - fee;
-  const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration });
+  const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration, recipient, outputToken: 0 });
   return {
     sourceEnvironmentId: env,
     commitmentVaultLockId: lockId,

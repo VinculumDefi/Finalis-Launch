@@ -78,14 +78,16 @@ interface IChainVerifier {
     /// @return maturityTimestamp The maturity timestamp
     function extractFacts(
         bytes calldata lockEventProof
-    ) external pure returns (
+    ) external view returns (
         bytes32 lockId,
         uint256 grossAmount,
         uint256 feeAmount,
         uint256 principalAmount,
         uint256 durationSecs,
         uint256 creationTimestamp,
-        uint256 maturityTimestamp
+        uint256 maturityTimestamp,
+        address baseRecipient,
+        uint8 outputToken
     );
 }
 
@@ -632,6 +634,9 @@ contract VinculumFinalisVerifier {
             uint256 extPrincipal,
             uint256 extDuration,
             ,
+            ,
+            address extRecipient,
+            uint8 extOutputToken
         ) = verifier.extractFacts(pkg.lockEventProof);
         require(
             keccak256(abi.encodePacked(extLockId)) == keccak256(abi.encodePacked(pkg.commitmentVaultLockId)),
@@ -641,6 +646,8 @@ contract VinculumFinalisVerifier {
         require(extFee == pkg.actualFeeAmountSmallestUnits, "VF-XCH-011: fee mismatch");
         require(extPrincipal == pkg.principalAmountSmallestUnits, "VF-XCH-011: principal mismatch");
         require(extDuration == pkg.durationSecs, "VF-XCH-011: duration mismatch");
+        require(extRecipient == pkg.baseRecipient, "VF-XCH-011: recipient mismatch");
+        require(extOutputToken == pkg.selectedOutputToken, "VF-XCH-011: output token mismatch");
 
         // Step 12: Issuance calculation (VF-COM-018/019)
         // VF-ORC-011/013: emission rate from Valuation Timestamp, not caller-supplied age.
