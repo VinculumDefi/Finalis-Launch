@@ -5,8 +5,8 @@
 // Deploys new VCLM, CHONX, SYNTH, Stake, and Verifier.
 // Binds BaseLockRecordVerifier to the EXISTING lock. Does not deploy a lock.
 // Registers Base and every written asset in the resolved registry, sets the
-// poster and Dev Fund, finalizes, writes the first scheduled ETH price, then
-// checks the reads.
+// poster and Dev Fund, finalizes, writes the first scheduled ETH price only
+// if the registry has a Base ETH line, then checks the reads.
 //
 // Inputs read from the repo (the operator is not asked for these):
 //   - Dev Fund: deployment/representativeBase.cjs, row environment "Base"
@@ -20,14 +20,18 @@
 //     does not equal counts.writes
 //   - a written row has a malformed canonicalAssetId, decimals, custodyClass,
 //     or custodyPath
-//   - the written rows contain no Base ETH row (environmentId "Base", symbol
-//     "ETH"); the first price run must write to a registered Base key
 //   - chain id is not Base mainnet (8453)
-//   - ETH_PRICE_USD is missing or below 0.95 (no invented $1)
+//   - the registry has a Base ETH line and ETH_PRICE_USD is missing or below
+//     0.95 (no invented $1)
+//
+// Each registry line is registered under its own environmentId with its own
+// canonicalAssetId, decimals, custodyClass, and custodyPath. No line is added.
+// With no Base ETH line (environmentId "Base", symbol "ETH"), no price run is
+// written and a Base lock of ETH stays unpriced until such a line exists.
 //   - EXISTING_LOCK_ADDRESS is missing
 //
 // Usage, from base-contracts, at the wallet:
-//   ETH_PRICE_USD=<price> EXISTING_LOCK_ADDRESS=0x... \
+//   [ETH_PRICE_USD=<price>] EXISTING_LOCK_ADDRESS=0x... \
 //   npx hardhat run scripts/broadcastMintPath.cjs --network base
 
 const hre = require("hardhat");
@@ -77,7 +81,7 @@ function loadAssets() {
   const baseEth = written.filter(
     (a) => a.environmentId === "Base" && String(a.symbol || "").toUpperCase() === "ETH"
   );
-  if (baseEth.length === 0) die("registry has no Base ETH row. The first price run would revert VF-REG-001 after finalize.");
+  if (baseEth.length === 0) return { written, ethId: null };
   if (baseEth.length > 1) die(`registry has ${baseEth.length} Base ETH rows (rows ${baseEth.map((a) => a.row).join(", ")}).`);
   return { written, ethId: baseEth[0].canonicalAssetId };
 }
@@ -90,16 +94,21 @@ async function main() {
   const net = await ethers.provider.getNetwork();
   if (net.chainId !== BASE_CHAIN_ID) die("not Base mainnet. This script only runs on Base.");
 
-  const priceRaw = process.env.ETH_PRICE_USD;
-  if (!priceRaw) die("ETH_PRICE_USD is not set. No price is invented.");
-  const priceUsd18 = ethers.parseUnits(priceRaw, 18);
-  if (priceUsd18 < MIN_PRICE_USD18) die("ETH_PRICE_USD is below 0.95. Refusing.");
+  let priceUsd18 = null;
+  if (ethId) {
+    const priceRaw = process.env.ETH_PRICE_USD;
+    if (!priceRaw) die("ETH_PRICE_USD is not set. No price is invented.");
+    priceUsd18 = ethers.parseUnits(priceRaw, 18);
+    if (priceUsd18 < MIN_PRICE_USD18) die("ETH_PRICE_USD is below 0.95. Refusing.");
+  }
 
   const existingLock = process.env.EXISTING_LOCK_ADDRESS;
   if (!existingLock || !ethers.isAddress(existingLock)) die("EXISTING_LOCK_ADDRESS is not set.");
 
   console.log("Base Dev Fund (deployment/representativeBase.cjs):", devFund);
-  console.log("Base ETH canonicalAssetId:", ethId);
+  console.log(ethId
+    ? `Base ETH canonicalAssetId: ${ethId}`
+    : "Base ETH: no registry line. No price run is written. A Base lock of ETH stays unpriced.");
 
   const [deployer] = await ethers.getSigners();
   console.log("Deployer:", deployer.address);
@@ -150,13 +159,19 @@ async function main() {
   await (await verifier.configureDevFund("Base", devFund)).wait();
   await (await verifier.finalize()).wait();
 
-  await (await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ethId, priceUsd18, success: true }])).wait();
+  if (ethId) {
+    await (await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ethId, priceUsd18, success: true }])).wait();
+  }
 
   const cv = await verifier.chainVerifiers("Base");
   if (cv === ethers.ZeroAddress) die("Base reader read failed.");
-  const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", ethId]);
-  const sp = await verifier.scheduledPrices(key);
-  if (!sp.usable) die("ETH price is not usable. Do not point the app at these addresses.");
+  if (ethId) {
+    const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", ethId]);
+    const sp = await verifier.scheduledPrices(key);
+    if (!sp.usable) die("ETH price is not usable. Do not point the app at these addresses.");
+  } else {
+    console.log("Base ETH: unpriced (no registry line). Price read skipped.");
+  }
 
   console.log("ALL READS PASSED");
   console.log("VCLM", await vclm.getAddress());
