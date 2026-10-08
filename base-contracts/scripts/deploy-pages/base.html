@@ -17,7 +17,7 @@
 <body>
 <main>
   <h1>Base ceremony</h1>
-  <p>Deploys a new verifier and new tokens. Binds the Base reader to the lock already on Base. Does not deploy a lock. Dev Fund and the registry come from the repository. The native-ETH price is fetched before any signature. If that fetch fails, or is below $0.95, the page sends nothing.</p>
+  <p>Deploys a new verifier and new tokens. Binds the Base reader to the lock already on Base. Does not deploy a lock. The Dev Fund, the registry, the lock, and the scheduled native-ETH price come from ceremony-data.json, written by the build script. If that price is missing or below $0.95, the page sends nothing. It does not print success until the price read comes back usable.</p>
   <p><button id="connect">Connect wallet</button> <span id="who"></span></p>
   <p><button id="run" disabled>Run ceremony</button></p>
   <div id="log"></div>
@@ -28,7 +28,7 @@
 const logEl = document.getElementById("log");
 const sealEl = document.getElementById("seal");
 function log(s) { logEl.textContent += s + "\n"; }
-let signer;
+let signer, data;
 document.getElementById("connect").onclick = async () => {
   if (!window.ethereum) { log("No wallet."); return; }
   const provider = new ethers.BrowserProvider(window.ethereum);
@@ -37,30 +37,24 @@ document.getElementById("connect").onclick = async () => {
   if (net.chainId !== 8453n) { log("Wrong network. Switch to Base."); return; }
   signer = await provider.getSigner();
   document.getElementById("who").textContent = await signer.getAddress();
+  data = await (await fetch("ceremony-data.json")).json();
+  if (!data.devFund || !data.existingLock || !data.row2 || !Array.isArray(data.entries) || !data.priceUsd18) {
+    log("Stopped before any signature. Ceremony data is incomplete.");
+    return;
+  }
+  if (BigInt(data.priceUsd18) < ethers.parseUnits("0.95", 18)) {
+    log("Stopped before any signature. Scheduled ETH price is below 0.95.");
+    return;
+  }
   document.getElementById("run").disabled = false;
-  log("Wallet connected on Base.");
+  log("Scheduled native-ETH price is in hand. Ceremony can be signed.");
 };
-async function fetchEthPriceUsd18() {
-  const resp = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-  if (!resp.ok) throw new Error("ETH price fetch failed");
-  const body = await resp.json();
-  const usd = body && body.ethereum && body.ethereum.usd;
-  if (typeof usd !== "number" || !(usd >= 0.95)) throw new Error("ETH price missing or below 0.95");
-  return ethers.parseUnits(String(usd), 18);
-}
 document.getElementById("run").onclick = async () => {
   document.getElementById("run").disabled = true;
   sealEl.style.display = "none";
   try {
-    const priceUsd18 = await fetchEthPriceUsd18();
-    log("Native ETH price fetched before any signature.");
-    const data = await (await fetch("ceremony-data.json")).json();
-    const lock = new URLSearchParams(location.search).get("lock") || data.existingLock;
-    if (!data.devFund || !data.row2 || !Array.isArray(data.entries) || data.entries.length === 0) {
-      throw new Error("repository ceremony data incomplete");
-    }
-    if (!lock || !ethers.isAddress(lock)) throw new Error("existing lock not available; page will not deploy a lock");
     const art = await (await fetch("ceremony.json")).json();
+    const priceUsd18 = BigInt(data.priceUsd18);
     const nonce = await signer.getNonce();
     const predicted = ethers.getCreateAddress({ from: await signer.getAddress(), nonce: nonce + 2 });
     const V = new ethers.ContractFactory(art.TokenVCLM.abi, art.TokenVCLM.bytecode, signer);
@@ -76,7 +70,7 @@ document.getElementById("run").onclick = async () => {
     await (await vclm.initialize(predicted, ethers.ZeroAddress)).wait();
     await (await chonx.initialize(predicted, ethers.ZeroAddress)).wait();
     const Reader = new ethers.ContractFactory(art.BaseLockRecordVerifier.abi, art.BaseLockRecordVerifier.bytecode, signer);
-    const reader = await Reader.deploy(lock);
+    const reader = await Reader.deploy(data.existingLock);
     await reader.waitForDeployment();
     await (await verifier.registerChainVerifier("Base", await reader.getAddress())).wait();
     for (const e of data.entries) {
@@ -87,9 +81,12 @@ document.getElementById("run").onclick = async () => {
     await (await verifier.configureDevFund("Base", data.devFund)).wait();
     await (await verifier.finalize()).wait();
     await (await verifier.applyScheduledPriceRun(1, [{ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, priceUsd18, success: true }])).wait();
+    const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", data.row2.canonicalAssetId]);
+    const sp = await verifier.scheduledPrices(key);
+    if (!sp.usable || sp.priceUsd18 !== priceUsd18) throw new Error("price read failed");
     if (await verifier.chainVerifiers("Base") === ethers.ZeroAddress) throw new Error("Base reader read failed");
     sealEl.style.display = "block";
-    sealEl.textContent = ["Reads passed.", "VCLM " + await vclm.getAddress(), "CHONX " + await chonx.getAddress(), "Verifier " + await verifier.getAddress(), "Reader " + await reader.getAddress()].join("\n");
+    sealEl.textContent = ["Price read usable.", "VCLM " + await vclm.getAddress(), "CHONX " + await chonx.getAddress(), "Verifier " + await verifier.getAddress(), "Reader " + await reader.getAddress()].join("\n");
     log("Ceremony complete.");
   } catch (e) {
     log("Stopped: " + (e && e.message ? e.message : e));
