@@ -4,34 +4,89 @@
 // Vinculum Finalis — Base mainnet production ceremony.
 // Deploys new VCLM, CHONX, SYNTH, Stake, and Verifier.
 // Binds BaseLockRecordVerifier to the EXISTING lock. Does not deploy a lock.
-// Registers Base and every asset in the registry JSON, sets the poster and Dev Fund,
-// finalizes, writes the first scheduled ETH price, then checks the reads.
+// Registers Base and every written asset in the resolved registry, sets the
+// poster and Dev Fund, finalizes, writes the first scheduled ETH price, then
+// checks the reads.
 //
-// Refuses before any send if:
+// Inputs read from the repo (the operator is not asked for these):
+//   - Dev Fund: deployment/representativeBase.cjs, row environment "Base"
+//   - Assets:   deployment/assetRegistry.resolved.json, entries[]
+//     Rows with unresolvedReason or sameKeyAsRow are not written, matching
+//     counts.writes in that file.
+//
+// Refuses before any transaction if:
+//   - the Base Dev Fund row is missing or not an address
+//   - the registry file is missing, has no entries, or the written-row count
+//     does not equal counts.writes
+//   - a written row has a malformed canonicalAssetId, decimals, custodyClass,
+//     or custodyPath
+//   - the written rows contain no Base ETH row (environmentId "Base", symbol
+//     "ETH"); the first price run must write to a registered Base key
 //   - chain id is not Base mainnet (8453)
 //   - ETH_PRICE_USD is missing or below 0.95 (no invented $1)
-//   - DEV_FUND_ADDRESS is missing
-//   - REGISTRY_PATH is missing or the file has no assets
 //   - EXISTING_LOCK_ADDRESS is missing
 //
 // Usage, from base-contracts, at the wallet:
-//   ETH_PRICE_USD=2560 DEV_FUND_ADDRESS=0x... REGISTRY_PATH=./registry.json \
-//   EXISTING_LOCK_ADDRESS=0x... npx hardhat run scripts/broadcastMintPath.cjs --network base
+//   ETH_PRICE_USD=<price> EXISTING_LOCK_ADDRESS=0x... \
+//   npx hardhat run scripts/broadcastMintPath.cjs --network base
 
 const hre = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 const { ethers } = hre;
+const { rows: DEPLOYMENT_ROWS } = require("../deployment/representativeBase.cjs");
 
 const BASE_CHAIN_ID = 8453n;
 const MIN_PRICE_USD18 = ethers.parseUnits("0.95", 18);
+const REGISTRY_FILE = path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json");
 
 function die(msg) {
   console.error("REFUSAL:", msg);
   process.exit(1);
 }
 
+function isUint8(v) {
+  return Number.isInteger(v) && v >= 0 && v <= 255;
+}
+
+function loadDevFund() {
+  const row = DEPLOYMENT_ROWS.find((r) => r.environment === "Base");
+  if (!row) die("deployment/representativeBase.cjs has no Base row.");
+  if (!ethers.isAddress(row.devFund)) die("Base Dev Fund in deployment/representativeBase.cjs is not an address.");
+  return ethers.getAddress(row.devFund);
+}
+
+function loadAssets() {
+  if (!fs.existsSync(REGISTRY_FILE)) die("deployment/assetRegistry.resolved.json not found.");
+  const registry = JSON.parse(fs.readFileSync(REGISTRY_FILE, "utf8"));
+  const entries = registry.entries;
+  if (!Array.isArray(entries) || entries.length === 0) die("registry has no entries.");
+  const written = entries.filter((a) => a.unresolvedReason == null && a.sameKeyAsRow == null);
+  const expected = registry.counts && registry.counts.writes;
+  if (written.length !== expected) {
+    die(`registry written rows ${written.length} do not equal counts.writes ${expected}.`);
+  }
+  for (const a of written) {
+    const where = `registry row ${a.row}`;
+    if (typeof a.environmentId !== "string" || a.environmentId.length === 0) die(`${where}: no environmentId.`);
+    if (!/^0x[0-9a-fA-F]{64}$/.test(String(a.canonicalAssetId))) die(`${where}: canonicalAssetId is not bytes32.`);
+    if (!isUint8(a.decimals)) die(`${where}: decimals is not uint8.`);
+    if (!isUint8(a.custodyClass)) die(`${where}: custodyClass is not uint8.`);
+    if (!isUint8(a.custodyPath)) die(`${where}: custodyPath is not uint8.`);
+  }
+  const baseEth = written.filter(
+    (a) => a.environmentId === "Base" && String(a.symbol || "").toUpperCase() === "ETH"
+  );
+  if (baseEth.length === 0) die("registry has no Base ETH row. The first price run would revert VF-REG-001 after finalize.");
+  if (baseEth.length > 1) die(`registry has ${baseEth.length} Base ETH rows (rows ${baseEth.map((a) => a.row).join(", ")}).`);
+  return { written, ethId: baseEth[0].canonicalAssetId };
+}
+
 async function main() {
+  // File inputs first, so a bad registry or Dev Fund refuses with no network use.
+  const devFund = loadDevFund();
+  const { written: assets, ethId } = loadAssets();
+
   const net = await ethers.provider.getNetwork();
   if (net.chainId !== BASE_CHAIN_ID) die("not Base mainnet. This script only runs on Base.");
 
@@ -40,19 +95,11 @@ async function main() {
   const priceUsd18 = ethers.parseUnits(priceRaw, 18);
   if (priceUsd18 < MIN_PRICE_USD18) die("ETH_PRICE_USD is below 0.95. Refusing.");
 
-  const devFund = process.env.DEV_FUND_ADDRESS;
-  if (!devFund || !ethers.isAddress(devFund)) die("DEV_FUND_ADDRESS is missing or not an address.");
-
-  const registryPath = process.env.REGISTRY_PATH;
-  if (!registryPath) die("REGISTRY_PATH is not set. The ceremony does not invent the asset list.");
-  const abs = path.resolve(registryPath);
-  if (!fs.existsSync(abs)) die("registry file not found. Refusing.");
-  const registry = JSON.parse(fs.readFileSync(abs, "utf8"));
-  const assets = registry.assets || registry;
-  if (!Array.isArray(assets) || assets.length === 0) die("registry has no assets. Refusing.");
-
   const existingLock = process.env.EXISTING_LOCK_ADDRESS;
   if (!existingLock || !ethers.isAddress(existingLock)) die("EXISTING_LOCK_ADDRESS is not set.");
+
+  console.log("Base Dev Fund (deployment/representativeBase.cjs):", devFund);
+  console.log("Base ETH canonicalAssetId:", ethId);
 
   const [deployer] = await ethers.getSigners();
   console.log("Deployer:", deployer.address);
@@ -93,12 +140,8 @@ async function main() {
   await (await verifier.registerChainVerifier("Base", await reader.getAddress())).wait();
 
   for (const a of assets) {
-    const env = a.environmentId || a.environment || "Base";
-    const canon = a.canonicalAssetId || a.canonical_asset_id || a.assetId;
     await (await verifier.registerAssetPrecision(
-      env, canon, a.symbol, Number(a.decimals),
-      Number(a.custodyClass || a.custody_class || 2),
-      Number(a.custodyPath || a.custody_path || 0)
+      a.environmentId, a.canonicalAssetId, a.symbol, a.decimals, a.custodyClass, a.custodyPath
     )).wait();
   }
 
@@ -107,9 +150,6 @@ async function main() {
   await (await verifier.configureDevFund("Base", devFund)).wait();
   await (await verifier.finalize()).wait();
 
-  const eth = assets.find((a) => String(a.symbol || "").toUpperCase() === "ETH");
-  if (!eth) die("registry has no ETH asset. Refusing.");
-  const ethId = eth.canonicalAssetId || eth.canonical_asset_id || eth.assetId;
   await (await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ethId, priceUsd18, success: true }])).wait();
 
   const cv = await verifier.chainVerifiers("Base");
