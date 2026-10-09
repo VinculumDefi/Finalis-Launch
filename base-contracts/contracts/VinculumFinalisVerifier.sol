@@ -385,6 +385,34 @@ contract VinculumFinalisVerifier {
         });
     }
 
+    struct AssetPrecisionInput {
+        string environmentId;
+        bytes32 canonicalAssetId;
+        string symbol;
+        uint8 decimals;
+        uint8 custodyClass;
+        uint8 custodyPath;
+    }
+
+    /// @notice Registers several asset precision entries in one call. Each item is
+    ///         written exactly as registerAssetPrecision writes it.
+    /// @dev Deployment ceremony only (same onlyDuringDeployment rule). At most 50
+    ///         items per call.
+    function registerAssetPrecisionBatch(AssetPrecisionInput[] calldata items) external onlyDuringDeployment {
+        require(items.length <= 50, "VF-REG: batch exceeds 50");
+        for (uint256 i = 0; i < items.length; i++) {
+            AssetPrecisionInput calldata it = items[i];
+            bytes32 key = keccak256(abi.encodePacked(it.environmentId, it.canonicalAssetId));
+            assetPrecisionTable[key] = AssetPrecisionEntry({
+                canonicalAssetId: it.canonicalAssetId,
+                symbol: it.symbol,
+                decimals: it.decimals,
+                custodyClass: it.custodyClass,
+                custodyPath: it.custodyPath
+            });
+        }
+    }
+
     /// @notice Sets the address authorized to write scheduled price runs (VF-ORC-007).
     /// @dev Deployment ceremony only. Poster writes batched run results; it is not
     ///      an admin setter that invents ad-hoc prices outside a scheduled run.
