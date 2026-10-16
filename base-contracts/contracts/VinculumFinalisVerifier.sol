@@ -192,9 +192,9 @@ contract VinculumFinalisVerifier {
     uint256 public constant HANDSHAKE_DURATION_SECS = 3600;
 
     // VF-COM-003: handshake USD range
-    uint256 public constant HANDSHAKE_USD_MIN = 0.95e18;
-    uint256 public constant HANDSHAKE_USD_MAX = 1.05e18;
-    uint256 public constant STANDARD_USD_MIN = 10e18;
+    uint256 public constant HANDSHAKE_USD_MIN = 0.01e18;
+    uint256 public constant HANDSHAKE_USD_MAX = 0.02e18;
+    uint256 public constant STANDARD_USD_MIN = 0.01e18;
 
     // Ethereum USDC/USDT: a last successful scheduled price below $0.95 makes
     // the asset unavailable for a new Handshake valuation until a later run
@@ -550,10 +550,10 @@ contract VinculumFinalisVerifier {
         if (isHandshake) {
             require(
                 verifiedGrossUsdMicro >= HANDSHAKE_USD_MIN && verifiedGrossUsdMicro <= HANDSHAKE_USD_MAX,
-                "VF-COM-003: handshake USD outside $0.95-$1.05"
+                "VF-COM-003: handshake USD outside $0.01-$0.02"
             );
         } else {
-            require(verifiedGrossUsdMicro >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $10.00");
+            require(verifiedGrossUsdMicro >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $0.01");
         }
 
         // VF-FEE-011 / VF-RAC-002: Record RAC on fee verification, independent of issuance.
@@ -615,10 +615,10 @@ contract VinculumFinalisVerifier {
         if (isHandshake) {
             require(
                 verifiedGrossUsdMicro >= HANDSHAKE_USD_MIN && verifiedGrossUsdMicro <= HANDSHAKE_USD_MAX,
-                "VF-COM-003: handshake USD outside $0.95-$1.05"
+                "VF-COM-003: handshake USD outside $0.01-$0.02"
             );
         } else {
-            require(verifiedGrossUsdMicro >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $10.00");
+            require(verifiedGrossUsdMicro >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $0.01");
         }
 
         // Step 7: Output eligibility (VF-COM-020/025, VF-TOK-002)

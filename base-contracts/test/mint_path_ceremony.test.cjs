@@ -39,9 +39,9 @@ async function deployCeremony() {
 
 async function lockHandshake(lock, ethId, recipient) {
   const lockId = ethers.hexlify(ethers.randomBytes(32));
-  const gross = ethers.parseEther("0.001");
+  const gross = ethers.parseEther("0.000015") // $0.015 at $1000/ETH;
   await (await lock.createNativeLock(
-    lockId, recipient, 0, ethId, ethers.ZeroHash, recipient, HOUR, SCALE, { value: gross }
+    lockId, recipient, 0, ethId, ethers.ZeroHash, recipient, HOUR, (15n * SCALE) / 1000n, { value: gross }
   )).wait();
   const rec = await lock.lockRecord(lockId);
   return { lockId, rec };

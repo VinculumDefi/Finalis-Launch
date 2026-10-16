@@ -108,7 +108,7 @@ describe("CommitmentVaultLock exact rows, fees, and derived allowance", function
     const dest = await destination.getAddress();
     for (const [secs, bps] of COMMITMENT) {
       const call = args(dest, secs);
-      const usd = secs === HOUR ? USD : 10n * USD;
+      const usd = secs === HOUR ? (15n * USD) / 1000n : 10n * USD;
       await deployed.connect(creator).createNativeLock(...call, usd, { value: 10_000n });
       const record = await deployed.lockRecord(call[0]);
       expect(record.multiplierBps).to.equal(bps);
@@ -121,27 +121,27 @@ describe("CommitmentVaultLock exact rows, fees, and derived allowance", function
     expect(await ethers.provider.getBalance(devFund)).to.equal(250n + 500n * 15n);
   });
 
-  it("keeps the handshake inside $0.95 to $1.05 and the other rows at or above $10", async function () {
+  it("keeps the handshake inside $0.01 to $0.02 and the other rows at or above $0.01", async function () {
     const { creator, deployed, destination } = await vault();
     const dest = await destination.getAddress();
     const hour = args(dest, HOUR);
     await expect(
-      deployed.connect(creator).createNativeLock(...hour, (95n * USD) / 100n - 1n, { value: 10_000n })
+      deployed.connect(creator).createNativeLock(...hour, USD / 100n - 1n, { value: 10_000n })
     ).to.be.revertedWith("CVL: handshake usd");
     await expect(
-      deployed.connect(creator).createNativeLock(...hour, (105n * USD) / 100n + 1n, { value: 10_000n })
+      deployed.connect(creator).createNativeLock(...hour, (2n * USD) / 100n + 1n, { value: 10_000n })
     ).to.be.revertedWith("CVL: handshake usd");
     const low = args(dest, HOUR);
-    await deployed.connect(creator).createNativeLock(...low, (95n * USD) / 100n, { value: 10_000n });
+    await deployed.connect(creator).createNativeLock(...low, USD / 100n, { value: 10_000n });
     const high = args(dest, HOUR);
-    await deployed.connect(creator).createNativeLock(...high, (105n * USD) / 100n, { value: 10_000n });
+    await deployed.connect(creator).createNativeLock(...high, (2n * USD) / 100n, { value: 10_000n });
 
     const week = args(dest, SEVEN_DAYS);
     await expect(
-      deployed.connect(creator).createNativeLock(...week, 10n * USD - 1n, { value: 10_000n })
+      deployed.connect(creator).createNativeLock(...week, USD / 100n - 1n, { value: 10_000n })
     ).to.be.revertedWith("CVL: standard usd");
     const ok = args(dest, SEVEN_DAYS);
-    await deployed.connect(creator).createNativeLock(...ok, 10n * USD, { value: 10_000n });
+    await deployed.connect(creator).createNativeLock(...ok, USD / 100n, { value: 10_000n });
     expect((await deployed.lockRecord(ok[0])).fee).to.equal(500n);
   });
 

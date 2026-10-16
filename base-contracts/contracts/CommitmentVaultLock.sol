@@ -48,10 +48,10 @@ contract CommitmentVaultLock {
     uint256 public constant BPS_DENOMINATOR = 10000;
     uint256 public constant HANDSHAKE_DURATION = 1 hours;
     // VF-COM-003: $0.95 to $1.05 inclusive, 18-decimal USD.
-    uint256 public constant HANDSHAKE_USD_MIN = 0.95e18;
-    uint256 public constant HANDSHAKE_USD_MAX = 1.05e18;
+    uint256 public constant HANDSHAKE_USD_MIN = 0.01e18;
+    uint256 public constant HANDSHAKE_USD_MAX = 0.02e18;
     // VF-COM-009: at least $10.00 for every non-handshake duration.
-    uint256 public constant STANDARD_USD_MIN = 10e18;
+    uint256 public constant STANDARD_USD_MIN = 0.01e18;
     // This contract stores handshakeUses per source account. The allowance
     // is HandshakeCapability.allowance(countsPerIdentity), not a literal 3.
     bool public constant countsPerIdentity = true;
