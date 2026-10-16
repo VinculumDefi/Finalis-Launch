@@ -6,8 +6,8 @@
 // Authority: Vinculum Finalis Master Specification Revision 8 (3 October 2026).
 //
 //   VF-COM-004 / VF-COM-009 / VF-COM-011 / VF-COM-012 / VF-COM-013
-//     One-hour Trust-Building Handshake fee is 250 bps. A lock whose duration
-//     is from 7 days through 3,650 days charges 500 bps. Fee units are
+//     Every duration, including the one-hour Trust-Building Handshake,
+//     charges 500 bps (5.00%). Fee units are
 //     floor(gross * bps / 10_000). Principal is gross minus that fee. A zero
 //     fee or a zero principal is rejected before the lock exists.
 //   VF-FEE-001 / VF-FEE-006 / VF-FEE-010
@@ -30,10 +30,9 @@
 //
 // Maturity is block.timestamp + duration. The duration gate is an exact
 // match against the sixteen COMMITMENT_DURATIONS rows. No range and no
-// interpolated multiplier. The one-hour row is the Handshake ($0.95 to
-// $1.05, fee 2.50%). The other fifteen charge 5.00% and require at least
-// $10.00. This contract keeps handshakeUses per source account, so
-// VF-COM-006 derives an allowance of 3. It does not store the number 3.
+// interpolated multiplier. The one-hour row is the Handshake ($0.01 to
+// $0.02). The other fifteen require at least $0.01. All sixteen charge
+// 5.00%. This contract keeps no per-account Handshake counter.
 // =============================================================================
 
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
@@ -43,17 +42,16 @@ import "./CommitmentDurations.sol";
 import "./HandshakeCapability.sol";
 
 contract CommitmentVaultLock {
-    uint256 public constant HANDSHAKE_FEE_BPS = 250;
     uint256 public constant STANDARD_FEE_BPS = 500;
     uint256 public constant BPS_DENOMINATOR = 10000;
     uint256 public constant HANDSHAKE_DURATION = 1 hours;
-    // VF-COM-003: $0.95 to $1.05 inclusive, 18-decimal USD.
+    // VF-COM-003: $0.01 to $0.02 inclusive, 18-decimal USD.
     uint256 public constant HANDSHAKE_USD_MIN = 0.01e18;
     uint256 public constant HANDSHAKE_USD_MAX = 0.02e18;
-    // VF-COM-009: at least $10.00 for every non-handshake duration.
+    // VF-COM-009: at least $0.01 for every non-handshake duration.
     uint256 public constant STANDARD_USD_MIN = 0.01e18;
-    // This contract stores handshakeUses per source account. The allowance
-    // is HandshakeCapability.allowance(countsPerIdentity), not a literal 3.
+    // Mechanism flag reported by handshakeAllowance(). This contract no
+    // longer counts Handshake uses on-chain.
     bool public constant countsPerIdentity = true;
 
     /// @notice Environment name supplied at deployment. Not a chain id guess.
@@ -83,7 +81,6 @@ contract CommitmentVaultLock {
     }
 
     mapping(bytes32 => LockRecord) private _locks;
-    mapping(address => uint8) public handshakeUses;
 
     uint256 private _entered;
 
@@ -271,11 +268,6 @@ contract CommitmentVaultLock {
         require(releaseDestination != address(0), "CVL: destination");
         require(!_locks[lockId].exists, "CVL: lock exists");
 
-        if (duration == HANDSHAKE_DURATION) {
-            require(handshakeUses[msg.sender] < handshakeAllowance(), "CVL: handshake allowance");
-            handshakeUses[msg.sender] += 1;
-        }
-
         bytes memory payload = abi.encodePacked(
             lockId,
             baseRecipient,
@@ -325,17 +317,14 @@ contract CommitmentVaultLock {
     {
         multiplierBps = CommitmentDurations.multiplierBps(duration);
         if (multiplierBps == 0) revert("CVL: duration");
-        uint256 bps;
         if (duration == HANDSHAKE_DURATION) {
             if (verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX) {
                 revert("CVL: handshake usd");
             }
-            bps = HANDSHAKE_FEE_BPS;
         } else {
             if (verifiedGrossUsd < STANDARD_USD_MIN) revert("CVL: standard usd");
-            bps = STANDARD_FEE_BPS;
         }
-        fee = (gross * bps) / BPS_DENOMINATOR;
+        fee = (gross * STANDARD_FEE_BPS) / BPS_DENOMINATOR;
         principal = gross - fee;
     }
 

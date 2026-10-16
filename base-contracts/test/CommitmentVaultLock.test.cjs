@@ -26,8 +26,8 @@ const STANDARD_USD = 10n * USD;
 const GROSS = 10_000n; // divisible by 10_000 so floor(gross * bps / 10_000) is exact
 const STANDARD_FEE = 500n; // 5.00% of 10_000
 const STANDARD_PRINCIPAL = 9_500n;
-const HANDSHAKE_FEE = 250n; // 2.50% of 10_000
-const HANDSHAKE_PRINCIPAL = 9_750n;
+const HANDSHAKE_FEE = 500n; // 5.00% of 10_000, same as every duration
+const HANDSHAKE_PRINCIPAL = 9_500n;
 
 function freshDevFund() {
   // Test fixture only. Generated in-process. Not a production Dev Fund address.
@@ -235,7 +235,7 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
           expect(await vault.foreignHeaderFinalityNotDecided(ethers.id("header"), 12)).to.equal(false);
         });
 
-        it("charges 2.50% on a one-hour lock and rejects durations that are not exact rows", async function () {
+        it("charges 5.00% on a one-hour lock and rejects durations that are not exact rows", async function () {
           const hour = bindingArgs(await destination.getAddress(), HOUR);
           await createNative(vault, creator, hour, GROSS);
           const record = await vault.lockRecord(hour.lockId);
@@ -306,34 +306,16 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
           expect(await token.balanceOf(await vault.getAddress())).to.equal(principal);
         });
 
-        it("derives three Handshakes because this contract counts per identity, and rejects the fourth", async function () {
-          expect(await vault.countsPerIdentity()).to.equal(true);
-          expect(await vault.handshakeAllowance()).to.equal(3n);
-          const Probe = await ethers.getContractFactory("HandshakeCapabilityProbe");
-          const probe = await Probe.deploy();
-          await probe.waitForDeployment();
-          expect(await probe.allowance(true)).to.equal(3n);
-          expect(await probe.allowance(false)).to.equal(1n);
-          expect(await vault.handshakeAllowance()).to.equal(await probe.allowance(await vault.countsPerIdentity()));
-
-          for (let i = 0; i < 3; i++) {
+        it("keeps no Handshake counter: a fourth Handshake from one account is accepted at 5%", async function () {
+          expect(await vault.handshakeAllowance()).to.equal(3n); // mechanism report only
+          expect(vault.handshakeUses).to.equal(undefined);
+          for (let i = 0; i < 4; i++) {
             const args = bindingArgs(await destination.getAddress(), HOUR);
             await createNative(vault, creator, args, GROSS);
+            const record = await vault.lockRecord(args.lockId);
+            expect(record.exists).to.equal(true);
+            expect(record.fee).to.equal(HANDSHAKE_FEE);
           }
-          expect(await vault.handshakeUses(creator.address)).to.equal(3);
-          const fourth = bindingArgs(await destination.getAddress(), HOUR);
-          await expect(createNative(vault, creator, fourth, GROSS)).to.be.revertedWith(
-            "CVL: handshake allowance"
-          );
-          expect((await vault.lockRecord(fourth.lockId)).exists).to.equal(false);
-
-          // A 7-day lock does not consume the handshake allowance, and another
-          // account still has its own three.
-          const standard = bindingArgs(await destination.getAddress(), SEVEN_DAYS);
-          await createNative(vault, creator, standard, GROSS);
-          const otherHour = bindingArgs(await destination.getAddress(), HOUR);
-          await createNative(vault, stranger, otherHour, GROSS);
-          expect(await vault.handshakeUses(stranger.address)).to.equal(1);
         });
       }
     });

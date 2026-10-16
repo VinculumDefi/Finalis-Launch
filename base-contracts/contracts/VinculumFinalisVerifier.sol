@@ -25,7 +25,7 @@
 //   VF-XCH-013:     Replay protection (env + lock id)
 //   VF-COM-001/002: Permitted durations only
 //   VF-COM-003/009: USD value bounds
-//   VF-COM-006-008: Handshake allowance (1 or 3 per identity)
+//   VF-COM-006:     Handshake allowance mechanism lookup (no per-identity counter)
 //   VF-COM-011-013: Fee math (floor, principal=gross-fee, zero rejection)
 //   VF-COM-017-020: Issuance calculation (fixed order, floor)
 //   VF-COM-025:     CHONX activation-at-creation (causal receipt)
@@ -123,7 +123,6 @@ struct ProofPackage {
     bytes32 commitmentVaultLockId;    // unique per environment
 
     // Handshake
-    string handshakeIdentity;         // (env, account) or (env, canonical_release_pubkey)
     uint8 handshakeAllowanceCount;   // 1 or 3
 
     // Asset identity + quantity
@@ -187,8 +186,7 @@ contract VinculumFinalisVerifier {
     uint256 public constant CHONX_ACTIVATION_THRESHOLD = 10_000_000 * 1e18;
 
     // VF-COM-003/009: fee basis points
-    uint256 public constant HANDSHAKE_FEE_BPS = 250;   // 2.50%
-    uint256 public constant STANDARD_FEE_BPS = 500;    // 5.00%
+    uint256 public constant STANDARD_FEE_BPS = 500;    // 5.00%, every duration incl. Handshake
     uint256 public constant HANDSHAKE_DURATION_SECS = 3600;
 
     // VF-COM-003: handshake USD range
@@ -241,10 +239,6 @@ contract VinculumFinalisVerifier {
     // VF-RAC-001: RAC exact-once — racIdentity => recorded
     mapping(bytes32 => bool) public recordedRacs;
 
-    // VF-COM-006/007: Handshake allowance counter (Base-enforced environments)
-    // keccak256(handshakeIdentity) => count used
-    mapping(bytes32 => uint256) public handshakeUsage;
-
     // BASE-CAP: lifetime issuance
     uint256 public cumulativeVclmIssued;
     uint256 public cumulativeChonxIssued;
@@ -280,6 +274,11 @@ contract VinculumFinalisVerifier {
 
     // Only this address may write scheduled-run results (not an invent-price admin).
     address public scheduledPricePoster;
+
+    // Registry row 2 (native ETH) canonical asset id, also registered under
+    // "Base". finalize() requires this Base row and its usable price.
+    bytes32 public constant BASE_NATIVE_ETH_ASSET_ID =
+        0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b;
     uint64 public lastScheduledRunId;
 
     // VF-ORC-011/013: emission rate uses Valuation Timestamp vs protocol launch.
@@ -440,6 +439,13 @@ contract VinculumFinalisVerifier {
     ///      address on earth that can alter registry, chain verifiers, or Dev
     ///      Fund destinations (VF-IMM-001/002/004, VF-DEP-003).
     function finalize() external onlyDuringDeployment {
+        require(address(chainVerifiers["Base"]) != address(0), "VF-DEP-010: Base reader not registered");
+        bytes32 baseEthKey = keccak256(abi.encodePacked("Base", BASE_NATIVE_ETH_ASSET_ID));
+        require(assetPrecisionTable[baseEthKey].canonicalAssetId != bytes32(0), "VF-DEP-011: Base ETH registry row missing");
+        require(devFundDestinations["Base"] != address(0), "VF-DEP-012: Base Dev Fund not set");
+        require(scheduledPricePoster != address(0), "VF-DEP-013: price poster not set");
+        ScheduledPriceEntry memory sp = scheduledPrices[baseEthKey];
+        require(sp.usable && sp.priceUsd18 > 0, "VF-DEP-014: Base ETH price not usable");
         configurationFinalized = true;
         if (protocolLaunchTimestamp == 0) {
             protocolLaunchTimestamp = block.timestamp;
@@ -467,7 +473,8 @@ contract VinculumFinalisVerifier {
         ScheduledPriceUpdate[] calldata updates
     ) external {
         require(msg.sender == scheduledPricePoster, "VF-ORC-007: not price poster");
-        require(configurationFinalized, "VF-DEP-001: not finalized");
+        // The poster may write before finalize (finalize requires a usable
+        // Base ETH price) and after it. A failed asset is kept unusable.
         require(runId > lastScheduledRunId, "VF-ORC-001: run id must advance");
         lastScheduledRunId = runId;
 
@@ -537,8 +544,7 @@ contract VinculumFinalisVerifier {
         require(fee > 0 && principal > 0, "VF-COM-013: zero fee or principal");
 
         bool isHandshake = pkg.durationSecs == HANDSHAKE_DURATION_SECS;
-        uint256 bps = isHandshake ? HANDSHAKE_FEE_BPS : STANDARD_FEE_BPS;
-        require(fee == (gross * bps) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+        require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
 
         // VF-COM-001/002: Duration must be permitted
         require(_isPermittedDuration(pkg.durationSecs), "VF-COM-002: duration not permitted");
@@ -604,8 +610,7 @@ contract VinculumFinalisVerifier {
         require(fee > 0 && principal > 0, "VF-COM-013: zero fee or principal");
 
         bool isHandshake = pkg.durationSecs == HANDSHAKE_DURATION_SECS;
-        uint256 bps = isHandshake ? HANDSHAKE_FEE_BPS : STANDARD_FEE_BPS;
-        require(fee == (gross * bps) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+        require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
 
         // Step 5: Duration (VF-COM-001/002)
         require(_isPermittedDuration(pkg.durationSecs), "VF-COM-002: duration not permitted");
@@ -628,10 +633,10 @@ contract VinculumFinalisVerifier {
             require(pkg.chonxActivationReceipt.length > 0, "VF-COM-025: missing activation receipt");
         }
 
-        // Step 8: Handshake allowance lookup (VF-COM-006/007 / CL-11)
+        // Step 8: Handshake allowance lookup (VF-COM-006 / CL-11)
         // Do not trust pkg.handshakeAllowanceCount as the rule. Look up the
         // registered mechanism on Base for every environment. A package value
-        // that disagrees reverts. Consumption is deferred until success.
+        // that disagrees reverts. No per-identity use is counted.
         uint256 expectedAllowance = _expectedHandshakeAllowance(pkg.sourceEnvironmentId);
         require(
             uint256(pkg.handshakeAllowanceCount) == expectedAllowance,
@@ -701,16 +706,6 @@ contract VinculumFinalisVerifier {
 
         // ===== All checks passed — authorize issuance =====
         // RAC already recorded at fee verification above.
-
-        // VF-COM-006/007: consume handshake allowance only on 1h Handshake success
-        if (isHandshake) {
-            bytes32 handshakeKey = keccak256(abi.encodePacked(pkg.handshakeIdentity));
-            require(
-                handshakeUsage[handshakeKey] < expectedAllowance,
-                "VF-COM-007: handshake allowance exhausted"
-            );
-            handshakeUsage[handshakeKey] += 1;
-        }
 
         // Mint tokens (BASE-EMIT)
         if (pkg.selectedOutputToken == 0) { // VCLM
@@ -903,10 +898,6 @@ contract VinculumFinalisVerifier {
 
     function isRacRecorded(bytes32 racIdentity) external view returns (bool) {
         return recordedRacs[racIdentity];
-    }
-
-    function getHandshakeUsage(string calldata handshakeIdentity) external view returns (uint256) {
-        return handshakeUsage[keccak256(abi.encodePacked(handshakeIdentity))];
     }
 
     function getRemainingVclmCap() external view returns (uint256) {

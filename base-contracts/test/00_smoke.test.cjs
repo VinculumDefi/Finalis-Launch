@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
 
 // W0 SMOKE TEST — proves the harness can deploy the system.
 // Asserts nothing about protocol correctness. If this is red, nothing else matters.
@@ -46,7 +47,7 @@ async function deploySystem() {
 
   // VF-DEP-001: deployment ceremony — configure, then close it permanently.
   await verifier.configureDevFund("base", deployer.address);
-  await verifier.finalize();
+  await finalizeCeremony(verifier);
 
   return { deployer, vclm, chonx, synthToken, verifier, synth, stake, launchTimestamp };
 }

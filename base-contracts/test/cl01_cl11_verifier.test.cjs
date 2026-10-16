@@ -1,11 +1,11 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
 
 const SCALE = 10n ** 18n;
 const HOUR = 3600n;
 const DAY30 = 2592000n;
-const HANDSHAKE_BPS = 250n;
-const STANDARD_BPS = 500n;
+const STANDARD_BPS = 500n; // every duration, including the Handshake
 
 function feeOf(gross, bps) {
   return (gross * bps) / 10000n;
@@ -53,14 +53,15 @@ async function deployVerifierFixture({ finalize = true } = {}) {
   await verifier.setScheduledPricePoster(deployer.address);
 
   if (finalize) {
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
   }
 
   return { deployer, recipient, vclm, chonx, verifier, mock, stake };
 }
 
 async function writeScheduledPrice(verifier, { env, assetId, priceUsd18, runId = 1n, success = true }) {
-  await verifier.applyScheduledPriceRun(runId, [
+  // run 1 is the Base ETH price written before finalize
+  await verifier.applyScheduledPriceRun(runId + 1n, [
     {
       environmentId: env,
       canonicalAssetId: assetId,
@@ -90,14 +91,13 @@ function buildPkg({
   racIdentity,
   priceRecord = "0x",
 }) {
-  const bps = duration === HOUR ? HANDSHAKE_BPS : STANDARD_BPS;
+  const bps = STANDARD_BPS;
   const fee = feeOf(gross, bps);
   const principal = gross - fee;
   const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration, recipient, outputToken: 0 });
   return {
     sourceEnvironmentId: env,
     commitmentVaultLockId: lockId,
-    handshakeIdentity: identity,
     handshakeAllowanceCount: allowance,
     canonicalAssetId: assetId,
     assetPrecision: precision,
@@ -150,7 +150,7 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
     await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
 
     // Bitcoin mechanism allowance is 1; package claims 3
@@ -174,7 +174,7 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     );
   });
 
-  it("handshake consume only on 1h success", async function () {
+  it("no per-identity Handshake counter: repeat Handshakes mint at the 5% fee", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await Token.deploy("V", "V", 10n ** 30n);
@@ -202,7 +202,7 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
     await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
 
     const identity = "btc-handshake-id";
@@ -226,9 +226,8 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     });
     await verifier.recordFeeAndRac(stdPkg);
     await verifier.verifyAndMint(stdPkg, 0);
-    expect(await verifier.getHandshakeUsage(identity)).to.equal(0n);
 
-    // One-hour Handshake success consumes exactly once
+    // One-hour Handshake mints; fee is 5% like every other duration
     const hsPkg = buildPkg({
       env: "Bitcoin",
       lockId: ethers.id("lock-hs"),
@@ -244,10 +243,10 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
       priceRecord,
     });
     await verifier.recordFeeAndRac(hsPkg);
+    expect(hsPkg.actualFeeAmountSmallestUnits).to.equal((hsGross * 500n) / 10000n);
     await verifier.verifyAndMint(hsPkg, 0);
-    expect(await verifier.getHandshakeUsage(identity)).to.equal(1n);
 
-    // Second Handshake by same identity is exhausted
+    // Second Handshake by the same identity is no longer limited on-chain
     const hsPkg2 = buildPkg({
       env: "Bitcoin",
       lockId: ethers.id("lock-hs-2"),
@@ -263,10 +262,8 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
       priceRecord,
     });
     await verifier.recordFeeAndRac(hsPkg2);
-    await expect(verifier.verifyAndMint(hsPkg2, 0)).to.be.revertedWith(
-      "VF-COM-007: handshake allowance exhausted"
-    );
-    expect(await verifier.getHandshakeUsage(identity)).to.equal(1n);
+    await expect(verifier.verifyAndMint(hsPkg2, 0)).to.not.be.reverted;
+    expect(await verifier.isLockConsumed("Bitcoin", ethers.id("lock-hs-2"))).to.equal(true);
   });
 });
 
@@ -299,7 +296,7 @@ async function deployStableFixture() {
   await verifier.registerChainVerifier("Ethereum", await mock.getAddress());
   await verifier.configureDevFund("Ethereum", deployer.address);
   await verifier.setScheduledPricePoster(deployer.address);
-  await verifier.finalize();
+  await finalizeCeremony(verifier);
   return { deployer, recipient, vclm, verifier, usdc, usdt };
 }
 
@@ -337,7 +334,7 @@ describe("CL-01 / VF-ORC · Ethereum USDC/USDT priced from scheduled runs", func
     const { recipient, vclm, verifier, usdc, usdt } = await deployStableFixture();
     const usdcPrice = 999_000_000_000_000_000n; // $0.999
     const usdtPrice = 1_002_000_000_000_000_000n; // $1.002
-    await verifier.applyScheduledPriceRun(1n, [
+    await verifier.applyScheduledPriceRun(2n, [
       { environmentId: "Ethereum", canonicalAssetId: usdc, priceUsd18: usdcPrice, success: true },
       { environmentId: "Ethereum", canonicalAssetId: usdt, priceUsd18: usdtPrice, success: true },
     ]);
@@ -486,7 +483,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
 
     const pkg = buildPkg({
       env: "Bitcoin",
@@ -533,7 +530,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
 
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
@@ -595,7 +592,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
 
     const price1 = 30000n * SCALE;
     await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: price1, runId: 1n });
@@ -669,7 +666,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await verifier.registerChainVerifier("Bitcoin", await mock.getAddress());
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
-    await verifier.finalize();
+    await finalizeCeremony(verifier);
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
       assetId,

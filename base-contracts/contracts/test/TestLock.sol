@@ -21,7 +21,7 @@ contract TestLock {
         require(msg.value > 0, "zero gross");
         uint256 multiplierBps = CommitmentDurations.multiplierBps(duration);
         require(multiplierBps > 0, "duration");
-        uint256 bps = duration == 3600 ? 250 : 500;
+        uint256 bps = 500; // 5% for every duration, Handshake included
         fee = msg.value * bps / 10000;
         principal = msg.value - fee;
         require(fee > 0 && principal > 0, "zero");

@@ -23,17 +23,17 @@ async function deployCeremony() {
   await (await chonx.initialize(predicted, await synth.getAddress())).wait();
   const reader = await (await ethers.getContractFactory("BaseLockRecordVerifier")).deploy(await lock.getAddress());
   await (await verifier.registerChainVerifier("Base", await reader.getAddress())).wait();
-  const ethId = ethers.hexlify(ethers.randomBytes(32));
+  const ethId = "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b"; // registry row 2 (Base ETH)
   await (await verifier.registerAssetPrecision("Base", ethId, "ETH", 18, 2, 0)).wait();
   await (await verifier.setScheduledPricePoster(deployer.address)).wait();
   await (await verifier.configureDevFund("Base", deployer.address)).wait();
-  await (await verifier.finalize()).wait();
   await (await verifier.applyScheduledPriceRun(1n, [{
     environmentId: "Base",
     canonicalAssetId: ethId,
     priceUsd18: 1000n * SCALE,
     success: true,
   }])).wait();
+  await (await verifier.finalize()).wait();
   return { deployer, recipient, other, lock, vclm, verifier, ethId };
 }
 
@@ -51,7 +51,6 @@ function pkgFrom(lockId, rec, ethId, recipient, racIdentity) {
   return {
     sourceEnvironmentId: "Base",
     commitmentVaultLockId: lockId,
-    handshakeIdentity: "base-handshake",
     handshakeAllowanceCount: 3,
     canonicalAssetId: ethId,
     assetPrecision: 18,

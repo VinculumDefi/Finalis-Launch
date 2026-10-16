@@ -112,13 +112,9 @@ describe("CommitmentVaultLock exact rows, fees, and derived allowance", function
       await deployed.connect(creator).createNativeLock(...call, usd, { value: 10_000n });
       const record = await deployed.lockRecord(call[0]);
       expect(record.multiplierBps).to.equal(bps);
-      if (secs === HOUR) {
-        expect(record.fee).to.equal(250n);
-      } else {
-        expect(record.fee).to.equal(500n);
-      }
+      expect(record.fee).to.equal(500n); // 5.00% for every row, Handshake included
     }
-    expect(await ethers.provider.getBalance(devFund)).to.equal(250n + 500n * 15n);
+    expect(await ethers.provider.getBalance(devFund)).to.equal(500n * 16n);
   });
 
   it("keeps the handshake inside $0.01 to $0.02 and the other rows at or above $0.01", async function () {
