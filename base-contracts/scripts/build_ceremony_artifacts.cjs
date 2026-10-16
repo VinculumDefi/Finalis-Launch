@@ -7,6 +7,7 @@ const targets = {
   VinculumFinalisVerifier: "VinculumFinalisVerifier.sol/VinculumFinalisVerifier.json",
   TokenVCLM: "VinculumFinalisToken.sol/VinculumFinalisToken.json",
   TokenCHONX: "VinculumFinalisToken.sol/VinculumFinalisToken.json",
+  CommitmentVaultLock: "CommitmentVaultLock.sol/CommitmentVaultLock.json",
   BaseLockRecordVerifier: "chain-verifiers/BaseLockRecordVerifier.sol/BaseLockRecordVerifier.json"
 };
 const out = {};

@@ -2,11 +2,13 @@
 "use strict";
 
 // Vinculum Finalis — Base mainnet production ceremony.
-// Deploys new VCLM, CHONX, SYNTH, Stake, and Verifier.
-// Binds BaseLockRecordVerifier to the EXISTING lock. Does not deploy a lock.
-// Registers Base and every written asset in the resolved registry, sets the
-// Base native-ETH price key, sets the poster and Dev Fund, finalizes, writes
-// the first scheduled Base native-ETH price, then checks the reads.
+// Deploys a new CommitmentVaultLock("Base") (5.00% fee on every duration,
+// Handshake $0.01-$0.02, standard minimum $0.01) and new VCLM, CHONX, SYNTH,
+// Stake, and Verifier. Binds BaseLockRecordVerifier to the new lock.
+// Ceremony order (finalize() reverts otherwise): register the Base reader,
+// write the registry in batches of 50 including the Base native-ETH key,
+// set the Dev Fund, set the poster, write the Base ETH price, read it back as
+// usable, then finalize.
 //
 // Inputs read from the repo (the operator is not asked for these):
 //   - Dev Fund: deployment/representativeBase.cjs, row environment "Base"
@@ -24,7 +26,8 @@
 //     pricingIdentifier "ethereum")
 //   - chain id is not Base mainnet (8453)
 //   - ETH_PRICE_USD is missing or below 0.95 (no invented $1)
-//   - EXISTING_LOCK_ADDRESS is missing
+//   - PRICE_POSTER_ADDRESS is set and is not the deployer (the price must be
+//     written before finalize, by the poster)
 //
 // Each registry line is registered under its own environmentId with its own
 // canonicalAssetId, decimals, custodyClass, and custodyPath. No line is added.
@@ -37,7 +40,7 @@
 // that key. This is the same asset, not a second token and not a new row.
 //
 // Usage, from base-contracts, at the wallet:
-//   ETH_PRICE_USD=<price> EXISTING_LOCK_ADDRESS=0x... \
+//   ETH_PRICE_USD=<price> \
 //   npx hardhat run scripts/broadcastMintPath.cjs --network base
 
 const hre = require("hardhat");
@@ -110,14 +113,21 @@ async function main() {
   const priceUsd18 = ethers.parseUnits(priceRaw, 18);
   if (priceUsd18 < MIN_PRICE_USD18) die("ETH_PRICE_USD is below 0.95. Refusing.");
 
-  const existingLock = process.env.EXISTING_LOCK_ADDRESS;
-  if (!existingLock || !ethers.isAddress(existingLock)) die("EXISTING_LOCK_ADDRESS is not set.");
 
   console.log("Base Dev Fund (deployment/representativeBase.cjs):", devFund);
   console.log("Base native ETH (registry row 2) canonicalAssetId:", ethId);
 
   const [deployer] = await ethers.getSigners();
   console.log("Deployer:", deployer.address);
+  const poster = process.env.PRICE_POSTER_ADDRESS || deployer.address;
+  if (poster.toLowerCase() !== deployer.address.toLowerCase()) {
+    die("PRICE_POSTER_ADDRESS must be the deployer: the Base ETH price is written before finalize.");
+  }
+
+  const Lock = await ethers.getContractFactory("CommitmentVaultLock");
+  const lock = await Lock.deploy("Base", devFund);
+  await lock.waitForDeployment();
+  if ((await lock.STANDARD_FEE_BPS()) !== 500n) die("lock fee is not 5%.");
   console.log("Registry assets:", assets.length);
 
   const nonce = await deployer.getNonce();
@@ -150,35 +160,45 @@ async function main() {
   await (await chonx.initialize(verifierAddress, await synth.getAddress())).wait();
 
   const Reader = await ethers.getContractFactory("BaseLockRecordVerifier");
-  const reader = await Reader.deploy(existingLock);
+  const reader = await Reader.deploy(await lock.getAddress());
   await reader.waitForDeployment();
   await (await verifier.registerChainVerifier("Base", await reader.getAddress())).wait();
 
-  for (const a of assets) {
-    await (await verifier.registerAssetPrecision(
-      a.environmentId, a.canonicalAssetId, a.symbol, a.decimals, a.custodyClass, a.custodyPath
-    )).wait();
+  if ((await verifier.BASE_NATIVE_ETH_ASSET_ID()).toLowerCase() !== ethId.toLowerCase()) {
+    die("Verifier BASE_NATIVE_ETH_ASSET_ID differs from registry row 2.");
   }
 
-  // Base native ETH: row 2's canonical asset id under Base for the price table.
-  await (await verifier.registerAssetPrecision(
-    "Base", ethId, nativeEth.symbol, nativeEth.decimals, nativeEth.custodyClass, nativeEth.custodyPath
-  )).wait();
+  // Registry in batches of 50. Base native ETH: row 2's canonical asset id
+  // under Base for the price table, appended to the same batches.
+  const items = assets.map((a) => ({
+    environmentId: a.environmentId, canonicalAssetId: a.canonicalAssetId, symbol: a.symbol,
+    decimals: a.decimals, custodyClass: a.custodyClass, custodyPath: a.custodyPath,
+  }));
+  items.push({
+    environmentId: "Base", canonicalAssetId: ethId, symbol: nativeEth.symbol,
+    decimals: nativeEth.decimals, custodyClass: nativeEth.custodyClass, custodyPath: nativeEth.custodyPath,
+  });
+  for (let i = 0; i < items.length; i += 50) {
+    await (await verifier.registerAssetPrecisionBatch(items.slice(i, i + 50))).wait();
+  }
 
-  const poster = process.env.PRICE_POSTER_ADDRESS || deployer.address;
-  await (await verifier.setScheduledPricePoster(poster)).wait();
   await (await verifier.configureDevFund("Base", devFund)).wait();
-  await (await verifier.finalize()).wait();
+  await (await verifier.setScheduledPricePoster(poster)).wait();
 
+  // Price before finalize; finalize() requires it usable.
   await (await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ethId, priceUsd18, success: true }])).wait();
 
   const cv = await verifier.chainVerifiers("Base");
-  if (cv === ethers.ZeroAddress) die("Base reader read failed.");
+  if (cv === ethers.ZeroAddress) die("Base reader read failed. Not finalizing.");
   const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", ethId]);
   const sp = await verifier.scheduledPrices(key);
-  if (!sp.usable) die("Base native-ETH price is not usable. Do not point the app at these addresses.");
+  if (!sp.usable) die("Base native-ETH price is not usable. Not finalizing.");
+
+  await (await verifier.finalize()).wait();
+  if (!(await verifier.configurationFinalized())) die("finalize read failed.");
 
   console.log("ALL READS PASSED");
+  console.log("Lock", await lock.getAddress());
   console.log("VCLM", await vclm.getAddress());
   console.log("CHONX", await chonx.getAddress());
   console.log("SYNTH", await synth.getAddress());

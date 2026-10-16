@@ -482,7 +482,8 @@ function evmLockPage(env) {
 <ul>
 <li>Lock: CommitmentVaultLock("${esc(env)}", ${esc(row.devFund)})</li>
 <li>Dev Fund (${esc(env)}): <code>${esc(row.devFund)}</code></li>
-<li>Handshake allowance: ${row.handshakeAllowance} (${esc(row.reason)})</li>
+<li>Fee: 5.00% of gross to the Dev Fund for every duration, including the 1-hour Handshake</li>
+<li>Floors: Handshake $0.01 to $0.02; every other duration at least $0.01</li>
 </ul>
 <button id="go" type="button">Connect and deploy on ${esc(net.name)}</button>
 <button id="clear" type="button">Forget saved address</button>
@@ -723,6 +724,11 @@ const order = rows.map((r) => r.environment);
 pages.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
 if (pages.length !== 16 || new Set(pages.map((p) => p[0])).size !== 16) throw new Error("expected sixteen distinct pages");
 for (const [env, file, html] of pages) {
+  // base.html is the full Base ceremony page (reader, registry, Dev Fund,
+  // poster, price, finalize), maintained by hand with ceremony.json from
+  // build_ceremony_artifacts.cjs. Do not overwrite it with the stop-before-
+  // finalize page generated here.
+  if (file === "base.html") { console.log(env.padEnd(16) + " scripts/deploy-pages/base.html (kept; not overwritten)"); continue; }
   fs.writeFileSync(path.join(OUT_DIR, file), html);
   console.log(env.padEnd(16) + " scripts/deploy-pages/" + file + " (" + html.length + " bytes)");
 }
