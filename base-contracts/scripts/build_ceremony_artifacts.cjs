@@ -54,6 +54,7 @@ function get(url) {
   const data = {
     devFund: base.devFund,
     existingLock: "0x968BFD5b580144b4398C10BB1E61bD8A6B1aC946",
+    environmentLocks: { "Ethereum": "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", "Arbitrum": "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", "Optimism": "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", "Polygon": "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", "BNB Smart Chain": "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", "Avalanche": "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a" },
     row2: { canonicalAssetId: row2.canonicalAssetId, symbol: row2.symbol, decimals: row2.decimals, custodyClass: row2.custodyClass, custodyPath: row2.custodyPath },
     entries: entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath })),
     priceUsd18,
