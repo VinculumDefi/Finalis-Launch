@@ -15,10 +15,18 @@ import { ENVIRONMENTS, findAssetPrecision, handshakeAllowanceFor } from '../../l
 import { computeEmissionRate, computeIssuanceFromUsd } from '../../lib/vfVerifierEngine.js';
 import { OUTPUT_TOKEN } from '../../lib/vfProofNormalizer.js';
 
-test('stake table is the sixteen commitment rows', () => {
-  assert.equal(STAKE_DURATIONS.length, 16);
-  assert.equal(STAKE_DURATIONS, COMMITMENT_DURATIONS);
+test('stake table is the four-row TRS table (2026-10-17), separate from the commitment rows', () => {
+  assert.equal(STAKE_DURATIONS.length, 4);
+  assert.notEqual(STAKE_DURATIONS, COMMITMENT_DURATIONS);
   assert.equal(COMMITMENT_DURATIONS.length, 16);
+  assert.deepEqual(
+    STAKE_DURATIONS.map((d) => [d.secs, d.multiplier_bps]),
+    [[2592000, 10000], [5184000, 14000], [7776000, 17500], [10368000, 21000]]
+  );
+  // Unsupported durations are not in the table.
+  for (const secs of [3600, 604800, 15552000, 31536000, 10368001]) {
+    assert.equal(STAKE_DURATIONS.find((d) => d.secs === secs), undefined);
+  }
 });
 
 test('S1 and S2 are the named assets and everyone else in the table is S3', () => {

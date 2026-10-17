@@ -28,7 +28,7 @@
 //   VF-STK-018: Claims transfer minted VCLM; no re-mint
 //   VF-STK-019: Claims only to owner
 //   VF-STK-020: Withdrawal does not erase claimable
-//   VF-STK-021: Queue one future term from the sixteen commitment durations
+//   VF-STK-021: Queue one future term 30/60/90/120d
 //   VF-STK-022: Queued term begins at scheduled end of current
 //   VF-STK-023: Only one future term at a time
 //   VF-STK-024: Extension adds/removes no tokens, charges no fee
@@ -48,8 +48,6 @@
 // =============================================================================
 
 pragma solidity 0.8.19;
-
-import "./CommitmentDurations.sol";
 
 interface IVerifier {
     function cumulativeVclmIssued() external view returns (uint256);
@@ -80,7 +78,24 @@ contract VinculumFinalisStake {
     // VF-RAC-005: Permanent $0.10 Reward Reference Value
     uint256 public constant REWARD_REFERENCE_CENTS = 10;
 
-    // VF-STK-003: stake durations are the sixteen COMMITMENT_DURATIONS rows.
+    // VF-STK-003: independent four-duration stake table (TRS correction,
+    // 2026-10-17). Not the Commitment Vault lock durations.
+    //   30 days  = 10000 bps (1.00x)
+    //   60 days  = 14000 bps (1.40x)
+    //   90 days  = 17500 bps (1.75x)
+    //   120 days = 21000 bps (2.10x)
+    // Historical Solidity used 20000 bps (2.00x) for 120 days. The operator
+    // authorized 21000 bps (2.10x) on 2026-10-17. Any other duration reverts.
+    uint256 public constant STAKE_30D_SECS  = 30 days;
+    uint256 public constant STAKE_60D_SECS  = 60 days;
+    uint256 public constant STAKE_90D_SECS  = 90 days;
+    uint256 public constant STAKE_120D_SECS = 120 days;
+    uint32 public constant STAKE_30D_BPS  = 10000;
+    uint32 public constant STAKE_60D_BPS  = 14000;
+    uint32 public constant STAKE_90D_BPS  = 17500;
+    uint32 public constant STAKE_120D_BPS = 21000;
+    uint256 public constant STAKE_DURATION_COUNT = 4;
+
     // Token multipliers stay VCLM=1.0x, CHONX=2.0x, SYNTH=4.0x (bps).
     uint16 private constant TOKEN_VCLM_BPS  = 10000;
     uint16 private constant TOKEN_CHONX_BPS = 20000;
@@ -383,15 +398,20 @@ contract VinculumFinalisStake {
     }
 
     function stakeDurationCount() external pure returns (uint256) {
-        return CommitmentDurations.COUNT;
+        return STAKE_DURATION_COUNT;
     }
 
     function stakeMultiplierBps(uint256 durationSecs) external pure returns (uint256) {
-        return CommitmentDurations.multiplierBps(durationSecs);
+        return _getStakeMultiplier(durationSecs);
     }
 
+    // Four rows only; any other duration reverts (VF-STK-003).
     function _getStakeMultiplier(uint256 durationSecs) internal pure returns (uint32) {
-        return uint32(CommitmentDurations.multiplierBps(durationSecs));
+        if (durationSecs == STAKE_30D_SECS) return STAKE_30D_BPS;
+        if (durationSecs == STAKE_60D_SECS) return STAKE_60D_BPS;
+        if (durationSecs == STAKE_90D_SECS) return STAKE_90D_BPS;
+        if (durationSecs == STAKE_120D_SECS) return STAKE_120D_BPS;
+        revert("VF-STK-003: duration not permitted");
     }
 
     // CL-03 / §10.1: Weight = amount x token multiplier x duration multiplier.

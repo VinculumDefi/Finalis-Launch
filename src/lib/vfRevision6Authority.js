@@ -99,10 +99,17 @@ export const COMMITMENT_DURATIONS = [
 // VF-COM-003/026: The one-hour duration is only a qualifying Handshake.
 export const HANDSHAKE_DURATION_SECS = 3600;
 
-// Treasury Reward Stake durations (VF-STK-003).
-// The stake ladder is the sixteen COMMITMENT_DURATIONS rows above.
-// No separate 30/60/90/120 table and no interpolated multiplier.
-export const STAKE_DURATIONS = COMMITMENT_DURATIONS;
+// Treasury Reward Stake durations (VF-STK-003), TRS correction 2026-10-17.
+// An independent four-row table, distinct from COMMITMENT_DURATIONS.
+// No interpolated multiplier; any other duration is rejected.
+// Historical Solidity used 20000 bps (2.00x) for 120 days. The operator
+// authorized 21000 bps (2.10x) on 2026-10-17.
+export const STAKE_DURATIONS = [
+  { label: '30 days', secs: 2592000, multiplier_bps: 10000 },
+  { label: '60 days', secs: 5184000, multiplier_bps: 14000 },
+  { label: '90 days', secs: 7776000, multiplier_bps: 17500 },
+  { label: '120 days', secs: 10368000, multiplier_bps: 21000 },
+];
 
 // VF-RAC-005: Permanent $0.10 Reward Reference Value for epoch reward VCLM.
 // This rate NEVER decays — it is distinct from the VCLM emission rate.
