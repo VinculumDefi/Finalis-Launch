@@ -27,8 +27,8 @@ describe("Live configuration: price poster", function () {
 
   it("differs from every Dev Fund, lock, release and deployed-contract address recorded in the repo", function () {
     const { EVM_DEV_FUND, rows } = require("../deployment/representativeBase.cjs");
-    const named = new Set([lc(EVM_DEV_FUND), lc(ceremonyData.devFund), lc(ceremonyData.existingLock),
-      ...Object.values(ceremonyData.environmentLocks).map(lc),
+    const named = new Set([lc(EVM_DEV_FUND), lc(ceremonyData.devFund), ...ceremonyData.oldLocks.map(lc),
+
       ...rows.map((r) => r.devFund).filter((a) => /^0x[0-9a-fA-F]{40}$/.test(a)).map(lc)]);
     for (const f of ["app/base44-lock-2026-10-12/src/lib/protocolConfig.js", "app/base44-lock-2026-10-13/src/lib/protocolConfig.js", "src/lib/vfBaseRegistry.js"]) {
       for (const a of fs.readFileSync(path.join(ROOT, f), "utf8").match(/0x[0-9a-fA-F]{40}\b/g) || []) named.add(lc(a));
@@ -49,7 +49,7 @@ describe("Live configuration: price poster", function () {
   });
 
   it("the Base deploy page hands the poster to the live address before finalize and refuses a clash", function () {
-    const html = fs.readFileSync(path.join(BC, "scripts/deploy-pages/base.html"), "utf8");
+    const html = fs.readFileSync(path.join(BC, "scripts/deploy-pages/baseCeremonyFlow.js"), "utf8");
     expect(html).to.include("setScheduledPricePoster(livePoster)");
     expect(html).to.include("live price poster equals the connected wallet");
     expect(html).to.include("live price poster equals the Dev Fund");

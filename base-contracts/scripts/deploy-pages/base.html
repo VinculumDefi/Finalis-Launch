@@ -8,6 +8,8 @@
   body { font-family: Georgia, serif; background:#0e1420; color:#e8eef8; margin:0; }
   main { max-width:760px; margin:0 auto; padding:28px 20px 60px; }
   h1 { font-weight:500; font-size:28px; }
+  label { display:block; margin:6px 0; }
+  input { font-family:ui-monospace, monospace; width:28em; }
   button { font:inherit; padding:10px 16px; margin:6px 6px 6px 0; border:0; border-radius:6px; background:#2f6fed; color:#fff; }
   button:disabled { background:#3a4254; }
   #log { white-space:pre-wrap; font-family:ui-monospace, monospace; font-size:13px; background:#151c2b; padding:14px; border-radius:8px; min-height:140px; }
@@ -17,25 +19,28 @@
 <body>
 <main>
   <h1>Base ceremony</h1>
-  <p>Deploys a new CommitmentVaultLock("Base"), VCLM, CHONX, and VinculumFinalisVerifier, and a Base reader bound to the new lock. It does not use the old Base lock or verifier. Every lock duration, including the 1-hour Handshake, charges 5.00% of gross. The Handshake must be $0.01 to $0.02; every other duration must be at least $0.01.</p>
-  <p>Order, as the Verifier enforces it: register the Base reader; write the registry in batches of 50, including the Base native-ETH key (registry row 2); set the Dev Fund; set the price poster to this wallet for the first price only; write the scheduled Base ETH price; read it back as usable; hand the price poster to the live price poster from deployment/liveConfig.json (ceremony-data.json) and read it back; then finalize. The page refuses a live poster that is missing, equals this wallet, the Dev Fund, the new lock or an old contract. finalize() reverts unless all of these are in place. The Dev Fund, registry, and price come from ceremony-data.json, written by build_ceremony_artifacts.cjs. If the price is missing, the page sends nothing.</p>
+  <p>Deploys a new 5% CommitmentVaultLock("Base"), VCLM, CHONX, the Verifier, Forge (VinculumFinalisSynth) and Stake. Stake is on from the start: VCLM is initialised with the Verifier and Stake as its minters. Every lock duration, including the 1-hour Handshake, charges 5.00% of gross.</p>
+  <p>Before finalize it deploys and registers 15 readers: Base; Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche (bound to the NEW 5% locks entered below); Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash (live Dev Fund scripts); Stellar and XRP Ledger (live Dev Fund key and account). Solana is not registered. Then: registry in batches of 50 (961 rows plus Base ETH), Dev Fund for the seven EVM chains, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
+  <p>Run the six non-Base lock pages first and paste the new lock addresses here. The page refuses the old 2.5% locks.</p>
+  <div id="locks"></div>
   <p><button id="connect">Connect wallet</button> <span id="who"></span></p>
   <p><button id="run" disabled>Run ceremony</button></p>
   <div id="log"></div>
   <div class="seal" id="seal"></div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+<script src="baseCeremonyFlow.js"></script>
 <script>
-const OLD_CONTRACTS = [
-  "0x968BFD5b580144b4398C10BB1E61bD8A6B1aC946", // old lock (2.5% Handshake, $0.95/$10 floors)
-  "0xb0670826b79e29cc6a1c216Eb396D383a54af47D", // old verifier
-].map((a) => a.toLowerCase());
-const BATCH = 50;
 const logEl = document.getElementById("log");
 const sealEl = document.getElementById("seal");
 function log(s) { logEl.textContent += s + "\n"; }
-function refuseOld(label, addr) {
-  if (OLD_CONTRACTS.includes(String(addr).toLowerCase())) throw new Error(label + " is an old contract (" + addr + "). Refusing.");
+const locksEl = document.getElementById("locks");
+for (const env of BaseCeremonyFlow.EVM_ENVS) {
+  const l = document.createElement("label");
+  l.textContent = "New " + env + " lock: ";
+  const i = document.createElement("input");
+  i.id = "lock-" + env; i.placeholder = "0x… (from the " + env + " page)";
+  l.appendChild(i); locksEl.appendChild(l);
 }
 let signer, data;
 document.getElementById("connect").onclick = async () => {
@@ -47,95 +52,23 @@ document.getElementById("connect").onclick = async () => {
   signer = await provider.getSigner();
   document.getElementById("who").textContent = await signer.getAddress();
   data = await (await fetch("ceremony-data.json")).json();
-  if (!data.devFund || !data.row2 || !Array.isArray(data.entries) || !data.priceUsd18) {
-    log("Stopped before any signature. Ceremony data is incomplete (Dev Fund, row 2, registry, or price missing).");
-    return;
-  }
-  if (BigInt(data.priceUsd18) <= 0n) { log("Stopped before any signature. Scheduled ETH price is not positive."); return; }
+  try { BaseCeremonyFlow.checkInputs(ethers, data, collectLocks(), await signer.getAddress()); }
+  catch (e) { log("Stopped before any signature: " + e.message); return; }
   document.getElementById("run").disabled = false;
-  log("Scheduled native-ETH price in hand: " + ethers.formatUnits(BigInt(data.priceUsd18), 18) + " USD (" + data.priceSource + "). Ceremony can be signed.");
+  log("Inputs checked. Base ETH price " + ethers.formatUnits(BigInt(data.priceUsd18), 18) + " USD (" + data.priceSource + "). Ceremony can be signed.");
 };
+function collectLocks() {
+  return Object.fromEntries(BaseCeremonyFlow.EVM_ENVS.map((env) => [env, document.getElementById("lock-" + env).value.trim()]));
+}
 document.getElementById("run").onclick = async () => {
   document.getElementById("run").disabled = true;
-  sealEl.style.display = "none";
   try {
     const art = await (await fetch("ceremony.json")).json();
-    const priceUsd18 = BigInt(data.priceUsd18);
-    const me = await signer.getAddress();
-    if (!data.scheduledPricePoster || !ethers.isAddress(data.scheduledPricePoster)) throw new Error("live price poster missing from ceremony-data.json. Nothing was sent.");
-    const livePoster = ethers.getAddress(data.scheduledPricePoster);
-    if (livePoster === ethers.ZeroAddress) throw new Error("live price poster is zero. Nothing was sent.");
-    if (livePoster === ethers.getAddress(me)) throw new Error("live price poster equals the connected wallet. Nothing was sent.");
-    if (livePoster === ethers.getAddress(data.devFund)) throw new Error("live price poster equals the Dev Fund. Nothing was sent.");
-    refuseOld("Live price poster", livePoster);
-
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
-    const lock = await L.deploy("Base", data.devFund);
-    await lock.waitForDeployment();
-    log("CommitmentVaultLock " + await lock.getAddress());
-    if ((await lock.STANDARD_FEE_BPS()) !== 500n) throw new Error("lock fee is not 5%");
-
-    const nonce = await signer.getNonce();
-    const predicted = ethers.getCreateAddress({ from: me, nonce: nonce + 2 });
-    const V = new ethers.ContractFactory(art.TokenVCLM.abi, art.TokenVCLM.bytecode, signer);
-    const C = new ethers.ContractFactory(art.TokenCHONX.abi, art.TokenCHONX.bytecode, signer);
-    const vclm = await V.deploy("Vinculum Finalis VCLM", "VCLM", 10000000000n * 10n ** 18n);
-    await vclm.waitForDeployment();
-    const chonx = await C.deploy("Vinculum Finalis CHONX", "CHONX", 100000000000n * 10n ** 18n);
-    await chonx.waitForDeployment();
-    const Ver = new ethers.ContractFactory(art.VinculumFinalisVerifier.abi, art.VinculumFinalisVerifier.bytecode, signer);
-    const verifier = await Ver.deploy(await vclm.getAddress(), await chonx.getAddress());
-    await verifier.waitForDeployment();
-    if ((await verifier.getAddress()).toLowerCase() !== predicted.toLowerCase()) throw new Error("verifier prediction mismatch");
-    refuseOld("Verifier", await verifier.getAddress());
-    if ((await verifier.BASE_NATIVE_ETH_ASSET_ID()).toLowerCase() !== data.row2.canonicalAssetId.toLowerCase()) {
-      throw new Error("Verifier BASE_NATIVE_ETH_ASSET_ID differs from registry row 2");
-    }
-    await (await vclm.initialize(predicted, ethers.ZeroAddress)).wait();
-    await (await chonx.initialize(predicted, ethers.ZeroAddress)).wait();
-
-    // 1. Base reader, bound to the new lock.
-    const Reader = new ethers.ContractFactory(art.BaseLockRecordVerifier.abi, art.BaseLockRecordVerifier.bytecode, signer);
-    const reader = await Reader.deploy(await lock.getAddress());
-    await reader.waitForDeployment();
-    await (await verifier.registerChainVerifier("Base", await reader.getAddress())).wait();
-    log("Base reader " + await reader.getAddress());
-
-    // 2. Registry, batches of 50, with the Base row 2 ETH key appended.
-    const items = data.entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath }));
-    items.push({ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, symbol: data.row2.symbol, decimals: data.row2.decimals, custodyClass: data.row2.custodyClass, custodyPath: data.row2.custodyPath });
-    for (let i = 0; i < items.length; i += BATCH) {
-      const chunk = items.slice(i, i + BATCH);
-      await (await verifier.registerAssetPrecisionBatch(chunk)).wait();
-      log("registry " + Math.min(i + BATCH, items.length) + "/" + items.length);
-    }
-    const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", data.row2.canonicalAssetId]);
-    if ((await verifier.assetPrecisionTable(key)).canonicalAssetId === ethers.ZeroHash) throw new Error("Base ETH row read failed");
-
-    // 3. Dev Fund. 4. Price poster: this wallet for the first price only (handed over in 6b).
-    await (await verifier.configureDevFund("Base", data.devFund)).wait();
-    await (await verifier.setScheduledPricePoster(me)).wait();
-
-    // 5. Scheduled Base ETH price, written before finalize. 6. Read back as usable.
-    await (await verifier.applyScheduledPriceRun(1, [{ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, priceUsd18, success: true }])).wait();
-    const sp = await verifier.scheduledPrices(key);
-    if (!sp.usable || sp.priceUsd18 !== priceUsd18) throw new Error("price read is not usable. Not finalizing.");
-    if (await verifier.chainVerifiers("Base") === ethers.ZeroAddress) throw new Error("Base reader read failed. Not finalizing.");
-    log("Price read usable: " + ethers.formatUnits(sp.priceUsd18, 18) + " USD");
-
-    // 6b. Hand the price poster to the live price poster. Its runs must use runId > 1.
-    if (livePoster === ethers.getAddress(await lock.getAddress())) throw new Error("live price poster equals the new lock. Not finalizing.");
-    await (await verifier.setScheduledPricePoster(livePoster)).wait();
-    if (ethers.getAddress(await verifier.scheduledPricePoster()) !== livePoster) throw new Error("price poster read-back failed. Not finalizing.");
-    log("Price poster handed to the live price poster");
-
-    // 7. Finalize.
-    await (await verifier.finalize()).wait();
-    if (!(await verifier.configurationFinalized())) throw new Error("finalize read failed");
-
-    sealEl.style.display = "block";
-    sealEl.textContent = ["Price read usable, then finalized.", "Lock " + await lock.getAddress(), "VCLM " + await vclm.getAddress(), "CHONX " + await chonx.getAddress(), "Verifier " + await verifier.getAddress(), "Reader " + await reader.getAddress()].join("\n");
-    log("Ceremony complete.");
+    const r = await BaseCeremonyFlow.runBaseCeremony({ ethers, signer, art, data, newLocks: collectLocks(), log });
+    const lines = ["Finalized."];
+    for (const k of ["lock", "vclm", "chonx", "verifier", "forge", "stake"]) lines.push(k + " " + await r[k].getAddress());
+    for (const [env, c] of Object.entries(r.readers)) lines.push("reader " + env + " " + await c.getAddress());
+    sealEl.style.display = "block"; sealEl.textContent = lines.join("\n");
   } catch (e) {
     log("Stopped: " + (e && e.message ? e.message : e));
   }

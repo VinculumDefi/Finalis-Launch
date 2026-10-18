@@ -24,32 +24,34 @@ One page for each chain. Each one deploys `CommitmentVaultLock(<chain>, EVM Dev 
 For each chain: connect the deployer wallet, check the page's chain-id check, sign, then
 write down the new lock address. The old locks stay on-chain, untouched.
 
-## Step 2 - Readers for those chains (no page yet)
-For each new lock, deploy that chain's reader on Base. The reader takes the new lock
-address: `SimpleEthereumLockReader`, `ArbitrumLockReader`, `OptimismLockReader`,
-`PolygonLockReader`, `BnbSmartChainLockReader`, `AvalancheLockReader`.
-The UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) take the Dev
-Fund script. Stellar takes the network id and the Dev Fund key. XRP Ledger takes the Dev Fund
-account. `scripts/testChainCeremony.cjs` shows the exact constructor inputs.
-**No deploy page does this yet** (see "Gaps").
-
-## Step 3 - Base page (`scripts/deploy-pages/base.html`, chain id 8453)
-In order, as the page runs it:
+## Step 2 - Base page (`scripts/deploy-pages/base.html`, chain id 8453)
+Paste the six new lock addresses from Step 1 into the page. Before anything is
+sent, the page refuses a missing or invalid address, an old 2.5% lock, or an
+address equal to the poster, the Dev Fund or the wallet. It then runs
+`scripts/deploy-pages/baseCeremonyFlow.js`, which is the same code that
+`test/base_ceremony_flow.test.cjs` runs on the test chain. In order:
 1. Deploy the new 5% Base lock `CommitmentVaultLock("Base", 0xFD21…3e9a)`. The old Base lock is left as it is.
-2. Deploy VCLM, CHONX and the Verifier, plus the Base reader for the new lock. Initialise the tokens to the Verifier.
-3. `registerChainVerifier("Base", reader)`.
-4. Write the registry in batches of 50: the 961 existing rows plus the Base ETH row.
-5. Set the Dev Fund.
-6. Set the price poster to the deployer wallet, but only for the first Base ETH price. Write that price, then read it back as usable.
-7. Hand the price poster to `0x6001…0DB4` and read it back. The page refuses the handover if this address
-   is missing or equals the wallet, the Dev Fund, the new lock or an old contract.
-8. `finalize()`.
+2. Deploy VCLM, CHONX, the Verifier, **Forge** (VinculumFinalisSynth) and **Stake**.
+3. `VCLM.initialize(Verifier, Stake)`, so Stake is on from the start. Then `CHONX.initialize(Verifier, 0)`.
+4. Deploy and register **15 readers**, reading each one back:
+   - Base, bound to the new Base lock.
+   - Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche, each bound to its new lock from Step 1.
+   - Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash, each with its live Dev Fund script.
+   - Stellar (public network, live Dev Fund key) and XRP Ledger (live Dev Fund account).
+   - Solana is not registered.
+   The Dev Fund wiring is decoded and checksum-checked from the recorded Dev Funds by `scripts/build_ceremony_artifacts.cjs` into `ceremony-data.json`.
+5. Write the registry in batches of 50: the 961 existing rows plus the Base ETH row.
+6. Set the Dev Fund for all seven EVM chains.
+7. Set the price poster to the deployer wallet for the first Base ETH price only (run 1). Write that price, then read it back as usable.
+8. Hand the price poster to `0x6001…0DB4` and read it back.
+9. `finalize()`. This is permanent: after it, nothing can be registered.
 
-## Gaps to close before going live
-- After `finalize()`, the readers from Step 2 can no longer be registered, because
-  `registerChainVerifier` works only during the ceremony. The Base page registers
-  only the Base reader. A page, or an added step before step 8, has to register
-  the other 14 readers (6 EVM, 6 UTXO, Stellar, XRP Ledger). Solana stays unregistered.
-- The Base page as it stands does not deploy Forge (VinculumFinalisSynth) or Stake.
-  The test-chain ceremony does deploy them.
+## Step 3 - Price runs (after finalize)
+`scripts/priceRun.cjs` turns fetched prices into the poster's lines: a success
+line for each fetched price, and a failure line for each miss. Run numbers
+start at 2. The script writes the run and its calldata for `0x6001…0DB4` to
+sign, and never sends to a live chain. It was tested on the test chain in
+`test/price_run.test.cjs`.
+
+## Still open
 - Token locks are refused until a token-address-to-registry mapping exists.
