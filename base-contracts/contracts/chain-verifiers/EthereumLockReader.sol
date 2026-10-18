@@ -5,6 +5,8 @@ import "../interfaces/IChainVerifier.sol";
 import "../checkers/ExecutionHeader.sol";
 import "../checkers/MptGet.sol";
 import "../checkers/RlpReader.sol";
+import "../checkers/BeaconSsz.sol";
+import "../checkers/EthereumBeaconLightClient.sol";
 
 /// @title EthereumLockReader
 /// @notice VF-XCH-006/011 for Ethereum. Facts come only from proven chain data,
@@ -21,17 +23,16 @@ import "../checkers/RlpReader.sol";
 ///      address exists on other chains), and LockRecord word 3 of
 ///      _locks[lockId] = baseRecipient | outputToken << 160. LockCreated does
 ///      not carry baseRecipient or outputToken, so they are read from storage.
-///   4. verifyFinality opens the same header and requires a Casper FFG chain of
-///      beacon headers (EthereumFinalityChecker rules: parent-root links,
-///      checkpoint slot, attested >= finalized + 2).
-///      The execution block hash must be SSZ-proven into beacons[0].bodyRoot
-///      (ExecutionPayload.block_hash), so the header is bound to the chain.
-/// LIMIT: the beacon headers are not signature-checked (no sync committee or
-/// trusted checkpoint), so finality is not trust-anchored. See
-/// the test file header; not production-final.
+///   4. verifyFinality opens the same header and requires: a beacon header
+///      recorded as finalized by EthereumBeaconLightClient (sync-committee
+///      BLS signatures from a trusted checkpoint); the lock's beacon block
+///      equal to it or SSZ-proven in its state's block_roots (<= 8192 slots
+///      back); and the execution block hash SSZ-proven into that beacon
+///      block's body (ExecutionPayload.block_hash).
+/// LIMITS: trust rests on the construction checkpoint and a single fork
+/// version; a new fork version or gindex layout needs a new deployment.
 contract EthereumLockReader is IChainVerifier {
     string public constant ENVIRONMENT_ID = "Ethereum";
-    uint256 public constant SLOTS_PER_EPOCH = 32;
     /// @dev CommitmentVaultLock.LockCreated signature.
     bytes32 public constant LOCK_CREATED_TOPIC =
         keccak256("LockCreated(bytes32,address,address,address,uint256,uint256,uint256,uint256)");
@@ -55,30 +56,27 @@ contract EthereumLockReader is IChainVerifier {
         bytes[] recipientSlotNodes; // storageProof for _locks[lockId] word 3
     }
 
-    struct BeaconHeader {
-        uint64 slot;
-        uint64 proposerIndex;
-        bytes32 parentRoot;
-        bytes32 stateRoot;
-        bytes32 bodyRoot;
-    }
-
     struct FinalityProof {
-        uint64 slot;
-        BeaconHeader[] beacons;
-        uint64 finalizedEpoch;
-        uint64 attestedEpoch;
-        /// SSZ branch from ExecutionPayload.block_hash up to beacons[0].bodyRoot.
-        bytes32[] payloadBranch;
+        BeaconSsz.BeaconHeader finalized; // recorded by the light client
+        BeaconSsz.BeaconHeader lockBeacon; // beacon block carrying the lock's execution block
+        bytes32[] blockRootsBranch; // lockBeacon in finalized state's block_roots (empty if same block)
+        bytes32[] payloadBranch; // ExecutionPayload.block_hash -> lockBeacon.bodyRoot
     }
 
-    /// @dev Deneb/Electra: BeaconBlockBody field 9 (execution_payload, 16 leaves),
+    /// @dev Electra/Fulu: BeaconBlockBody field 9 (execution_payload, 16 leaves),
     /// ExecutionPayload field 12 (block_hash, 32 leaves): (16 + 9) * 32 + 12.
     uint256 public constant BLOCK_HASH_GINDEX = 812;
+    /// @dev BeaconState field 5 (block_roots, 64 leaves), Vector[Root, 8192].
+    uint256 public constant BLOCK_ROOTS_GINDEX = 69;
+    uint256 public constant SLOTS_PER_HISTORICAL_ROOT = 8192;
 
-    constructor(address lock_) {
+    EthereumBeaconLightClient public immutable lightClient;
+
+    constructor(address lock_, address lightClient_) {
         require(lock_ != address(0), "VF-XCH-011: Ethereum lock");
+        require(lightClient_ != address(0), "VF-XCH-006: Ethereum light client");
         lock = lock_;
+        lightClient = EthereumBeaconLightClient(lightClient_);
     }
 
     function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
@@ -89,9 +87,25 @@ contract EthereumLockReader is IChainVerifier {
         LockEventProof memory e = abi.decode(lockEventProof, (LockEventProof));
         ExecutionHeader.View memory header = ExecutionHeader.open(e.headerRlp);
         FinalityProof memory f = abi.decode(sourceFinalityProof, (FinalityProof));
-        _requireFinalized(f);
+        bytes32 finRoot = BeaconSsz.root(f.finalized);
+        require(lightClient.isFinalized(finRoot), "VF-XCH-006: Ethereum beacon header not finalized");
+        bytes32 lockRoot = BeaconSsz.root(f.lockBeacon);
+        if (lockRoot != finRoot) {
+            require(
+                f.lockBeacon.slot < f.finalized.slot
+                    && f.finalized.slot - f.lockBeacon.slot <= SLOTS_PER_HISTORICAL_ROOT,
+                "VF-XCH-006: Ethereum block not under finalized header"
+            );
+            uint256 g = BLOCK_ROOTS_GINDEX * SLOTS_PER_HISTORICAL_ROOT + (f.lockBeacon.slot % SLOTS_PER_HISTORICAL_ROOT);
+            require(
+                BeaconSsz.branchRoot(lockRoot, f.blockRootsBranch, g) == f.finalized.stateRoot,
+                "VF-XCH-006: Ethereum block not under finalized header"
+            );
+        } else {
+            require(f.blockRootsBranch.length == 0, "VF-XCH-006: Ethereum block roots branch");
+        }
         require(
-            _sszRoot(header.hash, f.payloadBranch, BLOCK_HASH_GINDEX) == f.beacons[0].bodyRoot,
+            BeaconSsz.branchRoot(header.hash, f.payloadBranch, BLOCK_HASH_GINDEX) == f.lockBeacon.bodyRoot,
             "VF-XCH-006: Ethereum payload not in beacon body"
         );
         return (true, header.hash, header.number);
@@ -161,56 +175,5 @@ contract EthereumLockReader is IChainVerifier {
     function _slot(bytes32 storageRoot, bytes32 slot, bytes[] memory nodes) private pure returns (uint256) {
         bytes memory v = MptGet.get(storageRoot, abi.encodePacked(keccak256(abi.encodePacked(slot))), nodes);
         return RlpReader.toUint(v);
-    }
-
-    // ---- Casper FFG rules copied from EthereumFinalityChecker.verify ----
-    function _requireFinalized(FinalityProof memory p) private pure {
-        require(p.beacons.length >= 2, "VF-XCH-006: Ethereum beacon");
-        require(p.beacons[0].slot == p.slot, "VF-XCH-006: Ethereum slot");
-        require(p.beacons[0].bodyRoot != bytes32(0), "VF-XCH-006: Ethereum body root");
-        bytes32 prev = _beaconRoot(p.beacons[0]);
-        for (uint256 i = 1; i < p.beacons.length; i++) {
-            require(p.beacons[i].slot > p.beacons[i - 1].slot, "VF-XCH-006: Ethereum slot order");
-            require(p.beacons[i].parentRoot == prev, "VF-XCH-006: Ethereum parent root");
-            require(p.beacons[i].bodyRoot != bytes32(0), "VF-XCH-006: Ethereum body root");
-            prev = _beaconRoot(p.beacons[i]);
-        }
-        uint256 checkpointSlot = uint256(p.finalizedEpoch) * SLOTS_PER_EPOCH;
-        require(uint256(p.slot) <= checkpointSlot, "VF-XCH-006: Ethereum after checkpoint");
-        bool saw;
-        for (uint256 i = 0; i < p.beacons.length; i++) if (uint256(p.beacons[i].slot) == checkpointSlot) saw = true;
-        require(saw, "VF-XCH-006: Ethereum checkpoint header");
-        require(
-            uint256(p.beacons[p.beacons.length - 1].slot) / SLOTS_PER_EPOCH == uint256(p.attestedEpoch),
-            "VF-XCH-006: Ethereum attested epoch"
-        );
-        require(uint256(p.attestedEpoch) >= uint256(p.finalizedEpoch) + 2, "VF-XCH-006: Ethereum not finalized");
-    }
-
-    function _sszRoot(bytes32 leaf, bytes32[] memory branch, uint256 gindex) private pure returns (bytes32 h) {
-        h = leaf;
-        for (uint256 i = 0; i < branch.length; i++) {
-            h = gindex & 1 == 1 ? sha256(abi.encodePacked(branch[i], h)) : sha256(abi.encodePacked(h, branch[i]));
-            gindex >>= 1;
-        }
-        require(gindex == 1, "VF-XCH-006: Ethereum payload branch");
-    }
-
-    function _beaconRoot(BeaconHeader memory h) private pure returns (bytes32) {
-        bytes32 h01 = sha256(abi.encodePacked(_u64(h.slot), _u64(h.proposerIndex)));
-        bytes32 h23 = sha256(abi.encodePacked(h.parentRoot, h.stateRoot));
-        bytes32 h45 = sha256(abi.encodePacked(h.bodyRoot, bytes32(0)));
-        bytes32 h67 = sha256(abi.encodePacked(bytes32(0), bytes32(0)));
-        return sha256(abi.encodePacked(sha256(abi.encodePacked(h01, h23)), sha256(abi.encodePacked(h45, h67))));
-    }
-
-    function _u64(uint64 x) private pure returns (bytes32) {
-        uint256 v = uint256(x);
-        uint256 le;
-        for (uint256 i = 0; i < 8; i++) {
-            le = (le << 8) | (v & 0xff);
-            v >>= 8;
-        }
-        return bytes32(le << 192);
     }
 }

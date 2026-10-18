@@ -16,7 +16,8 @@ module.exports = {
       // Equihash 200,9 checks 512 BLAKE2b-50 hashes per header. Eleven headers
       // exceed the default 30,000,000 block gas limit. Base includes the
       // EIP-152 precompile used by the checker.
-      hardfork: "cancun",
+      // Prague: EIP-2537 BLS12-381 precompiles used by EthereumBeaconLightClient.
+      hardfork: "prague",
       blockGasLimit: 200_000_000,
     },
   },
