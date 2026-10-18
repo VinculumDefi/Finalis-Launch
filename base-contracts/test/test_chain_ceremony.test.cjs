@@ -1,11 +1,11 @@
 // Test-chain ceremony for the new main verifier (scripts/testChainCeremony.cjs).
-// In-process Hardhat network only. Checks deploy wiring, the 13 registered
-// readers, exactly 961 + 1 registry rows, a generated poster, a test Base ETH
+// In-process Hardhat network only. Checks deploy wiring, the 15 registered
+// readers (13 + Stellar and XRP Ledger), exactly 961 + 1 registry rows, a generated poster, a test Base ETH
 // price, and finalize gates VF-DEP-010..014 by static call (not finalized).
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
-const { runCeremony, registryRows, READY_EVM, READY_UTXO, BLOCKED, TEST_ETH_PRICE_USD18 } = require("../scripts/testChainCeremony.cjs");
+const { runCeremony, registryRows, stellarKey, xrplAccount, READY_EVM, READY_UTXO, READY_LEDGER, BLOCKED, STELLAR_PUBLIC_NETWORK, TEST_ETH_PRICE_USD18 } = require("../scripts/testChainCeremony.cjs");
 
 const key = (env, id) => ethers.solidityPackedKeccak256(["string", "bytes32"], [env, id]);
 
@@ -33,9 +33,11 @@ describe("Test-chain ceremony: new main verifier", function () {
     }
   });
 
-  it("registers exactly the 13 ready readers and none of the blocked ones", async function () {
-    const envs = ["Base", ...READY_EVM.map((x) => x[0]), ...READY_UTXO.map((x) => x[0])];
-    expect(envs.length).to.equal(13);
+  it("registers exactly the 15 ready readers (incl. Stellar and XRP Ledger) and not Solana", async function () {
+    const envs = ["Base", ...READY_EVM.map((x) => x[0]), ...READY_UTXO.map((x) => x[0]), ...READY_LEDGER];
+    expect(envs.length).to.equal(15);
+    expect(Object.keys(c.readers).length).to.equal(15);
+    expect(BLOCKED).to.deep.equal(["Solana"]);
     for (const env of envs) expect(await c.verifier.chainVerifiers(env)).to.equal(await c.readers[env].getAddress());
     for (const env of BLOCKED) expect(await c.verifier.chainVerifiers(env)).to.equal(ethers.ZeroAddress);
     expect(await c.readers.Base.vault()).to.equal(await c.locks.Base.getAddress());
@@ -51,6 +53,22 @@ describe("Test-chain ceremony: new main verifier", function () {
     expect(c.devFundScripts.DigiByte).to.match(/^0x0014[0-9a-f]{40}$/);
     for (const env of ["Bitcoin Cash", "Dogecoin", "Zcash"]) expect(c.devFundScripts[env]).to.match(/^0x76a914[0-9a-f]{40}88ac$/);
     for (const [env] of READY_UTXO) expect(await c.readers[env].devFundScript()).to.equal(c.devFundScripts[env]);
+  });
+
+  it("Stellar and XRP Ledger readers carry the recorded Dev Funds, decoded and checksum-checked", async function () {
+    const { rows } = require("../deployment/representativeBase.cjs");
+    const df = Object.fromEntries(rows.map((r) => [r.environment, r.devFund]));
+    expect(await c.readers.Stellar.devFundKey()).to.equal(stellarKey(df.Stellar));
+    expect(await c.readers.Stellar.networkId()).to.equal(ethers.sha256(ethers.toUtf8Bytes(STELLAR_PUBLIC_NETWORK)));
+    expect(await c.readers["XRP Ledger"].devFundAccount()).to.equal(xrplAccount(df["XRP Ledger"]));
+    expect(c.ledgerDevFunds.Stellar).to.match(/^0x[0-9a-f]{64}$/);
+    expect(c.ledgerDevFunds["XRP Ledger"]).to.match(/^0x[0-9a-f]{40}$/);
+    // Decoder checks: the XRPL genesis account decodes to its published AccountID,
+    // and a one-character change fails the checksum on both chains.
+    expect(xrplAccount("rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh")).to.equal("0xb5f762798a53d543a014caf8b297cff8f2f937e8");
+    const bump = (a, i) => a.slice(0, i) + (a[i] === "A" ? "B" : "A") + a.slice(i + 1);
+    expect(() => stellarKey(bump(df.Stellar, 10))).to.throw();
+    expect(() => xrplAccount(bump(df["XRP Ledger"], 10))).to.throw();
   });
 
   it("writes exactly the 961 existing rows plus the Base ETH row, nothing extra", async function () {

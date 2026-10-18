@@ -220,10 +220,16 @@ contract EvmReceiptLockReader is IChainVerifier {
         (, gross, fee, principal, maturity) = abi.decode(data, (address, uint256, uint256, uint256, uint256));
     }
 
+    /// @dev Account leaf: [nonce, balance, storageRoot, codeHash]. Chains with
+    /// extra account fields (Avalanche C-Chain: isMultiCoin) override this.
+    function _checkAccountShape(bytes[] memory a) internal pure virtual {
+        require(a.length == 4, "VF-XCH-011: account");
+    }
+
     function _storageRoot(bytes32 stateRoot, bytes[] memory nodes) internal view returns (bytes32) {
         bytes memory account = MptGet.get(stateRoot, abi.encodePacked(keccak256(abi.encodePacked(lock))), nodes);
         bytes[] memory a = RlpReader.listItems(account);
-        require(a.length == 4, "VF-XCH-011: account");
+        _checkAccountShape(a);
         return RlpReader.toBytes32(a[2]);
     }
 

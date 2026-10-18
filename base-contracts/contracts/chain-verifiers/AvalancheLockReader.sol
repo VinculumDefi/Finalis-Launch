@@ -33,6 +33,13 @@ contract AvalancheLockReader is EvmReceiptLockReader {
         require(f[15].length == 33 && uint8(f[15][0]) == 0xa0, "VF-XCH-011: Avalanche extDataHash");
     }
 
+    /// @dev The C-Chain account leaf carries a fifth field, isMultiCoin
+    /// (coreth StateAccount extra), found end to end against a real local
+    /// avalanchego lock. Storage root stays at index 2.
+    function _checkAccountShape(bytes[] memory a) internal pure virtual override {
+        require(a.length == 4 || a.length == 5, "VF-XCH-011: account");
+    }
+
     function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
         external
         view

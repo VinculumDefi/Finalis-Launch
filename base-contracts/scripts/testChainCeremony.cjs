@@ -12,7 +12,10 @@
 //      ArbitrumLockReader, OptimismLockReader, PolygonLockReader,
 //      BnbSmartChainLockReader, AvalancheLockReader, and the six UTXO readers
 //      (Dev Fund scriptPubKey decoded from deployment/representativeBase.cjs).
-//      Solana, Stellar and XRP Ledger are NOT registered (blocked readers).
+//      Stellar (StellarLockReader) and XRP Ledger (XrplLockReader) are also
+//      registered, wired to the recorded Stellar and XRP Ledger Dev Funds
+//      (decoded and checksum-checked here). That makes 15 readers.
+//      Solana is NOT registered (blocked reader).
 //   4. Price poster = a freshly generated wallet (test only); Dev Fund for the
 //      seven EVM environments.
 //   5. Registry: exactly the 961 written rows of assetRegistry.resolved.json
@@ -40,7 +43,9 @@ const READY_UTXO = [
   ["DigiByte", "DigiByteLockReader"],
   ["Zcash", "ZcashLockReader"],
 ];
-const BLOCKED = ["Solana", "Stellar", "XRP Ledger"];
+const READY_LEDGER = ["Stellar", "XRP Ledger"];
+const BLOCKED = ["Solana"];
+const STELLAR_PUBLIC_NETWORK = "Public Global Stellar Network ; September 2015";
 const TEST_ETH_PRICE_USD18 = 2500n * 10n ** 18n; // TEST VALUE, test chain only
 const BATCH = 50;
 
@@ -103,6 +108,33 @@ function devFundScript(env, addr) {
   throw new Error("no script rule for " + env);
 }
 
+// Stellar account strkey (G...) -> 32-byte ed25519 key. base32, version byte
+// 6<<3, CRC16-XModem checksum.
+function stellarKey(addr) {
+  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = 0, val = 0; const out = [];
+  for (const ch of addr) { const i = A.indexOf(ch); if (i < 0) throw new Error("bad strkey"); val = (val << 5) | i; bits += 5;
+    if (bits >= 8) { out.push((val >>> (bits - 8)) & 0xff); bits -= 8; } }
+  const b = Buffer.from(out);
+  if (b.length !== 35 || b[0] !== 6 << 3) throw new Error("not a Stellar account strkey");
+  let crc = 0;
+  for (const x of b.slice(0, 33)) { crc ^= x << 8; for (let k = 0; k < 8; k++) crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff; }
+  if (b.readUInt16LE(33) !== crc) throw new Error("Stellar strkey checksum");
+  return "0x" + b.slice(1, 33).toString("hex");
+}
+// XRP Ledger classic address (r...) -> 20-byte AccountID. base58 (XRPL
+// alphabet), type 0x00, double-SHA256 checksum.
+function xrplAccount(addr) {
+  const A = "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
+  let n = 0n; for (const ch of addr) { const i = A.indexOf(ch); if (i < 0) throw new Error("bad XRPL address"); n = n * 58n + BigInt(i); }
+  let hex = n.toString(16); if (hex.length % 2) hex = "0" + hex;
+  let b = Buffer.from(hex, "hex"); for (const ch of addr) { if (ch !== "r") break; b = Buffer.concat([Buffer.from([0]), b]); }
+  if (b.length !== 25 || b[0] !== 0) throw new Error("not an XRPL account address");
+  const sha = (x) => require("crypto").createHash("sha256").update(x).digest();
+  if (!sha(sha(b.slice(0, 21))).slice(0, 4).equals(b.slice(21))) throw new Error("XRPL address checksum");
+  return "0x" + b.slice(1, 21).toString("hex");
+}
+
 function registryRows() {
   const reg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json"), "utf8"));
   const written = reg.entries.filter((e) => e.decimals != null && e.sameKeyAsRow == null);
@@ -144,6 +176,10 @@ async function runCeremony(hre) {
     devFundScripts[env] = "0x" + devFundScript(env, devFundOf[env]).toString("hex");
     readers[env] = await (await F(name)).deploy(devFundScripts[env]);
   }
+  const ledgerDevFunds = { Stellar: stellarKey(devFundOf.Stellar), "XRP Ledger": xrplAccount(devFundOf["XRP Ledger"]) };
+  readers.Stellar = await (await F("StellarLockReader")).deploy(
+    ethers.sha256(ethers.toUtf8Bytes(STELLAR_PUBLIC_NETWORK)), ledgerDevFunds.Stellar);
+  readers["XRP Ledger"] = await (await F("XrplLockReader")).deploy(ledgerDevFunds["XRP Ledger"]);
   for (const [env, r] of Object.entries(readers)) await (await verifier.registerChainVerifier(env, await at(r))).wait();
 
   const poster = ethers.Wallet.createRandom().connect(ethers.provider); // TEST ONLY, generated here, never saved
@@ -162,10 +198,10 @@ async function runCeremony(hre) {
     { environmentId: "Base", canonicalAssetId: baseEth.canonicalAssetId, priceUsd18: TEST_ETH_PRICE_USD18, success: true },
   ])).wait();
 
-  return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, written, baseEth, all, registryGas, launch };
+  return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, ledgerDevFunds, written, baseEth, all, registryGas, launch };
 }
 
-module.exports = { runCeremony, registryRows, devFundScript, READY_EVM, READY_UTXO, BLOCKED, TEST_ETH_PRICE_USD18 };
+module.exports = { runCeremony, registryRows, devFundScript, stellarKey, xrplAccount, READY_EVM, READY_UTXO, READY_LEDGER, BLOCKED, STELLAR_PUBLIC_NETWORK, TEST_ETH_PRICE_USD18 };
 
 if (require.main === module) {
   const hre = require("hardhat");
