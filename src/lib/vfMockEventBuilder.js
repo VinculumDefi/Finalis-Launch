@@ -20,6 +20,7 @@ export function buildSolanaMockEvent(duration, outputToken) {
   const fee = (gross * bps) / 10000n;
   return {
     lock_id: `vf-sol-${Date.now()}`,
+    fee_tx_signature: `mock-sol-fee-sig-${Date.now()}`,
     handshake_identity: '(Solana, 7xKXtg2CW87d97TXJSDpbD5jBkheTqAAdANpSUQk3)',
     lock_type: 'Native',
     canonical_asset: 'SOL',

@@ -261,7 +261,14 @@ export function normalizeSolanaEvidence(event, finalityProof) {
     base_recipient: '0x' + Array.from(event.base_recipient).map((b) => b.toString(16).padStart(2, '0')).join('').padStart(40, '0').slice(-40),
     release_destination: event.release_destination,
     chonx_activation_receipt: event.chonx_activation_receipt || null,
-    rac_identity: null, // computed by normalizeProofPackage
+    rac_identity: event.fee_tx_signature ? computeRacIdentity({
+      sourceEnvironmentId: 'Solana',
+      lockId: event.lock_id,
+      canonicalFeeTxHash: event.fee_tx_signature,
+      feeOpOrOutputIndex: 0,
+      canonicalFeeAsset: event.canonical_asset,
+      actualFeeAmount: event.fee_amount,
+    }) : null,
     source_finality_proof: finalityProof || null,
     lock_event_proof: event,
   });

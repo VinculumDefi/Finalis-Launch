@@ -14,7 +14,7 @@
 import assert from 'assert';
 import { TokenLayerState, formatTokenAmount } from '../../lib/vfTokenEngine.js';
 import { VerifierState, verifyProof, computeIssuanceFromUsd } from '../../lib/vfVerifierEngine.js';
-import { buildMockEvent } from '../../lib/vfMockEventBuilder.js';
+import { buildMockEvent, buildFinalityProof } from '../../lib/vfMockEventBuilder.js';
 import { normalizeSolanaEvidence, normalizeXrplEvidence, OUTPUT_TOKEN } from '../../lib/vfProofNormalizer.js';
 import { SCALE, TOKEN_HARD_CAPS, CHONX_ACTIVATION_THRESHOLD, SYNTH_ACTIVATION_THRESHOLD, SYNTH_FORGE, COMMITMENT_DURATIONS } from '../../lib/vfRevision6Authority.js';
 
@@ -139,7 +139,8 @@ test('SYNTH forge rejected with insufficient VCLM balance', () => {
 
   state.mintVclm(acct, CHONX_ACTIVATION_THRESHOLD);
   state.mintChonx(acct, SYNTH_ACTIVATION_THRESHOLD);
-  // No extra VCLM minted — insufficient for forge
+  // Empty the account's VCLM (the activation mint left 10M VCLM, enough to forge)
+  state.setBalance('VCLM', acct, 0n);
   state.mintChonx(acct, SYNTH_FORGE.chonx_burn);
 
   const result = state.forgeSynth(acct, 1n);
@@ -205,7 +206,7 @@ test('Full pipeline: verifyProof (Solana) → mint VCLM → forge impossible (CH
 
   // Build a Solana mock event (7-day standard lock, VCLM output)
   const { event } = buildMockEvent('Solana', COMMITMENT_DURATIONS[1].secs, 'VCLM');
-  const { ok, pkg } = normalizeSolanaEvidence(event, { validated: true, height: 1000 });
+  const { ok, package: pkg } = normalizeSolanaEvidence(event, buildFinalityProof('Solana'));
   assert.ok(ok, 'normalization should succeed');
 
   // Verify proof
