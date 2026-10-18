@@ -144,7 +144,7 @@ describe("The package asset must match the lock's asset", function () {
     expect(await c.verifier.recordedRacs(relabel.racIdentity)).to.equal(false);
   });
 
-  it("Base: a token lock has no provable asset and is refused (fail closed)", async function () {
+  it("Base: a lock of an unindexed token address is refused (asset mismatch)", async function () {
     const c = await deploy();
     const token = await (await ethers.getContractFactory("TestFixtureERC20")).deploy(0);
     await token.mint(c.other.address, 10n ** 24n);
@@ -154,8 +154,10 @@ describe("The package asset must match the lock's asset", function () {
       await token.getAddress(), 10n ** 18n, SCALE);
     const rec = await c.lock.lockRecord(lockId);
     const pkg = basePkg(lockId, rec);
-    await expect(c.reader.extractAssetId(pkg.lockEventProof)).to.be.revertedWith("VF-XCH-011: token asset not provable");
-    await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: token asset not provable");
+    // The reader now reports the proven token address (keyed to Base); this
+    // address is not in the Verifier's token address index, so it is refused.
+    expect(await c.reader.extractAssetId(pkg.lockEventProof)).to.equal(await c.verifier.tokenAddressKey("Base", await token.getAddress()));
+    await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: asset mismatch");
   });
 
   it("verifyAndMint also refuses a package whose asset differs from the lock's", async function () {

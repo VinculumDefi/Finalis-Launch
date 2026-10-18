@@ -112,13 +112,15 @@ contract EvmReceiptLockReader is IChainVerifier {
 
     /// @notice The lock's own asset, from the proven LockCreated log (its
     /// `asset` field). The full extractFacts proof must hold first. A native
-    /// lock (asset 0) is this chain's native asset. A token lock reverts: the
-    /// proven data gives only the token address, not its canonical id.
+    /// lock (asset 0) is this chain's native asset. A token lock reports
+    /// keccak256(abi.encode(environmentId, token)) for the Verifier's index.
     function extractAssetId(bytes calldata lockEventProof) external view virtual returns (bytes32) {
         this.extractFacts(lockEventProof);
         LockEventProof memory e = _baseProof(lockEventProof);
-        require(_lockAsset(e.receipt, e.logIndex) == address(0), "VF-XCH-011: token asset not provable");
-        return nativeAssetId;
+        address asset = _lockAsset(e.receipt, e.logIndex);
+        if (asset == address(0)) return nativeAssetId;
+        // Token lock: report the proven token address, keyed to this chain.
+        return keccak256(abi.encode(environmentId, asset));
     }
 
     /// @dev The LockEventProof inside a package proof. Overridden by readers

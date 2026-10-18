@@ -127,8 +127,10 @@ contract BaseLockRecordVerifier is IBaseLockRecordVerifier {
         ICommitmentVaultLockReader.LockRecord memory r = vault.lockRecord(id);
         if (!r.exists) revert LockNotFound(id);
         _requireBinding(id, r.bindingPayload);
-        require(r.asset == address(0), "VF-XCH-011: token asset not provable");
-        return NATIVE_ASSET_ID;
+        if (r.asset == address(0)) return NATIVE_ASSET_ID;
+        // Token lock: the proven token address, keyed to Base, for the
+        // Verifier's token address index.
+        return keccak256(abi.encode("Base", r.asset));
     }
 
     function _lockIdOf(bytes calldata lockEventProof) private pure returns (bytes32) {

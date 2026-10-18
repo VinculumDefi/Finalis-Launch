@@ -58,8 +58,10 @@ interface IChainVerifier {
         uint8 outputToken
     );
 
-    /// @notice Canonical asset id of the asset the proven lock actually holds
-    /// (keccak256(abi.encodePacked(environmentId, assetId)) as in the registry).
+    /// @notice Asset the proven lock actually holds. Native lock: the registry
+    /// canonical id (keccak256(abi.encodePacked(environmentId, "native-<SYM>"))).
+    /// Token lock: keccak256(abi.encode(environmentId, tokenAddress)), which the
+    /// Verifier resolves to the registry row through its token address index.
     /// Reverts when the lock cannot be proven or its asset cannot be established
     /// from proven data. The Verifier requires it to equal the package's
     /// canonicalAssetId (VF-XCH-011: asset mismatch).

@@ -71,6 +71,17 @@ describe("Test-chain ceremony: new main verifier", function () {
     expect(() => xrplAccount(bump(df["XRP Ledger"], 10))).to.throw();
   });
 
+  it("indexes the rows' own token addresses (823, one row per environment + address) and aliases Polygon native POL to the POL row", async function () {
+    expect(c.tokenAddresses.length).to.equal(823);
+    for (const t of [c.tokenAddresses[0], c.tokenAddresses[400], c.tokenAddresses[822]])
+      expect(await c.verifier.tokenAssetIndex(await c.verifier.tokenAddressKey(t.environmentId, t.token))).to.equal(t.canonicalAssetId);
+    const pol = ethers.solidityPackedKeccak256(["string", "string"], ["Ethereum", "POL"]);
+    expect(await c.verifier.assetRowAlias(ethers.solidityPackedKeccak256(["string", "bytes32"], ["Polygon", pol])))
+      .to.equal(ethers.solidityPackedKeccak256(["string", "bytes32"], ["Ethereum", pol]));
+    expect(await c.readers.Polygon.nativeAssetId()).to.equal(pol);
+    expect(c.all.length).to.equal(962); // no POL row added
+  });
+
   it("writes exactly the 961 existing rows plus the Base ETH row, nothing extra", async function () {
     const { written, baseEth } = registryRows();
     expect(written.length).to.equal(961);

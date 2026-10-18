@@ -7,7 +7,8 @@
 //   -> 15 readers deployed and registered: Base, 6 EVM (bound to the NEW
 //      non-Base 5% locks typed into the page), 6 UTXO, Stellar, XRP Ledger.
 //      Solana is not registered.
-//   -> registry (batches of 50, 961 rows + Base ETH) -> Dev Fund for the 7 EVM
+//   -> registry (batches of 50, 961 rows + Base ETH) -> token address index
+//      (823 addresses) and the Polygon native POL alias -> Dev Fund for the 7 EVM
 //      chains -> poster = this wallet, price run 1, read usable
 //   -> poster handed to the live poster -> finalize.
 (function (root) {
@@ -91,6 +92,14 @@
     }
     const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", data.row2.canonicalAssetId]);
     if ((await verifier.assetPrecisionTable(key)).canonicalAssetId === ethers.ZeroHash) throw new Error("Base ETH row read failed");
+
+    // Token address index and asset row aliases (Polygon native POL -> POL row).
+    if (!Array.isArray(data.tokenAddresses) || !Array.isArray(data.assetRowAliases)) throw new Error("token address index missing. Not finalizing.");
+    for (let i = 0; i < data.tokenAddresses.length; i += BATCH) {
+      await (await verifier.registerTokenAddressBatch(data.tokenAddresses.slice(i, i + BATCH))).wait();
+      log("token addresses " + Math.min(i + BATCH, data.tokenAddresses.length) + "/" + data.tokenAddresses.length);
+    }
+    for (const a of data.assetRowAliases) await (await verifier.registerAssetRowAlias(a.environmentId, a.canonicalAssetId, a.rowEnvironmentId)).wait();
 
     for (const [env, a] of Object.entries(data.evmDevFunds)) await (await verifier.configureDevFund(env, a)).wait();
     await (await verifier.setScheduledPricePoster(me)).wait();

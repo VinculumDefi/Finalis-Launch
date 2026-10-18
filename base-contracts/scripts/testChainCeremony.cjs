@@ -135,6 +135,13 @@ function xrplAccount(addr) {
   return "0x" + b.slice(1, 21).toString("hex");
 }
 
+// Polygon native POL -> the existing POL row (environment Ethereum, symbol POL).
+const ASSET_ROW_ALIASES = [{
+  environmentId: "Polygon",
+  canonicalAssetId: require("ethers").solidityPackedKeccak256(["string", "string"], ["Ethereum", "POL"]),
+  rowEnvironmentId: "Ethereum",
+}];
+
 function registryRows() {
   const reg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json"), "utf8"));
   const written = reg.entries.filter((e) => e.decimals != null && e.sameKeyAsRow == null);
@@ -194,14 +201,23 @@ async function runCeremony(hre) {
     registryGas += (await (await verifier.registerAssetPrecisionBatch(batch)).wait()).gasUsed;
   }
 
+  // Token address index (env + address -> row) and the Polygon native POL alias
+  // to the existing POL row (environment Ethereum). No rows added.
+  const { entries: tokenAddresses } = require("./buildTokenAddressIndex.cjs").buildTokenAddressIndex();
+  for (let i = 0; i < tokenAddresses.length; i += BATCH) {
+    await (await verifier.registerTokenAddressBatch(tokenAddresses.slice(i, i + BATCH)
+      .map((t) => ({ environmentId: t.environmentId, token: t.token, canonicalAssetId: t.canonicalAssetId })))).wait();
+  }
+  for (const a of ASSET_ROW_ALIASES) await (await verifier.registerAssetRowAlias(a.environmentId, a.canonicalAssetId, a.rowEnvironmentId)).wait();
+
   await (await verifier.connect(poster).applyScheduledPriceRun(1n, [
     { environmentId: "Base", canonicalAssetId: baseEth.canonicalAssetId, priceUsd18: TEST_ETH_PRICE_USD18, success: true },
   ])).wait();
 
-  return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, ledgerDevFunds, written, baseEth, all, registryGas, launch };
+  return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, ledgerDevFunds, tokenAddresses, written, baseEth, all, registryGas, launch };
 }
 
-module.exports = { runCeremony, registryRows, devFundScript, stellarKey, xrplAccount, READY_EVM, READY_UTXO, READY_LEDGER, BLOCKED, STELLAR_PUBLIC_NETWORK, TEST_ETH_PRICE_USD18 };
+module.exports = { ASSET_ROW_ALIASES, runCeremony, registryRows, devFundScript, stellarKey, xrplAccount, READY_EVM, READY_UTXO, READY_LEDGER, BLOCKED, STELLAR_PUBLIC_NETWORK, TEST_ETH_PRICE_USD18 };
 
 if (require.main === module) {
   const hre = require("hardhat");

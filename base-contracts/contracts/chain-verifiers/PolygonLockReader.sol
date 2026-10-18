@@ -15,7 +15,14 @@ import "./EvmReceiptLockReader.sol";
 contract PolygonLockReader is EvmReceiptLockReader {
     bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
 
-    constructor(address lock_) EvmReceiptLockReader(lock_, "Polygon", 137, keccak256(abi.encodePacked("Polygon", "native-POL"))) {}
+    /// Native POL has no Polygon registry row. It resolves to the existing POL
+    /// row (environment Ethereum, symbol POL): a native lock reports that row's
+    /// canonical id, keccak256("Ethereum", "POL"), and the Verifier's ceremony
+    /// alias (Polygon, that id) -> (Ethereum, that id) supplies its decimals
+    /// and price. No row is added.
+    bytes32 public constant POL_ROW_ASSET_ID = keccak256(abi.encodePacked("Ethereum", "POL"));
+
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Polygon", 137, keccak256(abi.encodePacked("Ethereum", "POL"))) {}
 
     function _checkHeaderShape(bytes[] memory f) internal view virtual override {
         require(f.length >= 16, "VF-XCH-011: Polygon header fields");

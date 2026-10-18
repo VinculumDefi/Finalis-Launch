@@ -419,6 +419,69 @@ contract VinculumFinalisVerifier {
         }
     }
 
+    // ===== Token address index (environment + token address -> registry row) =====
+    //
+    // Registry rows are keyed by canonicalAssetId = keccak256(env, label); a
+    // lock records only the token ADDRESS. This index is the missing link: it
+    // maps keccak256(abi.encode(environmentId, tokenAddress)) - the key a reader
+    // reports for a proven token lock - to the row's canonicalAssetId, using the
+    // address already on each registry row. Written in the ceremony only; one
+    // row per (environment, address); the row must already be registered in
+    // that same environment.
+    mapping(bytes32 => bytes32) public tokenAssetIndex;
+
+    struct TokenAddressInput {
+        string environmentId;
+        address token;
+        bytes32 canonicalAssetId;
+    }
+
+    // ===== Registry row alias (an environment's asset priced by another environment's row) =====
+    //
+    // keccak256(env, canonicalAssetId) -> the registry key of the row it uses.
+    // Polygon native POL has no Polygon row; it uses the existing POL row
+    // (environment Ethereum, the POL token) for precision and price, so the
+    // registry stays 961 rows plus Base ETH. Ceremony only.
+    mapping(bytes32 => bytes32) public assetRowAlias;
+
+    function _assetKey(string memory environmentId, bytes32 canonicalAssetId) internal view returns (bytes32) {
+        bytes32 k = keccak256(abi.encodePacked(environmentId, canonicalAssetId));
+        bytes32 a = assetRowAlias[k];
+        return a != bytes32(0) ? a : k;
+    }
+
+    function registerAssetRowAlias(
+        string calldata environmentId,
+        bytes32 canonicalAssetId,
+        string calldata rowEnvironmentId
+    ) external onlyDuringDeployment {
+        bytes32 k = keccak256(abi.encodePacked(environmentId, canonicalAssetId));
+        bytes32 rowKey = keccak256(abi.encodePacked(rowEnvironmentId, canonicalAssetId));
+        require(assetPrecisionTable[rowKey].canonicalAssetId != bytes32(0), "VF-REG: alias row not registered");
+        require(assetPrecisionTable[k].canonicalAssetId == bytes32(0), "VF-REG: environment already has this row");
+        require(assetRowAlias[k] == bytes32(0), "VF-REG: alias already set");
+        assetRowAlias[k] = rowKey;
+    }
+
+    function tokenAddressKey(string memory environmentId, address token) public pure returns (bytes32) {
+        return keccak256(abi.encode(environmentId, token));
+    }
+
+    function registerTokenAddressBatch(TokenAddressInput[] calldata items) external onlyDuringDeployment {
+        require(items.length <= 50, "VF-REG: batch exceeds 50");
+        for (uint256 i = 0; i < items.length; i++) {
+            TokenAddressInput calldata it = items[i];
+            require(it.token != address(0), "VF-REG: zero token address");
+            require(
+                assetPrecisionTable[keccak256(abi.encodePacked(it.environmentId, it.canonicalAssetId))].canonicalAssetId != bytes32(0),
+                "VF-REG: row not registered in this environment"
+            );
+            bytes32 k = tokenAddressKey(it.environmentId, it.token);
+            require(tokenAssetIndex[k] == bytes32(0), "VF-REG: address already indexed");
+            tokenAssetIndex[k] = it.canonicalAssetId;
+        }
+    }
+
     /// @notice Sets the address authorized to write scheduled price runs (VF-ORC-007).
     /// @dev Deployment ceremony only. Poster writes batched run results; it is not
     ///      an admin setter that invents ad-hoc prices outside a scheduled run.
@@ -536,7 +599,7 @@ contract VinculumFinalisVerifier {
         require(!recordedRacs[pkg.racIdentity], "VF-RAC-001: RAC already recorded");
 
         // VF-REG-001: Asset must be in registry (validates asset identity)
-        bytes32 assetKey = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));
+        bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
         AssetPrecisionEntry memory entry = assetPrecisionTable[assetKey];
         require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
 
@@ -625,8 +688,13 @@ contract VinculumFinalisVerifier {
         require(extDuration == pkg.durationSecs, "VF-XCH-011: duration mismatch");
         require(extRecipient == pkg.baseRecipient, "VF-XCH-011: recipient mismatch");
         require(extOutputToken == pkg.selectedOutputToken, "VF-XCH-011: output token mismatch");
+        // Native locks: the reader reports the native canonical id. Token locks:
+        // the reader reports tokenAddressKey(env, token), resolved here through
+        // the ceremony-written index to the registry row for that address.
+        bytes32 provenAsset = verifier.extractAssetId(pkg.lockEventProof);
         require(
-            verifier.extractAssetId(pkg.lockEventProof) == pkg.canonicalAssetId,
+            pkg.canonicalAssetId != bytes32(0) &&
+                (provenAsset == pkg.canonicalAssetId || tokenAssetIndex[provenAsset] == pkg.canonicalAssetId),
             "VF-XCH-011: asset mismatch"
         );
     }
@@ -652,7 +720,7 @@ contract VinculumFinalisVerifier {
         require(recordedRacs[pkg.racIdentity], "VF-FEE-011: call recordFeeAndRac() first");
 
         // Step 3: Asset registry + precision (VF-REG-001, VF-QNORM)
-        bytes32 assetKey = keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId));
+        bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
         AssetPrecisionEntry memory entry = assetPrecisionTable[assetKey];
         require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
         require(entry.decimals == pkg.assetPrecision, "VF-QNORM: precision mismatch");
@@ -816,9 +884,7 @@ contract VinculumFinalisVerifier {
             // VF-ORC-009/010: retain lock-creation reference; proof delay/retry does not reprice.
             priceUsd18 = binding.priceUsd18;
         } else {
-            bytes32 assetKey = keccak256(
-                abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId)
-            );
+            bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
             ScheduledPriceEntry memory sp = scheduledPrices[assetKey];
             require(sp.usable && sp.priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
             // Ethereum USDC/USDT below $0.95: unavailable for a new Handshake

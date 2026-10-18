@@ -17,7 +17,7 @@ const ETH_ID = "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c38811394
 const coder = ethers.AbiCoder.defaultAbiCoder();
 // Native asset each reader reports for a native lock (registry key form).
 const nativeId = (env) => ({
-  Polygon: ethers.solidityPackedKeccak256(["string", "string"], ["Polygon", "native-POL"]),
+  Polygon: ethers.solidityPackedKeccak256(["string", "string"], ["Ethereum", "POL"]), // native POL resolves to the existing POL row (t203u)
   "BNB Smart Chain": ethers.solidityPackedKeccak256(["string", "string"], ["BNB Smart Chain", "native-BNB"]),
   Avalanche: ethers.solidityPackedKeccak256(["string", "string"], ["Avalanche", "native-AVAX"]),
 }[env] || ETH_ID);

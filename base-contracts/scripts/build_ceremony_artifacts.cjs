@@ -13,7 +13,7 @@ const targets = {
   VinculumFinalisStake: "VinculumFinalisStake.sol/VinculumFinalisStake.json",
 };
 // The 14 other readers, registered on the Base Verifier before finalize.
-const { READY_EVM, READY_UTXO, devFundScript, stellarKey, xrplAccount, STELLAR_PUBLIC_NETWORK } = require("./testChainCeremony.cjs");
+const { ASSET_ROW_ALIASES, READY_EVM, READY_UTXO, devFundScript, stellarKey, xrplAccount, STELLAR_PUBLIC_NETWORK } = require("./testChainCeremony.cjs");
 for (const [, name] of [...READY_EVM, ...READY_UTXO]) targets[name] = "chain-verifiers/" + name + ".sol/" + name + ".json";
 targets.StellarLockReader = "chain-verifiers/StellarLockReader.sol/StellarLockReader.json";
 targets.XrplLockReader = "chain-verifiers/XrplLockReader.sol/XrplLockReader.json";
@@ -75,6 +75,10 @@ function get(url) {
         devFundKey: stellarKey(rep.rows.find((r) => r.environment === "Stellar").devFund) },
       xrpl: { env: "XRP Ledger", contract: "XrplLockReader", devFundAccount: xrplAccount(rep.rows.find((r) => r.environment === "XRP Ledger").devFund) },
     },
+    // (environment, token address) -> registry row, from the rows' own addresses.
+    tokenAddresses: require("./buildTokenAddressIndex.cjs").buildTokenAddressIndex().entries
+      .map((t) => ({ environmentId: t.environmentId, token: t.token, canonicalAssetId: t.canonicalAssetId })),
+    assetRowAliases: ASSET_ROW_ALIASES,
     evmDevFunds: Object.fromEntries(rep.rows.filter((r) => /^0x[0-9a-fA-F]{40}$/.test(r.devFund)).map((r) => [r.environment, r.devFund])),
     row2: { canonicalAssetId: row2.canonicalAssetId, symbol: row2.symbol, decimals: row2.decimals, custodyClass: row2.custodyClass, custodyPath: row2.custodyPath },
     entries: entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath })),
