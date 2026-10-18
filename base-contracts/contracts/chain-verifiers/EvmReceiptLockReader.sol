@@ -66,6 +66,7 @@ contract EvmReceiptLockReader is IChainVerifier {
     function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
         external
         view
+        virtual
         returns (bool, bytes32, uint256)
     {
         LockEventProof memory e = abi.decode(lockEventProof, (LockEventProof));
@@ -81,6 +82,7 @@ contract EvmReceiptLockReader is IChainVerifier {
     function extractFacts(bytes calldata lockEventProof)
         external
         view
+        virtual
         returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8)
     {
         LockEventProof memory e = abi.decode(lockEventProof, (LockEventProof));
@@ -147,12 +149,17 @@ contract EvmReceiptLockReader is IChainVerifier {
         return t >= 0x01 && t <= 0x04;
     }
 
-    function _requireReceipt(bytes32 receiptsRoot, bytes memory receipt, uint256 index, bytes[] memory nodes) private pure {
+    /// @dev Receipt RLP field count. Default: status, cumulativeGas, bloom, logs.
+    function _receiptFieldCountOk(uint8, uint256 n) internal pure virtual returns (bool) {
+        return n == 4;
+    }
+
+    function _requireReceipt(bytes32 receiptsRoot, bytes memory receipt, uint256 index, bytes[] memory nodes) internal pure {
         bytes memory proven = MptGet.get(receiptsRoot, MptGet.rlpIndex(index), nodes);
         require(keccak256(proven) == keccak256(receipt), "VF-XCH-011: receipt");
     }
 
-    function _receiptFields(bytes memory receipt) private pure returns (bytes[] memory fields) {
+    function _receiptFields(bytes memory receipt) internal pure returns (bytes[] memory fields) {
         require(receipt.length > 1, "VF-XCH-011: receipt shape");
         bytes memory body = receipt;
         uint8 b0 = uint8(receipt[0]);
@@ -161,11 +168,11 @@ contract EvmReceiptLockReader is IChainVerifier {
             body = RlpReader.slice(receipt, 1, receipt.length);
         }
         fields = RlpReader.listItems(body);
-        require(fields.length == 4, "VF-XCH-011: receipt shape");
+        require(_receiptFieldCountOk(b0 < 0x80 ? b0 : 0, fields.length), "VF-XCH-011: receipt shape");
     }
 
     function _lockLog(bytes memory receipt, uint256 logIndex)
-        private
+        internal
         view
         returns (bytes32 lockId, uint256 gross, uint256 fee, uint256 principal, uint256 maturity)
     {
@@ -186,14 +193,14 @@ contract EvmReceiptLockReader is IChainVerifier {
         (, gross, fee, principal, maturity) = abi.decode(data, (address, uint256, uint256, uint256, uint256));
     }
 
-    function _storageRoot(bytes32 stateRoot, bytes[] memory nodes) private view returns (bytes32) {
+    function _storageRoot(bytes32 stateRoot, bytes[] memory nodes) internal view returns (bytes32) {
         bytes memory account = MptGet.get(stateRoot, abi.encodePacked(keccak256(abi.encodePacked(lock))), nodes);
         bytes[] memory a = RlpReader.listItems(account);
         require(a.length == 4, "VF-XCH-011: account");
         return RlpReader.toBytes32(a[2]);
     }
 
-    function _slot(bytes32 storageRoot, bytes32 slot, bytes[] memory nodes) private pure returns (uint256) {
+    function _slot(bytes32 storageRoot, bytes32 slot, bytes[] memory nodes) internal pure returns (uint256) {
         bytes memory v = MptGet.get(storageRoot, abi.encodePacked(keccak256(abi.encodePacked(slot))), nodes);
         return RlpReader.toUint(v);
     }

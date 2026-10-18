@@ -1,21 +1,34 @@
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 pragma solidity 0.8.19;
-import "../interfaces/IChainVerifier.sol";
+
+import "./EvmReceiptLockReader.sol";
+
 /// @title OptimismLockReader
-/// @notice VF-XCH-011 for Optimism. Facts come from the CommitmentVaultLock event proof.
-/// Finality model: OP Stack. This reader does not accept a separate caller recipient.
-/// A zero recipient reverts. Header authentication remains evidence required.
-contract OptimismLockReader is IChainVerifier {
-    string public constant ENVIRONMENT_ID = "Optimism";
-    function verifyFinality(bytes calldata, bytes calldata sourceFinalityProof) external pure returns (bool, bytes32, uint256) {
-        (bytes32 blockHash, uint256 height, bool finalized) = abi.decode(sourceFinalityProof, (bytes32, uint256, bool));
-        require(finalized && blockHash != bytes32(0) && height != 0, "VF-XCH-006: Optimism not finalized");
-        return (true, blockHash, height);
+/// @notice VF-XCH-011 for OP Mainnet (chain 10), receipt-proof form. Same rules
+/// as EvmReceiptLockReader; facts never come from caller-supplied bytes.
+/// Header: OP Stack (op-geth) uses the geth layout: at least 20 fields,
+/// difficulty 0, uncles = empty-list hash.
+/// Receipts: deposit receipts (type 0x7e) carry depositNonce and
+/// depositReceiptVersion after the four standard fields.
+/// https://github.com/ethereum-optimism/op-geth/blob/optimism/core/types/receipt.go
+contract OptimismLockReader is EvmReceiptLockReader {
+    bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
+    uint8 public constant DEPOSIT_TX_TYPE = 0x7e;
+
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Optimism", 10) {}
+
+    function _checkHeaderShape(bytes[] memory f) internal view virtual override {
+        require(f.length >= 20, "VF-XCH-011: Optimism header fields");
+        require(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH, "VF-XCH-011: Optimism uncles");
+        require(RlpReader.toUint(f[7]) == 0, "VF-XCH-011: Optimism difficulty");
     }
-    function extractFacts(bytes calldata lockEventProof) external pure returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8) {
-        (bytes32 lockId, uint256 gross, uint256 fee, uint256 principal, uint256 duration, uint256 createdAt, uint256 maturity, address recipient, uint8 outputToken) = abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8));
-        require(recipient != address(0), "VF-XCH-011: Optimism recipient missing");
-        require(outputToken <= 1, "VF-XCH-011: Optimism output token");
-        return (lockId, gross, fee, principal, duration, createdAt, maturity, recipient, outputToken);
+
+    function _receiptTypeAllowed(uint8 t) internal pure override returns (bool) {
+        return (t >= 0x01 && t <= 0x04) || t == DEPOSIT_TX_TYPE;
+    }
+
+    function _receiptFieldCountOk(uint8 t, uint256 n) internal pure override returns (bool) {
+        if (t == DEPOSIT_TX_TYPE) return n == 4 || n == 5 || n == 6;
+        return n == 4;
     }
 }

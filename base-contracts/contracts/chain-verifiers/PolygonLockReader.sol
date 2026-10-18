@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 pragma solidity 0.8.19;
-import "../interfaces/IChainVerifier.sol";
+
+import "./EvmReceiptLockReader.sol";
+
 /// @title PolygonLockReader
-/// @notice VF-XCH-011 for Polygon. Facts come from the CommitmentVaultLock event proof.
-/// Finality model: Heimdall checkpoint. This reader does not accept a separate caller recipient.
-/// A zero recipient reverts. Header authentication remains evidence required.
-contract PolygonLockReader is IChainVerifier {
-    string public constant ENVIRONMENT_ID = "Polygon";
-    function verifyFinality(bytes calldata, bytes calldata sourceFinalityProof) external pure returns (bool, bytes32, uint256) {
-        (bytes32 blockHash, uint256 height, bool finalized) = abi.decode(sourceFinalityProof, (bytes32, uint256, bool));
-        require(finalized && blockHash != bytes32(0) && height != 0, "VF-XCH-006: Polygon not finalized");
-        return (true, blockHash, height);
-    }
-    function extractFacts(bytes calldata lockEventProof) external pure returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8) {
-        (bytes32 lockId, uint256 gross, uint256 fee, uint256 principal, uint256 duration, uint256 createdAt, uint256 maturity, address recipient, uint8 outputToken) = abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8));
-        require(recipient != address(0), "VF-XCH-011: Polygon recipient missing");
-        require(outputToken <= 1, "VF-XCH-011: Polygon output token");
-        return (lockId, gross, fee, principal, duration, createdAt, maturity, recipient, outputToken);
+/// @notice VF-XCH-011 for Polygon PoS (chain 137), receipt-proof form. Same
+/// rules as EvmReceiptLockReader; facts never come from caller-supplied bytes.
+/// Header: Bor keeps the geth hash; the current chain uses 16 fields (classic
+/// 15 plus baseFee) or more; difficulty is at least 1; extraData holds 32
+/// bytes of vanity and a 65-byte seal (at least 97 bytes).
+/// Receipts: Bor's state-sync receipt is not part of receiptsRoot, so a
+/// lock is always an ordinary transaction receipt.
+/// https://github.com/0xPolygon/bor/blob/master/core/types/block.go
+contract PolygonLockReader is EvmReceiptLockReader {
+    bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
+
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Polygon", 137) {}
+
+    function _checkHeaderShape(bytes[] memory f) internal view virtual override {
+        require(f.length >= 16, "VF-XCH-011: Polygon header fields");
+        require(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH, "VF-XCH-011: Polygon uncles");
+        require(RlpReader.toUint(f[7]) >= 1, "VF-XCH-011: Polygon difficulty");
+        require(RlpReader.stringPayload(f[12]).length >= 97, "VF-XCH-011: Polygon extraData");
     }
 }
