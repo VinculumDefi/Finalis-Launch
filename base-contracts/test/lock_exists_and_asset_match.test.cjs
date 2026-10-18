@@ -177,10 +177,8 @@ describe("The package asset must match the lock's asset", function () {
       .to.be.revertedWith("VF-REG-001: asset not in registry");
   });
 
-  it("blocked readers have no asset", async function () {
-    for (const n of ["SolanaLockReader", "StellarLockReader", "XrplLockReader"]) {
-      const r = await (await ethers.getContractFactory(n)).deploy();
-      await expect(r.extractAssetId("0x")).to.be.reverted;
-    }
+  it("the blocked Solana reader has no asset", async function () {
+    const r = await (await ethers.getContractFactory("SolanaLockReader")).deploy();
+    await expect(r.extractAssetId("0x")).to.be.reverted;
   });
 });

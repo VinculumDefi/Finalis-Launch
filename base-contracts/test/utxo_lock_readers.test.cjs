@@ -134,8 +134,8 @@ describe("UTXO readers: wrong chain", function () {
   });
 });
 
-describe("Solana, Stellar and XRP Ledger readers fail closed (blocked)", function () {
-  for (const [name, env] of [["SolanaLockReader", "Solana"], ["StellarLockReader", "Stellar"], ["XrplLockReader", "XRP Ledger"]]) {
+describe("Solana reader fails closed (blocked)", function () {
+  for (const [name, env] of [["SolanaLockReader", "Solana"]]) {
     it(`${name} refuses every proof`, async function () {
       const r = await (await ethers.getContractFactory(name)).deploy();
       expect(await r.ENVIRONMENT_ID()).to.equal(env);
@@ -145,4 +145,17 @@ describe("Solana, Stellar and XRP Ledger readers fail closed (blocked)", functio
       await expect(r.verifyFinality(fake, claim(ethers.id("b"), 1))).to.be.revertedWith(`VF-XCH-006: ${env} reader blocked`);
     });
   }
+});
+
+describe("Stellar and XRP Ledger readers refuse caller-supplied facts", function () {
+  it("a plain encoding of facts is not a ledger proof", async function () {
+    const st = await (await ethers.getContractFactory("StellarLockReader")).deploy(ethers.id("net"), ethers.id("dev"));
+    const xr = await (await ethers.getContractFactory("XrplLockReader")).deploy("0x" + "11".repeat(20));
+    const fake = coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8"],
+      [ethers.id("x"), 1000, 50, 950, 604800, 1, 604801, "0x000000000000000000000000000000000000dEaD", 1]);
+    for (const r of [st, xr]) {
+      await expect(r.extractFacts(fake)).to.be.reverted;
+      await expect(r.extractAssetId(fake)).to.be.reverted;
+    }
+  });
 });
