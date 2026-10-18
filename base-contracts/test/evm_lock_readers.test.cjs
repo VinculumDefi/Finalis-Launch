@@ -15,6 +15,12 @@ const DAY7 = 604800n;
 const SCALE = 10n ** 18n;
 const ETH_ID = "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b";
 const coder = ethers.AbiCoder.defaultAbiCoder();
+// Native asset each reader reports for a native lock (registry key form).
+const nativeId = (env) => ({
+  Polygon: ethers.solidityPackedKeccak256(["string", "string"], ["Polygon", "native-POL"]),
+  "BNB Smart Chain": ethers.solidityPackedKeccak256(["string", "string"], ["BNB Smart Chain", "native-BNB"]),
+  Avalanche: ethers.solidityPackedKeccak256(["string", "string"], ["Avalanche", "native-AVAX"]),
+}[env] || ETH_ID);
 const claim = (chainId, hash, height) => coder.encode(["uint256", "bytes32", "uint256"], [chainId, hash, height]);
 
 const CHAINS = [
@@ -98,6 +104,10 @@ for (const c of CHAINS) {
       expect(f[0]).to.equal(lockId);
       expect(f[1]).to.equal(rec.gross);
       expect(f[2]).to.equal(rec.fee);
+      // The lock's own asset (native) comes from the proven log.
+      expect(await reader.extractAssetId(enc(c, ev))).to.equal(nativeId(c.env));
+      expect(await reader.nativeAssetId()).to.equal(nativeId(c.env));
+      await expect(reader.extractAssetId(enc(c, { ...ev, receipt: ethers.hexlify(ethers.randomBytes(300)) }))).to.be.reverted;
       expect(f[3]).to.equal(rec.principal);
       expect(f[4]).to.equal(rec.duration);
       expect(f[5]).to.equal(rec.createdAt);

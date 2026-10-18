@@ -176,4 +176,9 @@ contract EthereumLockReader is IChainVerifier {
         bytes memory v = MptGet.get(storageRoot, abi.encodePacked(keccak256(abi.encodePacked(slot))), nodes);
         return RlpReader.toUint(v);
     }
+
+    /// Not one of the registered readers; returns no asset (fail closed).
+    function extractAssetId(bytes calldata) external pure returns (bytes32) {
+        revert("VF-XCH-011: asset not supported by this reader");
+    }
 }

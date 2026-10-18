@@ -11,10 +11,11 @@ function feeOf(gross, bps) {
   return (gross * bps) / 10000n;
 }
 
-function encodeLockProof({ lockId, gross, fee, principal, duration, created = 1n, maturity = 2n, recipient, outputToken = 0 }) {
+// The 10th word is the lock's asset id (MockAlwaysFinalizedVerifier.extractAssetId).
+function encodeLockProof({ lockId, gross, fee, principal, duration, created = 1n, maturity = 2n, recipient, outputToken = 0, assetId }) {
   return ethers.AbiCoder.defaultAbiCoder().encode(
-    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8"],
-    [lockId, gross, fee, principal, duration, created, maturity, recipient, outputToken]
+    ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8", "bytes32"],
+    [lockId, gross, fee, principal, duration, created, maturity, recipient, outputToken, assetId]
   );
 }
 
@@ -94,7 +95,7 @@ function buildPkg({
   const bps = STANDARD_BPS;
   const fee = feeOf(gross, bps);
   const principal = gross - fee;
-  const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration, recipient, outputToken: 0 });
+  const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration, recipient, outputToken: 0, assetId });
   return {
     sourceEnvironmentId: env,
     commitmentVaultLockId: lockId,

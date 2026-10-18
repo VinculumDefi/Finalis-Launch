@@ -232,15 +232,17 @@ describe("predeploy 4: negative cases", function () {
   it("mismatched recipient reverts VF-XCH-011", async function () {
     const { lockId, rec } = await hs();
     const pkg = pkgFrom(lockId, rec, { recipient: c.other.address });
-    await c.verifier.recordFeeAndRac(pkg);
-    await expect(c.verifier.verifyAndMint(pkg, 0)).to.be.revertedWith("VF-XCH-011: recipient mismatch");
+    await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: recipient mismatch");
+    await expect(c.verifier.verifyAndMint(pkg, 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
   });
   it("unusable price (failed run) reverts VF-ORC-005", async function () {
     await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 0, success: false }]);
     const { lockId, rec } = await hs();
     await expect(c.verifier.recordFeeAndRac(pkgFrom(lockId, rec))).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
   });
-  it("missing price (registered, never priced asset) reverts VF-ORC-005", async function () {
+  // A native-ETH lock relabelled as another registered (unpriced) asset is now
+  // refused by the asset check before the price lookup is reached.
+  it("relabelled to a registered, never-priced asset: asset mismatch (VF-XCH-011)", async function () {
     const d = await deployContracts();
     const other = ethers.id("other-base-asset");
     await d.verifier.registerChainVerifier("Base", await d.reader.getAddress());
@@ -253,17 +255,18 @@ describe("predeploy 4: negative cases", function () {
     const { lockId, rec } = await openLock(d.lock, d.other, { recipient: d.recipient.address, dest: d.dest.address, duration: HOUR, gross: HS_GROSS });
     const pkg = pkgFrom(lockId, rec);
     pkg.canonicalAssetId = other; pkg.feeAssetId = other;
-    await expect(d.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
+    await expect(d.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: asset mismatch");
   });
   it("zero-price success run reverts VF-ORC-004", async function () {
     await expect(c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 0, success: true }]))
       .to.be.revertedWith("VF-ORC-004: zero price");
   });
-  it("unregistered asset reverts VF-REG-001", async function () {
+  // Relabelled to an unregistered asset: the asset check refuses it first.
+  it("relabelled to an unregistered asset: asset mismatch (VF-XCH-011)", async function () {
     const { lockId, rec } = await hs();
     const pkg = pkgFrom(lockId, rec);
     pkg.canonicalAssetId = ethers.id("not-registered");
-    await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-REG-001: asset not in registry");
+    await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: asset mismatch");
   });
   // Rule change: Handshake counters removed. A fourth Handshake is accepted at 5%.
   it("fourth Handshake from the same wallet is accepted by the lock at 5%", async function () {

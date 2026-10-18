@@ -15,7 +15,7 @@ contract OptimismLockReader is EvmReceiptLockReader {
     bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
     uint8 public constant DEPOSIT_TX_TYPE = 0x7e;
 
-    constructor(address lock_) EvmReceiptLockReader(lock_, "Optimism", 10) {}
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Optimism", 10, keccak256(abi.encodePacked("Ethereum", "native-ETH"))) {}
 
     function _checkHeaderShape(bytes[] memory f) internal view virtual override {
         require(f.length >= 20, "VF-XCH-011: Optimism header fields");

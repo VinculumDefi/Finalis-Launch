@@ -13,7 +13,7 @@ import "./EvmReceiptLockReader.sol";
 contract BnbSmartChainLockReader is EvmReceiptLockReader {
     bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
 
-    constructor(address lock_) EvmReceiptLockReader(lock_, "BNB Smart Chain", 56) {}
+    constructor(address lock_) EvmReceiptLockReader(lock_, "BNB Smart Chain", 56, keccak256(abi.encodePacked("BNB Smart Chain", "native-BNB"))) {}
 
     function _checkHeaderShape(bytes[] memory f) internal view virtual override {
         require(f.length >= 20, "VF-XCH-011: BNB header fields");

@@ -9,5 +9,5 @@ import "./UtxoLockReader.sol";
 /// transaction. Block spacing 15 s; binding carried as SHA-256 of the 117-byte payload.
 /// The Dev Fund scriptPubKey is fixed at construction. See UtxoLockReader.
 contract DigiByteLockReader is UtxoLockReader {
-    constructor(bytes memory devFundScript_) UtxoLockReader("DigiByte", devFundScript_, 15, false, false) {}
+    constructor(bytes memory devFundScript_) UtxoLockReader("DigiByte", devFundScript_, 15, false, false, "native-DGB") {}
 }

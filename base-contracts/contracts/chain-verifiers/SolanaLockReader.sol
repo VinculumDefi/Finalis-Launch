@@ -22,4 +22,8 @@ contract SolanaLockReader is IChainVerifier {
     {
         revert("VF-XCH-011: Solana reader blocked");
     }
+
+    function extractAssetId(bytes calldata) external pure returns (bytes32) {
+        revert("VF-XCH-011: Solana reader blocked");
+    }
 }

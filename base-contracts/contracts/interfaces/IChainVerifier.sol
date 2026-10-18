@@ -57,4 +57,11 @@ interface IChainVerifier {
         address baseRecipient,
         uint8 outputToken
     );
+
+    /// @notice Canonical asset id of the asset the proven lock actually holds
+    /// (keccak256(abi.encodePacked(environmentId, assetId)) as in the registry).
+    /// Reverts when the lock cannot be proven or its asset cannot be established
+    /// from proven data. The Verifier requires it to equal the package's
+    /// canonicalAssetId (VF-XCH-011: asset mismatch).
+    function extractAssetId(bytes calldata lockEventProof) external view returns (bytes32 canonicalAssetId);
 }

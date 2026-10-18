@@ -22,4 +22,8 @@ contract XrplLockReader is IChainVerifier {
     {
         revert("VF-XCH-011: XRP Ledger reader blocked");
     }
+
+    function extractAssetId(bytes calldata) external pure returns (bytes32) {
+        revert("VF-XCH-011: XRP Ledger reader blocked");
+    }
 }

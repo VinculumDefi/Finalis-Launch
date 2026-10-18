@@ -25,7 +25,7 @@ contract AvalancheLockReader is EvmReceiptLockReader {
         bytes[] createdAtSlotNodes; // storageProof for _locks[lockId] word 9
     }
 
-    constructor(address lock_) EvmReceiptLockReader(lock_, "Avalanche", 43114) {}
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Avalanche", 43114, keccak256(abi.encodePacked("Avalanche", "native-AVAX"))) {}
 
     function _checkHeaderShape(bytes[] memory f) internal view virtual override {
         require(f.length >= 16, "VF-XCH-011: Avalanche header fields");
@@ -47,6 +47,10 @@ contract AvalancheLockReader is EvmReceiptLockReader {
         require(claimedHash == h.hash, "VF-XCH-006: block hash mismatch");
         require(claimedHeight == h.number, "VF-XCH-006: block height mismatch");
         return (true, h.hash, h.number);
+    }
+
+    function _baseProof(bytes calldata lockEventProof) internal pure override returns (LockEventProof memory) {
+        return abi.decode(lockEventProof, (AvalancheLockEventProof)).base;
     }
 
     function extractFacts(bytes calldata lockEventProof)

@@ -30,4 +30,15 @@ contract MockAlwaysFinalizedVerifier is IChainVerifier {
             (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8)
         );
     }
+
+    /// @dev Test proofs carry the lock's asset id as a 10th word. A proof
+    /// without it has no provable asset and reverts.
+    function extractAssetId(bytes calldata lockEventProof) external pure override returns (bytes32) {
+        require(lockEventProof.length >= 320, "mock: no asset word");
+        (, , , , , , , , , bytes32 assetId) = abi.decode(
+            lockEventProof,
+            (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8, bytes32)
+        );
+        return assetId;
+    }
 }

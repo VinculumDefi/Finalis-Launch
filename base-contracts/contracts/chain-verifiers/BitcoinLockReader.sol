@@ -9,5 +9,5 @@ import "./UtxoLockReader.sol";
 /// transaction. Block spacing 600 s; binding carried raw (117 bytes).
 /// The Dev Fund scriptPubKey is fixed at construction. See UtxoLockReader.
 contract BitcoinLockReader is UtxoLockReader {
-    constructor(bytes memory devFundScript_) UtxoLockReader("Bitcoin", devFundScript_, 600, true, false) {}
+    constructor(bytes memory devFundScript_) UtxoLockReader("Bitcoin", devFundScript_, 600, true, false, "native-BTC") {}
 }

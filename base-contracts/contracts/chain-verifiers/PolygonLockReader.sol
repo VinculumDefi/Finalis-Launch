@@ -15,7 +15,7 @@ import "./EvmReceiptLockReader.sol";
 contract PolygonLockReader is EvmReceiptLockReader {
     bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
 
-    constructor(address lock_) EvmReceiptLockReader(lock_, "Polygon", 137) {}
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Polygon", 137, keccak256(abi.encodePacked("Polygon", "native-POL"))) {}
 
     function _checkHeaderShape(bytes[] memory f) internal view virtual override {
         require(f.length >= 16, "VF-XCH-011: Polygon header fields");

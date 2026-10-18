@@ -76,7 +76,11 @@ contract UtxoLockReader is IChainVerifier {
         Out[] outs;
     }
 
-    constructor(string memory env_, bytes memory devFundScript_, uint256 blockSpacing_, bool rawBinding_, bool zcash_) {
+    /// Canonical id of this chain's native coin, the only asset a UTXO lock holds.
+    bytes32 public immutable nativeAssetId;
+
+    constructor(string memory env_, bytes memory devFundScript_, uint256 blockSpacing_, bool rawBinding_, bool zcash_, string memory nativeAsset_) {
+        nativeAssetId = keccak256(abi.encodePacked(env_, nativeAsset_));
         require(bytes(env_).length != 0, "VF-XCH-011: environment");
         require(devFundScript_.length != 0, "VF-XCH-011: dev fund script");
         require(blockSpacing_ != 0 && 3600 % blockSpacing_ == 0, "VF-XCH-011: block spacing");
@@ -100,6 +104,13 @@ contract UtxoLockReader is IChainVerifier {
         require(claimedHash == hash, "VF-XCH-006: block hash mismatch");
         require(claimedHeight == height, "VF-XCH-006: block height mismatch");
         return (true, hash, height);
+    }
+
+    /// @notice A UTXO lock holds the chain's native coin. The full extractFacts
+    /// proof must hold first; then the asset is that native coin.
+    function extractAssetId(bytes calldata lockEventProof) external view returns (bytes32) {
+        this.extractFacts(lockEventProof);
+        return nativeAssetId;
     }
 
     function extractFacts(bytes calldata lockEventProof)

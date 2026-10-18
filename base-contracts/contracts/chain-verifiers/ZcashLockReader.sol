@@ -9,5 +9,5 @@ import "./UtxoLockReader.sol";
 /// transaction. Block spacing 75 s; binding carried as SHA-256 of the 117-byte payload.
 /// The Dev Fund scriptPubKey is fixed at construction. See UtxoLockReader.
 contract ZcashLockReader is UtxoLockReader {
-    constructor(bytes memory devFundScript_) UtxoLockReader("Zcash", devFundScript_, 75, false, true) {}
+    constructor(bytes memory devFundScript_) UtxoLockReader("Zcash", devFundScript_, 75, false, true, "native-ZEC") {}
 }

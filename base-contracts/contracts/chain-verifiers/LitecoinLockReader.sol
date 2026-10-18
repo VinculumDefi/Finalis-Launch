@@ -9,5 +9,5 @@ import "./UtxoLockReader.sol";
 /// transaction. Block spacing 150 s; binding carried as SHA-256 of the 117-byte payload.
 /// The Dev Fund scriptPubKey is fixed at construction. See UtxoLockReader.
 contract LitecoinLockReader is UtxoLockReader {
-    constructor(bytes memory devFundScript_) UtxoLockReader("Litecoin", devFundScript_, 150, false, false) {}
+    constructor(bytes memory devFundScript_) UtxoLockReader("Litecoin", devFundScript_, 150, false, false, "native-LTC") {}
 }

@@ -89,6 +89,13 @@ interface IChainVerifier {
         address baseRecipient,
         uint8 outputToken
     );
+
+    /// @notice Canonical asset id of the asset the proven lock actually holds
+    /// (keccak256(abi.encodePacked(environmentId, assetId)) as in the registry).
+    /// Reverts when the lock cannot be proven or its asset cannot be established
+    /// from proven data. The Verifier requires it to equal the package's
+    /// canonicalAssetId (VF-XCH-011: asset mismatch).
+    function extractAssetId(bytes calldata lockEventProof) external view returns (bytes32 canonicalAssetId);
 }
 
 // ---------------------------------------------------------------------------
@@ -521,6 +528,10 @@ contract VinculumFinalisVerifier {
     function recordFeeAndRac(
         ProofPackage calldata pkg
     ) external onlyWhenFinalized {
+        // The lock must exist: the source is proven, and the package checked
+        // against it (including its asset), before any fee or RAC is recorded.
+        _verifySource(pkg);
+
         // VF-RAC-001: RAC exact-once
         require(!recordedRacs[pkg.racIdentity], "VF-RAC-001: RAC already recorded");
 
@@ -574,6 +585,50 @@ contract VinculumFinalisVerifier {
             racEpoch[pkg.racIdentity] = epoch;
             emit RacCreditRecorded(pkg.racIdentity, racCredit, epoch);
         }
+    }
+
+    // ===== Source verification (VF-XCH-006/010/011) =====
+
+    /// @dev Proves the source lock through the registered chain reader and
+    ///      cross-checks the package against the facts the reader extracts.
+    ///      Called by recordFeeAndRac (before any write, so no fee or RAC is
+    ///      recorded for a lock that does not exist) and by verifyAndMint.
+    ///      The asset the lock actually holds must equal the package asset.
+    function _verifySource(ProofPackage calldata pkg) internal view {
+        IChainVerifier verifier = chainVerifiers[pkg.sourceEnvironmentId];
+        require(address(verifier) != address(0), "VF-XCH-006: no verifier registered for environment");
+        (bool finalized, , ) = verifier.verifyFinality(pkg.lockEventProof, pkg.sourceFinalityProof);
+        require(finalized, "VF-XCH-006: source not finalized");
+
+        // VF-XCH-011: Independently extract immutable facts from the raw lock event
+        // proof and cross-check against the normalized ProofPackage fields. This
+        // prevents tampering by the normalizer/relayer — the chain verifier
+        // extracts directly from the chain-specific event, not from normalized fields.
+        (
+            bytes32 extLockId,
+            uint256 extGross,
+            uint256 extFee,
+            uint256 extPrincipal,
+            uint256 extDuration,
+            ,
+            ,
+            address extRecipient,
+            uint8 extOutputToken
+        ) = verifier.extractFacts(pkg.lockEventProof);
+        require(
+            keccak256(abi.encodePacked(extLockId)) == keccak256(abi.encodePacked(pkg.commitmentVaultLockId)),
+            "VF-XCH-011: lockId mismatch"
+        );
+        require(extGross == pkg.grossAmountSmallestUnits, "VF-XCH-011: gross mismatch");
+        require(extFee == pkg.actualFeeAmountSmallestUnits, "VF-XCH-011: fee mismatch");
+        require(extPrincipal == pkg.principalAmountSmallestUnits, "VF-XCH-011: principal mismatch");
+        require(extDuration == pkg.durationSecs, "VF-XCH-011: duration mismatch");
+        require(extRecipient == pkg.baseRecipient, "VF-XCH-011: recipient mismatch");
+        require(extOutputToken == pkg.selectedOutputToken, "VF-XCH-011: output token mismatch");
+        require(
+            verifier.extractAssetId(pkg.lockEventProof) == pkg.canonicalAssetId,
+            "VF-XCH-011: asset mismatch"
+        );
     }
 
     // ===== Canonical verification entry point =====
@@ -651,36 +706,7 @@ contract VinculumFinalisVerifier {
         // In simulation: skip (deployment pending)
 
         // Step 11: Source finality + fact cross-check (VF-XCH-006/010/011)
-        IChainVerifier verifier = chainVerifiers[pkg.sourceEnvironmentId];
-        require(address(verifier) != address(0), "VF-XCH-006: no verifier registered for environment");
-        (bool finalized, , ) = verifier.verifyFinality(pkg.lockEventProof, pkg.sourceFinalityProof);
-        require(finalized, "VF-XCH-006: source not finalized");
-
-        // VF-XCH-011: Independently extract immutable facts from the raw lock event
-        // proof and cross-check against the normalized ProofPackage fields. This
-        // prevents tampering by the normalizer/relayer — the chain verifier
-        // extracts directly from the chain-specific event, not from normalized fields.
-        (
-            bytes32 extLockId,
-            uint256 extGross,
-            uint256 extFee,
-            uint256 extPrincipal,
-            uint256 extDuration,
-            ,
-            ,
-            address extRecipient,
-            uint8 extOutputToken
-        ) = verifier.extractFacts(pkg.lockEventProof);
-        require(
-            keccak256(abi.encodePacked(extLockId)) == keccak256(abi.encodePacked(pkg.commitmentVaultLockId)),
-            "VF-XCH-011: lockId mismatch"
-        );
-        require(extGross == pkg.grossAmountSmallestUnits, "VF-XCH-011: gross mismatch");
-        require(extFee == pkg.actualFeeAmountSmallestUnits, "VF-XCH-011: fee mismatch");
-        require(extPrincipal == pkg.principalAmountSmallestUnits, "VF-XCH-011: principal mismatch");
-        require(extDuration == pkg.durationSecs, "VF-XCH-011: duration mismatch");
-        require(extRecipient == pkg.baseRecipient, "VF-XCH-011: recipient mismatch");
-        require(extOutputToken == pkg.selectedOutputToken, "VF-XCH-011: output token mismatch");
+        _verifySource(pkg);
 
         // Step 12: Issuance calculation (VF-COM-018/019)
         // VF-ORC-011/013: emission rate from Valuation Timestamp, not caller-supplied age.

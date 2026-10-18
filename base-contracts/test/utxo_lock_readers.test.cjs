@@ -42,6 +42,9 @@ for (const [env, cfg] of Object.entries(FX.chains)) {
     it("accepts a real 7-day lock: facts come from the transaction and payload; fee is 5%", async function () {
       const f = await reader.extractFacts(proof(S));
       expect(f[0]).to.equal(S.lockId);
+      const sym = { Bitcoin: "BTC", "Bitcoin Cash": "BCH", Litecoin: "LTC", Dogecoin: "DOGE", DigiByte: "DGB", Zcash: "ZEC" }[env];
+      expect(await reader.extractAssetId(proof(S))).to.equal(ethers.solidityPackedKeccak256(["string", "string"], [env, "native-" + sym]));
+      await expect(reader.extractAssetId(proof(S, { lockIndex: 1 }))).to.be.revertedWith("VF-XCH-011: lock not in block");
       expect(f[1]).to.equal(BigInt(S.fee + S.principal));
       expect(f[2]).to.equal(BigInt(S.fee));
       expect(f[3]).to.equal(BigInt(S.principal));

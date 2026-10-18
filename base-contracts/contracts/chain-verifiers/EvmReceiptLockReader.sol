@@ -39,6 +39,8 @@ contract EvmReceiptLockReader is IChainVerifier {
     uint256 public immutable chainId;
     bytes32 public immutable environmentWord;
     string public environmentId;
+    /// Canonical id of this chain's native asset (registry key form).
+    bytes32 public immutable nativeAssetId;
 
     struct LockEventProof {
         bytes headerRlp;
@@ -51,7 +53,9 @@ contract EvmReceiptLockReader is IChainVerifier {
         bytes[] recipientSlotNodes;
     }
 
-    constructor(address lock_, string memory environmentId_, uint256 chainId_) {
+    constructor(address lock_, string memory environmentId_, uint256 chainId_, bytes32 nativeAssetId_) {
+        require(nativeAssetId_ != bytes32(0), "VF-XCH-011: native asset id");
+        nativeAssetId = nativeAssetId_;
         require(lock_ != address(0), "VF-XCH-011: lock");
         uint256 n = bytes(environmentId_).length;
         require(n != 0 && n < 32, "VF-XCH-011: environment name");
@@ -104,6 +108,29 @@ contract EvmReceiptLockReader is IChainVerifier {
         require(gross != 0 && fee + principal == gross, "VF-XCH-011: amounts");
         require(maturity > h.timestamp, "VF-XCH-011: maturity");
         return (lockId, gross, fee, principal, maturity - h.timestamp, h.timestamp, maturity, recipient, outputToken);
+    }
+
+    /// @notice The lock's own asset, from the proven LockCreated log (its
+    /// `asset` field). The full extractFacts proof must hold first. A native
+    /// lock (asset 0) is this chain's native asset. A token lock reverts: the
+    /// proven data gives only the token address, not its canonical id.
+    function extractAssetId(bytes calldata lockEventProof) external view virtual returns (bytes32) {
+        this.extractFacts(lockEventProof);
+        LockEventProof memory e = _baseProof(lockEventProof);
+        require(_lockAsset(e.receipt, e.logIndex) == address(0), "VF-XCH-011: token asset not provable");
+        return nativeAssetId;
+    }
+
+    /// @dev The LockEventProof inside a package proof. Overridden by readers
+    /// whose proof wraps it (Avalanche).
+    function _baseProof(bytes calldata lockEventProof) internal pure virtual returns (LockEventProof memory) {
+        return abi.decode(lockEventProof, (LockEventProof));
+    }
+
+    function _lockAsset(bytes memory receipt, uint256 logIndex) internal view returns (address asset) {
+        bytes[] memory logs = RlpReader.listItems(_receiptFields(receipt)[3]);
+        bytes[] memory log = RlpReader.listItems(logs[logIndex]);
+        (asset, , , , ) = abi.decode(RlpReader.stringPayload(log[2]), (address, uint256, uint256, uint256, uint256));
     }
 
     /// @notice Parsing helper: opens the header and proves a receipt against

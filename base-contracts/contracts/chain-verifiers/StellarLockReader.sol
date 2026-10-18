@@ -22,4 +22,8 @@ contract StellarLockReader is IChainVerifier {
     {
         revert("VF-XCH-011: Stellar reader blocked");
     }
+
+    function extractAssetId(bytes calldata) external pure returns (bytes32) {
+        revert("VF-XCH-011: Stellar reader blocked");
+    }
 }

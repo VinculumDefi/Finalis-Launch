@@ -22,7 +22,7 @@ contract ArbitrumLockReader is EvmReceiptLockReader {
     uint256 public constant ARBITRUM_ONE_CHAIN_ID = 42161;
     bytes32 public constant EMPTY_UNCLE_HASH = keccak256(hex"c0");
 
-    constructor(address lock_) EvmReceiptLockReader(lock_, "Arbitrum", ARBITRUM_ONE_CHAIN_ID) {}
+    constructor(address lock_) EvmReceiptLockReader(lock_, "Arbitrum", ARBITRUM_ONE_CHAIN_ID, keccak256(abi.encodePacked("Ethereum", "native-ETH"))) {}
 
     function _checkHeaderShape(bytes[] memory f) internal view virtual override {
         require(f.length == 16, "VF-XCH-011: Arbitrum header fields");

@@ -114,6 +114,23 @@ contract BaseLockRecordVerifier is IBaseLockRecordVerifier {
         return (id, r.gross, r.fee, r.principal, r.duration, r.createdAt, r.maturity, r.baseRecipient, r.outputToken);
     }
 
+    /// Native ETH on Base uses the Ethereum native-ETH canonical id (registry
+    /// row 2), the same id as the Verifier's BASE_NATIVE_ETH_ASSET_ID.
+    bytes32 public constant NATIVE_ASSET_ID = keccak256(abi.encodePacked("Ethereum", "native-ETH"));
+
+    /// @notice The lock's own asset, read from the lock record. A native lock
+    /// is native ETH. A token lock reverts: the lock records only the token
+    /// address and a caller-chosen assetIdentity, so its canonical id cannot be
+    /// established from proven data here (fail closed).
+    function extractAssetId(bytes calldata lockEventProof) external view returns (bytes32) {
+        bytes32 id = _lockIdOf(lockEventProof);
+        ICommitmentVaultLockReader.LockRecord memory r = vault.lockRecord(id);
+        if (!r.exists) revert LockNotFound(id);
+        _requireBinding(id, r.bindingPayload);
+        require(r.asset == address(0), "VF-XCH-011: token asset not provable");
+        return NATIVE_ASSET_ID;
+    }
+
     function _lockIdOf(bytes calldata lockEventProof) private pure returns (bytes32) {
         (bytes32 lockId, , , , , , ) = abi.decode(
             lockEventProof,
