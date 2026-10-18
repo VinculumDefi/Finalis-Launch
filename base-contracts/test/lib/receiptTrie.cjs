@@ -199,4 +199,7 @@ module.exports = {
   buildLegacyReceipt,
   buildReceiptTrie,
   signDigest,
+  insert,
+  prove,
+  rootHash,
 };
