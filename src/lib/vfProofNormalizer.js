@@ -117,6 +117,23 @@ export function normalizeProofPackage(raw) {
     return { ok: false, errors: ['proof package is not an object'] };
   }
 
+  // Repair 2.K: derive rac_identity from the immutable fee facts BEFORE the
+  // required-field check, so a package that carries its canonical fee tx hash
+  // is not rejected for lacking a pre-computed identity.
+  if (!raw.rac_identity && raw.canonical_fee_tx_hash) {
+    raw = {
+      ...raw,
+      rac_identity: computeRacIdentity({
+        sourceEnvironmentId: raw.source_environment_id,
+        lockId: raw.commitment_vault_lock_id,
+        canonicalFeeTxHash: raw.canonical_fee_tx_hash,
+        feeOpOrOutputIndex: raw.fee_op_or_output_index || 0,
+        canonicalFeeAsset: raw.fee_asset_id || raw.canonical_asset_id,
+        actualFeeAmount: raw.actual_fee_amount_smallest_units,
+      }),
+    };
+  }
+
   // VF-XCH-001: environment must be in the 17-environment registry
   const env = findEnvironment(raw.source_environment_id);
   if (!env) {
@@ -139,6 +156,12 @@ export function normalizeProofPackage(raw) {
     if (raw[field] === undefined || raw[field] === null || raw[field] === '') {
       // chonx_activation_receipt is optional unless output is CHONX
       if (field === 'chonx_activation_receipt') continue;
+      // source_finality_proof is opaque to the normalizer and judged by
+      // BASE-VERIFY (VF-XCH-006 "finality proof missing"), not here.
+      if (field === 'source_finality_proof') continue;
+      // null allowance is the registry's own value for an environment whose
+      // mechanism is incomplete (Cosmos Hub); checked against env below.
+      if (field === 'handshake_allowance_count' && env && env.handshakeAllowance === null) continue;
       errors.push(`VF-XCH-011: missing field "${field}"`);
     }
   }
@@ -210,22 +233,16 @@ export function normalizeProofPackage(raw) {
     pkg[field] = raw[field];
   }
 
+  // Keep the fee facts the RAC identity is derived from, so BASE-VERIFY can
+  // re-derive it (a package cannot carry someone else's RAC identity).
+  pkg.canonical_fee_tx_hash = raw.canonical_fee_tx_hash ?? null;
+  pkg.fee_op_or_output_index = raw.fee_op_or_output_index || 0;
+
   // Enrich with resolved metadata
   pkg._environment = env;
   pkg._precisionEntry = precisionEntry;
   pkg._assetMultiplierBps = precisionEntry ? getAssetMultiplierBps(precisionEntry.custodyClass) : null;
 
-  // Compute RAC identity if not pre-computed
-  if (!pkg.rac_identity && raw.canonical_fee_tx_hash) {
-    pkg.rac_identity = computeRacIdentity({
-      sourceEnvironmentId: raw.source_environment_id,
-      lockId: raw.commitment_vault_lock_id,
-      canonicalFeeTxHash: raw.canonical_fee_tx_hash,
-      feeOpOrOutputIndex: raw.fee_op_or_output_index || 0,
-      canonicalFeeAsset: raw.fee_asset_id || raw.canonical_asset_id,
-      actualFeeAmount: raw.actual_fee_amount_smallest_units,
-    });
-  }
 
   return { ok: true, package: pkg };
 }
@@ -261,14 +278,8 @@ export function normalizeSolanaEvidence(event, finalityProof) {
     base_recipient: '0x' + Array.from(event.base_recipient).map((b) => b.toString(16).padStart(2, '0')).join('').padStart(40, '0').slice(-40),
     release_destination: event.release_destination,
     chonx_activation_receipt: event.chonx_activation_receipt || null,
-    rac_identity: event.fee_tx_signature ? computeRacIdentity({
-      sourceEnvironmentId: 'Solana',
-      lockId: event.lock_id,
-      canonicalFeeTxHash: event.fee_tx_signature,
-      feeOpOrOutputIndex: 0,
-      canonicalFeeAsset: event.canonical_asset,
-      actualFeeAmount: event.fee_amount,
-    }) : null,
+    canonical_fee_tx_hash: event.fee_tx_signature,
+    fee_op_or_output_index: 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: event,
   });
@@ -312,7 +323,8 @@ export function normalizeXrplEvidence(escrowTx, paymentTx, finalityProof) {
     base_recipient: metadata.base_recipient,
     release_destination: metadata.release_destination || escrowTx.Account,
     chonx_activation_receipt: metadata.chonx_activation_receipt || null,
-    rac_identity: null,
+    canonical_fee_tx_hash: paymentTx.hash,
+    fee_op_or_output_index: 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: { escrow: escrowTx, payment: paymentTx },
   });
@@ -342,7 +354,8 @@ export function normalizeCosmosEvidence(event, finalityProof) {
     base_recipient: event.base_recipient,
     release_destination: event.release_destination,
     chonx_activation_receipt: event.chonx_activation_receipt || null,
-    rac_identity: null,
+    canonical_fee_tx_hash: event.fee_tx_hash,
+    fee_op_or_output_index: event.fee_msg_index || 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: event,
   });
@@ -372,7 +385,8 @@ export function normalizeUtxoEvidence(envId, txData, finalityProof) {
     base_recipient: txData.base_recipient,
     release_destination: txData.canonical_release_public_key,
     chonx_activation_receipt: txData.chonx_activation_receipt || null,
-    rac_identity: null,
+    canonical_fee_tx_hash: txData.fee_output_txid,
+    fee_op_or_output_index: txData.fee_output_index || 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: txData,
   });
@@ -402,7 +416,8 @@ export function normalizeStellarEvidence(txData, finalityProof) {
     base_recipient: txData.base_recipient,
     release_destination: txData.release_destination,
     chonx_activation_receipt: txData.chonx_activation_receipt || null,
-    rac_identity: null,
+    canonical_fee_tx_hash: txData.fee_payment_txid,
+    fee_op_or_output_index: txData.fee_op_index || 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: txData,
   });
@@ -432,7 +447,8 @@ export function normalizeEvmEvidence(envId, event, finalityProof) {
     base_recipient: event.baseRecipient,
     release_destination: event.sourceAccount,
     chonx_activation_receipt: event.chonxActivationReceipt || null,
-    rac_identity: null,
+    canonical_fee_tx_hash: event.feeTransferTxHash,
+    fee_op_or_output_index: event.feeLogIndex || 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: event,
   });

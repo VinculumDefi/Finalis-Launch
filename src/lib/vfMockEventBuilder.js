@@ -63,6 +63,7 @@ export function buildXrplMockEvent(duration, outputToken) {
     },
     payment: {
       Destination: 'rHnBBVfjrtwqMLwCTEzJhB3LznhQDas5M4',
+      hash: 'MOCKXRPLFEE' + Date.now(),
       Amount: fee.toString(),
     },
   };
@@ -125,6 +126,7 @@ export function buildCosmosMockEvent(duration, outputToken) {
     principal_amount: (gross - fee).toString(),
     fee_destination: 'cosmos1devfund' + 'b'.repeat(30),
     fee_transfer_evidence: 'cosmos1devfund' + 'b'.repeat(30),
+    fee_tx_hash: 'MOCKCOSMOSFEE' + Date.now(),
     creation_time_secs: now(),
     maturity_time_secs: now() + Number(duration),
     duration_secs: Number(duration),

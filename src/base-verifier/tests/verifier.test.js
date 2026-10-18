@@ -286,3 +286,5 @@ test('T-20: Chain-agnostic — all 16 deployable environments verify', () => {
 var raw2; // hoist for T-08
 
 console.log(`\n=== Results: ${passed} passed, ${failed} failed ===\n`);
+// Any failure makes the run exit non-zero, so failures cannot hide.
+if (failed > 0 || passed === 0) process.exitCode = 1;

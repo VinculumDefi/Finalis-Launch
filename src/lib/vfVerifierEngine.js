@@ -31,7 +31,7 @@ import {
   ASSET_CLASS_MULTIPLIERS_BPS,
 } from './vfRevision6Authority.js';
 import { findEnvironment, findAssetPrecision, getAssetMultiplierBps, isDevFundConfigured } from './vfBaseRegistry.js';
-import { OUTPUT_TOKEN, outputTokenToString } from './vfProofNormalizer.js';
+import { OUTPUT_TOKEN, outputTokenToString, computeRacIdentity } from './vfProofNormalizer.js';
 import { dispatchFinalityCheck, dispatchFactExtraction, isVerifierRegistered } from './vfChainVerifierRegistry.js';
 
 // ---------------------------------------------------------------------------
@@ -95,6 +95,23 @@ export function checkReplay(state, pkg) {
 // ---------------------------------------------------------------------------
 
 export function checkRacDedup(state, pkg) {
+  // Repair 2.K: the RAC identity is derived from immutable fee facts, never
+  // trusted from the package. Re-derive it; a missing identity is filled in,
+  // a different one is rejected.
+  if (pkg.canonical_fee_tx_hash) {
+    const derived = computeRacIdentity({
+      sourceEnvironmentId: pkg.source_environment_id,
+      lockId: pkg.commitment_vault_lock_id,
+      canonicalFeeTxHash: pkg.canonical_fee_tx_hash,
+      feeOpOrOutputIndex: pkg.fee_op_or_output_index || 0,
+      canonicalFeeAsset: pkg.fee_asset_id || pkg.canonical_asset_id,
+      actualFeeAmount: pkg.actual_fee_amount_smallest_units,
+    });
+    if (!pkg.rac_identity) pkg.rac_identity = derived;
+    else if (pkg.rac_identity !== derived) {
+      return { ok: false, reason: 'VF-RAC-001: rac_identity does not match the fee facts' };
+    }
+  }
   if (!pkg.rac_identity) {
     return { ok: false, reason: 'VF-RAC-001: missing rac_identity' };
   }
