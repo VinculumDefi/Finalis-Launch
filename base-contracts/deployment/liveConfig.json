@@ -1,0 +1,5 @@
+{
+  "_note": "Live configuration read by the future live ceremony and the deploy pages. Addresses only, no keys. The test-chain ceremony (scripts/testChainCeremony.cjs) does NOT read this; it uses a generated poster.",
+  "chainId": 8453,
+  "scheduledPricePoster": "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4"
+}

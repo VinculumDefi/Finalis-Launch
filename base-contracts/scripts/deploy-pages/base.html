@@ -18,7 +18,7 @@
 <main>
   <h1>Base ceremony</h1>
   <p>Deploys a new CommitmentVaultLock("Base"), VCLM, CHONX, and VinculumFinalisVerifier, and a Base reader bound to the new lock. It does not use the old Base lock or verifier. Every lock duration, including the 1-hour Handshake, charges 5.00% of gross. The Handshake must be $0.01 to $0.02; every other duration must be at least $0.01.</p>
-  <p>Order, as the Verifier enforces it: register the Base reader; write the registry in batches of 50, including the Base native-ETH key (registry row 2); set the Dev Fund; set the price poster (this wallet); write the scheduled Base ETH price; read it back as usable; then finalize. finalize() reverts unless all of these are in place. The Dev Fund, registry, and price come from ceremony-data.json, written by build_ceremony_artifacts.cjs. If the price is missing, the page sends nothing.</p>
+  <p>Order, as the Verifier enforces it: register the Base reader; write the registry in batches of 50, including the Base native-ETH key (registry row 2); set the Dev Fund; set the price poster to this wallet for the first price only; write the scheduled Base ETH price; read it back as usable; hand the price poster to the live price poster from deployment/liveConfig.json (ceremony-data.json) and read it back; then finalize. The page refuses a live poster that is missing, equals this wallet, the Dev Fund, the new lock or an old contract. finalize() reverts unless all of these are in place. The Dev Fund, registry, and price come from ceremony-data.json, written by build_ceremony_artifacts.cjs. If the price is missing, the page sends nothing.</p>
   <p><button id="connect">Connect wallet</button> <span id="who"></span></p>
   <p><button id="run" disabled>Run ceremony</button></p>
   <div id="log"></div>
@@ -62,6 +62,12 @@ document.getElementById("run").onclick = async () => {
     const art = await (await fetch("ceremony.json")).json();
     const priceUsd18 = BigInt(data.priceUsd18);
     const me = await signer.getAddress();
+    if (!data.scheduledPricePoster || !ethers.isAddress(data.scheduledPricePoster)) throw new Error("live price poster missing from ceremony-data.json. Nothing was sent.");
+    const livePoster = ethers.getAddress(data.scheduledPricePoster);
+    if (livePoster === ethers.ZeroAddress) throw new Error("live price poster is zero. Nothing was sent.");
+    if (livePoster === ethers.getAddress(me)) throw new Error("live price poster equals the connected wallet. Nothing was sent.");
+    if (livePoster === ethers.getAddress(data.devFund)) throw new Error("live price poster equals the Dev Fund. Nothing was sent.");
+    refuseOld("Live price poster", livePoster);
 
     const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
     const lock = await L.deploy("Base", data.devFund);
@@ -106,7 +112,7 @@ document.getElementById("run").onclick = async () => {
     const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", data.row2.canonicalAssetId]);
     if ((await verifier.assetPrecisionTable(key)).canonicalAssetId === ethers.ZeroHash) throw new Error("Base ETH row read failed");
 
-    // 3. Dev Fund. 4. Price poster (this wallet, so it can write before finalize).
+    // 3. Dev Fund. 4. Price poster: this wallet for the first price only (handed over in 6b).
     await (await verifier.configureDevFund("Base", data.devFund)).wait();
     await (await verifier.setScheduledPricePoster(me)).wait();
 
@@ -116,6 +122,12 @@ document.getElementById("run").onclick = async () => {
     if (!sp.usable || sp.priceUsd18 !== priceUsd18) throw new Error("price read is not usable. Not finalizing.");
     if (await verifier.chainVerifiers("Base") === ethers.ZeroAddress) throw new Error("Base reader read failed. Not finalizing.");
     log("Price read usable: " + ethers.formatUnits(sp.priceUsd18, 18) + " USD");
+
+    // 6b. Hand the price poster to the live price poster. Its runs must use runId > 1.
+    if (livePoster === ethers.getAddress(await lock.getAddress())) throw new Error("live price poster equals the new lock. Not finalizing.");
+    await (await verifier.setScheduledPricePoster(livePoster)).wait();
+    if (ethers.getAddress(await verifier.scheduledPricePoster()) !== livePoster) throw new Error("price poster read-back failed. Not finalizing.");
+    log("Price poster handed to the live price poster");
 
     // 7. Finalize.
     await (await verifier.finalize()).wait();
