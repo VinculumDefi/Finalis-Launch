@@ -57,7 +57,7 @@ import {
   STAKE_DURATIONS,
   REWARD_REFERENCE_CENTS,
   FIXED_RULES,
-} from './vfRevision6Authority';
+} from './vfRevision6Authority.js';
 
 const EPOCH_SECS = FIXED_RULES.epoch_days * 86400;
 

@@ -21,7 +21,7 @@
 // are DEFERRED EXTERNAL INPUT — not present in Revision 6 constants, must not be invented.
 // =============================================================================
 
-import { SOLANA_HANDSHAKE_ALLOWANCE, LOCK_STATES, ATTEMPT_STATES } from './vfRevision6Authority';
+import { SOLANA_HANDSHAKE_ALLOWANCE, LOCK_STATES, ATTEMPT_STATES } from './vfRevision6Authority.js';
 
 export class SolanaMockAdapter {
   constructor() {

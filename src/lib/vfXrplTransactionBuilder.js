@@ -26,8 +26,8 @@ import {
   XRPL_BASE_FEE_DROPS,
   XRPL_DEFAULT_LLS_MARGIN,
   computeFinishAfter,
-} from './vfXrplAuthority';
-import { validateXrplAddress, validateBaseRecipient, buildHandshakeIdentity } from './vfXrplLockEngine';
+} from './vfXrplAuthority.js';
+import { validateXrplAddress, validateBaseRecipient, buildHandshakeIdentity } from './vfXrplLockEngine.js';
 
 // ---------------------------------------------------------------------------
 // Lock metadata (stored in EscrowCreate Memos — VF-XCH-011 immutable facts)

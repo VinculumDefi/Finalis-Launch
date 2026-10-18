@@ -28,8 +28,8 @@ import {
   LOCK_STATES,
   ATTEMPT_STATES,
   SOLANA_HANDSHAKE_ALLOWANCE,
-} from './vfRevision6Authority';
-import { SOLANA_REGISTRY } from './vfSolanaRegistry';
+} from './vfRevision6Authority.js';
+import { SOLANA_REGISTRY } from './vfSolanaRegistry.js';
 
 // ---------------------------------------------------------------------------
 // Duration helpers — VF-COM-001/002

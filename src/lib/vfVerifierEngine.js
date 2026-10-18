@@ -29,10 +29,10 @@ import {
   TOKEN_HARD_CAPS,
   CHONX_ACTIVATION_THRESHOLD,
   ASSET_CLASS_MULTIPLIERS_BPS,
-} from './vfRevision6Authority';
-import { findEnvironment, findAssetPrecision, getAssetMultiplierBps, isDevFundConfigured } from './vfBaseRegistry';
-import { OUTPUT_TOKEN, outputTokenToString } from './vfProofNormalizer';
-import { dispatchFinalityCheck, dispatchFactExtraction, isVerifierRegistered } from './vfChainVerifierRegistry';
+} from './vfRevision6Authority.js';
+import { findEnvironment, findAssetPrecision, getAssetMultiplierBps, isDevFundConfigured } from './vfBaseRegistry.js';
+import { OUTPUT_TOKEN, outputTokenToString } from './vfProofNormalizer.js';
+import { dispatchFinalityCheck, dispatchFactExtraction, isVerifierRegistered } from './vfChainVerifierRegistry.js';
 
 // ---------------------------------------------------------------------------
 // Fixed-point USD boundary thresholds (VF-COM-003/009)

@@ -20,7 +20,7 @@
 // addresses are DEFERRED EXTERNAL INPUT — not present in Revision 6 constants.
 // =============================================================================
 
-import { XRPL_HANDSHAKE_ALLOWANCE, XRPL_DISPOSITION, LOCK_STATES, ATTEMPT_STATES } from './vfXrplAuthority';
+import { XRPL_HANDSHAKE_ALLOWANCE, XRPL_DISPOSITION, LOCK_STATES, ATTEMPT_STATES } from './vfXrplAuthority.js';
 
 export class XrplMockAdapter {
   constructor() {

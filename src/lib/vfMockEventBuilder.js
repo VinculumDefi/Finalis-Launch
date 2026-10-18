@@ -1,9 +1,9 @@
 // Mock event builders for the Base verifier test harness.
 // Each builds a simulated finalized source event for a different environment family.
 
-import { findAssetPrecision } from './vfBaseRegistry';
-import { OUTPUT_TOKEN } from './vfProofNormalizer';
-import { HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority';
+import { findAssetPrecision } from './vfBaseRegistry.js';
+import { OUTPUT_TOKEN } from './vfProofNormalizer.js';
+import { HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority.js';
 
 function now() { return Math.floor(Date.now() / 1000); }
 

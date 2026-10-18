@@ -24,9 +24,9 @@ import {
   ASSET_CLASS_MULTIPLIERS_BPS,
   CHONX_ACTIVATION_THRESHOLD,
   TOKEN_HARD_CAPS,
-} from './vfRevision6Authority';
-import { XRPL_ENVIRONMENT, XRPL_HANDSHAKE_ALLOWANCE } from './vfXrplAuthority';
-import { XRPL_REGISTRY } from './vfXrplRegistry';
+} from './vfRevision6Authority.js';
+import { XRPL_ENVIRONMENT, XRPL_HANDSHAKE_ALLOWANCE } from './vfXrplAuthority.js';
+import { XRPL_REGISTRY } from './vfXrplRegistry.js';
 
 // ---------------------------------------------------------------------------
 // Duration helpers — VF-COM-001/002

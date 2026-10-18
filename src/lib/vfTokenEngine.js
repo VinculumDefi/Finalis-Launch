@@ -29,7 +29,7 @@ import {
   SYNTH_ACTIVATION_THRESHOLD,
   SYNTH_FORGE,
   FIXED_RULES,
-} from './vfRevision6Authority';
+} from './vfRevision6Authority.js';
 
 // ---------------------------------------------------------------------------
 // TokenLayerState — tracks balances, cumulative issuance, and activation

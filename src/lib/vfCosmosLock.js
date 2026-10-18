@@ -9,7 +9,7 @@ import {
   FEE_BPS_HANDSHAKE, FEE_BPS_STANDARD,
   HANDSHAKE_USD_MIN_MICRO, HANDSHAKE_USD_MAX_MICRO, STANDARD_USD_MIN_MICRO,
   isVaultDeployed,
-} from './vfIntegrationConfig';
+} from './vfIntegrationConfig.js';
 
 const BASE_RECIPIENT_LEN = 42;
 const MAX_LOCK_ID_LEN = 128;

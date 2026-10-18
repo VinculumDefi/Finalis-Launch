@@ -16,8 +16,8 @@
 // RAC identity is derived from immutable source facts, not serialized proof bytes.
 // =============================================================================
 
-import { findAssetPrecision, findEnvironment, getAssetMultiplierBps } from './vfBaseRegistry';
-import { SCALE, COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority';
+import { findAssetPrecision, findEnvironment, getAssetMultiplierBps } from './vfBaseRegistry.js';
+import { SCALE, COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority.js';
 
 // ---------------------------------------------------------------------------
 // Canonical ProofPackage structure (Section D)

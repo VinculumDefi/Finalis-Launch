@@ -13,12 +13,12 @@
 // intentionally unregistered — the verifier engine rejects it before finality.
 // =============================================================================
 
-import { findEnvironment } from './vfBaseRegistry';
-import { EvmChainVerifier } from './vfEvmChainVerifier';
-import { SolanaChainVerifier } from './vfSolanaChainVerifier';
-import { UtxoChainVerifier } from './vfUtxoChainVerifier';
-import { XrplChainVerifier } from './vfXrplChainVerifier';
-import { StellarChainVerifier } from './vfStellarChainVerifier';
+import { findEnvironment } from './vfBaseRegistry.js';
+import { EvmChainVerifier } from './vfEvmChainVerifier.js';
+import { SolanaChainVerifier } from './vfSolanaChainVerifier.js';
+import { UtxoChainVerifier } from './vfUtxoChainVerifier.js';
+import { XrplChainVerifier } from './vfXrplChainVerifier.js';
+import { StellarChainVerifier } from './vfStellarChainVerifier.js';
 
 // EVM family — per-environment finality configuration (Section C)
 const EVM_CONFIGS = {

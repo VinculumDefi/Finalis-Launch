@@ -17,7 +17,7 @@
 // the registry is the single source of truth for asset metadata.
 // =============================================================================
 
-import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfRevision6Authority';
+import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfRevision6Authority.js';
 
 // VF-COM-006: capable mechanisms get 3, mechanisms that cannot count get 1.
 export function handshakeAllowanceFor(countsPerIdentity) {

@@ -1,5 +1,5 @@
 import { base44 } from '@/api/base44Client';
-import { getAssetPricingInfo } from './vfBaseRegistry';
+import { getAssetPricingInfo } from './vfBaseRegistry.js';
 
 // =============================================================================
 // Frontend price service — calls the fetchAssetPrice backend function which

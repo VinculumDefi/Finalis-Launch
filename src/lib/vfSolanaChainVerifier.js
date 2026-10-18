@@ -11,7 +11,7 @@
 //   still-valid pending attempt.
 // =============================================================================
 
-import { FINALITY_STATUS } from './vfEvmChainVerifier';
+import { FINALITY_STATUS } from './vfEvmChainVerifier.js';
 
 export class SolanaChainVerifier {
   constructor() {

@@ -21,8 +21,8 @@
 // the reservation.
 // =============================================================================
 
-import { ATTEMPT_STATES, SOLANA_DISPOSITION } from './vfRevision6Authority';
-import { findEnvironment } from './vfBaseRegistry';
+import { ATTEMPT_STATES, SOLANA_DISPOSITION } from './vfRevision6Authority.js';
+import { findEnvironment } from './vfBaseRegistry.js';
 
 // ---------------------------------------------------------------------------
 // Terminal dispositions per environment family.
