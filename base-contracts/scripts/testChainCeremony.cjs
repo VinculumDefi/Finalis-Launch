@@ -135,12 +135,17 @@ function xrplAccount(addr) {
   return "0x" + b.slice(1, 21).toString("hex");
 }
 
-// Polygon native POL -> the existing POL row (environment Ethereum, symbol POL).
-const ASSET_ROW_ALIASES = [{
-  environmentId: "Polygon",
-  canonicalAssetId: require("ethers").solidityPackedKeccak256(["string", "string"], ["Ethereum", "POL"]),
-  rowEnvironmentId: "Ethereum",
-}];
+// Native coins whose reader reports a row of another environment (no rows added):
+//  - Polygon native POL -> the existing POL row (environment Ethereum, symbol POL);
+//  - Arbitrum and Optimism native ETH -> the existing ETH row (environment
+//    Ethereum, registry row 2); their readers report that row's id and the
+//    registry has no Arbitrum or Optimism ETH row.
+const _k = (a, b) => require("ethers").solidityPackedKeccak256(["string", "string"], [a, b]);
+const ASSET_ROW_ALIASES = [
+  { environmentId: "Polygon", canonicalAssetId: _k("Ethereum", "POL"), rowEnvironmentId: "Ethereum" },
+  { environmentId: "Arbitrum", canonicalAssetId: _k("Ethereum", "native-ETH"), rowEnvironmentId: "Ethereum" },
+  { environmentId: "Optimism", canonicalAssetId: _k("Ethereum", "native-ETH"), rowEnvironmentId: "Ethereum" },
+];
 
 function registryRows() {
   const reg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json"), "utf8"));
