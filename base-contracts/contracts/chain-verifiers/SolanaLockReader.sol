@@ -1,20 +1,25 @@
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 pragma solidity 0.8.19;
+
 import "../interfaces/IChainVerifier.sol";
+
 /// @title SolanaLockReader
-/// @notice VF-XCH-011. Facts come from the LockCreated event on a finalized slot.
-/// A zero recipient reverts. Slot authentication remains evidence required.
+/// @notice Solana: BLOCKED. This reader fails closed. It replaces a stand-in
+/// that decoded caller-supplied facts. Do not register it.
+/// Reason: Solana blocks commit to transactions only through the proof-of-history entry chain (hundreds of thousands of sequential SHA-256 steps per block) and to account state through the bank hash, which has no per-account inclusion proof. A block hash alone therefore cannot prove the vf-solana-vault record; doing so needs the cluster's consensus data, which is outside the operator's simple bar.
 contract SolanaLockReader is IChainVerifier {
     string public constant ENVIRONMENT_ID = "Solana";
-    function verifyFinality(bytes calldata, bytes calldata sourceFinalityProof) external pure returns (bool, bytes32, uint256) {
-        (bytes32 blockhash, uint256 slot, uint8 commitment) = abi.decode(sourceFinalityProof, (bytes32, uint256, uint8));
-        require(commitment == 1 && blockhash != bytes32(0) && slot != 0, "VF-XCH-006: Solana slot not finalized");
-        return (true, blockhash, slot);
+    string public constant STATUS = "BLOCKED: no chain-data proof for Solana locks";
+
+    function verifyFinality(bytes calldata, bytes calldata) external pure returns (bool, bytes32, uint256) {
+        revert("VF-XCH-006: Solana reader blocked");
     }
-    function extractFacts(bytes calldata lockEventProof) external pure returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8) {
-        (bytes32 lockId, uint256 gross, uint256 fee, uint256 principal, uint256 duration, uint256 createdAt, uint256 maturity, address recipient, uint8 outputToken) = abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8));
-        require(recipient != address(0), "VF-XCH-011: Solana recipient missing");
-        require(outputToken <= 1, "VF-XCH-011: Solana output token");
-        return (lockId, gross, fee, principal, duration, createdAt, maturity, recipient, outputToken);
+
+    function extractFacts(bytes calldata)
+        external
+        pure
+        returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8)
+    {
+        revert("VF-XCH-011: Solana reader blocked");
     }
 }

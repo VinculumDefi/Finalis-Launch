@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 pragma solidity 0.8.19;
+
 import "../interfaces/IChainVerifier.sol";
+
 /// @title XrplLockReader
-/// @notice VF-XCH-011. Facts come from the EscrowCreate lock on a validated ledger.
+/// @notice XRP Ledger: BLOCKED. This reader fails closed. It replaces a stand-in
+/// that decoded caller-supplied facts. Do not register it.
+/// Reason: Ledger hashes and the transaction SHAMap use SHA-512Half; the EVM has no SHA-512 precompile, so a Solidity SHA-512 is required, plus SHAMap inner-node proofs and an XRPL binary-codec parser for the Payment and EscrowCreate transactions and their metadata (tesSUCCESS). Not built in this piece.
 contract XrplLockReader is IChainVerifier {
     string public constant ENVIRONMENT_ID = "XRP Ledger";
-    function verifyFinality(bytes calldata, bytes calldata sourceFinalityProof) external pure returns (bool, bytes32, uint256) {
-        (bytes32 ledgerHash, uint256 index, bool validated) = abi.decode(sourceFinalityProof, (bytes32, uint256, bool));
-        require(validated && ledgerHash != bytes32(0) && index != 0, "VF-XCH-006: XRPL ledger not validated");
-        return (true, ledgerHash, index);
+    string public constant STATUS = "BLOCKED: no chain-data proof for XRP Ledger locks";
+
+    function verifyFinality(bytes calldata, bytes calldata) external pure returns (bool, bytes32, uint256) {
+        revert("VF-XCH-006: XRP Ledger reader blocked");
     }
-    function extractFacts(bytes calldata lockEventProof) external pure returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8) {
-        (bytes32 lockId, uint256 gross, uint256 fee, uint256 principal, uint256 duration, uint256 createdAt, uint256 maturity, address recipient, uint8 outputToken) = abi.decode(lockEventProof, (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8));
-        require(recipient != address(0), "VF-XCH-011: XRPL recipient missing");
-        require(outputToken <= 1, "VF-XCH-011: XRPL output token");
-        return (lockId, gross, fee, principal, duration, createdAt, maturity, recipient, outputToken);
+
+    function extractFacts(bytes calldata)
+        external
+        pure
+        returns (bytes32, uint256, uint256, uint256, uint256, uint256, uint256, address, uint8)
+    {
+        revert("VF-XCH-011: XRP Ledger reader blocked");
     }
 }
