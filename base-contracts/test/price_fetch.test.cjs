@@ -6,7 +6,7 @@
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
-const { fetchPrices, registryRows, rowAddress, summarize, MIN_LIQUIDITY_USD } = require("../scripts/fetchPrices.cjs");
+const { fetchPrices, registryRows, rowAddress, summarize, MIN_LIQUIDITY_USD, FRESH_SECS } = require("../scripts/fetchPrices.cjs");
 const { buildPriceRun, buildPriceRuns, nextRunId, postOnTestChain, MAX_LINES_PER_RUN } = require("../scripts/priceRun.cjs");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const data = require("../scripts/deploy-pages/ceremony-data.json");
@@ -39,6 +39,7 @@ describe("Price fetcher -> price run (test chain)", function () {
   const btc = rows.find((r) => r.row === 3);
   const sol = rows.find((r) => r.row === 5);
   const usdt = rows.find((r) => r.row === 6);
+  const thin = rows.find((r) => r.environmentId === "Base" && /^0x[0-9a-fA-F]{40}$/.test(r.identifier) && ![aero, toshi].includes(r) && r.pricingIdentifier !== aero.pricingIdentifier && r.pricingIdentifier !== toshi.pricingIdentifier);
 
   it("reads the 962 registered rows: the 961 written rows plus Base ETH", () => {
     expect(rows.length).to.equal(962);
@@ -46,13 +47,16 @@ describe("Price fetcher -> price run (test chain)", function () {
     expect(rows.every((r) => r.pricingIdentifier)).to.equal(true);
   });
 
-  it("CoinGecko first (age not filtered); on a miss DexScreener then GeckoTerminal by the row's own chain and address; min liquidity; no symbol search; no substitute", async () => {
-    const sub = [aero, toshi, usdcPol, btc, sol, usdt];
+  it("fresh CoinGecko first; else DexScreener then GeckoTerminal (row's own chain + address, min liquidity); else stale CoinGecko as last resort; no symbol search; no substitute", async () => {
+    const sub = [aero, toshi, usdcPol, btc, sol, usdt, thin];
     const m = mock([
       [/coingecko/, (u) => ({
-        [aero.pricingIdentifier]: { usd: 0.79, last_updated_at: NOW - 5 * 365 * 86400 }, // 5 years old -> still CoinGecko (age not filtered)
-        [usdt.pricingIdentifier]: { usd: 1.0002 },                                       // no last_updated_at -> still CoinGecko
-        // toshi, usdcPol, btc, sol: id not found -> DEX
+        [aero.pricingIdentifier]: { usd: 0.79, last_updated_at: NOW - FRESH_SECS },       // fresh (24h) -> CoinGecko
+        [toshi.pricingIdentifier]: { usd: 0.0005, last_updated_at: NOW - 3 * 86400 },    // stale + DEX under $10k -> stale CoinGecko
+        [usdcPol.pricingIdentifier]: { usd: 0.97, last_updated_at: NOW - 400 * 86400 },  // stale + DEX >= $10k -> DEX wins
+        [btc.pricingIdentifier]: { usd: 60000, last_updated_at: NOW - 5 * 365 * 86400 }, // stale, no DEX possible -> stale CoinGecko
+        [usdt.pricingIdentifier]: { usd: 1.0002 },                                       // undated + DEX under $10k -> stale CoinGecko
+        // sol, thin: id not found -> DEX only
       })],
       [/dexscreener/, (u) => addrs(u).flatMap((a) => {
         if (a.toLowerCase() === toshi.identifier.toLowerCase()) return [
@@ -72,14 +76,17 @@ describe("Price fetcher -> price run (test chain)", function () {
     ]);
     const res = await fetchPrices({ rows: sub, get: m.get, now: () => NOW, pause: NOPAUSE });
     const by = Object.fromEntries(res.map((r) => [r.symbol, r]));
-    expect(by.AERO).to.include({ usd: "0.79", source: "CoinGecko", reason: null, cgLastUpdatedAt: NOW - 5 * 365 * 86400 });
-    expect(by.USDT).to.include({ usd: "1.0002", source: "CoinGecko", reason: null, cgLastUpdatedAt: null });
-    expect(by.USDC_POL).to.include({ usd: "0.9998", source: "DexScreener", reason: null });
+    expect(by.AERO).to.include({ usd: "0.79", source: "CoinGecko", reason: null, cgLastUpdatedAt: NOW - FRESH_SECS });
+    expect(by.USDC_POL).to.include({ usd: "0.9998", source: "DexScreener", reason: null });         // fresh DEX beats stale CoinGecko
+    expect(by.USDC_POL.detail).to.match(/coingecko: stale \(400d old\)/);
+    expect(by.TOSHI).to.include({ usd: "0.0005", source: "CoinGecko (stale)", reason: null, cgLastUpdatedAt: NOW - 3 * 86400 });
+    expect(by.TOSHI.detail).to.match(/dexscreener: below min liquidity/);                           // the thin pool was not used
+    expect(by.USDT).to.include({ usd: "1.0002", source: "CoinGecko (stale)", reason: null, cgLastUpdatedAt: null });
+    expect(by.USDT.detail).to.match(/coingecko: no last_updated_at.*geckoterminal: below min liquidity/);
+    expect(by.BTC).to.include({ usd: "60000", source: "CoinGecko (stale)", reason: null });
+    expect(by.BTC.detail).to.match(/no contract address/);
     expect(by.SOL).to.include({ usd: "150.5", source: "GeckoTerminal", reason: null });
-    expect(by.TOSHI).to.include({ usd: null, source: null, reason: "below_min_liquidity" });
-    expect(by.TOSHI.detail).to.match(/coingecko: id not found/);
-    expect(res.some((r) => /stale/.test(r.detail || ""))).to.equal(false);
-    expect(by.BTC).to.include({ usd: null, reason: "no_contract_address" });
+    expect(by[thin.symbol]).to.include({ usd: null, source: null, reason: "below_min_liquidity" });  // no CoinGecko, DEX under $10k -> fail
     // Only these endpoints; never a symbol search.
     for (const u of m.urls) expect(u).to.match(/^https:\/\/(api\.coingecko\.com\/api\/v3\/simple\/price\?ids=|api\.dexscreener\.com\/tokens\/v1\/|api\.geckoterminal\.com\/api\/v2\/simple\/networks\/)/);
     expect(m.urls.some((u) => /search/.test(u))).to.equal(false);
