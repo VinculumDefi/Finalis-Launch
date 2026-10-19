@@ -62,6 +62,23 @@ function buildPriceRun(fetched, runId, { registry = registryKeys() } = {}) {
   return { runId: id, poster: LIVE.scheduledPricePoster, updates, skipped };
 }
 
+// A full registry run does not fit one transaction: a success line costs about
+// 57,000 gas (measured on the test chain), so 962 lines are about 55M gas, above
+// the 2^24 (16,777,216) per-transaction gas cap. Split the lines into
+// consecutive runs of at most MAX_LINES_PER_RUN (250 lines, about 14.3M gas),
+// numbered firstRunId, firstRunId + 1, ... Each run is posted on its own.
+const MAX_LINES_PER_RUN = 250;
+function buildPriceRuns(fetched, firstRunId, { registry = registryKeys(), maxLines = MAX_LINES_PER_RUN } = {}) {
+  const all = buildPriceRun(fetched, firstRunId, { registry }); // validates and de-duplicates the whole set
+  const runs = [];
+  for (let i = 0; i < all.updates.length; i += maxLines) {
+    const id = all.runId + BigInt(runs.length);
+    if (id >= 2n ** 64n) throw new Error("run number exceeds uint64");
+    runs.push({ runId: id, poster: all.poster, updates: all.updates.slice(i, i + maxLines), skipped: runs.length ? [] : all.skipped });
+  }
+  return runs;
+}
+
 function calldata(run) {
   return new ethers.Interface(ABI).encodeFunctionData("applyScheduledPriceRun", [run.runId, run.updates]);
 }
@@ -88,15 +105,16 @@ async function postOnTestChain(hre, verifier, run) {
   }
 }
 
-module.exports = { buildPriceRun, toUsd18, calldata, nextRunId, postOnTestChain, MIN_RUN_ID };
+module.exports = { buildPriceRun, buildPriceRuns, toUsd18, calldata, nextRunId, postOnTestChain, MIN_RUN_ID, MAX_LINES_PER_RUN };
 
 if (require.main === module) {
   const a = process.argv.slice(2);
   const file = a[0], run = a[a.indexOf("--run") + 1], out = a.includes("--out") ? a[a.indexOf("--out") + 1] : null;
   if (!file || !a.includes("--run")) { console.error("usage: node scripts/priceRun.cjs <fetched.json> --run <N> [--out run.json]"); process.exit(1); }
-  const r = buildPriceRun(JSON.parse(fs.readFileSync(file, "utf8")), run);
-  const json = JSON.stringify({ runId: r.runId.toString(), poster: r.poster,
-    updates: r.updates.map((u) => ({ ...u, priceUsd18: u.priceUsd18.toString() })), skipped: r.skipped, calldata: calldata(r) }, null, 2);
+  const runs = buildPriceRuns(JSON.parse(fs.readFileSync(file, "utf8")), run);
+  const json = JSON.stringify(runs.map((r) => ({ runId: r.runId.toString(), poster: r.poster,
+    updates: r.updates.map((u) => ({ ...u, priceUsd18: u.priceUsd18.toString() })), skipped: r.skipped, calldata: calldata(r) })), null, 2);
   if (out) fs.writeFileSync(out, json + "\n"); else console.log(json);
-  console.error("Run " + r.runId + ": " + r.updates.filter((u) => u.success).length + " success, " + r.updates.filter((u) => !u.success).length + " failure lines. NOT sent. Poster " + r.poster.slice(0, 6) + "…" + r.poster.slice(-4) + " signs it.");
+  for (const r of runs) console.error("Run " + r.runId + ": " + r.updates.filter((u) => u.success).length + " success, " + r.updates.filter((u) => !u.success).length + " failure lines.");
+  console.error(runs.length + " run(s), NOT sent. Poster " + runs[0].poster.slice(0, 6) + "…" + runs[0].poster.slice(-4) + " signs each, in order.");
 }

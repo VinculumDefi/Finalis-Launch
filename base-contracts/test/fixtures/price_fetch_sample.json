@@ -1,0 +1,118 @@
+[
+ {
+  "environmentId": "Base",
+  "canonicalAssetId": "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b",
+  "row": 2,
+  "symbol": "ETH",
+  "usd": "2418.08",
+  "source": "CoinGecko",
+  "reason": null
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b",
+  "row": 2,
+  "symbol": "ETH",
+  "usd": "2418.08",
+  "source": "CoinGecko",
+  "reason": null
+ },
+ {
+  "environmentId": "Solana",
+  "canonicalAssetId": "0xc22aff18b0e692921c142b79484b27e44bee686a65348af0e356970fd390f8ac",
+  "row": 5,
+  "symbol": "SOL",
+  "usd": "104.63",
+  "source": "CoinGecko",
+  "reason": null
+ },
+ {
+  "environmentId": "Bitcoin",
+  "canonicalAssetId": "0xfd2d51dec504c0a1ebf663dca36adce2c0888306ca3d6e414d844d1e50dfaab5",
+  "row": 3,
+  "symbol": "BTC",
+  "usd": "82206",
+  "source": "CoinGecko",
+  "reason": null
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0x6a3a32c29ea26de0731a164e6a2dbdbc0e61b38b59ec2837abef5708e9e89c27",
+  "row": 52,
+  "symbol": "MATIC",
+  "usd": "0.09212",
+  "source": "DexScreener",
+  "reason": null,
+  "liquidityUsd": 238031
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0x8380e3b46aa1588d6955310082aec398839f0263ee6379e957e59f235c83f065",
+  "row": 114,
+  "symbol": "POL",
+  "usd": "0.0923",
+  "source": "DexScreener",
+  "reason": null,
+  "liquidityUsd": 37773
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0x0f14ddf23055449da3590932454ad7f6233700954a2f8301b2af5cc92c201dca",
+  "row": 186,
+  "symbol": "sUSD",
+  "usd": "0.2509083743",
+  "source": "GeckoTerminal",
+  "reason": null,
+  "liquidityUsd": 12250
+ },
+ {
+  "environmentId": "Avalanche",
+  "canonicalAssetId": "0xc3082a47b9f4a4eee86a6b27a0aa580792da1871eb7e8a369d70e0870bdbc9af",
+  "row": 359,
+  "symbol": "ggAVAX",
+  "usd": "0.00875141971872831",
+  "source": "GeckoTerminal",
+  "reason": null,
+  "liquidityUsd": 11525
+ },
+ {
+  "environmentId": "Base",
+  "canonicalAssetId": "0xad7045d7834c3d122e3676d1bbb15351d93e9c3cc41ca3ffc0ef77d2a9b2f44a",
+  "row": 138,
+  "symbol": "TigerOG",
+  "usd": null,
+  "source": null,
+  "reason": "below_min_liquidity",
+  "detail": "coingecko: id not found; dexscreener: no pair; geckoterminal: below min liquidity ($2487)"
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0xba8875d5ada0b33d2febe0500fbbad7b8d2e932ba088bf69b379da6cac43513a",
+  "row": 268,
+  "symbol": "SWEAT",
+  "usd": null,
+  "source": null,
+  "reason": "below_min_liquidity",
+  "detail": "coingecko: id not found; dexscreener: below min liquidity ($360); geckoterminal: below min liquidity ($382)"
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0x368d4a275dec25eedfbc93afd182202275cc8c6397be73e2f42230ab1998386d",
+  "row": 188,
+  "symbol": "GT",
+  "usd": null,
+  "source": null,
+  "reason": "no_dex_price",
+  "detail": "coingecko: stale (> 24h); dexscreener: no pair; geckoterminal: no price"
+ },
+ {
+  "environmentId": "Ethereum",
+  "canonicalAssetId": "0x1a306628e868d50849a65fe2180f8e041ff1e317a722b4c581d41907a7ebe324",
+  "row": 410,
+  "symbol": "IPOR",
+  "usd": null,
+  "source": null,
+  "reason": "no_dex_price",
+  "detail": "coingecko: stale (> 24h); dexscreener: no pair; geckoterminal: no price"
+ }
+]
