@@ -12,7 +12,11 @@
 //
 // Steps, per row:
 //  1. CoinGecko /simple/price by the row's own pricingIdentifier (batched).
-//     Accepted if usd > 0. CoinGecko age is not filtered (operator opened freshness 2026-10-19); last_updated_at is recorded as cgLastUpdatedAt.
+//     Used first only if usd > 0 and last_updated_at is within FRESH_SECS (24h).
+//     Operator opened freshness 2026-10-19: an older (or undated) CoinGecko
+//     price is no longer refused, but a fresh DEX price beats a stale CoinGecko
+//     price, so a stale one is kept back as the last resort (step 3b).
+//     CoinGecko's last_updated_at is recorded as cgLastUpdatedAt.
 //  2. On a CoinGecko miss: DexScreener by the row's own chain + contract
 //     address, then GeckoTerminal by the same chain + address.
 //     Minimum-liquidity rule (no numeric rule exists in the registry or the
@@ -27,6 +31,8 @@
 //     they are priced by CoinGecko only, except where the row's own
 //     identifier names a pricing reference contract (ETH -> WETH, SOL ->
 //     wrapped SOL), which is then used on that reference's chain.
+//  3b. Still unpriced but CoinGecko had a usd price of any age (no date,
+//     years old): use that stale CoinGecko price, source "CoinGecko (stale)".
 //  4. Anything else is a confirmed fail with a reason.
 //
 // CLI: node scripts/fetchPrices.cjs --out <file.json>
@@ -35,6 +41,7 @@ const path = require("path");
 const https = require("https");
 
 const MIN_LIQUIDITY_USD = 10000;
+const FRESH_SECS = 24 * 3600; // CoinGecko within this is used first; older is last resort (operator opened freshness 2026-10-19)
 const CG_BATCH = 200, DS_BATCH = 30, GT_BATCH = 30;
 const PAUSE = { cg: 6000, ds: 400, gt: 2500 };
 
@@ -105,6 +112,7 @@ const same = (chain, a, b) => (chain === "Solana" ? a === b : String(a).toLowerC
 async function fetchPrices({ rows = registryRows(), get = httpGet, now = () => Math.floor(Date.now() / 1000), pause = PAUSE, log = () => {} } = {}) {
   const out = new Map(); // index -> result
   const misses = new Map(); // index -> cg reason
+  const staleCg = new Map(); // index -> stale CoinGecko quote kept as last resort
 
   // 1. CoinGecko by pricingIdentifier.
   const ids = [...new Set(rows.map((r) => r.pricingIdentifier).filter(Boolean))];
@@ -120,8 +128,11 @@ async function fetchPrices({ rows = registryRows(), get = httpGet, now = () => M
     if (!r.pricingIdentifier) misses.set(i, "coingecko: no pricingIdentifier");
     else if (!q || q._error) misses.set(i, q && q._error ? "coingecko: fetch error " + q._error : "coingecko: id not found");
     else if (!(Number(q.usd) > 0)) misses.set(i, "coingecko: no usd price");
-    // CoinGecko age is not filtered (operator opened freshness 2026-10-19).
-    else out.set(i, { usd: decimalString(q.usd), source: "CoinGecko", reason: null, cgLastUpdatedAt: q.last_updated_at || null });
+    else if (q.last_updated_at && now() - q.last_updated_at <= FRESH_SECS) out.set(i, { usd: decimalString(q.usd), source: "CoinGecko", reason: null, cgLastUpdatedAt: q.last_updated_at });
+    else { // stale or undated: fresh DEX beats it; kept as last resort
+      staleCg.set(i, q);
+      misses.set(i, q.last_updated_at ? `coingecko: stale (${Math.floor((now() - q.last_updated_at) / 86400)}d old)` : "coingecko: no last_updated_at");
+    }
   });
   log(`CoinGecko: ${out.size} priced, ${misses.size} misses`);
 
@@ -129,7 +140,7 @@ async function fetchPrices({ rows = registryRows(), get = httpGet, now = () => M
   const pending = new Map(); // i -> {chain,address,why[]}
   for (const [i, why] of misses) {
     const a = rowAddress(rows[i]);
-    if (!a) out.set(i, { usd: null, source: null, reason: "no_contract_address", detail: why });
+    if (!a) out.set(i, staleCg.has(i) ? lastResort(staleCg.get(i), why + "; no contract address") : { usd: null, source: null, reason: "no_contract_address", detail: why });
     else pending.set(i, { ...a, why: [why] });
   }
   const byChain = (m) => { const g = {}; for (const [i, p] of m) (g[p.chain] = g[p.chain] || []).push([i, p]); return g; };
@@ -171,11 +182,17 @@ async function fetchPrices({ rows = registryRows(), get = httpGet, now = () => M
     }
   }
   for (const [i, p] of pending) {
+    if (staleCg.has(i)) { out.set(i, lastResort(staleCg.get(i), p.why.join("; "))); continue; }
     const fetchErr = p.why.some((w) => /fetch error/.test(w)) && !p.why.some((w) => /no pair|no price|below/.test(w));
     out.set(i, { usd: null, source: null, reason: fetchErr ? "fetch_error" : (p.dsLow || p.gtLow) ? "below_min_liquidity" : "no_dex_price", detail: p.why.join("; ") });
   }
 
   return rows.map((r, i) => ({ environmentId: r.environmentId, canonicalAssetId: r.canonicalAssetId, row: r.row, symbol: r.symbol, ...out.get(i) }));
+}
+
+// Last resort: the stale/undated CoinGecko price (operator opened freshness 2026-10-19).
+function lastResort(q, detail) {
+  return { usd: decimalString(q.usd), source: "CoinGecko (stale)", reason: null, cgLastUpdatedAt: q.last_updated_at || null, detail };
 }
 
 // Exact decimal string of an API number/string (no exponent), for toUsd18.
@@ -194,7 +211,7 @@ function decimalString(v) {
 }
 
 function summarize(res) {
-  const c = { total: res.length, CoinGecko: 0, DexScreener: 0, GeckoTerminal: 0, fail: 0, failByReason: {} };
+  const c = { total: res.length, CoinGecko: 0, "CoinGecko (stale)": 0, DexScreener: 0, GeckoTerminal: 0, fail: 0, failByReason: {} };
   for (const r of res) {
     if (r.usd != null) c[r.source]++;
     else { c.fail++; c.failByReason[r.reason] = (c.failByReason[r.reason] || 0) + 1; }
@@ -202,7 +219,7 @@ function summarize(res) {
   return c;
 }
 
-module.exports = { fetchPrices, registryRows, rowAddress, summarize, decimalString, MIN_LIQUIDITY_USD, CHAINS };
+module.exports = { fetchPrices, registryRows, rowAddress, summarize, decimalString, MIN_LIQUIDITY_USD, FRESH_SECS, CHAINS };
 
 if (require.main === module) {
   const a = process.argv.slice(2);
