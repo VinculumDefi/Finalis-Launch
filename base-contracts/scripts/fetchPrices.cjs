@@ -12,7 +12,7 @@
 //
 // Steps, per row:
 //  1. CoinGecko /simple/price by the row's own pricingIdentifier (batched).
-//     Accepted only if usd > 0 and last_updated_at is within MAX_AGE_SECS.
+//     Accepted if usd > 0. CoinGecko age is not filtered (operator opened freshness 2026-10-19); last_updated_at is recorded as cgLastUpdatedAt.
 //  2. On a CoinGecko miss: DexScreener by the row's own chain + contract
 //     address, then GeckoTerminal by the same chain + address.
 //     Minimum-liquidity rule (no numeric rule exists in the registry or the
@@ -35,7 +35,6 @@ const path = require("path");
 const https = require("https");
 
 const MIN_LIQUIDITY_USD = 10000;
-const MAX_AGE_SECS = 24 * 3600;
 const CG_BATCH = 200, DS_BATCH = 30, GT_BATCH = 30;
 const PAUSE = { cg: 6000, ds: 400, gt: 2500 };
 
@@ -121,8 +120,8 @@ async function fetchPrices({ rows = registryRows(), get = httpGet, now = () => M
     if (!r.pricingIdentifier) misses.set(i, "coingecko: no pricingIdentifier");
     else if (!q || q._error) misses.set(i, q && q._error ? "coingecko: fetch error " + q._error : "coingecko: id not found");
     else if (!(Number(q.usd) > 0)) misses.set(i, "coingecko: no usd price");
-    else if (!q.last_updated_at || now() - q.last_updated_at > MAX_AGE_SECS) misses.set(i, "coingecko: stale (> 24h)");
-    else out.set(i, { usd: decimalString(q.usd), source: "CoinGecko", reason: null });
+    // CoinGecko age is not filtered (operator opened freshness 2026-10-19).
+    else out.set(i, { usd: decimalString(q.usd), source: "CoinGecko", reason: null, cgLastUpdatedAt: q.last_updated_at || null });
   });
   log(`CoinGecko: ${out.size} priced, ${misses.size} misses`);
 
@@ -203,7 +202,7 @@ function summarize(res) {
   return c;
 }
 
-module.exports = { fetchPrices, registryRows, rowAddress, summarize, decimalString, MIN_LIQUIDITY_USD, MAX_AGE_SECS, CHAINS };
+module.exports = { fetchPrices, registryRows, rowAddress, summarize, decimalString, MIN_LIQUIDITY_USD, CHAINS };
 
 if (require.main === module) {
   const a = process.argv.slice(2);
