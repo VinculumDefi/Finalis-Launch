@@ -1,10 +1,11 @@
 // Price fetcher for the scheduled price run (t209u item 2). READ-ONLY: HTTP
 // GETs to public price APIs; it never signs, sends or posts anything.
 //
-// Input : deployment/assetRegistry.resolved.json - the 961 written rows
-//         (decimals known, not a same-key duplicate) plus the Base ETH row
-//         (row 2 under environment Base) = 962 registered rows. Same set as
-//         priceRun.cjs registryKeys().
+// Input : the current registry, Revision B (deployment/assetRegistry.revB.json,
+//         via scripts/registryFile.cjs): 486 written rows plus the Base ETH row
+//         (row 2 under environment Base) = 487 registered rows. Same set as
+//         priceRun.cjs registryKeys(). The prior revision
+//         (assetRegistry.resolved.json, 962 rows) is no longer read.
 // Output: [{ environmentId, canonicalAssetId, usd | null, source, reason, row, symbol }]
 //         usd is the fetched decimal string; null = confirmed fail with reason.
 //         Feeds scripts/priceRun.cjs unchanged (it reads environmentId,
@@ -39,6 +40,7 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const { loadRegistry } = require("./registryFile.cjs");
 
 const MIN_LIQUIDITY_USD = 10000;
 const FRESH_SECS = 24 * 3600; // CoinGecko within this is used first; older is last resort (operator opened freshness 2026-10-19)
@@ -59,12 +61,8 @@ const CHAINS = {
 const EVM_ADDR = /^0x[0-9a-fA-F]{40}$/;
 const B58_ADDR = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
-function registryRows(regPath = path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json")) {
-  const reg = JSON.parse(fs.readFileSync(regPath, "utf8"));
-  const rows = reg.entries.filter((e) => e.decimals != null && e.sameKeyAsRow == null);
-  const row2 = reg.entries.find((e) => e.row === 2);
-  rows.push({ ...row2, environmentId: "Base" }); // Base ETH (registered under Base)
-  return rows;
+function registryRows(regFile) {
+  return loadRegistry(regFile).all; // Revision B: written rows + Base ETH
 }
 
 // The row's own contract address and the chain it lives on, or null.

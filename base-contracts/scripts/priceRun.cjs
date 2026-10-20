@@ -17,6 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 const { ethers } = require("ethers");
+const { loadRegistry } = require("./registryFile.cjs");
 
 const LIVE = require("../deployment/liveConfig.json");
 const MIN_RUN_ID = 2n;
@@ -33,12 +34,10 @@ function toUsd18(usd) {
   return BigInt(m[1]) * 10n ** 18n + BigInt(frac);
 }
 
-function registryKeys() {
-  const reg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json"), "utf8"));
-  const keys = new Set(reg.entries.filter((e) => e.decimals != null && e.sameKeyAsRow == null).map((e) => e.environmentId + "|" + e.canonicalAssetId.toLowerCase()));
-  const row2 = reg.entries.find((e) => e.row === 2);
-  keys.add("Base|" + row2.canonicalAssetId.toLowerCase());
-  return keys;
+// Every registered line of the current registry (Revision B: 486 written rows
+// plus Base ETH = 487), as "environment|canonicalAssetId".
+function registryKeys(regFile) {
+  return new Set(loadRegistry(regFile).all.map((e) => e.environmentId + "|" + e.canonicalAssetId.toLowerCase()));
 }
 
 function buildPriceRun(fetched, runId, { registry = registryKeys() } = {}) {
@@ -63,8 +62,8 @@ function buildPriceRun(fetched, runId, { registry = registryKeys() } = {}) {
 }
 
 // A full registry run does not fit one transaction: a success line costs about
-// 57,000 gas (measured on the test chain), so 962 lines are about 55M gas, above
-// the 2^24 (16,777,216) per-transaction gas cap. Split the lines into
+// 57,000 gas (measured on the test chain), so 487 lines (Revision B) are about
+// 28M gas, above the 2^24 (16,777,216) per-transaction gas cap. Split the lines into
 // consecutive runs of at most MAX_LINES_PER_RUN (250 lines, about 14.3M gas),
 // numbered firstRunId, firstRunId + 1, ... Each run is posted on its own.
 const MAX_LINES_PER_RUN = 250;
