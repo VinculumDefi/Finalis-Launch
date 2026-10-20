@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { REGISTRY_URL, REGISTRY_TOTAL } from '@/lib/vfRegistryVerification';
+import { filterOfferable } from '@/lib/vfActiveAssetAllowlist';
 
 // Single shared cache — all components loading the registry share one fetch.
 let _cache = null;
@@ -19,8 +20,14 @@ async function fetchRegistry() {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
     const data = JSON.parse(raw);
+    const records = data.records || [];
+    // Only active-list assets (Revision B + on-chain verification) are offerable.
+    // records stays the full hosted list for audit display; pickers use offerable.
+    const offerable = filterOfferable(records);
     _cache = {
-      records: data.records || [],
+      records,
+      offerable,
+      hiddenCount: records.length - offerable.length,
       count: data.count || data.records?.length || 0,
       source: data.source || null,
       sha256,
@@ -45,6 +52,8 @@ async function fetchRegistry() {
 export function useApprovedAssetRegistry() {
   const [state, setState] = useState({
     records: [],
+    offerable: [],
+    hiddenCount: 0,
     count: 0,
     source: null,
     sha256: null,
