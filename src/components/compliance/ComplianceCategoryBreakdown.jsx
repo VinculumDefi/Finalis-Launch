@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { getCategoryStats, CATEGORIES, STATUS_META, STATUS } from '@/lib/vfComplianceData';
+import { getCategoryStats, CATEGORIES } from '@/lib/vfComplianceData';
 
 export default function ComplianceCategoryBreakdown() {
   const stats = getCategoryStats();
