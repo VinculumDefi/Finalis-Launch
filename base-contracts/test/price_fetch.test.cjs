@@ -33,15 +33,22 @@ const addrs = (u) => u.split("/").pop().split("?")[0].split(",");
 describe("Price fetcher -> price run (test chain)", function () {
   this.timeout(900000);
   const rows = registryRows();
-  const aero = rows.find((r) => r.environmentId === "Base" && r.symbol === "AERO");
-  const toshi = rows.find((r) => r.environmentId === "Base" && r.symbol === "TOSHI");
-  const usdcPol = rows.find((r) => r.environmentId === "Polygon" && r.symbol === "USDC_POL");
+  // Distinct token rows (each with its own CoinGecko id) on their own chains.
+  const toks = [];
+  for (const r of rows) if (r.kind === "token" && /^0x[0-9a-fA-F]{40}$/.test(r.identifier) && !toks.some((t) => t.pricingIdentifier === r.pricingIdentifier)) toks.push(r);
+  const pickOn = (env, n) => toks.filter((r) => r.environmentId === env)[n];
+  const T = { single: pickOn("Ethereum", 0), split: pickOn("Ethereum", 1), idle: pickOn("Ethereum", 2), noPool: pickOn("Ethereum", 3),
+    staleWithPool: pickOn("Polygon", 0), staleOnly: pickOn("Base", 0), overCap: pickOn("Ethereum", 4), gtOnly: pickOn("Arbitrum", 0),
+    quoteSide: pickOn("BNB Smart Chain", 0), wrongChain: pickOn("Avalanche", 0), dsDown: pickOn("Optimism", 0), noQuote: pickOn("Ethereum", 5) };
   const btc = rows.find((r) => r.row === 3);
+  const doge = rows.find((r) => r.row === 4);
+  const baseEth = rows.find((r) => r.environmentId === "Base" && r.row === 2);
   // Solana SOL (row 5) is not in Revision B; the prior-revision row is used only
-  // to exercise the fetcher's GeckoTerminal path on a non-EVM address.
+  // to exercise the GeckoTerminal path on a non-EVM address.
   const sol = require("../scripts/registryFile.cjs").loadHistoricalWritten().find((r) => r.row === 5);
-  const usdt = rows.find((r) => r.row === 6);
-  const thin = rows.find((r) => r.environmentId === "Base" && /^0x[0-9a-fA-F]{40}$/.test(r.identifier) && ![aero, toshi].includes(r) && r.pricingIdentifier !== aero.pricingIdentifier && r.pricingIdentifier !== toshi.pricingIdentifier);
+  const solMint = "So11111111111111111111111111111111111111112";
+  const solRow = { ...sol, identifier: solMint, kind: "token" };
+  const lc = (a) => String(a).toLowerCase();
 
   it("reads the 487 Revision B rows: the 486 written rows plus Base ETH; no Solana", () => {
     expect(rows.length).to.equal(487);
@@ -49,54 +56,132 @@ describe("Price fetcher -> price run (test chain)", function () {
     expect(rows.filter((r) => r.environmentId === "Solana").length).to.equal(0);
     expect(sol.environmentId).to.equal("Solana");
     expect(rows.every((r) => r.pricingIdentifier)).to.equal(true);
+    expect(rows.filter((r) => r.kind === "native").length).to.equal(12);
+    for (const t of Object.values(T)) expect(t, "test row").to.not.equal(undefined);
   });
 
-  it("fresh CoinGecko first; else DexScreener then GeckoTerminal (row's own chain + address, min liquidity); else stale CoinGecko as last resort; no symbol search; no substitute", async () => {
-    const sub = [aero, toshi, usdcPol, btc, sol, usdt, thin];
-    const m = mock([
-      [/coingecko/, (u) => ({
-        [aero.pricingIdentifier]: { usd: 0.79, last_updated_at: NOW - FRESH_SECS },       // fresh (24h) -> CoinGecko
-        [toshi.pricingIdentifier]: { usd: 0.0005, last_updated_at: NOW - 3 * 86400 },    // stale + DEX under $10k -> stale CoinGecko
-        [usdcPol.pricingIdentifier]: { usd: 0.97, last_updated_at: NOW - 400 * 86400 },  // stale + DEX >= $10k -> DEX wins
-        [btc.pricingIdentifier]: { usd: 60000, last_updated_at: NOW - 5 * 365 * 86400 }, // stale, no DEX possible -> stale CoinGecko
-        [usdt.pricingIdentifier]: { usd: 1.0002 },                                       // undated + DEX under $10k -> stale CoinGecko
-        // sol, thin: id not found -> DEX only
-      })],
-      [/dexscreener/, (u) => addrs(u).flatMap((a) => {
-        if (a.toLowerCase() === toshi.identifier.toLowerCase()) return [
-          { chainId: "base", baseToken: { address: a }, priceUsd: "0.0004", liquidity: { usd: MIN_LIQUIDITY_USD - 1 } }, // below min
-          { chainId: "ethereum", baseToken: { address: a }, priceUsd: "9", liquidity: { usd: 1e9 } },              // wrong chain: ignored
-          { chainId: "base", baseToken: { address: "0x" + "1".repeat(40) }, quoteToken: { address: a }, priceUsd: "7", liquidity: { usd: 1e9 } }, // quote side: ignored
-        ];
-        if (a.toLowerCase() === usdcPol.identifier.toLowerCase()) return [
-          { chainId: "polygon", baseToken: { address: a }, priceUsd: "0.9998", liquidity: { usd: 5e6 } },
-        ];
-        return []; // wrapped SOL: no pair
-      })],
-      [/geckoterminal/, (u) => ({ data: { attributes: {
-        token_prices: Object.fromEntries(addrs(u).map((a) => [a, a === sol.identifier.match(/\((\w+) wrapped/)[1] ? "150.5" : "0.00041"])),
-        total_reserve_in_usd: Object.fromEntries(addrs(u).map((a) => [a, a.startsWith("0x") ? String(MIN_LIQUIDITY_USD - 1) : "90000000"])),
-      } } })],
-    ]);
-    const res = await fetchPrices({ rows: sub, get: m.get, now: () => NOW, pause: NOPAUSE });
-    const by = Object.fromEntries(res.map((r) => [r.symbol, r]));
-    expect(by.AERO).to.include({ usd: "0.79", source: "CoinGecko", reason: null, cgLastUpdatedAt: NOW - FRESH_SECS });
-    expect(by.USDC_POL).to.include({ usd: "0.9998", source: "DexScreener", reason: null });         // fresh DEX beats stale CoinGecko
-    expect(by.USDC_POL.detail).to.match(/coingecko: stale \(400d old\)/);
-    expect(by.TOSHI).to.include({ usd: "0.0005", source: "CoinGecko (stale)", reason: null, cgLastUpdatedAt: NOW - 3 * 86400 });
-    expect(by.TOSHI.detail).to.match(/dexscreener: below min liquidity/);                           // the thin pool was not used
-    expect(by.USDT).to.include({ usd: "1.0002", source: "CoinGecko (stale)", reason: null, cgLastUpdatedAt: null });
-    expect(by.USDT.detail).to.match(/coingecko: no last_updated_at.*geckoterminal: below min liquidity/);
-    expect(by.BTC).to.include({ usd: "60000", source: "CoinGecko (stale)", reason: null });
-    expect(by.BTC.detail).to.match(/no contract address/);
-    expect(by.SOL).to.include({ usd: "150.5", source: "GeckoTerminal", reason: null });
-    expect(by[thin.symbol]).to.include({ usd: null, source: null, reason: "below_min_liquidity" });  // no CoinGecko, DEX under $10k -> fail
-    // Only these endpoints; never a symbol search.
-    for (const u of m.urls) expect(u).to.match(/^https:\/\/(api\.coingecko\.com\/api\/v3\/simple\/price\?ids=|api\.dexscreener\.com\/tokens\/v1\/|api\.geckoterminal\.com\/api\/v2\/simple\/networks\/)/);
-    expect(m.urls.some((u) => /search/.test(u))).to.equal(false);
-    // DEX lookups use the row's own chain and address.
-    expect(m.urls.some((u) => u.includes("/tokens/v1/polygon/" + usdcPol.identifier))).to.equal(true);
-    expect(rowAddress(btc)).to.equal(null);
+  describe("tightened rule (t222u): one traded pool >= $10,000 on its own, fresh price, natives on fresh CoinGecko only", function () {
+    let by, m;
+    const pair = (t, o = {}) => ({ chainId: CHAINS[t.environmentId].ds, pairAddress: o.pair || "0x" + "a".repeat(40), baseToken: { address: t.identifier }, quoteToken: { address: "0x" + "e".repeat(40) },
+      priceUsd: o.price || "1.5", priceNative: o.native || "0.0005", liquidity: { usd: o.liq }, txns: { h24: { buys: o.buys ?? 3, sells: o.sells ?? 2 } }, volume: { h24: o.vol ?? 500 }, marketCap: o.mcap, fdv: o.fdv });
+    const { CHAINS } = require("../scripts/fetchPrices.cjs");
+    const H = 3600;
+    before(async () => {
+      const sub = [...Object.values(T), btc, doge, baseEth, solRow];
+      m = mock([
+        [/coingecko/, () => ({
+          [T.single.pricingIdentifier]: { usd: 2.5, last_updated_at: NOW - H },          // fresh
+          [T.split.pricingIdentifier]: { usd: 1, last_updated_at: NOW - H },             // fresh, but only split pools
+          [T.idle.pricingIdentifier]: { usd: 1, last_updated_at: NOW - H },              // fresh, but the big pool is idle
+          [T.noPool.pricingIdentifier]: { usd: 7, last_updated_at: NOW - H },            // fresh, no pool at all
+          [T.staleWithPool.pricingIdentifier]: { usd: 0.97, last_updated_at: NOW - 3 * 86400 }, // stale + qualifying pool
+          [T.staleOnly.pricingIdentifier]: { usd: 0.0005, last_updated_at: NOW - 3 * 86400 },   // stale, no pool
+          [T.overCap.pricingIdentifier]: { usd: 1, last_updated_at: NOW - H },
+          [T.gtOnly.pricingIdentifier]: { usd: 3, last_updated_at: NOW - 400 * 86400 },  // stale + GeckoTerminal-only pool
+          [T.wrongChain.pricingIdentifier]: { usd: 1, last_updated_at: NOW - H },
+          [T.dsDown.pricingIdentifier]: { usd: 1, last_updated_at: NOW - H },
+          [T.noQuote.pricingIdentifier]: { usd: 4, last_updated_at: NOW - 2 * 86400 },  // stale + qualifying pool without a quote
+          [btc.pricingIdentifier]: { usd: 60000, last_updated_at: NOW - H },             // native, fresh
+          [doge.pricingIdentifier]: { usd: 0.1, last_updated_at: NOW - 30 * H },         // native, stale
+          [baseEth.pricingIdentifier]: { usd: 2400, last_updated_at: NOW - FRESH_SECS }, // native, exactly 24h: fresh
+          // quoteSide, sol: id not found -> pool price only
+        })],
+        [/dexscreener\.com\/token-pairs\/v1\/optimism\//, () => { throw new Error("ECONNRESET"); }],
+        [/dexscreener\.com\/token-pairs/, (u) => {
+          const a = lc(u.split("/").pop());
+          if (a === lc(T.single.identifier)) return [pair(T.single, { liq: 50000 })];
+          if (a === lc(T.split.identifier)) return [pair(T.split, { liq: 6000, pair: "0x" + "1".repeat(40) }), pair(T.split, { liq: 6000, pair: "0x" + "2".repeat(40) })];
+          if (a === lc(T.idle.identifier)) return [pair(T.idle, { liq: 1e6, buys: 0, sells: 0, vol: 0 }), pair(T.idle, { liq: 4000, pair: "0x" + "3".repeat(40) })];
+          if (a === lc(T.staleWithPool.identifier)) return [pair(T.staleWithPool, { liq: 5e6, price: "0.9998" }), pair(T.staleWithPool, { liq: 9000, price: "5", pair: "0x" + "4".repeat(40) })];
+          if (a === lc(T.overCap.identifier)) return [pair(T.overCap, { liq: 1e6, mcap: 1000, fdv: 2000 })];
+          if (a === lc(T.quoteSide.identifier)) return [{ ...pair(T.quoteSide, { liq: 20000, price: "8", native: "4" }), baseToken: { address: "0x" + "b".repeat(40) }, quoteToken: { address: T.quoteSide.identifier } }];
+          if (a === lc(T.wrongChain.identifier)) return [{ ...pair(T.wrongChain, { liq: 1e7 }), chainId: "ethereum" }];
+          if (a === lc(T.noQuote.identifier)) return [pair(T.noQuote, { liq: 30000, price: "0" })];
+          return [];
+        }],
+        [/geckoterminal\.com\/api\/v2\/networks\/[^/]+\/tokens\/multi\//, (u) => {
+          const list = u.split("/multi/")[1].split("?")[0].split(",");
+          const data = [], included = [];
+          for (const a of list) {
+            if (lc(a) === lc(T.gtOnly.identifier)) {
+              data.push({ attributes: { address: lc(a), market_cap_usd: "5000000" }, relationships: { top_pools: { data: [{ id: "arbitrum_0xpoolgt" }, { id: "arbitrum_0xpoolidle" }] } } });
+              included.push({ id: "arbitrum_0xpoolgt", attributes: { address: "0xpoolgt", reserve_in_usd: "25000", base_token_price_usd: "3.21", quote_token_price_usd: "1", transactions: { h24: { buys: 1, sells: 0 } }, volume_usd: { h24: "10" } },
+                relationships: { base_token: { data: { id: "arbitrum_" + lc(a) } } } });
+              included.push({ id: "arbitrum_0xpoolidle", attributes: { address: "0xpoolidle", reserve_in_usd: "900000000", base_token_price_usd: "9", transactions: { h24: { buys: 0, sells: 0 } }, volume_usd: { h24: "0" } },
+                relationships: { base_token: { data: { id: "arbitrum_" + lc(a) } } } });
+            }
+            if (a === solMint) {
+              data.push({ attributes: { address: a }, relationships: { top_pools: { data: [{ id: "solana_P" }] } } });
+              included.push({ id: "solana_P", attributes: { address: "P", reserve_in_usd: "90000000", base_token_price_usd: "150.5", transactions: { h24: { buys: 10, sells: 9 } }, volume_usd: { h24: "1" } },
+                relationships: { base_token: { data: { id: "solana_" + a } } } });
+            }
+          }
+          return { data, included };
+        }],
+        [/geckoterminal\.com\/api\/v2\/networks\/[^/]+\/tokens\/[^/]+\/pools/, () => ({ data: [] })],
+      ]);
+      const res = await fetchPrices({ rows: sub, get: m.get, now: () => NOW, pause: { ...NOPAUSE, retry: 0 } });
+      by = new Map(res.map((r) => [r.environmentId + "|" + r.row, r]));
+    });
+    const R = (t) => by.get(t.environmentId + "|" + t.row);
+
+    it("a single traded pool >= $10,000 passes; a fresh CoinGecko price is then used", () => {
+      expect(R(T.single)).to.include({ usd: "2.5", source: "CoinGecko", reason: null });
+      expect(R(T.single).qualifyingPool).to.include({ source: "DexScreener", liquidityUsd: 50000, tx24h: 5 });
+    });
+    it("two traded pools each under $10,000 that sum to $12,000 fail (no summing)", () => {
+      expect(R(T.split)).to.include({ usd: null, source: null, reason: "no_single_traded_pool_10k", sumTradedPoolsUsd: 12000 });
+      expect(R(T.split).bestTradedPool.liquidityUsd).to.equal(6000);
+      expect(R(T.split).detail).to.match(/only when summed/);
+    });
+    it("a $1,000,000 pool with zero 24h trades and zero volume fails; idle pools are ignored completely", () => {
+      expect(R(T.idle)).to.include({ usd: null, reason: "no_single_traded_pool_10k" });
+      expect(R(T.idle).bestTradedPool.liquidityUsd).to.equal(4000); // the idle pool is not even the "best"
+      expect(R(T.gtOnly).bestTradedPool.liquidityUsd).to.equal(25000); // the idle $900M GeckoTerminal pool is ignored
+    });
+    it("a fresh CoinGecko price with no qualifying pool fails", () => {
+      expect(R(T.noPool)).to.include({ usd: null, source: null, reason: "no_single_traded_pool_10k" });
+      expect(R(T.noPool).bestTradedPool).to.equal(null);
+      expect(R(T.wrongChain)).to.include({ usd: null, reason: "no_single_traded_pool_10k" }); // other-chain pair ignored
+    });
+    it("a pool reporting more than 2x market cap is dropped", () => {
+      expect(R(T.overCap)).to.include({ usd: null, reason: "no_single_traded_pool_10k", poolsDroppedOverCap: 1, marketCapUsd: 2000 });
+    });
+    it("stale CoinGecko + qualifying pool uses that pool's own quote (largest qualifying DexScreener pool)", () => {
+      expect(R(T.staleWithPool)).to.include({ usd: "0.9998", source: "DexScreener", reason: null, liquidityUsd: 5000000 });
+      expect(R(T.staleWithPool).detail).to.match(/coingecko: stale \(72\.0h old, not used\)/);
+      expect(R(T.gtOnly)).to.include({ usd: "3.21", source: "GeckoTerminal", reason: null });
+      expect(R(T.quoteSide)).to.include({ usd: "2", source: "DexScreener" }); // quote side: priceUsd / priceNative
+      expect(by.get("Solana|5")).to.include({ usd: "150.5", source: "GeckoTerminal" });
+    });
+    it("stale CoinGecko only fails: there is no stale last resort", () => {
+      expect(R(T.staleOnly)).to.include({ usd: null, source: null, reason: "no_single_traded_pool_10k" });
+      expect(R(T.staleOnly).detail).to.match(/stale/);
+      for (const r of by.values()) expect(r.source).to.not.equal("CoinGecko (stale)");
+    });
+    it("a qualifying pool with no quote and no fresh CoinGecko price fails", () => {
+      expect(R(T.noQuote)).to.include({ usd: null, reason: "no_fresh_price" });
+      expect(R(T.noQuote).qualifyingPool.liquidityUsd).to.equal(30000);
+    });
+    it("an API that stays down after the retries fails closed", () => {
+      expect(R(T.dsDown)).to.include({ usd: null, source: null, reason: "fetch_error" });
+      expect(m.urls.filter((u) => u.includes("token-pairs/v1/optimism/")).length).to.equal(5); // 5 tries
+    });
+    it("natives: a fresh CoinGecko price passes with no pool; a stale one fails; no pool is looked up for a native", () => {
+      expect(R(btc)).to.include({ usd: "60000", source: "CoinGecko", reason: null, kind: "native" });
+      expect(R(baseEth)).to.include({ usd: "2400", source: "CoinGecko", kind: "native" });
+      expect(R(doge)).to.include({ usd: null, source: null, reason: "no_fresh_coingecko", kind: "native" });
+      expect(m.urls.some((u) => /c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2/i.test(u))).to.equal(false); // no WETH pool for ETH
+      expect(rowAddress(btc)).to.equal(null);
+      expect(rowAddress(baseEth)).to.equal(null);
+    });
+    it("only the row's own chain and address are requested; never a symbol search", () => {
+      for (const u of m.urls) expect(u).to.match(/^https:\/\/(api\.coingecko\.com\/api\/v3\/simple\/price\?ids=|api\.dexscreener\.com\/token-pairs\/v1\/[a-z]+\/[0-9A-Za-z]+$|api\.geckoterminal\.com\/api\/v2\/networks\/[a-z_]+\/tokens\/(multi\/[0-9A-Za-z,]+\?include=top_pools|[0-9A-Za-z]+\/pools\?page=1)$)/);
+      expect(m.urls.some((u) => /search/.test(u))).to.equal(false);
+      expect(m.urls.some((u) => u === "https://api.dexscreener.com/token-pairs/v1/polygon/" + T.staleWithPool.identifier)).to.equal(true);
+      expect(MIN_LIQUIDITY_USD).to.equal(10000);
+      expect(FRESH_SECS).to.equal(86400);
+    });
   });
 
   describe("on the test chain (ceremony: Revision B, 487 rows, poster = live poster)", function () {
@@ -131,14 +216,21 @@ describe("Price fetcher -> price run (test chain)", function () {
       const failIds = new Set(rows.filter((r, i) => i % 7 === 0).map((r) => r.pricingIdentifier));
       const m = mock([
         [/coingecko/, (u) => Object.fromEntries(cgIds(u).filter((id) => !failIds.has(id)).map((id, j) => [id, { usd: (j + 1) / 8, last_updated_at: NOW }]))],
-        [/dexscreener/, () => []],
-        [/geckoterminal/, () => ({ data: { attributes: { token_prices: {}, total_reserve_in_usd: {} } } })],
+        // Every token has one traded $50,000 pool on its own chain.
+        [/dexscreener/, (u) => { const p = u.split("/"); return [{ chainId: p[p.length - 2], pairAddress: "0x" + "c".repeat(40), baseToken: { address: p[p.length - 1] }, quoteToken: { address: "0x" + "e".repeat(40) },
+          priceUsd: "0.5", priceNative: "1", liquidity: { usd: 50000 }, txns: { h24: { buys: 1, sells: 1 } }, volume: { h24: 10 } }]; }],
+        [/geckoterminal/, () => ({ data: [], included: [] })],
       ]);
       const res = await fetchPrices({ rows, get: m.get, now: () => NOW, pause: NOPAUSE });
       expect(res.length).to.equal(487);
       const c = summarize(res);
-      expect(c.CoinGecko + c.fail).to.equal(487);
-      expect(c.fail).to.be.gt(0);
+      const failNatives = rows.filter((r) => r.kind === "native" && failIds.has(r.pricingIdentifier)).length;
+      const dsTokens = rows.filter((r) => r.kind === "token" && failIds.has(r.pricingIdentifier)).length;
+      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(487);
+      expect(c.fail).to.equal(failNatives);          // a native with no fresh CoinGecko price fails
+      expect(c.DexScreener).to.equal(dsTokens);      // a token with no CoinGecko price uses its qualifying pool
+      expect(c.DexScreener).to.be.gt(0);
+      for (const f of res.filter((x) => x.usd == null)) expect(f.reason).to.equal("no_fresh_coingecko");
       const first = await nextRunId(v);
       const runs = buildPriceRuns(res, first);
       expect(runs.length).to.equal(Math.ceil(487 / MAX_LINES_PER_RUN));
