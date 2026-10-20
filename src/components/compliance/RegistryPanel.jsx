@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   REGISTRY_SOURCE, REGISTRY_URL, REGISTRY_TOTAL, CLASS_DISTRIBUTION,
