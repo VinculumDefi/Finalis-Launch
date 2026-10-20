@@ -1,6 +1,10 @@
 import React from 'react';
 import { COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS } from '@/lib/vfRevision6Authority';
 import { XRPL_REGISTRY } from '@/lib/vfXrplRegistry';
+import { filterOfferable } from '@/lib/vfActiveAssetAllowlist';
+
+// Only active-list assets are offered (XRP native is on Revision B).
+const OFFERED = filterOfferable(XRPL_REGISTRY);
 
 export default function LockConfigForm({ values, onChange }) {
   function set(key, val) {
@@ -18,7 +22,7 @@ export default function LockConfigForm({ values, onChange }) {
           className="w-full rounded-md border border-[#18324b]/20 bg-white px-3 py-2 text-sm"
         >
           <option value="">Select asset…</option>
-          {XRPL_REGISTRY.map((a) => (
+          {OFFERED.map((a) => (
             <option key={a.symbol} value={a.symbol}>
               {a.symbol} — {a.asset_name} (class {a.class})
             </option>
