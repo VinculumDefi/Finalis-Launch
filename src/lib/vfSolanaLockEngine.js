@@ -18,7 +18,6 @@ import {
   SCALE,
   EMISSION,
   DECAY,
-  FIXED_RULES,
   COMMITMENT_DURATIONS,
   HANDSHAKE_DURATION_SECS,
   ASSET_CLASS_MULTIPLIERS_BPS,
@@ -29,6 +28,7 @@ import {
   ATTEMPT_STATES,
   SOLANA_HANDSHAKE_ALLOWANCE,
 } from './vfRevision6Authority.js';
+import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP } from './vfLiveRules.js';
 import { SOLANA_REGISTRY } from './vfSolanaRegistry.js';
 import { isOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
 
@@ -115,7 +115,8 @@ export function computeFee(grossAssetUnits, durationSecs) {
     return { ok: false, errors: ['VF-COM-010: zero asset amount is invalid'] };
   }
   const handshake = isHandshakeDuration(durationSecs);
-  const bps = BigInt(handshake ? FIXED_RULES.handshake_fee_bps : FIXED_RULES.standard_fee_bps);
+  // Rev 12: 500 bps on every duration, the 1-hour Handshake included.
+  const bps = BigInt(handshake ? LIVE_RULES.handshake_fee_bps : LIVE_RULES.standard_fee_bps);
   // VF-COM-011: floor(gross × bps / 10000)
   const fee = (gross * bps) / 10000n;
   // VF-COM-012: principal = gross - fee
@@ -348,20 +349,23 @@ export function validateLockRequest({
   }
 
   // VF-COM-003/009: USD value bounds
-  const usd = Number(BigInt(verifiedGrossUsdMicro)) / Number(SCALE);
+  // Exact fixed-point decision against the contract values (vfLiveRules.js);
+  // the float below is only for messages.
+  const usdFp = BigInt(verifiedGrossUsdMicro);
+  const usd = Number(usdFp) / Number(SCALE);
   const handshake = isHandshakeDuration(durationSecs);
   if (handshake) {
-    // VF-COM-003: $0.95–$1.05 inclusive
-    if (usd < FIXED_RULES.handshake_value_usd_min || usd > FIXED_RULES.handshake_value_usd_max) {
-      errors.push(`VF-COM-003: Handshake USD value $${usd.toFixed(4)} outside $0.95–$1.05 inclusive`);
+    // VF-COM-003 as amended by Rev 12: $0.01 to $0.02 inclusive
+    if (usdFp < HANDSHAKE_USD_MIN_FP || usdFp > HANDSHAKE_USD_MAX_FP) {
+      errors.push(`VF-COM-003: Handshake USD value $${usd.toFixed(4)} outside $0.01 to $0.02 inclusive`);
       checks.push({ id: 'VF-COM-003', pass: false });
     } else {
       checks.push({ id: 'VF-COM-003', pass: true, detail: `$${usd.toFixed(4)}` });
     }
   } else {
-    // VF-COM-009: ≥ $10.00
-    if (usd < FIXED_RULES.standard_minimum_value_usd) {
-      errors.push(`VF-COM-009: standard lock USD value $${usd.toFixed(4)} below $10.00 minimum`);
+    // VF-COM-009: contract minimum $0.01 inclusive
+    if (usdFp < STANDARD_USD_MIN_FP) {
+      errors.push(`VF-COM-009: standard lock USD value $${usd.toFixed(4)} below $0.01 minimum`);
       checks.push({ id: 'VF-COM-009', pass: false });
     } else {
       checks.push({ id: 'VF-COM-009', pass: true, detail: `$${usd.toFixed(4)}` });
