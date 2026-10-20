@@ -79,12 +79,12 @@ test('T-02: Standard lock fee calculation (VF-COM-009/011/012)', () => {
 
 // T-03: Handshake — fee calculation
 test('T-03: Handshake fee calculation (VF-COM-003/004)', () => {
-  // 1 XRP = 1,000,000 drops, 1-hour, 2.5% fee
+  // 1 XRP = 1,000,000 drops, 1-hour. Rev 12: 5% on every duration, Handshake included.
   const result = computeFee(1000000, 3600);
   assert.strictEqual(result.ok, true);
-  assert.strictEqual(result.fee.toString(), '25000'); // 2.5% of 1M = 25000 drops
-  assert.strictEqual(result.principal.toString(), '975000');
-  assert.strictEqual(result.bps, 250);
+  assert.strictEqual(result.fee.toString(), '50000'); // 5% of 1M = 50000 drops
+  assert.strictEqual(result.principal.toString(), '950000');
+  assert.strictEqual(result.bps, 500);
 });
 
 // T-04: Zero amount rejected
