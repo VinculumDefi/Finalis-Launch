@@ -33,14 +33,23 @@ import {
 import { findEnvironment, findAssetPrecision, getAssetMultiplierBps, isDevFundConfigured } from './vfBaseRegistry.js';
 import { OUTPUT_TOKEN, outputTokenToString, computeRacIdentity } from './vfProofNormalizer.js';
 import { dispatchFinalityCheck, dispatchFactExtraction, isVerifierRegistered } from './vfChainVerifierRegistry.js';
+import { isUtxoHandshake, checkUtxoHandshakeLock, capHandshakeUsd18 } from './vfUtxoMinimumLock.js';
 
 // ---------------------------------------------------------------------------
 // Fixed-point USD boundary thresholds (VF-COM-003/009)
-// Derived once as exact BigInt from the authoritative decimal bounds so the
-// acceptance decision never touches IEEE-754. 18-decimal fixed-point (SCALE).
+// Exact BigInt, so the acceptance decision never touches IEEE-754.
+// 18-decimal fixed-point (SCALE).
+//
+// Handshake band (t239u): aligned with the Revision B verifier
+// (base-contracts/contracts/VinculumFinalisVerifier.sol HANDSHAKE_USD_MIN/MAX),
+// $0.01 to $0.02 inclusive. The Revision 6 record (vfRevision6Authority.js
+// FIXED_RULES, $0.95 to $1.05) is a historical transcription and is left as is.
+// Bitcoin, Bitcoin Cash and Litecoin native Handshakes use the unit band from
+// vfUtxoMinimumLock.js instead, and their USD for VCLM and RAC is capped at $0.02.
+// The standard minimum here is unchanged by t239u.
 // ---------------------------------------------------------------------------
-const HANDSHAKE_USD_MIN_FP = (95n * SCALE) / 100n;  // $0.95 inclusive
-const HANDSHAKE_USD_MAX_FP = (105n * SCALE) / 100n; // $1.05 inclusive
+const HANDSHAKE_USD_MIN_FP = SCALE / 100n;          // $0.01 inclusive
+const HANDSHAKE_USD_MAX_FP = (2n * SCALE) / 100n;   // $0.02 inclusive
 const STANDARD_USD_MIN_FP = 10n * SCALE;           // $10.00 inclusive
 
 // ---------------------------------------------------------------------------
@@ -177,11 +186,19 @@ export function checkUsdBounds(pkg, verifiedGrossUsdMicro) {
   const usdMicro = BigInt(verifiedGrossUsdMicro);
   // VF-COM-003/009 decision: exact fixed-point BigInt comparison (no IEEE-754).
   // A floating-point USD value is created ONLY below, AFTER the decision resolves,
-  // solely for human-readable message formatting — it never influences the decision.
+  // solely for human-readable message formatting; it never influences the decision.
+  // issuanceUsdMicro is the USD used for RAC and issuance: equal to the verified
+  // USD except for a Bitcoin, Bitcoin Cash or Litecoin native Handshake.
+  if (isHandshake && isUtxoHandshake(pkg.source_environment_id, pkg.duration_secs, pkg.canonical_asset_id)) {
+    const band = checkUtxoHandshakeLock({ env: pkg.source_environment_id, grossSmallestUnits: pkg.gross_amount_smallest_units });
+    if (!band.ok) return { ok: false, reason: band.reason };
+    const capped = capHandshakeUsd18(usdMicro);
+    return { ok: true, usd: Number(usdMicro) / Number(SCALE), isHandshake, unitBand: band.band, issuanceUsdMicro: capped.toString() };
+  }
   if (isHandshake) {
     if (usdMicro < HANDSHAKE_USD_MIN_FP || usdMicro > HANDSHAKE_USD_MAX_FP) {
       const usd = Number(usdMicro) / Number(SCALE);
-      return { ok: false, reason: `VF-COM-003: handshake USD $${usd.toFixed(4)} outside $0.95–$1.05` };
+      return { ok: false, reason: `VF-COM-003: handshake USD $${usd.toFixed(4)} outside $0.01 to $0.02` };
     }
   } else {
     if (usdMicro < STANDARD_USD_MIN_FP) {
@@ -190,7 +207,7 @@ export function checkUsdBounds(pkg, verifiedGrossUsdMicro) {
     }
   }
   const usd = Number(usdMicro) / Number(SCALE);
-  return { ok: true, usd, isHandshake };
+  return { ok: true, usd, isHandshake, issuanceUsdMicro: usdMicro.toString() };
 }
 
 // ---------------------------------------------------------------------------
@@ -490,7 +507,7 @@ export function verifyProof(state, pkg, { verifiedGrossUsdMicro, daysSinceLaunch
     return reject(checks, 'VF-ORC-001: verifiedGrossUsdMicro not provided (price record required)');
   }
   const usd = checkUsdBounds(pkg, verifiedGrossUsdMicro);
-  checks.push({ step: 'VF-COM-003/009: USD value bounds', pass: usd.ok, detail: usd.ok ? `$${usd.usd.toFixed(4)} (${usd.isHandshake ? 'handshake' : 'standard'})` : usd.reason });
+  checks.push({ step: 'VF-COM-003/009: USD value bounds', pass: usd.ok, detail: usd.ok ? (usd.unitBand ? `${pkg.gross_amount_smallest_units} units in ${usd.unitBand[0]} to ${usd.unitBand[1]} (handshake, counted as $${(Number(BigInt(usd.issuanceUsdMicro)) / Number(SCALE)).toFixed(4)})` : `$${usd.usd.toFixed(4)} (${usd.isHandshake ? 'handshake' : 'standard'})`) : usd.reason });
   if (!usd.ok) return reject(checks, usd.reason);
 
   // VF-FEE-011 / VF-RAC-002: Record RAC on fee verification, independent of issuance.
@@ -500,7 +517,7 @@ export function verifyProof(state, pkg, { verifiedGrossUsdMicro, daysSinceLaunch
   if (!state.recordedRacs.has(pkg.rac_identity)) {
     state.recordedRacs.add(pkg.rac_identity);
     if (state.cumulativeVclmIssued < TOKEN_HARD_CAPS.VCLM) {
-      const racCredit = computeRacCredit(verifiedGrossUsdMicro, fee.fee, fee.gross);
+      const racCredit = computeRacCredit(usd.issuanceUsdMicro, fee.fee, fee.gross);
       state.racCredits.push({
         racIdentity: pkg.rac_identity,
         credit: racCredit,
@@ -540,7 +557,7 @@ export function verifyProof(state, pkg, { verifiedGrossUsdMicro, daysSinceLaunch
 
   // Step 12: Issuance calculation
   const issuance = computeIssuanceFromUsd(
-    verifiedGrossUsdMicro,
+    usd.issuanceUsdMicro,
     pkg.selected_output_token,
     envAsset.precision.custodyClass,
     pkg.duration_secs,
