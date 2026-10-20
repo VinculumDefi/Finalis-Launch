@@ -29,7 +29,7 @@ export {
 
 // --- XRPL environment (Protocol Constants "supported_environments") ---
 
-// VF-XCH-001/002: XRPL is one of the 17 supported environments.
+// VF-XCH-001/002: XRPL is one of the 16 supported environments.
 export const XRPL_ENVIRONMENT = {
   family: 'Non-EVM',
   name: 'XRPL',
