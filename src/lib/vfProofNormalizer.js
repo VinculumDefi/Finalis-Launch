@@ -8,7 +8,7 @@
 //
 // This module normalizes chain-specific source evidence into the canonical
 // ProofPackage structure that BASE-VERIFY consumes. Every source environment
-// (Solana, XRPL, Cosmos, Bitcoin, Stellar, Cardano, EVM, etc.) produces the
+// (Solana, XRPL, Bitcoin, Stellar, EVM, etc.) produces the
 // same normalized structure — the verifier never needs to know the source
 // chain's internal representation.
 //
@@ -134,7 +134,7 @@ export function normalizeProofPackage(raw) {
     };
   }
 
-  // VF-XCH-001: environment must be in the 17-environment registry
+  // VF-XCH-001: environment must be in the 16-environment registry
   const env = findEnvironment(raw.source_environment_id);
   if (!env) {
     errors.push(`VF-XCH-001: unknown source environment "${raw.source_environment_id}"`);
@@ -160,7 +160,7 @@ export function normalizeProofPackage(raw) {
       // BASE-VERIFY (VF-XCH-006 "finality proof missing"), not here.
       if (field === 'source_finality_proof') continue;
       // null allowance is the registry's own value for an environment whose
-      // mechanism is incomplete (Cosmos Hub); checked against env below.
+      // mechanism cannot count; checked against env below (fail closed).
       if (field === 'handshake_allowance_count' && env && env.handshakeAllowance === null) continue;
       errors.push(`VF-XCH-011: missing field "${field}"`);
     }
@@ -213,7 +213,7 @@ export function normalizeProofPackage(raw) {
     }
   }
 
-  // Handshake allowance count must be 1 or 3 (or null for Cosmos Hub)
+  // Handshake allowance count must be 1 or 3 (null only where the registry has no allowance)
   if (raw.handshake_allowance_count != null && env) {
     const count = Number(raw.handshake_allowance_count);
     if (env.handshakeAllowance !== null && count !== env.handshakeAllowance) {
@@ -327,37 +327,6 @@ export function normalizeXrplEvidence(escrowTx, paymentTx, finalityProof) {
     fee_op_or_output_index: 0,
     source_finality_proof: finalityProof || null,
     lock_event_proof: { escrow: escrowTx, payment: paymentTx },
-  });
-}
-
-// Cosmos: CosmWasm lock event → ProofPackage
-export function normalizeCosmosEvidence(event, finalityProof) {
-  return normalizeProofPackage({
-    source_environment_id: 'CosmosHub',
-    commitment_vault_lock_id: event.lock_id,
-    handshake_identity: `(cosmoshub-4, ${event.source_account})`,
-    handshake_allowance_count: null, // EVIDENCE REQUIRED — dependent on mechanism
-    canonical_asset_id: 'native-uatom',
-    canonical_asset_symbol: 'ATOM',
-    asset_precision: 6,
-    asset_custody_class: 'S3',
-    gross_amount_smallest_units: event.gross_amount,
-    actual_fee_amount_smallest_units: event.fee_amount,
-    principal_amount_smallest_units: event.principal_amount,
-    fee_asset_id: 'native-uatom',
-    dev_fund_destination: event.fee_destination,
-    fee_transfer_evidence: event.fee_transfer_evidence,
-    valuation_timestamp: event.creation_time_secs,
-    maturity_timestamp: event.maturity_time_secs,
-    duration_secs: event.duration_secs,
-    selected_output_token: event.output_token === 'VCLM' ? OUTPUT_TOKEN.VCLM : OUTPUT_TOKEN.CHONX,
-    base_recipient: event.base_recipient,
-    release_destination: event.release_destination,
-    chonx_activation_receipt: event.chonx_activation_receipt || null,
-    canonical_fee_tx_hash: event.fee_tx_hash,
-    fee_op_or_output_index: event.fee_msg_index || 0,
-    source_finality_proof: finalityProof || null,
-    lock_event_proof: event,
   });
 }
 
