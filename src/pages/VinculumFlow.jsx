@@ -3,18 +3,21 @@ import { Eye, ShieldAlert, Link2, Lock, FileCheck2, Coins, Unlock, AlertTriangle
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
 import {
   COSMOS_HUB, BASE_CHAIN, PERMITTED_DURATIONS, DEPLOYMENT_STATE, isVaultDeployed, isBaseVerifierPresent,
 } from '@/lib/vfIntegrationConfig';
 import {
-  buildCommitVaultLockMsg, buildReleasePrincipalMsg, computeFee, validateBaseRecipient,
+  buildCommitVaultLockMsg, buildReleasePrincipalMsg, computeFee,
   connectKeplr, isKeplrAvailable, submitLock, submitRelease,
 } from '@/lib/vfCosmosLock';
 import { normalizeLockEvent } from '@/lib/vfProofAdapter';
 import { useApprovedAssetRegistry } from '@/hooks/useApprovedAssetRegistry';
+import { resolveOfferable, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
+
+// The asset this page locks (Cosmos Hub ATOM). It is offered only if it is on the active list.
+const PAGE_ASSET = { environment: 'Cosmos', contract_or_native_identifier: 'NATIVE', symbol: COSMOS_HUB.asset_symbol };
 
 function StatusPill({ ok, children }) {
   return ok
@@ -43,7 +46,10 @@ export default function VinculumFlow() {
   const [busy, setBusy] = useState(false);
 
   const registry = useApprovedAssetRegistry();
-  const [selectedAssetRow, setSelectedAssetRow] = useState(479); // ATOM default
+  // No default asset: the old default (row 479 ATOM) is not on the active list.
+  const [selectedAssetRow, setSelectedAssetRow] = useState(null);
+  const offeredRows = useMemo(() => new Set(registry.offerable.map((r) => r.registry_row)), [registry.offerable]);
+  const pageAssetCheck = resolveOfferable(PAGE_ASSET);
 
   const feePreview = useMemo(() => {
     if (!amountUatom) return null;
@@ -60,6 +66,12 @@ export default function VinculumFlow() {
 
   async function onConstructAndSubmitLock() {
     setBusy(true); setConstructed(null); setNormalizeResult(null); setSubmitResult(null);
+    // Active asset list: refuse before building anything if this page's asset is not offerable.
+    if (!pageAssetCheck.ok) {
+      setConstructed({ ok: false, errors: [`${NOT_ACTIVE_MESSAGE}: ${COSMOS_HUB.asset_symbol} (Cosmos Hub)`] });
+      setBusy(false);
+      return;
+    }
     const built = buildCommitVaultLockMsg({
       durationSecs: Number(durationSecs),
       baseRecipient, releaseDestination, outputToken,
@@ -191,16 +203,16 @@ export default function VinculumFlow() {
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">
-                Asset {registry.loading ? '(loading…)' : `(${registry.count} in registry)`}
+                Asset {registry.loading ? '(loading…)' : `(${registry.offerable.length} offered of ${registry.count} in registry; ${registry.hiddenCount} hidden)`}
               </Label>
               <Select
-                value={String(selectedAssetRow)}
-                onValueChange={(v) => setSelectedAssetRow(Number(v))}
+                value={selectedAssetRow != null && offeredRows.has(selectedAssetRow) ? String(selectedAssetRow) : undefined}
+                onValueChange={(v) => { if (offeredRows.has(Number(v))) setSelectedAssetRow(Number(v)); }}
                 disabled={registry.loading || !!registry.error}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-72">
-                  {!registry.loading && !registry.error && registry.records.map((r) => (
+                  {!registry.loading && !registry.error && registry.offerable.map((r) => (
                     <SelectItem key={r.registry_row} value={String(r.registry_row)}>
                       {r.symbol} · {r.asset_name} ({r.environment}, row {r.registry_row})
                     </SelectItem>
