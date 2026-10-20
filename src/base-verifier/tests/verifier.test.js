@@ -2,7 +2,7 @@ import assert from 'assert';
 
 // Import the modules under test
 import { VerifierState, verifyProof, computeIssuanceFromUsd, checkFeeMath, checkHardCap, computeRacCredit } from '../../lib/vfVerifierEngine.js';
-import { normalizeProofPackage, normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeEvmEvidence, normalizeCosmosEvidence, normalizeStellarEvidence, OUTPUT_TOKEN, computeRacIdentity } from '../../lib/vfProofNormalizer.js';
+import { normalizeProofPackage, normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeEvmEvidence, normalizeStellarEvidence, OUTPUT_TOKEN, computeRacIdentity } from '../../lib/vfProofNormalizer.js';
 import { findEnvironment, findAssetPrecision, ENVIRONMENT_COUNT } from '../../lib/vfBaseRegistry.js';
 import { COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS, SCALE, TOKEN_HARD_CAPS, CHONX_ACTIVATION_THRESHOLD } from '../../lib/vfRevision6Authority.js';
 import { buildMockEvent, buildFinalityProof } from '../../lib/vfMockEventBuilder.js';
@@ -20,22 +20,20 @@ const USD_0_95 = '950000000000000000'; // $0.95
 
 console.log('\n=== Base Verifier Integration Tests ===\n');
 
-// T-01: Environment registry has 17 entries
-test('T-01: 17 environments registered', () => {
-  assert.strictEqual(ENVIRONMENT_COUNT, 17);
+// T-01: Environment registry has 16 entries
+test('T-01: 16 environments registered', () => {
+  assert.strictEqual(ENVIRONMENT_COUNT, 16);
   assert.ok(findEnvironment('Solana'));
   assert.ok(findEnvironment('XRPL'));
   assert.ok(findEnvironment('Bitcoin'));
-  assert.ok(findEnvironment('CosmosHub'));
   assert.strictEqual(findEnvironment('NonExistent'), null);
 });
 
 // T-02: Asset precision table resolves known assets
-test('T-02: Asset precision table resolves SOL, XRP, BTC, ATOM', () => {
+test('T-02: Asset precision table resolves SOL, XRP, BTC, XLM, ETH', () => {
   assert.strictEqual(findAssetPrecision('Solana', 'native-SOL').decimals, 9);
   assert.strictEqual(findAssetPrecision('XRPL', 'native-XRP').decimals, 6);
   assert.strictEqual(findAssetPrecision('Bitcoin', 'native-BTC').decimals, 8);
-  assert.strictEqual(findAssetPrecision('CosmosHub', 'native-uatom').decimals, 6);
   assert.strictEqual(findAssetPrecision('Stellar', 'native-XLM').decimals, 7);
   assert.strictEqual(findAssetPrecision('Ethereum', 'native-ETH').decimals, 18);
 });
@@ -214,14 +212,13 @@ test('T-16: RAC credit — 60% of fee USD (VF-RAC)', () => {
   assert.strictEqual(credit, expected);
 });
 
-// T-17: Cosmos Hub — rejected (EVIDENCE REQUIRED)
-test('T-17: Cosmos Hub rejected — mechanism incomplete', () => {
-  const state = new VerifierState();
-  const mock = buildMockEvent('CosmosHub', 604800, 'VCLM');
-  const raw = normalizeCosmosEvidence(mock.event, buildFinalityProof('CosmosHub'));
-  const r = verifyProof(state, raw.package, { verifiedGrossUsdMicro: USD_10, daysSinceLaunch: 0 });
+// T-17: an environment outside the 16 is rejected (VF-XCH-001)
+test('T-17: environment outside the 16 rejected', () => {
+  const mock = buildMockEvent('Solana', 604800, 'VCLM');
+  const raw = normalizeSolanaEvidence(mock.event, buildFinalityProof('Solana'));
+  const r = normalizeProofPackage({ ...raw.package, source_environment_id: 'Cardano' });
   assert.ok(!r.ok);
-  assert.ok(r.reason.includes('EVIDENCE') || r.reason.includes('incomplete') || r.reason.includes('mechanism'));
+  assert.ok(r.errors.some((e) => e.startsWith('VF-XCH-001')), r.errors.join('; '));
 });
 
 // T-18: CHONX activation triggers at 10M VCLM
