@@ -1,0 +1,824 @@
+row,environment,label,address,code_bytes,onchain_symbol,onchain_name,row_decimals,onchain_decimals,symbol_class,status,reason,note,in_revision_b
+1,Ethereum,USDC,0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,2186,USDC,USD Coin,6,6,exact,verify,,,yes
+6,Ethereum,USDT,0xdAC17F958D2ee523a2206206994597C13D831ec7,11075,USDT,Tether USD,6,6,exact,verify,,,yes
+7,Ethereum,WBTC,0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599,4582,WBTC,Wrapped BTC,8,8,exact,verify,,,yes
+8,Ethereum,LINK,0x514910771AF9Ca656af840dff83E8264EcF986CA,3153,LINK,ChainLink Token,18,18,exact,verify,,,yes
+9,Ethereum,stETH,0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84,1035,stETH,Liquid staked Ether 2.0,18,18,exact,verify,,,yes
+10,Ethereum,DAI,0x6B175474E89094C44Da98b954EedeAC495271d0F,7904,DAI,Dai Stablecoin,18,18,exact,verify,,,yes
+11,Arbitrum,USDC_ARB,0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8,2092,USDC,USD Coin (Arb1),6,6,suffix-alias,verify,,,yes
+13,Ethereum,UNI,0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984,12567,UNI,Uniswap,18,18,exact,verify,,,yes
+14,Ethereum,AAVE,0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9,2491,AAVE,Aave Token,18,18,exact,verify,,,yes
+15,Ethereum,LDO,0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32,7440,LDO,Lido DAO Token,18,18,exact,verify,,,yes
+17,Ethereum,SHIB,0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE,4852,SHIB,SHIBA INU,18,18,exact,verify,,,yes
+20,Arbitrum,USDT_ARB,0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9,2141,USD₮0,USD₮0,6,6,mismatch,renamed_ticker,,USDT0 upgrade of Tether on Arbitrum,yes
+21,Ethereum,PEPE,0x6982508145454Ce325dDbE47a25d4ec3d2311933,4517,PEPE,Pepe,18,18,exact,verify,,,yes
+22,Arbitrum,ARB,0x912CE59144191C1204E64559FE8253a0e49E6548,2593,ARB,Arbitrum,18,18,exact,verify,,,yes
+24,Ethereum,wstETH,0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0,6492,wstETH,Wrapped liquid staked Ether 2.0,18,18,exact,verify,,,yes
+25,Base,CBETH,0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22,2096,cbETH,Coinbase Wrapped Staked ETH,18,18,case,verify,,,yes
+26,Optimism,OP,0x4200000000000000000000000000000000000042,16528,OP,Optimism,18,18,exact,verify,,,yes
+27,Ethereum,SKY,0x56072C95FAA701256059aa122697B133aDEd9279,4852,SKY,SKY Governance Token,18,18,exact,verify,,,yes
+29,Ethereum,USDS,0xdC035D45d973E3EC169d2276DDab16f1e407384F,170,USDS,USDS Stablecoin,18,18,exact,verify,,,yes
+32,Ethereum,MKR,0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2,3379,MKR,Maker,18,18,exact,verify,,,yes
+34,Base,AERO,0x940181a94A35A4569E4529A3CDfB74e38FD98631,4736,AERO,Aerodrome,18,18,exact,verify,,,yes
+35,Ethereum,GRT,0xc944E90C64B2c07662A292be6244BDf05Cda44a7,6082,GRT,Graph Token,18,18,exact,verify,,,yes
+36,Ethereum,ENS,0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72,18709,ENS,Ethereum Name Service,18,18,exact,verify,,,yes
+37,Ethereum,PAXG,0x45804880De22913dAFE09f4980848ECE6EcbAf78,1506,PAXG,Paxos Gold,18,18,exact,verify,,,yes
+38,Arbitrum,WBTC_ARB,0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f,760,WBTC,Wrapped BTC,8,8,suffix-alias,verify,,,yes
+39,Optimism,USDC_OP,0x7F5c764cBc14f9669B88837ca1490cCa17c31607,14725,USDC,USD Coin,6,6,suffix-alias,verify,,,yes
+40,Polygon,USDC_POL,0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174,2037,USDC,USD Coin (PoS),6,6,suffix-alias,verify,,,yes
+41,BNB Smart Chain,USDC_BSC,0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d,1596,USDC,USD Coin,18,18,suffix-alias,verify,,,yes
+42,Avalanche,USDC_AVAX,0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E,1852,USDC,USD Coin,6,6,suffix-alias,verify,,,yes
+43,Arbitrum,LINK_ARB,0xf97f4df75117a78c1A5a0DBb814Af92458539FB4,760,LINK,ChainLink Token,18,18,suffix-alias,verify,,,yes
+44,Arbitrum,DAI_ARB,0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1,4926,DAI,Dai Stablecoin,18,18,suffix-alias,verify,,,yes
+45,Base,cbBTC,0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf,1550,cbBTC,Coinbase Wrapped BTC,8,8,exact,verify,,,yes
+46,Ethereum,IMX,0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF,4317,IMX,Immutable X,18,18,exact,verify,,,yes
+47,Ethereum,PENDLE,0x808507121B80c02388fAd14726482e061B8da827,9943,PENDLE,Pendle,18,18,exact,verify,,,yes
+48,Ethereum,EIGEN,0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83,2188,EIGEN,Eigen,18,18,exact,verify,,,yes
+49,Polygon,USDT_POL,0xc2132D05D31c914a87C6611C10748AEb04B58e8F,2949,USDT0,USDT0,6,6,mismatch,renamed_ticker,,USDT0 upgrade of Tether on Polygon,yes
+50,BNB Smart Chain,USDT_BSC,0x55d398326f99059fF775485246999027B3197955,4413,USDT,Tether USD,18,18,suffix-alias,verify,,,yes
+51,Arbitrum,GMX,0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a,8613,GMX,GMX,18,18,exact,verify,,,yes
+52,Ethereum,MATIC,0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0,2947,MATIC,Matic Token,18,18,exact,verify,,,yes
+53,Ethereum,RNDR,0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24,2151,RNDR,Render Token,18,18,exact,verify,,,yes
+55,Ethereum,SNX,0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F,4160,SNX,Synthetix Network Token,18,18,exact,verify,,,yes
+56,Ethereum,CRV,0xD533a949740bb3306d119CC777fa900bA034cd52,4369,CRV,Curve DAO Token,18,18,exact,verify,,,yes
+57,Ethereum,1INCH,0x111111111117dC0aa78b770fA6A738034120C302,7038,1INCH,1INCH Token,18,18,exact,verify,,,yes
+58,Ethereum,RPL,0xD33526068D116cE69F19A9ee46F0bd304F21A51f,7730,RPL,Rocket Pool Protocol,18,18,exact,verify,,,yes
+59,Ethereum,rETH,0xae78736Cd615f374D3085123A210448E74Fc6393,8800,rETH,Rocket Pool ETH,18,18,exact,verify,,,yes
+60,Ethereum,ENA,0x57e114B691Db790C35207b2e685D4A43181e6061,7713,ENA,ENA,18,18,exact,verify,,,yes
+62,BNB Smart Chain,CAKE,0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82,7285,Cake,PancakeSwap Token,18,18,case,verify,,,yes
+63,Ethereum,CHZ,0x3506424F91fD33084466F402d5D97f05F8e3b4AF,6113,CHZ,chiliZ,18,18,exact,verify,,,no
+64,Ethereum,FET,0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85,6318,FET,Fetch,18,18,exact,verify,,,yes
+65,Ethereum,USDe,0x4c9EDD5852cd905f086C759E8383e09bff1E68B3,7567,USDe,USDe,18,18,exact,verify,,,yes
+66,Ethereum,ONDO,0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3,11822,ONDO,Ondo,18,18,exact,verify,,,yes
+67,Ethereum,OKB,0x75231F58b43240C9718Dd58B4967c5114342a86c,1963,OKB,OKB,18,18,exact,verify,,,yes
+68,Ethereum,GHO,0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f,8046,GHO,Gho Token,18,18,exact,verify,,,yes
+69,Ethereum,COMP,0xc00e94Cb662C3520282E6f5717214004A7f26888,6795,COMP,Compound,18,18,exact,verify,,,yes
+70,Ethereum,CBBTC_ETH,0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf,1550,cbBTC,Coinbase Wrapped BTC,8,8,suffix-alias,verify,,,yes
+71,Ethereum,FLOKI,0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E,8007,FLOKI,FLOKI,9,9,exact,verify,,,yes
+73,Base,VIRTUAL,0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b,14849,VIRTUAL,Virtual Protocol,18,18,exact,verify,,,yes
+74,Ethereum,BLUR,0x5283D291DBCF85356A21bA090E6db59121208b44,8696,BLUR,Blur,18,18,exact,verify,,,no
+75,Base,BRETT,0x532f27101965dd16442E59d40670FaF5eBB142E4,23271,BRETT,Brett,18,18,exact,verify,,,yes
+77,Ethereum,BAR,0x340D2bdE5Eb28c1eed91B2f790723E3B160613B7,3395,VEE,BLOCKv Token,18,18,mismatch,fail,symbol_mismatch,contract is BLOCKv (VEE),no
+81,Ethereum,PYUSD,0x6c3ea9036406852006290770BEdFcAbA0e23A0e8,1506,PYUSD,PayPal USD,6,6,exact,verify,,,yes
+82,Arbitrum,AAVE_ARB,0xba5DdD1f9d7F570dc94a51479a000E3BCE967196,760,AAVE,Aave Token,18,18,suffix-alias,verify,,,yes
+83,Optimism,AAVE_OP,0x76FB31fb4af56892A25e32cFC43De717950c9278,10899,AAVE,Aave Token,18,18,suffix-alias,verify,,,yes
+84,Polygon,AAVE_POL,0xD6DF932A45C0f255f85145f286eA0b292B21C90B,2949,AAVE,Aave (PoS),18,18,suffix-alias,verify,,,yes
+85,Arbitrum,UNI_ARB,0xFa7F8980b0f1E64A2062791cc3b0871572f1F7f0,760,UNI,Uniswap,18,18,suffix-alias,verify,,,yes
+86,Optimism,UNI_OP,0x6fd9d7AD17242c41f7131d257212c54A0e816691,3890,UNI,Uniswap,18,18,suffix-alias,verify,,,yes
+87,Optimism,WBTC_OP,0x68f180fcCe6836688e9084f035309E29Bf0A2095,6733,WBTC,Wrapped BTC,8,8,suffix-alias,verify,,,yes
+88,Polygon,WBTC_POL,0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6,2949,WBTC,(PoS) Wrapped BTC,8,8,suffix-alias,verify,,,yes
+89,Optimism,DAI_OP,0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1,4782,DAI,Dai Stablecoin,18,18,suffix-alias,verify,,,yes
+90,Polygon,DAI_POL,0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063,2949,DAI,(PoS) Dai Stablecoin,18,18,suffix-alias,verify,,,yes
+91,Polygon,LINK_POL,0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39,12443,LINK,ChainLink Token,18,18,suffix-alias,verify,,,yes
+92,BNB Smart Chain,LINK_BSC,0xF8A0BF9cF54Bb92F17374d9e9A321E6a111a51bD,4413,LINK,ChainLink Token,18,18,suffix-alias,verify,,,yes
+93,Avalanche,LINK_AVAX,0x5947BB275c521040051D82396192181b413227A3,13553,LINK.e,Chainlink Token,18,18,mismatch,renamed_ticker,representation,bridged LINK.e,yes
+94,Avalanche,AAVE_AVAX,0x63a72806098Bd3D9520cC43356dD78afe5D386D9,12716,AAVE.e,Aave Token,18,18,mismatch,renamed_ticker,representation,bridged AAVE.e,yes
+95,Ethereum,BAL,0xba100000625a3754423978a60c9317c58a424e3D,12349,BAL,Balancer,18,18,exact,verify,,,yes
+96,BNB Smart Chain,DAI_BSC,0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3,4413,DAI,Dai Token,18,18,suffix-alias,verify,,,yes
+97,Ethereum,SPX,0xE0f63A424a4439cBE457D80E4f4b51aD25b2c56C,13914,SPX,SPX6900,8,8,exact,verify,,,yes
+98,Ethereum,WLD,0x163f8C2467924be0ae7B5347228CABF260318753,4738,WLD,Worldcoin,18,18,exact,verify,,,yes
+99,Base,DEGEN,0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed,11608,DEGEN,Degen,18,18,exact,verify,,,yes
+101,Ethereum,BAT,0x0D8775F648430679A709E98d2b0Cb6250d2887EF,3284,BAT,Basic Attention Token,18,18,exact,verify,,,yes
+102,Ethereum,LUSD,0x5f98805A4E8be255a32880FDeC7F6728C6568bA0,5297,LUSD,LUSD Stablecoin,18,18,exact,verify,,,yes
+103,Arbitrum,PENDLE_ARB,0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8,760,PENDLE,Pendle,18,18,suffix-alias,verify,,,yes
+108,Ethereum,COW,0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB,7345,COW,CoW Protocol Token,18,18,exact,verify,,,yes
+109,Ethereum,MNT,0x3c3a81e81dc49A522A592e7622A7E711c06bf354,4021,MNT,Mantle,18,18,exact,verify,,,yes
+110,Ethereum,STRK,0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766,11561,STRK,StarkNet Token,18,18,exact,verify,,,yes
+112,Ethereum,CRO,0xA0b73E1Ff0B80914AB6fe0444E65848C4C34450b,8144,CRO,CRO,8,8,exact,verify,,,yes
+113,Optimism,VELO,0x3c8B650257cFb5f272f799F5e2b4e65093a11a05,2092,VELO,Velodrome,18,18,exact,verify,,,yes
+114,Ethereum,POL,0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6,8736,POL,Polygon Ecosystem Token,18,18,exact,verify,,,yes
+115,Ethereum,YFI,0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e,6419,YFI,yearn.finance,18,18,exact,verify,,,yes
+116,Ethereum,FXS,0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0,12769,FXS,Frax Share,18,18,exact,verify,,,yes
+117,Ethereum,FRAX,0x853d955aCEf822Db058eb8505911ED77F175b99e,14894,FRAX,Frax,18,18,exact,verify,,,yes
+118,Ethereum,CRVUSD,0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E,3572,crvUSD,Curve.Fi USD Stablecoin,18,18,case,verify,,,yes
+119,Optimism,USDT_OP,0x94b008aA00579c1307B0EF2c499aD98a8ce58e58,6774,USDT,Tether USD,6,6,suffix-alias,verify,,,yes
+120,Ethereum,CVX,0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B,3756,CVX,Convex Token,18,18,exact,verify,,,yes
+121,Avalanche,USDT_AVAX,0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7,2141,USDt,TetherToken,6,6,suffix-alias,verify,,,yes
+123,Ethereum,MOG,0xaaee1a9723aadb7afa2810263653a34ba2c21c7a,8321,Mog,Mog Coin,18,18,case,verify,,,yes
+124,Ethereum,APE,0x4d224452801ACEd8B2F0aebE155379bb5D594381,2244,APE,ApeCoin,18,18,exact,verify,,,yes
+126,Avalanche,JOE,0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd,7087,JOE,JoeToken,18,18,exact,verify,,,yes
+127,Ethereum,MANA,0x0F5D2fB29fb7d3CFeE444a200298f468908cC942,3045,MANA,Decentraland MANA,18,18,exact,verify,,,yes
+128,Ethereum,SAND,0x3845badAde8e6dFF049820680d1F14bD3903a5d0,7283,SAND,SAND,18,18,exact,verify,,,yes
+129,Ethereum,AXS,0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b,2545,AXS,Axie Infinity Shard,18,18,exact,verify,,,yes
+130,Ethereum,OCEAN,0x967da4048cD07aB37855c090aAF366e4ce1b9F48,5566,OCEAN,Ocean Token,18,18,exact,verify,,,yes
+131,Ethereum,ETHFI,0xFe0c30065B384F05761f15d0CC899D4F9F9Cc0eB,7889,ETHFI,ether.fi governance token,18,18,exact,verify,,,yes
+132,Ethereum,sUSDe,0x9D39A5DE30e57443BfF2A8307A4256c8797A3497,17299,sUSDe,Staked USDe,18,18,exact,verify,,,yes
+133,Ethereum,WEETH,0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee,845,weETH,Wrapped eETH,18,18,case,verify,,,yes
+134,Ethereum,eETH,0x35fA164735182de50811E8e2E824cFb9B6118ac2,845,eETH,ether.fi ETH,18,18,exact,verify,,,yes
+135,Ethereum,MORPHO,0x58D97B57BB95320F9a05dC918Aef65434969c2B2,141,MORPHO,Morpho Token,18,18,exact,verify,,,yes
+136,Ethereum,LQTY,0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D,5621,LQTY,LQTY,18,18,exact,verify,,,yes
+137,Ethereum,DYDX,0x92D6C1e31e14520e676a687F0a93788B716BEff5,11913,DYDX,dYdX,18,18,exact,verify,,,no
+138,Base,TigerOG,0xCF7Fc0De71238c9EC45EC2Fd24FDc8521345dbB5,45,TIGEROG,TigerOG,9,9,case,verify,,"dropped (TigerOG), not checked on 2026-10-19",no
+139,Arbitrum,WOO,0xcAFcD85D8ca7Ad1e1C6F82F651fA15E33AEfD07b,760,WOO,Wootrade Network,18,18,exact,verify,,,yes
+140,Ethereum,FRXETH,0x5E8422345238F34275888049021821E8E08CAa1f,6734,frxETH,Frax Ether,18,18,case,verify,,,yes
+141,Optimism,SNS,0x8700dAec35aF8Ff88c16BdF0418774CB3D7599B4,3715,SNX,Synthetix Network Token,18,18,mismatch,renamed_ticker,,label misspells SNX (Synthetix),yes
+144,Base,TOSHI,0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4,11948,TOSHI,Toshi,18,18,exact,verify,,,yes
+145,Ethereum,PRIME,0xb23d80f5fefcddaa212212f028021b41ded428cf,7649,PRIME,Prime,18,18,exact,verify,,,yes
+146,Arbitrum,MAGIC,0x539bdE0d7Dbd336b79148AA742883198BBF60342,760,MAGIC,MAGIC,18,18,exact,verify,,,yes
+147,BNB Smart Chain,GMT,0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1,1596,GMT,Green Metaverse Token,8,8,exact,verify,,,yes
+148,Ethereum,sfrxETH,0xac3E018457B222d93114458476f3E3416Abbe38F,7109,sfrxETH,Staked Frax Ether,18,18,exact,verify,,,yes
+154,Ethereum,AGIX,0x5B7533812759B45C2B44C19e320ba2cD2681b542,6403,AGIX,SingularityNET Token,8,8,exact,verify,,,no
+155,Ethereum,SUSHI,0x6B3595068778DD592e39A122f4f5a5cF09C90fE2,6897,SUSHI,SushiToken,18,18,exact,verify,,,yes
+156,Ethereum,W,0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91,209,W,Wormhole Token,18,18,exact,verify,,,yes
+157,Ethereum,AXL,0x467719aD09025FcC6cF6F8311755809d45a5E5f3,5200,AXL,Axelar,6,6,exact,verify,,,no
+158,Ethereum,FLUID,0x6f40d4A6237C257fff2dB00FA0510DeEECd303eb,1541,FLUID,Fluid,18,18,exact,verify,,,yes
+159,Ethereum,STG,0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6,9364,STG,StargateToken,18,18,exact,verify,,,yes
+160,Avalanche,DAI_AVAX,0xd586E7F844cEa2F87f50152665BCbc2C279D8d70,12716,DAI.e,Dai Stablecoin,18,18,mismatch,renamed_ticker,representation,bridged DAI.e,yes
+162,BNB Smart Chain,BABYDOGE,0xc748673057861a797275CD8A068AbB95A902e8de,11178,BabyDoge,Baby Doge Coin,9,9,case,verify,,,yes
+164,Ethereum,NEIRO,0xEE2a03Aa6Dacf51C18679C516ad5283d8E7C2637,8074,NEIRO,Neiro,9,9,exact,verify,,,yes
+165,Ethereum,TURBO,0xA35923162C49cF95e6BF26623385eb431ad920D3,6790,TURBO,Turbo,18,18,exact,verify,,,yes
+167,Ethereum,BANANA,0x38E68A37E401F7271568CecaAc63c6B1e19130B4,13694,BANANA,Banana,18,18,exact,verify,,,yes
+168,Ethereum,UNIBOT,0xf819d9Cb1c2A819Fd991781A822dE3ca8607c3C9,12397,UNIBOT,Unibot,18,18,exact,verify,,,yes
+173,Ethereum,GALA,0x15D4c048F83bd7e37d49eA4C83a07267Ec4203dA,8651,GALA,Gala,8,8,exact,verify,,,no
+174,Ethereum,ARKM,0x6e2a43be0b1d33b726f0ca3b8de60b3482b8b050,680,ARKM,Arkham,18,18,exact,verify,,,no
+175,Ethereum,FIL,0x6e1A19F235bE7ED8E3369eF73b196C07257494DE,129,WFIL,Wrapped Filecoin,18,18,mismatch,renamed_ticker,representation,Wrapped Filecoin,no
+178,Ethereum,SLP,0xCC8Fa225D80b9c7D42F96e9570156c65D6cAAa25,4693,SLP,Smooth Love Potion,0,0,exact,verify,,,yes
+182,Ethereum,BGB,0x54d2252757e1672eead234d27b1270728ff90581,4556,BGB,BitgetToken,18,18,exact,verify,,,yes
+184,BNB Smart Chain,FDUSD,0xc5f0f7b66764f6ec8c8dff7ba683102295e16409,2104,FDUSD,First Digital USD,18,18,exact,verify,,,yes
+185,BNB Smart Chain,GALXE,0xe4cc45bb5dbda06db6183e8bf016569f40497aa5,1596,GAL,Project Galaxy,18,18,mismatch,renamed_ticker,,"Galxe, contract ticker GAL",yes
+186,Ethereum,sUSD,0x57Ab1ec28D129707052df4dF418D58a2D46d5f51,4160,sUSD,Synth sUSD (retired),18,18,exact,verify,,,no
+187,Ethereum,KCS,0xf34960d9d60be18cC1D5Afc1A6F012A723a28811,8148,KCS,KuCoin Token,6,6,exact,verify,,,yes
+188,Ethereum,GT,0xD5CAa0dA00169686EA7b594582827043ad59639D,1939,GT,GateToken,18,18,exact,verify,,,no
+189,Ethereum,USUAL,0xc4441c2be5d8fa8126822b9929ca0b81ea0de38e,1129,USUAL,USUAL,18,18,exact,verify,,,yes
+190,Ethereum,EUROC,0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c,1852,EURC,Euro Coin,6,6,mismatch,renamed_ticker,,EUROC renamed EURC (Circle),yes
+191,Polygon,UNI_POL,0xb33EaAd8d922B1083446DC23f610c2567fB5180f,2949,UNI,Uniswap (PoS),18,18,suffix-alias,verify,,,yes
+193,BNB Smart Chain,LUNC,0x45b695F2594713c96B52468ED168A691986b858A,8411,LUNC,Terra Classic AI,18,18,exact,verify,,,no
+194,Base,HIGHER,0x0578d8a44db98b23bf096a382e016e29a5ce0ffe,2680,HIGHER,higher,18,18,exact,verify,,,yes
+195,Optimism,LINK_OP,0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6,6271,LINK,ChainLink Token,18,18,suffix-alias,verify,,,yes
+198,Ethereum,PEOPLE,0x7A58c0Be72BE218B41C608b7Fe7C5bB630736C71,5940,PEOPLE,ConstitutionDAO,18,18,exact,verify,,,yes
+201,Ethereum,NMR,0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671,9604,NMR,Numeraire,18,18,exact,verify,,,yes
+202,Ethereum,API3,0x0b38210ea11411557c13457D4dA7dC6ea731B88a,5031,API3,API3,18,18,exact,verify,,,yes
+203,Ethereum,TRB,0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0,2779,TRB,Tellor Tributes,18,18,exact,verify,,,yes
+204,Ethereum,UMA,0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828,9881,UMA,UMA Voting Token v1,18,18,exact,verify,,,yes
+205,Ethereum,tBTC,0x18084fbA666a33d37592fA2633fD49a74DD93a88,12877,tBTC,tBTC v2,18,18,exact,verify,,,yes
+206,Ethereum,LPT,0x58b6A8A3302369DAEc383334672404Ee733aB239,3429,LPT,Livepeer Token,18,18,exact,verify,,,yes
+207,Ethereum,GLM,0x7DD9c5Cba05E151C895FDe1CF355C9A1D5DA6429,8031,GLM,Golem Network Token,18,18,exact,verify,,,yes
+208,Ethereum,MILADY,0x12970e6868f88f6557b76120662c1b3e50a646bf,3734,LADYS,Milady,18,18,mismatch,renamed_ticker,,"Milady meme coin, ticker LADYS",yes
+209,Ethereum,WOJAK,0x5026f006b85729a8b14553fae6af249ad16c9aab,4655,WOJAK,Wojak Coin,18,18,exact,verify,,,yes
+211,Ethereum,ETHX,0xa35b1b31ce002fbf2058d22f30f95d405200a15b,2227,ETHx,ETHx,18,18,case,verify,,,yes
+212,Ethereum,ILV,0x767FE9EDC9E0dF98E07454847909b5E959D7ca0E,10924,ILV,Illuvium,18,18,exact,verify,,,yes
+213,Ethereum,GODS,0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97,8264,GODS,Gods Unchained,18,18,exact,verify,,,no
+214,Ethereum,PUFFER,0x4d1c297d39c5c1277964d0e3f8aa901493664530,8489,PUFFER,PUFFER,18,18,exact,verify,,,yes
+215,Ethereum,SWELL,0x0a6e7ba5042b38349e437ec6db6214aec7b35676,2199,SWELL,Swell Governance Token,18,18,exact,verify,,,yes
+216,Ethereum,METIS,0x9E32b13ce7f2E80A01932B42553652E053D6ed8e,8912,Metis,Metis Token,18,18,case,verify,,,yes
+217,Ethereum,ANKR,0x8290333ceF9e6D528dD5618Fb97a76f268f3EDD4,5479,ANKR,Ankr Network,18,18,exact,verify,,,yes
+218,Ethereum,TRAC,0xaA7a9CA87d3694B5755f213B5D04094b8d0F0A6F,11995,TRAC,Trace Token,18,18,exact,verify,,,yes
+219,Ethereum,BIFI,0xb1f1ee126e9c96231cc3d3fad7c08b4cf873b1f1,5339,BIFI,Beefy,18,18,exact,verify,,,yes
+220,Ethereum,SYN,0x0f2D719407FdBeFF09D87557AbB7232601FD9F29,45,SYN,Synapse,18,18,exact,verify,,,yes
+221,Arbitrum,GNS,0x18c11fd286c5ec11c3b683caa813b77f5163a122,6149,GNS,Gains Network,18,18,exact,verify,,,yes
+222,Avalanche,sAVAX,0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE,2141,sAVAX,Staked AVAX,18,18,exact,verify,,,yes
+223,Ethereum,BOLD,0x6440f144b7e50D6a8439336510312d2F54beB01D,6591,BOLD,BOLD Stablecoin,18,18,exact,verify,,,yes
+224,Ethereum,LRC,0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD,3596,LRC,LoopringCoin V2,18,18,exact,verify,,,yes
+225,Ethereum,TAIKO,0x10dea67478c5f8c5e2d90e5e9b26dbe60c54d800,170,TAIKO,Taiko Token,18,18,exact,verify,,,no
+227,Arbitrum,GRAIL,0x3d9907F9a368ad0a51Be60f7Da3b97cf940982D8,9299,GRAIL,Camelot token,18,18,exact,verify,,,yes
+228,Ethereum,DIA,0x84cA8bc7997272c7CfB4D0Cd3D55cd942B3c9419,5850,DIA,DIAToken,18,18,exact,verify,,,yes
+229,Ethereum,OETH,0x856c4efb76c1d1ae02e20ceb03a2a6a08b0b8dc3,2416,OETH,Origin Ether,18,18,exact,verify,,,yes
+230,Ethereum,GEARBOX,0xba3335588d9403515223f109edc4eb7269a9ab5d,15073,GEAR,Gearbox,18,18,mismatch,renamed_ticker,,"Gearbox, ticker GEAR",yes
+231,Avalanche,QI,0x8729438EB15e2C8B576fCc6AeCdA6A148776C0F5,8192,QI,BENQI,18,18,exact,verify,,,yes
+232,Ethereum,STORJ,0xB64ef51C888972c908CFacf59B47C1AfBC0Ab8aC,3554,STORJ,StorjToken,8,8,exact,verify,,,yes
+233,Polygon,QUICK,0x831753DD7087CaC61aB5644b308642cc1c33Dc13,10037,QUICK,Quickswap,18,18,exact,verify,,,yes
+234,Base,PENDLE_B,0xa99f6e6785da0f5d6fb42495fe424bce029eeb3e,4932,PENDLE,Pendle,18,18,suffix-alias,verify,,,yes
+236,Ethereum,NOT,0x4C22D1536FCc44a97d641f1662c99c41A358f9bd,5476,NOT,Notcoin,18,18,exact,verify,,,no
+237,BNB Smart Chain,FLOKI2,0xfb5B838b6cfEEdC2873aB27866079AC55363D37E,8007,FLOKI,FLOKI,9,9,suffix-alias,verify,,,yes
+241,Ethereum,BAND,0xBA11D00c5f74255f56a5E366F4F77f5A186d7f55,4379,BAND,BandToken,18,18,exact,verify,,,yes
+242,Ethereum,LAYER3,0x88909d489678dd17aa6d9609f89b0419bf78fd9a,183,L3,Layer3,18,18,mismatch,renamed_ticker,,"Layer3, ticker L3",yes
+243,Ethereum,XAUT,0x68749665FF8D2d112Fa859AA293F07A622782F38,2141,XAUt,Tether Gold,6,6,case,verify,,,yes
+244,Ethereum,DODO,0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd,1995,DODO,DODO bird,18,18,exact,verify,,,yes
+245,Polygon,GHST,0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7,2949,GHST,Aavegotchi GHST Token (PoS),18,18,exact,verify,,,yes
+247,Base,MOCHI,0xf6e932ca12afa26665dc4dde7e27be02a7c02e50,11915,MOCHI,Mochi,18,18,exact,verify,,,yes
+248,Ethereum,OHM,0x64aa3364F17a4D01c6f1751Fd97C2BD3D7e7f1D5,5870,OHM,Olympus,9,9,exact,verify,,,yes
+249,Ethereum,PIXEL,0x3429d03c6f7521aec737a0bbf2e5ddcef2c3ae31,4655,PIXEL,PIXEL,18,18,exact,verify,,,no
+250,Ethereum,OLAS,0x0001a500a6b18995b03f44bb040a5ffc28e45cb0,5479,OLAS,Autonolas,18,18,exact,verify,,,yes
+251,Ethereum,FLUX,0x469eda64aed3a3ad6f868c44564291aa415cb1d9,15320,FLUX,FLUX,18,18,exact,verify,,,no
+252,Ethereum,ACH,0xEd04915c23f00A313a544955524EB7DBD823143d,3661,ACH,Alchemy,8,8,exact,verify,,,yes
+253,Ethereum,AKT,0x85a5b5d3e3440a05299C5FC1Da15BE355eb87051,5150,AKT,Akash Network,18,18,exact,verify,,,no
+254,BNB Smart Chain,XVS,0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63,12781,XVS,Venus,18,18,exact,verify,,,yes
+255,Ethereum,MPL,0x33349B282065b0284d756F0577FB39c158F935e6,6746,MPL,Maple Token,18,18,exact,verify,,,no
+257,Ethereum,ALT,0x8457ca5040ad67fdebbcc8edce889a335bc0fbfb,4948,ALT,AltLayer Token,18,18,exact,verify,,,yes
+258,Ethereum,CELO,0x3294395e62F4eB6aF3f1Fcf89f5602D90Fb3Ef69,831,CELO,Celo native asset,18,18,exact,verify,,,no
+259,Ethereum,ZRC20,0xf091867ec603a6628ed83d274e835539d82e9cc8,2018,ZETA,Zeta,18,18,mismatch,fail,symbol_mismatch_uncertain,label ZRC20 is not a ticker; contract is Zeta (ZETA),no
+260,Ethereum,IOTX,0x6fB3e0A217407EFFf7Ca062D46c26E5d60a14d69,6212,IOTX,IoTeX Network,18,18,exact,verify,,,yes
+261,Ethereum,rswETH,0xfae103dc9cf190ed75350761e95403b7b8afa6c0,2112,rswETH,rswETH,18,18,exact,verify,,,yes
+262,Ethereum,USD0,0x73A15FeD60Bf67631dC6cd7Bc5B6e8da8190aCF5,1129,USD0,Usual USD,18,18,exact,verify,,,yes
+263,BNB Smart Chain,ALPACA,0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F,10088,ALPACA,AlpacaToken,18,18,exact,verify,,,yes
+264,Ethereum,CFG,0x1ECF064cd4016aAE4C4cee1c2eCa660fdb3AA46F,5150,CFG,Centrifuge,18,18,exact,verify,,,no
+265,Base,AIXBT,0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825,45,AIXBT,aixbt by Virtuals,18,18,exact,verify,,,yes
+266,Base,CLANKER,0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb,1620,CLANKER,tokenbot,18,18,exact,verify,,,yes
+267,Ethereum,OG,0x0A5b6fF8B6b22a631D9945714331E59407CB23e4,5150,OG,OG Fan,18,18,exact,verify,,,no
+268,Ethereum,SWEAT,0xB4b9DC1C77bdbb135eA907fd5a08094d98883A35,831,SWEAT,SWEAT,18,18,exact,verify,,,no
+269,Ethereum,RARE,0xba5BDe662c17e2aDFF1075610382B9B691296350,2141,RARE,SuperRare,18,18,exact,verify,,,yes
+270,Ethereum,CARV,0xc08cd26474722ce93f4d0c34d16201461c10aa8c,12532,CARV,CARV,18,18,exact,verify,,,no
+271,BNB Smart Chain,TLM,0x2222227E22102Fe3322098e4CBfE18cFebD57c95,13239,TLM,Alien Worlds Trilium,4,4,exact,verify,,,yes
+272,Arbitrum,RDNT,0x0C4681e6C0235179ec3D4F4fc4DF3d14FDD96017,2269,RDNT,Radiant,18,18,exact,verify,,,yes
+273,Arbitrum,CRV_ARB,0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978,760,CRV,Curve DAO Token,18,18,suffix-alias,verify,,,yes
+279,Ethereum,ELON,0x761D38e5ddf6ccf6Cf7c55759d5210750B5D60F3,2546,ELON,Dogelon,18,18,exact,verify,,,yes
+283,BNB Smart Chain,LAZIO,0x77d547256A2cD95F32F67aE0313E450Ac200648d,1596,LAZIO,FC Lazio Fan Token,8,8,exact,verify,,,yes
+284,BNB Smart Chain,PORTO,0x49f2145d6366099e13B10FbF80646C0F377eE7f6,1596,PORTO,FC Porto Fan Token,8,8,exact,verify,,,yes
+285,BNB Smart Chain,ATM,0x986058ec93756E57b4e55b406dD0BeE24bcD95e3,9208,ATM,ATM,18,18,exact,verify,,,yes
+286,Ethereum,MFER,0x2C91D908E9fab2dD2441532a04182d791e590f2d,7018,RG,REAPERS GAMBIT,18,18,mismatch,fail,symbol_mismatch,contract is REAPERS GAMBIT (RG),no
+287,Base,NORMIE,0x7F12d13B34F5F4f0a9449c16Bcd42f0da47AF200,9505,NORMIE,Normie,9,9,exact,verify,,,no
+289,Ethereum,MX,0x11eef04c884e24d9b7b4760e7476d06ddf797f36,4185,MX,MX Token,18,18,exact,verify,,,no
+290,Ethereum,ALICE,0xAC51066d7bEC65Dc4589368da368b212745d63E8,4005,ALICE,ALICE,6,6,exact,verify,,,no
+291,Ethereum,BEAM,0x62d0a8458ed7719fdaf978fe5929c6d342b0bfce,10861,BEAM,Beam,18,18,exact,verify,,,yes
+292,Ethereum,YGG,0x25f8087EAD173b73D6e8B84329989A8eEA16CF73,2546,YGG,Yield Guild Games Token,18,18,exact,verify,,,no
+293,Ethereum,MC,0x949D48EcA67b17269629c7194F4b727d4Ef9E5d6,10734,MC,Merit Circle,18,18,exact,verify,,,no
+294,BNB Smart Chain,SANTOS,0xA64455a4553C9034236734FadDAddbb64aCE4Cc7,1596,SANTOS,FC Santos Fan Token,8,8,exact,verify,,,yes
+295,BNB Smart Chain,ALPINE,0x287880ea252b52b63cc5f40a2d3e5a44aa665a76,1596,ALPINE,ALPINE Fan Token,8,8,exact,verify,,,no
+296,Ethereum,MASK,0x69af81e73A73B40adF4f3d4223Cd9b1ECE623074,4331,MASK,Mask Network,18,18,exact,verify,,,yes
+297,Ethereum,CYBER,0x14778860e937f509e651192a90589de711fb88a9,8295,CYBER,CyberConnect,18,18,exact,verify,,,no
+298,Ethereum,AIOZ,0x626E8036dEB333b408Be468F951bdB42433cBF18,3747,AIOZ,AIOZ Network,18,18,exact,verify,,,yes
+299,BNB Smart Chain,ID,0x2dff88a56767223a5529ea5960da7a3f5f766406,9712,ID,SPACE ID,18,18,exact,verify,,,no
+304,Base,TYBG,0x0d97F261b1e88845184f678e2d1e7a98D9FD38dE,11952,TYBG,Base God,18,18,exact,verify,,,yes
+306,Ethereum,POOL,0x0cEC1A9154Ff802e7934Fc916Ed7Ca50bDE6844e,10104,POOL,PoolTogether,18,18,exact,verify,,,no
+310,Ethereum,MAGA,0x6aa56e1d98b3805921c170eb4b3fe7d4fda6d89b,5041,TRUMP,MAGA,9,9,mismatch,renamed_ticker,,"MAGA, ticker TRUMP",yes
+311,Ethereum,ACROSS,0x44108f0223A3C3028F5Fe7AEC7f9bb2E66beF82F,4720,ACX,Across Protocol Token,18,18,mismatch,renamed_ticker,,"Across, ticker ACX",yes
+312,Ethereum,USDM,0x59d9356e565ab3a36dd77763fc0d87feaf85508c,708,USDM,Mountain Protocol USD,18,18,exact,verify,,,no
+313,Ethereum,agEUR,0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8,2673,EURA,EURA (previously agEUR),18,18,mismatch,renamed_ticker,,agEUR renamed EURA (name says so),yes
+314,Ethereum,T,0xCdF7028ceAB81fA0C6971208e83fa7872994beE5,9773,T,Threshold Network Token,18,18,exact,verify,,,yes
+315,Ethereum,HOP,0xc5102fE9359FD9a28f877a67E36B0F050d81a3CC,19146,HOP,Hop,18,18,exact,verify,,,yes
+316,Polygon,BIFI,0xFbdd194376de19a88118e84E279b977f165d01b8,10622,BIFI,beefy.finance,18,18,exact,verify,,,no
+317,BNB Smart Chain,SHIB2,0x2859e4544C4bB03966803b044A93563Bd2D0DD4D,1596,SHIB,SHIBA INU,18,18,suffix-alias,verify,,,yes
+320,Arbitrum,JONES,0x10393c20975cF177a3513071bC110f7962CD67da,7198,JONES,Jones DAO,18,18,exact,verify,,,yes
+321,Ethereum,GHST2,0x3F382DbD960E3a9bbCeaE22651E88158d2791550,7440,GHST,Aavegotchi GHST Token,18,18,suffix-alias,verify,,,no
+322,Base,BUILD,0x3C281A39944a2319aA653D81Cfd93Ca10983D234,7722,BUILD,BUILD,18,18,exact,verify,,,yes
+323,Ethereum,MEMECORE,0x1b980e05943dE3dB3a459C72325338d327B6F5a9,12861,GEAR,Bitgear,18,18,mismatch,fail,symbol_mismatch,contract is Bitgear (GEAR),no
+324,Ethereum,RLC,0x607F4C5BB672230e8672085532f7e901544a7375,3086,RLC,iEx.ec Network Token,9,9,exact,verify,,,yes
+325,Ethereum,INDEX,0x0954906da0Bf32d5479e25f46056d22f08464cab,6193,INDEX,Index,18,18,exact,verify,,,yes
+326,Ethereum,BADGER,0x3472A5A71965499acd81997a54BBA8D852C6E53d,7440,BADGER,Badger,18,18,exact,verify,,,yes
+327,Ethereum,SPELL,0x090185f2135308BaD17527004364eBcC2D37e5F6,5427,SPELL,Spell Token,18,18,exact,verify,,,yes
+328,Ethereum,REQ,0x8f8221aFbB33998d8584A2B05749bA73c37a938a,3804,REQ,Request Token,18,18,exact,verify,,,yes
+329,Optimism,PERP,0x9e1028F5F1D5eDE59748FFceE5532509976840E0,4299,PERP,Perpetual,18,18,exact,verify,,,no
+331,Ethereum,ALCX,0xdBdb4d16EdA451D0503b854CF79D55697F90c8DF,5732,ALCX,Alchemix,18,18,exact,verify,,,yes
+332,Base,PONKE,0x4a0c64af541439898448659aedcec8e8e819fc53,8380,PONKE,Ponke,18,18,exact,verify,,,yes
+341,Ethereum,JPEG,0xE80C0cd204D654CEbe8dd64A4857cAb6Be8345a3,11405,JPEG,JPEG’d Governance Token,18,18,exact,verify,,,no
+342,Ethereum,OMNI,0x36E66fbBce51e4cD5bd3C62B637Eb411b18949D4,4341,OMNI,Omni Network,18,18,exact,verify,,,yes
+343,Ethereum,XBORG,0xeae00d6f9b16deb1bd584c7965e4c7d762f178a1,7338,XBG,XBorg Token,18,18,mismatch,renamed_ticker,,"XBorg, ticker XBG",no
+344,Ethereum,WILD,0x2a3bFF78B79A009976EeA096a51A948a3dC00e34,1581,WILD,Wilder,18,18,exact,verify,,,yes
+346,Ethereum,XCAD,0x7659CE147D0e714454073a5dd7003544234b6Aa0,6712,XCAD,XCAD Token,18,18,exact,verify,,,no
+347,BNB Smart Chain,HOOK,0xa260e12d2b924cb899ae80bb58123ac3fee1e2f0,6732,HOOK,Hook Token,18,18,exact,verify,,,no
+348,BNB Smart Chain,LISUSD,0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5,2141,lisUSD,Lista USD,18,18,case,verify,,,yes
+349,Ethereum,AURORA,0xAaAAAA20D9E0e2461697782ef11675f668207961,5034,AURORA,Aurora,18,18,exact,verify,,,yes
+351,Ethereum,XYO,0x55296f69f40Ea6d20E478533C15A6B08B654E758,4204,XYO,XY Oracle,18,18,exact,verify,,,yes
+352,Ethereum,LUMIA,0xd9343a049d5dbd89cd19dc6bca8c48fb3a0a42a7,3636,LUMIA,Lumia Token,18,18,exact,verify,,,no
+353,Ethereum,SYRUP,0xB850B9247410d693F44E9AC32f676a3043A13Ed4,5476,SYRUP,Syrup Token,18,18,exact,verify,,,no
+354,Ethereum,LOOKS,0xf4d2888d29D722226FafA5d9B24F9164c092421E,4154,LOOKS,LooksRare Token,18,18,exact,verify,,,no
+355,Optimism,KWENTA,0x920Cf626a271321C151D027030D5d08aF699456b,4196,KWENTA,Kwenta,18,18,exact,verify,,,no
+356,BNB Smart Chain,BSW,0x965F527D9159dCe6288a2219DB51fc6Eef120dD1,10822,BSW,Biswap,18,18,exact,verify,,,yes
+357,BNB Smart Chain,UNFI,0x728C5baC3C3e370E372Fc4671f9ef6916b814d8B,7273,UNFI,UNFI,18,18,exact,verify,,,no
+358,BNB Smart Chain,TKO,0x9f589e3eabe42ebC94A44727b3f3531C0c877809,7807,TKO,Tokocrypto Token,18,18,exact,verify,,,yes
+359,Avalanche,ggAVAX,0x69260b9483f9871ca57f81a90d91e2f96c2cd11d,4477,GGP,GoGoPool Protocol,18,18,mismatch,fail,symbol_mismatch,contract is GoGoPool Protocol (GGP),no
+360,Ethereum,PYR,0x430ef9263e76dae63c84292c3409d61c598e9682,6466,PYR,PYR Token,18,18,exact,verify,,,no
+361,Ethereum,MODE,0x084382d1cc4f4dfd1769b1cc1ac2a9b1f8365e90,12492,MODE,MODE,18,18,exact,verify,,,no
+362,Ethereum,FUEL,0x675b68aa4d9c2d3bb3f0397048e62e6b7192079c,170,FUEL,FUEL,9,9,exact,verify,,,no
+363,Ethereum,LSK,0x6033f7f88332b8db6ad452b7c6d5bb643990ae3f,5730,LSK,Lisk,18,18,exact,verify,,,yes
+364,Ethereum,PLA,0x3a4f40631a4f906c2BaD353Ed06De7A5D3fCb430,5957,PLA,PlayDapp Token,18,18,exact,verify,,,no
+365,Ethereum,HIGH,0x71Ab77b7dbB4fa7e017BC15090b2163221420282,5042,HIGH,Highstreet token,18,18,exact,verify,,,yes
+366,Ethereum,VOXEL,0x3c4b6e6e1ea3d4863700d7f76b36b7f3d3f13e3d,7992,VGX,Voyager Token,8,8,mismatch,fail,symbol_mismatch,contract is Voyager Token (VGX),no
+367,Ethereum,BTRST,0x799ebfABE77a6E34311eeEe9825190B9ECe32824,11659,BTRST,BTRST,18,18,exact,verify,,,no
+368,Ethereum,POWR,0x595832F8FC6BF59c85C527fEC3740A1b7a361269,4831,POWR,PowerLedger,6,6,exact,verify,,,yes
+369,Ethereum,PROM,0xfc82bb4ba86045Af6F327323a46E80412b91b27d,5479,PROM,Token Prometeus Network,18,18,exact,verify,,,no
+370,Ethereum,SUB,0x09395a2a58db45db0da254c7eaa5ac469d8bdc85,3439,SQT,SubQueryToken,18,18,mismatch,fail,symbol_mismatch,contract is SubQueryToken (SQT),no
+373,Ethereum,TLM2,0x888888848B652B3E3a0f34c96E00EEC0F3a23F72,13137,TLM,Alien Worlds Trilium,4,4,suffix-alias,verify,,,no
+377,Ethereum,TSUKA,0xc5fb36dd2fb59d3b98deff88425a3f425ee469ed,7699,TSUKA,Dejitaru Tsuka,9,9,exact,verify,,,yes
+379,Polygon,DIMO,0xe261d618a959afffd53168cd07d12e37b26761db,680,DIMO,Dimo,18,18,exact,verify,,,yes
+383,Ethereum,AKITA,0x3301Ee63Fb29F863f2333Bd4466acb46CD8323E6,4852,AKITA,Akita Inu,18,18,exact,verify,,,yes
+384,Base,ANON,0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C,14545,Anon,HeyAnon,18,18,case,verify,,,yes
+385,Avalanche,PNG,0x60781C2586D68229fde47564546784ab3fACA982,13591,PNG,Pangolin,18,18,exact,verify,,,yes
+387,BNB Smart Chain,ELON2,0x7bd6FaBD64813c48545C9c0e312A0099d9be2540,1596,ELON,Dogelon Mars,18,18,suffix-alias,verify,,,yes
+390,Base,BASED,0x32E0f9d26D1e33625742A52620cC76C1130efde6,5986,BASED,BASED,18,18,exact,verify,,,yes
+391,Arbitrum,TBTC2,0x6c84a8f1c29108f47a79964b5fe888d4f4d0de40,2112,tBTC,Arbitrum tBTC v2,18,18,suffix-alias,verify,,,yes
+393,Ethereum,CULT,0xf0f9d895aca5c8678f706fb8216fa22957685a13,680,CULT,Cult DAO,18,18,exact,verify,,,yes
+396,Ethereum,ANGLE,0x31429d1856aD1377A8A0079410B297e1a9e214c2,10122,ANGLE,ANGLE,18,18,exact,verify,,,no
+397,Avalanche,COQ,0x420fca0121dc28039145009570975747295f2329,5770,COQ,COQINU,18,18,exact,verify,,,yes
+400,Base,LUNA_AI,0x55cd6469f597452b5a7536e2cd98fde4c1247ee4,45,LUNA,Luna by Virtuals,18,18,suffix-alias,verify,,,yes
+401,Base,SKI,0x768be13e1680b5ebe0024c42c896e3db59ec0149,14554,SKI,SKI MASK DOG,9,9,exact,verify,,,yes
+402,Base,MIGGLES,0xb1a03eda10342529bbf8eb700a06c60441fef25d,2603,MIGGLES,Mister Miggles,18,18,exact,verify,,,yes
+403,Ethereum,PAAL,0x14fee680690900ba0cccfc76ad70fd1b95d10e16,15612,$PAAL,PAAL AI,9,9,mismatch,renamed_ticker,,"PAAL AI, contract ticker $PAAL",yes
+404,Ethereum,rsETH,0xa1290d69c65a6fe4df752f95823fae25cb99e5a7,2837,rsETH,rsETH,18,18,exact,verify,,,yes
+405,Ethereum,WEN,0xEBA6145367b33e9FB683358E0421E8b7337D435f,1785,WEN,Wencash,18,18,exact,verify,,,no
+406,Ethereum,MENCHESTER,0x3ebb4a4e91ad83be51f8d596533818b246f4bee1,7132,SATA,Signata,18,18,mismatch,fail,symbol_mismatch,contract is Signata (SATA),no
+408,Ethereum,ezETH,0xbf5495Efe5DB9ce00f80364C8B423567e58d2110,2739,ezETH,Renzo Restaked ETH,18,18,exact,verify,,,yes
+410,Ethereum,IPOR,0x1e4746dC744503b53b4A082cB3607B169a289090,2429,IPOR,IPOR Token,18,18,exact,verify,,,no
+411,Ethereum,SPECTRA,0x6a89228055c7c28430692e342f149f37462b478b,1115,SPECTRA,Spectra Token,18,18,exact,verify,,,no
+413,Avalanche,KIMBO,0x184ff13b3ebcb25be44e860163a5d8391dd568c1,5770,KIMBO,Kimbo,18,18,exact,verify,,,yes
+415,Polygon,GEOD,0xac0f66379a6d7801d7726d5a943356a172549adb,11208,GEOD,Geodnet Token,18,18,exact,verify,,,yes
+417,Polygon,REVV,0x70c006878a5A50Ed185ac4C87d837633923De296,11942,REVV,REVV,18,18,exact,verify,,,no
+419,BNB Smart Chain,FRAX_BSC,0x90C97F71E18723b0Cf0dfa30ee176Ab653E89F40,16256,FRAX,Frax,18,18,suffix-alias,verify,,,yes
+420,Ethereum,EULER,0xd9Fcd98c322942075A5C3860693e9f4f03AAE07b,19936,EUL,Euler,18,18,mismatch,renamed_ticker,,"Euler, ticker EUL",yes
+421,Ethereum,RAIL,0xe76C6c83af64e4C60245D8C7dE953DF673a7A33D,3933,RAIL,Rail,18,18,exact,verify,,,yes
+422,Ethereum,PRISMA,0xda47862a83dac0c112ba89c6abc2159b95afd71c,15482,PRISMA,Prisma Governance Token,18,18,exact,verify,,,yes
+423,Ethereum,BERA,0x1dBE93F3BA0e764C620451E8F21AE32f51a055A3,5150,BERA,Berachain,18,18,exact,verify,,,no
+424,Base,KEYCAT,0x9a26f5433671751c3276a065f57e5a02d2817973,7022,KEYCAT,Keyboard Cat,18,18,exact,verify,,,yes
+425,Arbitrum,WETH_ARB,0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,2092,WETH,Wrapped Ether,18,18,suffix-alias,verify,,,yes
+426,Optimism,WETH_OP,0x4200000000000000000000000000000000000006,2041,WETH,Wrapped Ether,18,18,suffix-alias,verify,,,yes
+427,Polygon,WETH_POL,0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619,12443,WETH,Wrapped Ether,18,18,suffix-alias,verify,,,yes
+428,BNB Smart Chain,WETH_BSC,0x2170Ed0880ac9A755fd29B2688956BD959F933F8,4413,ETH,Ethereum Token,18,18,mismatch,renamed_ticker,representation,Binance-peg ETH,yes
+429,Avalanche,WETH_AVAX,0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB,12716,WETH.e,Wrapped Ether,18,18,mismatch,renamed_ticker,representation,bridged WETH.e,yes
+434,Arbitrum,GRT_ARB,0x23A941036Ae778Ac51Ab04CEa08Ed6e2FE103614,760,GRT,Graph Token,18,18,suffix-alias,verify,,,no
+454,Base,USDC_BASE,0x833589fcd6edb6e08f4c7c32d4f71b54bda02913,1852,USDC,USD Coin,6,6,suffix-alias,verify,,,yes
+475,Ethereum,ARB_ETH,0xb50721bcf8d664c30412cfbc6cf7a15145234ad1,2593,ARB,Arbitrum,18,18,suffix-alias,verify,,,yes
+478,BNB Smart Chain,ASTER,0x000ae314e2a2172a039b26378814c252734f556a,3839,ASTER,Aster,18,18,exact,verify,,,yes
+480,Ethereum,AUSD,0x00000000efe302beaa2b3e6e1b18d08d69a9012a,5937,AUSD,AUSD,6,6,exact,verify,,,yes
+481,Ethereum,BMX,0x986ee2b944c42d017f52af21c4c69b84dbea35d8,5934,BMC,BitMartToken,18,18,mismatch,renamed_ticker,,"BitMart Token, contract ticker BMC",no
+482,Ethereum,BTSE,0x666d875c600aa06ac1cf15641361dec3b00432ef,13146,BTSE,BTSE Token,8,8,exact,verify,,,yes
+483,BNB Smart Chain,CHEEMS,0x0df0587216a4a1bb7d5082fdc491d93d2dd4b413,6612,Cheems,Cheems,18,18,case,verify,,,yes
+484,Ethereum,DEXE,0xde4EE8057785A7e8e800Db58F9784845A5C2Cbd6,24064,DEXE,Dexe,18,18,exact,verify,,,yes
+485,Ethereum,DOLA,0x865377367054516e17014CcdED1e7d814EDC9ce4,3967,DOLA,Dola USD Stablecoin,18,18,exact,verify,,,yes
+486,Ethereum,FTM,0x4E15361FD6b4BB609Fa63C81A2be19d873717870,9901,FTM,Fantom Token,18,18,exact,verify,,,yes
+487,Ethereum,FTT,0x50D1c9771902476076eCFc8B2A83Ad6b9355a4c9,2076,FTX Token,FTT,18,18,mismatch,renamed_ticker,,FTX Token: symbol and name swapped in the contract,yes
+488,Ethereum,GNO,0x6810e776880C02933D47DB1b9fc05908e5386b96,2599,GNO,Gnosis Token,18,18,exact,verify,,,yes
+489,Ethereum,GOMINING,0x7ddc52c4de30e94be3a6a0a2b259b2850f421989,9367,GMT,GoMining Token,18,18,mismatch,renamed_ticker,,"GoMining Token, contract ticker GMT",yes
+490,Ethereum,HEX,0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39,20989,HEX,HEX,8,8,exact,verify,,,yes
+491,Ethereum,INJ,0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30,4324,INJ,Injective Token,18,18,exact,verify,,,yes
+492,Ethereum,JASMY,0x7420B4b9a0110cdC71fB720908340C03F9Bc03EC,4320,JASMY,JasmyCoin,18,18,exact,verify,,,yes
+493,Base,KTA,0xc0634090F2Fe6c6d75e61Be2b949464aBB498973,9001,KTA,Keeta,18,18,exact,verify,,,yes
+494,Ethereum,LEO,0x2AF5D2aD76741191D15Dfe7bF6aC92d4Bd912Ca3,6316,LEO,Bitfinex LEO Token,18,18,exact,verify,,,no
+495,Ethereum,LSETH,0x8c1bed5b9a0928467c9b1341da1d7bd5e10b6549,2763,LsETH,Liquid Staked ETH,18,18,case,verify,,,yes
+496,Ethereum,NEXO,0xB62132e35a6c13ee1EE0f84dC5d40bad8d815206,13089,NEXO,Nexo,18,18,exact,verify,,,yes
+498,Ethereum,QNT,0x4a220E6096B25EADb88358cb44068A3248254675,5155,QNT,Quant,18,18,exact,verify,,,yes
+499,Ethereum,RLB,0x046eee2cc3188071c02bfc1745a6b17c656e3f3d,2227,RLB,Rollbit Coin,18,18,exact,verify,,,yes
+500,Ethereum,RLUSD,0x8292bb45bf1ee4d140127049757c2e0ff06317ed,238,RLUSD,RLUSD,18,18,exact,verify,,,yes
+501,Ethereum,RSR,0x320623b8E4fF03373931769A31Fc52A4E78B5d70,16985,RSR,Reserve Rights,18,18,exact,verify,,,yes
+502,BNB Smart Chain,SFP,0xD41FDb03Ba84762dD66a0af1a6C8540FF1ba5dfb,4324,SFP,SafePal Token,18,18,exact,verify,,,yes
+503,Ethereum,SHFL,0x8881562783028f5c1bcb985d2283d5e170d88888,3776,SHFL,Shuffle,18,18,exact,verify,,,yes
+504,BNB Smart Chain,SIREN,0x997A58129890bBdA032231A52eD1ddC845fc18e1,2901,SIREN,SIREN,18,18,exact,verify,,,yes
+505,BNB Smart Chain,SKYAI,0x92aa03137385f18539301349dcfc9ebc923ffb10,2525,SKYAI,SKYAI,18,18,exact,verify,,,yes
+506,Base,SOSO,0x624e2e7fDc8903165F64891672267AB0FCB98831,4932,SOSO,SoSoValue,18,18,exact,verify,,,yes
+507,Polygon,TEL,0xdF7837DE1F2Fa4631D716CF2502f8b230F1dcc32,2949,TEL,Telcoin (PoS),2,2,exact,verify,,,yes
+508,Base,TIBBIR,0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00,45,TIBBIR,Ribbita by Virtuals,18,18,exact,verify,,,yes
+509,Ethereum,TUSD,0x0000000000085d4780B73119b644AE5ecd22b376,1479,TUSD,TrueUSD,18,18,exact,verify,,,yes
+510,BNB Smart Chain,TWT,0x4B0F1812e5Df2A09796481Ff14017e6005508003,3762,TWT,Trust Wallet,18,18,exact,verify,,,yes
+511,Ethereum,USDD,0x0C10bF8FcB7Bf5412187A595ab97a3609160b5c6,7088,USDD,Decentralized USD,18,18,exact,verify,,,yes
+512,Ethereum,USDG,0xe343167631d89b6ffc58b88d6b7fb0228795491d,708,USDG,Global Dollar,6,6,exact,verify,,,yes
+513,Base,VVV,0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf,2968,VVV,Venice Token,18,18,exact,verify,,,yes
+514,BNB Smart Chain,WBETH,0xa2e3356610840701bdf5611a53974510ae27e2e1,1550,wBETH,Wrapped Binance Beacon ETH,18,18,case,verify,,,yes
+515,BNB Smart Chain,WBNB,0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c,3124,WBNB,Wrapped BNB,18,18,exact,verify,,,yes
+516,Ethereum,WLFI,0x779073bd43F2E93dc09cC99210a048B65CDD66cD,5150,WLFI,WLFI,18,18,exact,verify,,,no
+517,Ethereum,XCN,0xA2cd3D43c775978A96BdBf12d733D5A1ED94fb18,6726,XCN,Chain,18,18,exact,verify,,,yes
+521,Ethereum,ZIG,0xb2617246d0c6c0087f18703d576831899ca94f01,2449,ZIG,ZigCoin,18,18,exact,verify,,,yes
+522,Ethereum,sUSDS,0xa3931d71877c0e7a3148cb7eb4463524fec27fbd,170,sUSDS,Savings USDS,18,18,exact,verify,,,yes
+523,Polygon,WMATIC,0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270,3000,WPOL,Wrapped Polygon Ecosystem Token,18,18,mismatch,renamed_ticker,,WMATIC renamed WPOL,yes
+524,Avalanche,MIM,0x130966628846BFd36ff31a822705796e8cb8C18D,10660,MIM,Magic Internet Money,18,18,exact,verify,,,yes
+525,Polygon,MIMATIC,0xa3Fa99A148fA48D14Ed51d610c367C61876997F1,13155,miMATIC,miMATIC,18,18,case,verify,,,yes
+526,Avalanche,TIME,0xb54f16fB19478766A268F172C9480f8da1a7c9C3,5239,TIME,Time,9,9,exact,verify,,,no
+527,Avalanche,USDTE,0xc7198437980c041c805A1EDcbA50c1Ce5db95118,12716,USDT.e,Tether USD,6,6,mismatch,renamed_ticker,representation,bridged USDT.e,yes
+528,Avalanche,WAVAX,0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7,3249,WAVAX,Wrapped AVAX,18,18,exact,verify,,,yes
+529,BNB Smart Chain,BTCB,0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c,4413,BTCB,BTCB Token,18,18,exact,verify,,,yes
+530,BNB Smart Chain,BUSD,0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56,4413,BUSD,BUSD Token,18,18,exact,verify,,,yes
+531,Ethereum,ENJ,0xF629cBd94d3791C9250152BD8dfBDF380E2a3B9c,9242,ENJ,Enjin Coin,18,18,exact,verify,,,yes
+532,Polygon,FISH,0x3a3Df212b7AA91Aa0402B9035b098891d276572B,11916,FISH,Fish,18,18,exact,verify,,,no
+533,Avalanche,MELT,0x47EB6F7525C1aA999FBC9ee92715F5231eB1241D,2327,MELT,Defrost Finance Token,18,18,exact,verify,,,no
+534,Ethereum,RAI,0x03ab458634910AaD20eF5f1C8ee96F1D6ac54919,4731,RAI,Rai Reflex Index,18,18,exact,verify,,,yes
+535,Avalanche,YAK,0x59414b3089ce2AF0010e7523Dea7E2b35d776ec7,4558,YAK,Yak Token,18,18,exact,verify,,,no
+536,Ethereum,ZRX,0xE41d2489571d322189246DaFA5ebDe1F4699F498,2946,ZRX,0x Protocol Token,18,18,exact,verify,,,yes
+537,BNB Smart Chain,ADA,0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47,4413,ADA,Cardano Token,18,18,exact,verify,,,yes
+538,Polygon,ADDY,0xc3FdbadC7c795EF1D6Ba111e06fF8F16A20Ea539,3730,ADDY,Adamant,18,18,exact,verify,,,yes
+539,Ethereum,AMP,0xfF20817765cB7f73d4bde2e66e067E58D11095C2,13920,AMP,Amp,18,18,exact,verify,,,yes
+540,Ethereum,BNT,0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C,4337,BNT,Bancor Network Token,18,18,exact,verify,,,no
+541,Ethereum,BOND,0x0391D2021f89DC339F60Fff84546EA23E337750f,3201,BOND,BarnBridge Governance Token,18,18,exact,verify,,,yes
+542,BNB Smart Chain,DOT,0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402,4413,DOT,Polkadot Token,18,18,exact,verify,,,yes
+543,Arbitrum,DPX,0x6C2C06790b3E3E3c38e12Ee22F8183b37a13EE55,760,DPX,Dopex Governance Token,18,18,exact,verify,,,no
+544,BNB Smart Chain,HELMET,0x948d2a81086A075b3130BAc19e4c6DEe1D2E3fE8,2307,Helmet,Helmet.insure Governance Token,18,18,case,verify,,,yes
+545,Avalanche,KLO,0xb27c8941a7Df8958A1778c0259f76D1F8B711C35,5034,KLO,Kalao Token,18,18,exact,verify,,,no
+546,BNB Smart Chain,LTC,0x4338665CBB7B2485A8855A139b75D5e34AB0DB94,4413,LTC,Litecoin Token,18,18,exact,verify,,,yes
+547,BNB Smart Chain,MBOX,0x3203c9E46cA618C8C1cE5dC67e7e9D75f5da2377,4159,MBOX,Mobox,18,18,exact,verify,,,yes
+548,Avalanche,PEFI,0xe896CDeaAC9615145c0cA09C8Cd5C25bced6384c,12940,PEFI,PenguinToken,18,18,exact,verify,,,yes
+549,Avalanche,PTP,0x22d4002028f537599bE9f666d1c4Fa138522f9c8,5703,PTP,Platypus,18,18,exact,verify,,,no
+550,Ethereum,REN,0x408e41876cCCDC0F92210600ef50372656052a38,7067,REN,Republic Token,18,18,exact,verify,,,yes
+551,Ethereum,RGT,0xD291E7a03283640FDc51b121aC401383A46cC623,2261,RGT,Rari Governance Token,18,18,exact,verify,,,yes
+552,Avalanche,SNOB,0xC38f41A296A4493Ff429F1238e030924A1542e50,6317,SNOB,Snowball,18,18,exact,verify,,,no
+553,Polygon,SX,0x840195888Db4D6A99ED9F73FcD3B225Bb3cB1A79,2949,SX,SportX (PoS),18,18,exact,verify,,,no
+554,BNB Smart Chain,SXP,0x47BEAd2563dCBf3bF2c9407fEa4dC236fAbA485A,17877,SXP,Swipe,18,18,exact,verify,,,yes
+555,Avalanche,TUS,0xf693248F96Fe03422FEa95aC0aFbBBc4a8FdD172,9267,TUS,Treasure Under Sea,18,18,exact,verify,,,no
+556,BNB Smart Chain,USTC,0x23396cF899Ca06c4472205fC903bDB4de249D6fC,7084,UST,Wrapped UST Token,18,18,mismatch,renamed_ticker,,Wrapped UST (UST renamed USTC),yes
+557,Avalanche,VSO,0x846D50248BAf8b7ceAA9d9B53BFd12d7D7FBB25a,2546,VSO,VersoToken,18,18,exact,verify,,,no
+558,Avalanche,XAVA,0xd1c3f94DE7e5B45fa4eDBBA472491a9f4B166FC4,4727,XAVA,Avalaunch,18,18,exact,verify,,,yes
+559,BNB Smart Chain,XRP,0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE,4413,XRP,XRP Token,18,18,exact,verify,,,yes
+560,Polygon,AGA,0x033d942A6b495C4071083f4CDe1f17e986FE856c,2949,AGA,AGA Token (PoS),4,4,exact,verify,,,no
+561,Polygon,AGAR,0xF84BD51eab957c2e7B7D646A3427C5A50848281D,2949,AGAr,AGA Rewards (PoS),8,8,case,verify,,,no
+562,BNB Smart Chain,ALPHA,0xa1faa113cbE53436Df28FF0aEe54275c13B40975,4225,ALPHA,AlphaToken,18,18,exact,verify,,,no
+563,Avalanche,AVE,0x78ea17559B3D2CF85a7F9C2C704eda119Db5E6dE,8094,AVE,Avaware,18,18,exact,verify,,,no
+564,BNB Smart Chain,BAKE,0xE02dF9e3e622DeBdD69fb838bB799E3F168902c5,9140,BAKE,BakeryToken,18,18,exact,verify,,,yes
+565,BNB Smart Chain,BANANA,0x603c7f932ED1fc6575303D8Fb018fDCBb0f39a95,7053,BANANA,ApeSwapFinance Banana,18,18,exact,verify,,,no
+566,BNB Smart Chain,BCH,0x8fF795a6F4D97E7887C79beA79aba5cc76444aDf,4413,BCH,Bitcoin Cash Token,18,18,exact,verify,,,yes
+567,BNB Smart Chain,BSCX,0x5Ac52EE5b2a633895292Ff6d8A89bB9190451587,19326,BSCX,BSCX,18,18,exact,verify,,,yes
+568,BNB Smart Chain,BTCST,0x78650B139471520656b9E7aA7A5e9276814a38e9,2261,BTCST,StandardBTCHashrateToken,17,17,exact,verify,,,yes
+569,BNB Smart Chain,BURGER,0xAe9269f27437f0fcBC232d39Ec814844a51d6b8f,5531,BURGER,Burger Swap,18,18,exact,verify,,,no
+570,Ethereum,CEL,0xaaAEBE6Fe48E54f431b0C390CfaF0b017d09D42d,2394,CEL,Celsius,4,4,exact,verify,,,yes
+571,Arbitrum,CELR,0x3a8B787f78D775AECFEEa15706D4221B40F345AB,760,CELR,CelerToken,18,18,exact,verify,,,no
+572,Avalanche,CRA,0xA32608e873F9DdEF944B24798db69d80Bbb4d1ed,17824,CRA,CRA,18,18,exact,verify,,,no
+573,Avalanche,CRAFT,0x8aE8be25C23833e0A01Aa200403e826F611f9CD2,3175,CRAFT,CRAFT,18,18,exact,verify,,,no
+574,Avalanche,DCAU,0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30,7037,DCAU,Dragon Crypto Aurum,18,18,exact,verify,,,no
+575,BNB Smart Chain,DOGE,0xbA2aE424d960c26247Dd6c32edC70B295c744C43,1596,DOGE,Dogecoin,8,8,exact,verify,,,yes
+576,Arbitrum,DXD,0xC3Ae0333F0F34aa734D5493276223d95B8F9Cb37,760,DXD,DXdao,18,18,exact,verify,,,no
+577,BNB Smart Chain,EOS,0x56b6fB708fC5732DEC1Afc8D8556423A2EDcCbD6,4413,EOS,EOS Token,18,18,exact,verify,,,yes
+578,BNB Smart Chain,EPS,0xA7f552078dcC247C2684336020c03648500C6d9F,1978,EPS,Ellipsis,18,18,exact,verify,,,yes
+579,BNB Smart Chain,FIL,0x0D8Ce2A99Bb6e3B7Db580eD848240e4a0F9aE153,1596,FIL,Filecoin,18,18,exact,verify,,,yes
+580,Avalanche,FIRE,0xfcc6CE74f4cd7eDEF0C5429bB99d38A3608043a5,2975,FIRE,FIRE,18,18,exact,verify,,,no
+581,BNB Smart Chain,FRONT,0x928e55daB735aa8260AF3cEDadA18B5f70C72f1b,4931,FRONT,Frontier Token,18,18,exact,verify,,,no
+582,BNB Smart Chain,FUEL,0x2090c8295769791ab7A3CF1CC6e0AA19F35e441A,14365,Fuel,Fuel Token,18,18,case,verify,,,yes
+583,Avalanche,GOHM,0x321E7092a180BB43555132ec53AaA65a5bF84251,45,gOHM,Governance OHM,18,18,case,verify,,,yes
+584,BNB Smart Chain,HERO,0xD40bEDb44C081D2935eebA6eF5a3c8A31A1bBE13,22661,HERO,Metahero,18,18,exact,verify,,,yes
+585,Avalanche,HUSKY,0x65378b697853568dA9ff8EaB60C13E1Ee9f4a654,5076,HUSKY,Husky,18,18,exact,verify,,,yes
+586,Polygon,IGG,0xe6FC6C7CB6d2c31b359A49A33eF08aB87F4dE7CE,2949,IGG,IG Gold (PoS),6,6,exact,verify,,,no
+587,Avalanche,IME,0xF891214fdcF9cDaa5fdC42369eE4F27F226AdaD6,2141,IME,Imperium Empires Token,18,18,exact,verify,,,no
+588,Ethereum,KNCL,0xdd974D5C2e2928deA5F71b9825b8b646686BD200,3074,KNC,Kyber Network Crystal,18,18,mismatch,renamed_ticker,,Kyber KNC legacy contract (KNCL),yes
+589,Avalanche,LYD,0x4C9B4E1AC6F24CdE3660D5E4Ef1eBF77C710C084,7280,LYD,LydiaFinance Token,18,18,exact,verify,,,no
+590,Arbitrum,MATH,0x99F40b01BA9C469193B360f72740E416B17Ac332,760,MATH,MATH Token,18,18,exact,verify,,,no
+591,Arbitrum,MCB,0x4e352cF164E64ADCBad318C3a1e222E9EBa4Ce42,2091,MCB,MUX Protocol,18,18,exact,verify,,,yes
+592,Polygon,MUST,0x9C78EE466D6Cb57A4d01Fd887D2b5dFb2D46288f,8946,MUST,Must,18,18,exact,verify,,,no
+593,BNB Smart Chain,O3,0xEe9801669C6138E84bD50dEB500827b776777d28,9103,O3,O3 Swap Token,18,18,exact,verify,,,no
+594,Polygon,OM,0xC3Ec80343D2bae2F8E680FDADDe7C17E71E114ea,2949,OM,MANTRA DAO (PoS),18,18,exact,verify,,,no
+595,Ethereum,OMG,0xd26114cd6EE289AccF82350c8d8487fedB8A0C07,3916,OMG,OMGToken,18,18,exact,verify,,,no
+596,Ethereum,ORN,0x0258F474786DdFd37ABCE6df6BBb1Dd5dfC4434a,3963,ORN,Orion Protocol,8,8,exact,verify,,,yes
+597,Arbitrum,PREMIA,0x51fC0f6660482Ea73330E414eFd7808811a57Fa2,760,PREMIA,Premia,18,18,exact,verify,,,no
+598,Polygon,QI,0x580A84C73811E1839F75d86d75d88cCa0c241fF4,2546,QI,Qi Dao,18,18,exact,verify,,,no
+599,Arbitrum,RDPX,0x32Eb7902D4134bf98A28b963D26de779AF92A212,2141,rDPX,Dopex Rebate Token,18,18,case,verify,,,no
+600,BNB Smart Chain,REEF,0xF21768cCBC73Ea5B6fd3C687208a7c2def2d966e,7476,REEF,Reef.finance,18,18,exact,verify,,,yes
+601,Avalanche,SPORE,0x6e7f5C0b9f4432716bDd0a77a3601291b9D9e985,7146,SPORE,Spore.Finance,9,9,exact,verify,,,no
+602,Avalanche,THOR,0x8F47416CaE600bccF9530E9F3aeaA06bdD1Caa79,17913,THOR,THOR v2,18,18,exact,verify,,,no
+603,Ethereum,TOKE,0x2e9d63788249371f1DFC918a52f8d799F4a38C94,5054,TOKE,Tokemak,18,18,exact,verify,,,yes
+604,BNB Smart Chain,VAI,0x4BD17003473389A42DAF6a0a729f6Fdb328BbBd7,4377,VAI,VAI Stablecoin,18,18,exact,verify,,,yes
+605,BNB Smart Chain,WEGLD,0xbF7c81FFF98BbE61B40Ed186e4AfD6DDd01337fe,1596,EGLD,Elrond,18,18,mismatch,renamed_ticker,representation,Binance-peg Elrond (EGLD),yes
+606,Polygon,WOLF,0x8f18dC399594b451EdA8c5da02d0563c0b2d0f16,6804,WOLF,moonwolf.io,9,9,exact,verify,,,no
+607,Ethereum,0XBTC,0xB6eD7644C69416d67B522e20bC294A9a9B405B31,8324,0xBTC,0xBitcoin Token,8,8,case,verify,,,no
+608,Ethereum,ADX,0xADE00C28244d5CE17D72E40330B1c318cD12B7c3,4392,ADX,AdEx Network,18,18,exact,verify,,,yes
+609,Ethereum,ALEPH,0x27702a26126e0B3702af63Ee09aC4d1A084EF628,5432,ALEPH,aleph.im v2,18,18,exact,verify,,,yes
+610,Ethereum,AMPL,0xD46bA6D942050d489DBd938a2C909A5d5039A161,2269,AMPL,Ampleforth,9,9,exact,verify,,,yes
+611,Polygon,ANY,0x6aB6d61428fde76768D7b45D8BFeec19c6eF91A8,8983,ANY,Anyswap,18,18,exact,verify,,,no
+612,BNB Smart Chain,ARV,0x6679eB24F59dFe111864AEc72B443d1Da666B360,7967,ARV,ARIVA,8,8,exact,verify,,,no
+613,BNB Smart Chain,AUTO,0xa184088a740c695E156F91f5cC086a06bb78b827,5942,AUTO,AUTOv2,18,18,exact,verify,,,yes
+614,Avalanche,AVAI,0x346A59146b9b4a77100D369a3d18E8007A9F46a6,1554,AVAI,AVAI,18,18,exact,verify,,,yes
+615,Avalanche,AVME,0x1ECd47FF4d9598f89721A2866BFEb99505a413Ed,4627,AVME,AVME,18,18,exact,verify,,,no
+616,Avalanche,AVXT,0x397bBd6A0E41bdF4C3F971731E180Db8Ad06eBc1,9784,AVXT,Avaxtars Token,6,6,exact,verify,,,no
+617,Ethereum,BAC,0x3449FC1Cd036255BA1EB19d65fF4BA2b8903A69a,8466,BAC,BAC,18,18,exact,verify,,,no
+618,BNB Smart Chain,BDO,0x190b589cf9Fb8DDEabBFeae36a813FFb2A702454,7042,BDO,bDollar,18,18,exact,verify,,,no
+619,BNB Smart Chain,BELT,0xE0e514c71282b6f4e823703a39374Cf58dc3eA4f,3969,BELT,BELT Token,18,18,exact,verify,,,yes
+620,BNB Smart Chain,BETH,0x250632378E573c6Be1AC2f97Fcdf00515d0Aa91B,1596,BETH,Binance Beacon ETH,18,18,exact,verify,,,yes
+621,Avalanche,BOOFI,0xB00F1ad977a949a3CCc389Ca1D1282A2946963b0,8253,BOOFI,Boo Finance Token,18,18,exact,verify,,,no
+622,BNB Smart Chain,BRY,0xf859Bf77cBe8699013d6Dbc7C2b926Aaf307F830,12000,BRY,Berry Tributes,18,18,exact,verify,,,no
+623,BNB Smart Chain,BSCPAD,0x5A3010d4d8D3B5fB49f8B6E57FB9E48063f16700,2240,BSCPAD,BSCPAD.com,18,18,exact,verify,,,yes
+624,Avalanche,BTCB,0x152b9d0FdC40C096757F570A51E494bd4b943E50,10032,BTC.b,Bitcoin,8,8,mismatch,renamed_ticker,representation,BTC.b (bridged Bitcoin),yes
+625,BNB Smart Chain,BUNNY,0xC9849E6fdB743d08fAeE3E34dd2D1bc69EA11a51,7048,BUNNY,Bunny Token,18,18,exact,verify,,,yes
+626,BNB Smart Chain,C98,0xaEC945e04baF28b135Fa7c640f624f8D90F1C3a6,8413,C98,Coin98,18,18,exact,verify,,,yes
+627,Arbitrum,CAP,0x031d35296154279DC1984dCD93E392b1f946737b,760,CAP,Cap,18,18,exact,verify,,,no
+628,BNB Smart Chain,CGG,0x1613957159E9B0ac6c80e824F7Eea748a32a0AE2,1581,CGG,pTokens CGG,18,18,exact,verify,,,no
+629,BNB Smart Chain,CHESS,0x20de22029ab63cf9A7Cf5fEB2b737Ca1eE4c82A6,2546,CHESS,Chess,18,18,exact,verify,,,no
+630,Avalanche,COOK,0x637afeff75ca669fF92e4570B14D6399A658902f,2559,COOK,Poly-Peg COOK,18,18,exact,verify,,,no
+631,Ethereum,COTI,0xDDB3422497E61e13543BeA06989C0789117555c5,7599,COTI,COTI Token,18,18,exact,verify,,,yes
+632,Ethereum,CREAM,0x2ba592F78dB6436527729929AAf6c908497cB200,6790,CREAM,Cream,18,18,exact,verify,,,yes
+633,Ethereum,CTSI,0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D,7123,CTSI,Cartesi Token,18,18,exact,verify,,,no
+634,Ethereum,CTX,0x321C2fE4446C7c963dc41Dd58879AF648838f98D,10149,CTX,Cryptex,18,18,exact,verify,,,yes
+635,BNB Smart Chain,CWS,0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd,10090,pCWS,PolyCrowns,18,18,mismatch,renamed_ticker,,PolyCrowns (pCWS),no
+636,Ethereum,DEXT,0xfB7B4564402E5500dB5bB6d63Ae671302777C75a,3210,DEXT,DEXTools,18,18,exact,verify,,,yes
+637,Arbitrum,DOG,0x4425742F1EC8D98779690b5A3A6276Db85Ddc01A,760,DOG,The Doge NFT,18,18,exact,verify,,,no
+638,BNB Smart Chain,DOME,0x475bFaa1848591ae0E6aB69600f48d828f61a80E,4294,DOME,Everdome,18,18,exact,verify,,,yes
+639,Ethereum,DPI,0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b,14033,DPI,DefiPulse Index,18,18,exact,verify,,,yes
+640,Avalanche,DYP,0x961C8c0B1aaD0c0b10a51FeF6a867E3091BCef17,11033,DYP,DeFiYieldProtocol,18,18,exact,verify,,,no
+641,Ethereum,EDEN,0x1559FA1b8F28238FD5D76D9f434ad86FD20D1559,10469,EDEN,EDEN,18,18,exact,verify,,,no
+642,Avalanche,EGG,0x7761E2338B35bCEB6BdA6ce477EF012bde7aE611,24504,EGG,chikn egg,18,18,exact,verify,,,yes
+643,BNB Smart Chain,EZ,0x5512014efa6Cd57764Fa743756F7a6Ce3358cC83,2188,EZ,Easy V2,18,18,exact,verify,,,no
+644,Ethereum,FARM,0xa0246c9032bC3A600820415aE600c6388619A14D,4746,FARM,FARM Reward Token,18,18,exact,verify,,,yes
+645,Ethereum,FEI,0x956F47F50A910163D8BF957Cf5846D573E7f87CA,8004,FEI,Fei USD,18,18,exact,verify,,,yes
+646,BNB Smart Chain,FINE,0x4e6415a5727ea08aAE4580057187923aeC331227,7823,FINE,Refinable,18,18,exact,verify,,,yes
+647,Ethereum,FODL,0x4C2e59D098DF7b6cBaE0848d66DE2f8A4889b9C3,6098,FODL,Fodl,18,18,exact,verify,,,yes
+648,Ethereum,FUSE,0x970B9bB2C0444F5E81e9d0eFb84C8ccdcdcAf84d,8997,FUSE,Fuse Token,18,18,exact,verify,,,yes
+649,Polygon,GAJ,0xF4B0903774532AEe5ee567C02aaB681a81539e92,12209,GAJ,PolyGaj Token,18,18,exact,verify,,,no
+650,Avalanche,GB,0x90842eb834cFD2A1DB0b1512B254a18E4D396215,13612,GB,Good Bridging,9,9,exact,verify,,,no
+651,Ethereum,GUSD,0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd,3490,GUSD,Gemini dollar,2,2,exact,verify,,,yes
+652,Avalanche,H2O,0x026187BdbC6b751003517bcb30Ac7817D5B766f8,3841,H2O,Defrost Finance H2O,18,18,exact,verify,,,no
+653,Polygon,IFARM,0xab0b2ddB9C7e440fAc8E140A89c0dbCBf2d7Bbff,2949,miFARM,Harvest Interest Token,18,18,mismatch,renamed_ticker,,Harvest Interest Token (miFARM),no
+654,BNB Smart Chain,IOTX,0x9678E42ceBEb63F23197D726B29b1CB20d0064E5,1596,IOTX,IoTeX Network,18,18,exact,verify,,,yes
+655,Avalanche,ISA,0x3EeFb18003D033661f84e48360eBeCD181A84709,7145,ISA,Islander,18,18,exact,verify,,,yes
+656,BNB Smart Chain,JGN,0xC13B7a43223BB9Bf4B69BD68Ab20ca1B79d81C75,4188,JGN,Juggernaut DeFi,18,18,exact,verify,,,no
+657,Ethereum,KEEP,0x85Eee30c52B0b379b046Fb0F85F4f3Dc3009aFEC,6487,KEEP,KEEP Token,18,18,exact,verify,,,yes
+658,Ethereum,KP3R,0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44,24528,KP3R,Keep3rV1,18,18,exact,verify,,,yes
+659,Polygon,KRILL,0x05089C9EBFFa4F0AcA269e32056b1b36B37ED71b,3662,Krill,Krill,18,18,case,verify,,,no
+660,BNB Smart Chain,KUN,0x1A2fb0Af670D0234c2857FaD35b789F8Cb725584,2261,KUN,QIAN governance token,18,18,exact,verify,,,no
+661,BNB Smart Chain,LINA,0x762539b45A1dCcE3D36d080F74d1AED37844b878,2261,LINA,Linear Token,18,18,exact,verify,,,no
+662,BNB Smart Chain,LTO,0x857B222Fc79e1cBBf8Ca5f78CB133d1b7CF34BBd,4187,LTO,LTO Network,18,18,exact,verify,,,no
+663,BNB Smart Chain,MCRN,0xacb2d47827C9813AE26De80965845D80935afd0B,12331,MCRN,MacaronSwap Token,18,18,exact,verify,,,yes
+664,Ethereum,MLN,0xec67005c4E498Ec7f55E092bd1d35cbC47C91892,4844,MLN,Melon Token,18,18,exact,verify,,,yes
+665,Polygon,MONA,0x6968105460f67c3BF751bE7C15f92F5286Fd0CE5,4365,MONA,Monavale,18,18,exact,verify,,,no
+666,Ethereum,MTA,0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2,4820,MTA,Meta,18,18,exact,verify,,,yes
+667,BNB Smart Chain,NRV,0x42F6f551ae042cBe50C739158b4f0CAC0Edb9096,9432,NRV,Nerve,18,18,exact,verify,,,no
+668,Ethereum,NU,0x4fE83213D56308330EC302a8BD641f1d0113A4Cc,2083,NU,NuCypher,18,18,exact,verify,,,yes
+669,Ethereum,OGN,0x8207c1FfC5B6804F6024322CcF34F29c3541Ae26,6702,OGN,OriginToken,18,18,exact,verify,,,yes
+670,BNB Smart Chain,ONT,0xFd7B3A77848f1C2D67E05E54d78d174a0C850335,4413,ONT,Ontology Token,18,18,exact,verify,,,no
+671,BNB Smart Chain,PERL,0x0F9E4D49f25de22c2202aF916B681FBB3790497B,1596,PERL,Perlin,18,18,exact,verify,,,yes
+672,Polygon,PLOT,0xe82808eaA78339b06a691fd92E1Be79671cAd8D3,7824,PLOT,PlotX,18,18,exact,verify,,,yes
+673,Ethereum,PNK,0x93ED3FBe21207Ec2E8f2d3c3de6e058Cb73Bc04d,6051,PNK,Pinakion,18,18,exact,verify,,,yes
+674,Ethereum,POLY,0x9992eC3cF6A55b00978cdDF2b27BC6882d88D1eC,2319,POLY,Polymath,18,18,exact,verify,,,no
+675,BNB Smart Chain,POTS,0x3Fcca8648651E5b974DD6d3e50F61567779772A8,2546,POTS,Moonpot,18,18,exact,verify,,,yes
+676,BNB Smart Chain,RACA,0x12BB890508c125661E03b09EC06E404bc9289040,15134,RACA,Radio Caca V2,18,18,exact,verify,,,yes
+677,BNB Smart Chain,RAMP,0x8519EA49c997f50cefFa444d240fB655e89248Aa,5236,RAMP,RAMP DEFI,18,18,exact,verify,,,yes
+678,Ethereum,RARI,0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF,4640,RARI,Rarible,18,18,exact,verify,,,yes
+679,Ethereum,RENBTC,0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D,2428,renBTC,renBTC,8,8,case,verify,,,yes
+680,Ethereum,REP,0x221657776846890989a759BA2973e427DfF5C9bB,7860,REPv2,Reputation,18,18,mismatch,renamed_ticker,,Augur REP v2 contract,no
+681,Avalanche,ROCO,0xb2a85C5ECea99187A977aC34303b80AcbDdFa208,6824,ROCO,ROCO,18,18,exact,verify,,,no
+682,Ethereum,ROOK,0xfA5047c9c78B8877af97BDcb85Db743fD7313d4a,8211,ROOK,ROOK,18,18,exact,verify,,,no
+683,Polygon,ROUTE,0x16ECCfDbb4eE1A85A33f3A9B21175Cd7Ae753dB4,2949,ROUTE (PoS),Route,18,18,mismatch,renamed_ticker,,"Route, 'ROUTE (PoS)'",yes
+684,Ethereum,SDT,0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F,3666,SDT,Stake DAO Token,18,18,exact,verify,,,yes
+685,BNB Smart Chain,SFUND,0x477bC8d23c634C154061869478bce96BE6045D12,45,SFUND,SeedifyFund,18,18,exact,verify,,,yes
+686,Avalanche,SHIBX,0x440aBbf18c54b2782A4917b80a1746d3A2c2Cce1,13853,SHIBX,SHIBAVAX,18,18,exact,verify,,,yes
+687,Ethereum,SOS,0x3b484b82567a09e2588A13D54D032153f0c0aEe0,4433,SOS,SOS,18,18,exact,verify,,,yes
+688,Ethereum,SRM,0x476c5E26a75bd202a9683ffD34359C0CC15be0fF,7907,SRM,Serum,6,6,exact,verify,,,no
+689,Ethereum,STARL,0x8E6cd950Ad6ba651F6DD608Dc70e5886B1AA6B24,5107,STARL,StarLink,18,18,exact,verify,,,yes
+690,Ethereum,SUPER,0xe53EC727dbDEB9E2d5456c3be40cFF031AB40A55,7643,SUPER,SuperFarm,18,18,exact,verify,,,yes
+691,Arbitrum,SUSD,0xA970AF1a584579B618be4d69aD6F73459D112F95,760,sUSD,Synth sUSD,18,18,case,verify,,,no
+692,Arbitrum,SWPR,0xdE903E2712288A1dA82942DDdF2c20529565aC30,760,SWPR,Swapr,18,18,exact,verify,,,yes
+693,Polygon,TITAN,0xaAa5B9e6c589642f98a1cDA99B9D024B8407285A,6660,TITAN,IRON Titanium Token,18,18,exact,verify,,,no
+694,BNB Smart Chain,TPT,0xECa41281c24451168a37211F0bc2b8645AF45092,3072,TPT,TokenPocket Token,4,4,exact,verify,,,yes
+695,BNB Smart Chain,TRADE,0x7af173F350D916358AF3e218Bdf2178494Beb748,4563,TRADE,UniTrade,18,18,exact,verify,,,no
+696,Ethereum,TRIBE,0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B,8030,TRIBE,Tribe,18,18,exact,verify,,,yes
+697,Ethereum,TRU,0x4C19596f5aAfF459fA38B0f7eD92F11AE6543784,2700,TRU,TrueFi,8,8,exact,verify,,,yes
+698,BNB Smart Chain,TRX,0x85EAC5Ac2F758618dFa09bDbe0cf174e7d574D5B,1596,TRX,TRON,18,18,exact,verify,,,yes
+699,Avalanche,TSD,0x4fbf0429599460D327BD5F55625E30E4fC066095,5295,TSD,TSD Stablecoin,18,18,exact,verify,,,no
+700,Ethereum,UBT,0x8400D94A5cb0fa0D041a3788e395285d61c9ee5e,11074,UBT,UniBright,8,8,exact,verify,,,yes
+701,Ethereum,UFO,0x249e38Ea4102D0cf8264d3701f1a0E39C4f2DC3B,2316,UFO,THE TRUTH,18,18,exact,verify,,,yes
+702,Ethereum,USDP,0x8E870D67F660D95d5be530380D0eC0bd388289E1,1506,USDP,Pax Dollar,18,18,exact,verify,,,yes
+703,Ethereum,UST,0xa693B19d2931d498c5B318dF961919BB4aee87a5,831,UST,UST,6,6,exact,verify,,,no
+704,Polygon,VISION,0x034b2090b579228482520c589dbD397c53Fc51cC,2949,VISION,Vision Token (PoS),18,18,exact,verify,,,yes
+705,Arbitrum,VISR,0x995C235521820f2637303Ca1970c7c044583df44,760,VISR,VISOR,18,18,exact,verify,,,no
+706,Avalanche,WET,0xB1466d4cf0DCfC0bCdDcf3500F473cdACb88b56D,2282,WET,Weble Ecosystem Token,18,18,exact,verify,,,no
+707,BNB Smart Chain,WEX,0xa9c41A46a6B3531d28d5c32F6633dd2fF05dFB90,10537,WEX,WaultSwap,18,18,exact,verify,,,yes
+708,Ethereum,XFT,0xABe580E7ee158dA464b51ee1a83Ac0289622e6be,6701,XFT,Offshift,18,18,exact,verify,,,no
+709,BNB Smart Chain,ZIL,0xb86AbCb37C3A4B64f74f59301AFF131a1BEcC787,1596,ZIL,Zilliqa,12,12,exact,verify,,,yes
+710,BNB Smart Chain,8PAY,0xFeea0bDd3D07eb6FE305938878C0caDBFa169042,6666,8PAY,8PAY Network,18,18,exact,verify,,,no
+711,BNB Smart Chain,ABNBC,0xE85aFCcDaFBE7F2B096f268e31ccE3da8dA2990A,2141,ankrBNB,Ankr Reward Bearing BNB,18,18,mismatch,renamed_ticker,,Ankr aBNBc renamed ankrBNB,no
+712,Optimism,AELIN,0x61BAADcF22d2565B0F471b291C475db5555e0b76,2244,AELIN,Aelin Token,18,18,exact,verify,,,no
+713,Ethereum,AETHC,0xE95A203B1a91a908F9B9CE46459d101078c2c3cb,2261,ankrETH,Ankr Staked ETH,18,18,mismatch,renamed_ticker,,Ankr aETHc renamed ankrETH,yes
+714,Ethereum,AKRO,0x8Ab7404063Ec4DBcfd4598215992DC3F8EC853d7,3662,LGKAON,Legacy Kaon,18,18,mismatch,fail,symbol_mismatch_uncertain,label AKRO; contract now reads Kaon (KAON) - rebrand not confirmed,no
+715,Polygon,ALGB,0x0169eC1f8f639B32Eec6D923e24C2A2ff45B9DD6,7294,ALGB,Algebra,18,18,exact,verify,,,no
+716,BNB Smart Chain,ALPA,0xc5E6689C9c8B02be7C49912Ef19e79cF24977f03,4168,ALPA,AlpaToken,18,18,exact,verify,,,no
+717,Polygon,AMAAVE,0x1d2a0E5EC8E5bBDCA5CB219e649B565d8e5c3360,1779,amAAVE,Aave Matic Market AAVE,18,18,case,verify,,,no
+718,Polygon,ANRX,0x554f074d9cCda8F483d1812d4874cBebD682644E,2949,$ANRX,AnRKey X (PoS),18,18,mismatch,renamed_ticker,,"AnRKey X, $ANRX (PoS)",no
+719,Ethereum,ANT,0xa117000000f279D81A1D3cc75430fAA017FA5A2e,5109,ANT,Aragon Network Token,18,18,exact,verify,,,no
+720,Polygon,ARIA20,0x46F48FbdedAa6F5500993BEDE9539ef85F4BeE8e,2949,ARIA20,ARIANEE (PoS),18,18,exact,verify,,,no
+721,BNB Smart Chain,ARPA,0x6F769E65c14Ebd1f68817F5f1DcDb61Cfa2D6f7e,1596,ARPA,ARPA Token,18,18,exact,verify,,,yes
+722,Ethereum,AST,0x27054b13b1B798B345b591a4d22e6562d47eA75a,5697,AST,AirSwap Token,4,4,exact,verify,,,yes
+723,Ethereum,AUC,0xc12d099be31567add4e4e4d0D45691C3F58f5663,4453,AUC,Auctus Token,18,18,exact,verify,,,no
+724,Ethereum,AUCTION,0xA9B1Eb5908CfC3cdf91F9B8B3a74108598009096,5646,Auction,Bounce Token,18,18,case,verify,,,no
+725,Ethereum,AUDIO,0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998,1069,AUDIO,Audius,18,18,exact,verify,,,yes
+726,Avalanche,AXIAL,0xcF8419A615c57511807236751c0AF38Db4ba3351,7099,AXIAL,AxialToken,18,18,exact,verify,,,no
+727,Polygon,AZUKI,0x7CdC0421469398e0F3aA8890693d86c840Ac8931,14214,AZUKI,DokiDokiAzuki,18,18,exact,verify,,,no
+728,BNB Smart Chain,BABYCAKE,0xdB8D30b74bf098aF214e862C90E647bbB1fcC58c,15004,BABYCAKE,BABY CAKE,18,18,exact,verify,,,yes
+729,Ethereum,BANK,0x2d94AA3e47d9D5024503Ca8491fcE9A2fB4DA198,9364,BANK,Bankless Token,18,18,exact,verify,,,yes
+730,Ethereum,BAO,0x374CB8C27130E2c9E04F44303f3c8351B9De61C1,19496,BAO,BaoToken,18,18,exact,verify,,,no
+731,BNB Smart Chain,BEL,0x8443f091997f06a61670B735ED92734F5628692F,1596,BEL,Bella Protocol,18,18,exact,verify,,,no
+732,BNB Smart Chain,BFI,0x81859801b01764D4f0Fa5E64729f5a6C3b91435b,11195,BFI,bearn.fi,18,18,exact,verify,,,no
+733,Ethereum,BICO,0xF17e65822b568B3903685a7c9F496CF7656Cc6C2,2260,BICO,Biconomy Token,18,18,exact,verify,,,yes
+734,Ethereum,BIT,0x1A4b46696b2bB4794Eb3D4c26f1c55F9170fa4C5,12996,BIT,BitDAO,18,18,exact,verify,,,yes
+735,Ethereum,BLZ,0x5732046A883704404F284Ce41FfADd5b007FD668,3808,BLZ,Bluzelle Token,18,18,exact,verify,,,yes
+736,BNB Smart Chain,BMON,0x08ba0619b1e7A582E0BCe5BBE9843322C954C340,12348,BMON,Binamon,18,18,exact,verify,,,yes
+737,BNB Smart Chain,BONDLY,0x5D0158A5c3ddF47d4Ea4517d8DB0D76aA2e87563,11888,BONDLY,Bondly,18,18,exact,verify,,,yes
+738,BNB Smart Chain,BORING,0xffEecbf8D7267757c2dc3d13D730E97E15BfdF7F,5380,BORING,BoringDAO,18,18,exact,verify,,,no
+739,Avalanche,BPT,0x1111111111182587795eF1098ac7da81a108C97a,5565,BPT,Bold Point Token,18,18,exact,verify,,,no
+740,Avalanche,BSGG,0x63682bDC5f875e9bF69E201550658492C9763F89,10660,BSGG,Betswap.gg,18,18,exact,verify,,,no
+741,BNB Smart Chain,BTTOLD,0x8595F9dA7b868b1822194fAEd312235E43007b49,1596,BTT,BitTorrent,18,18,mismatch,renamed_ticker,representation,old BitTorrent BTT contract,yes
+742,BNB Smart Chain,BUX,0x211FfbE424b90e25a15531ca322adF1559779E45,3727,BUX,BUX Token,18,18,exact,verify,,,no
+743,Ethereum,BZRX,0x56d811088235F11C8920698a204A5010a788f4b3,2187,BZRX,bZx Protocol Token,18,18,exact,verify,,,no
+744,Ethereum,CETH,0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5,19629,cETH,Compound Ether,8,8,case,verify,,,no
+745,Avalanche,CLY,0xec3492a2508DDf4FDc0cD76F31f340b30d1793e6,9590,CLY,Colony Token,18,18,exact,verify,,,yes
+746,Ethereum,COMBO,0xfFffFffF2ba8F66D4e51811C5190992176930278,2546,COMBO,Furucombo,18,18,exact,verify,,,no
+747,Ethereum,CORE,0x62359Ed7505Efc61FF1D56fEF82158CcaffA23D7,22152,CORE,cVault.finance,18,18,exact,verify,,,yes
+748,Ethereum,COVAL,0x3D658390460295FB963f54dC0899cfb1c30776Df,2269,Coval,CircuitsOfValue,8,8,case,verify,,,no
+749,Ethereum,CQT,0xD417144312DbF50465b1C641d016962017Ef6240,7665,CQT,Covalent Query Token,18,18,exact,verify,,,no
+750,Ethereum,CUSDC,0x39AA39c021dfbaE8faC545936693aC917d5E7563,18970,cUSDC,Compound USD Coin,8,8,case,verify,,,yes
+751,Ethereum,CVC,0x41e5560054824eA6B0732E656E3Ad64E20e94E45,4160,CVC,Civic,8,8,exact,verify,,,no
+752,Ethereum,CVP,0x38e4adB44ef08F22F5B5b76A8f0c2d0dCbE7DcA1,6816,CVP,Concentrated Voting Power,18,18,exact,verify,,,no
+753,BNB Smart Chain,CYC,0x810EE35443639348aDbbC467b33310d2AB43c168,7695,CYC,Cyclone Protocol,18,18,exact,verify,,,no
+754,Avalanche,CYCLE,0x81440C939f2C1E34fc7048E518a637205A632a74,9936,CYCLE,Cycle Token,18,18,exact,verify,,,no
+755,Ethereum,DDX,0x3A880652F47bFaa771908C07Dd8673A787dAEd3A,13644,DDX,DerivaDAO,18,18,exact,verify,,,yes
+756,Ethereum,DEGEN,0x126c121f99e1E211dF2e5f8De2d96Fa36647c855,522,DEGEN,DEGEN Index,18,18,exact,verify,,,no
+757,Ethereum,DERC,0x9fa69536d1cda4A04cFB50688294de75B505a9aE,4091,DERC,DeRace Token,18,18,exact,verify,,,no
+758,Ethereum,DEV,0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26,5368,DEV,Dev,18,18,exact,verify,,,no
+759,Ethereum,DF,0x431ad2ff6a9C365805eBaD47Ee021148d6f7DBe0,5008,DF,dForce,18,18,exact,verify,,,no
+760,Polygon,DFX,0xE7804D91dfCDE7F776c90043E03eAa6Df87E6395,2949,DFX,DFX Token (PoS),18,18,exact,verify,,,no
+761,Polygon,DFYN,0xC168E40227E4ebD8C1caE80F7a55a4F0e6D66C97,2949,DFYN,DFYN Token (PoS),18,18,exact,verify,,,no
+762,Polygon,DG,0x2a93172c8DCCbfBC60a39d56183B7279a2F647b4,2949,$DG,decentral.games (PoS),18,18,mismatch,renamed_ticker,,"decentral.games, $DG (PoS)",no
+763,Ethereum,DHT,0xca1207647Ff814039530D7d35df0e1Dd2e91Fa84,1589,DHT,dHedge DAO Token,18,18,exact,verify,,,no
+764,Polygon,DMT,0xd28449BB9bB659725aCcAd52947677ccE3719fD7,2949,DMT,Dark Matter Token (PoS),18,18,exact,verify,,,no
+765,Ethereum,DNT,0x0AbdAce70D3790235af448C88547603b945604ea,11397,DNT,district0x Network Token,18,18,exact,verify,,,no
+766,Polygon,DSLA,0xa0E390e9ceA0D0e8cd40048ced9fA9EA10D71639,2949,DSLA,DSLA (PoS),18,18,exact,verify,,,no
+767,Ethereum,DUCK,0x92E187a03B6CD19CB6AF293ba17F2745Fd2357D5,1976,DUCK,Unit Protocol,18,18,exact,verify,,,no
+768,Ethereum,DVF,0xDDdddd4301A082e62E84e43F474f044423921918,7038,DVF,DeversiFi Token,18,18,exact,verify,,,no
+769,Ethereum,ERSDL,0x5218E472cFCFE0b64A064F055B43b4cdC9EfD3A6,11926,eRSDL,UnFederalReserveToken,18,18,case,verify,,,no
+770,Polygon,ETH2X-FLI-P,0x3Ad707dA309f3845cd602059901E39C4dcd66473,14101,ETH2x-FLI-P,ETH 2x Flexible Leverage Index,18,18,case,verify,,,yes
+771,Ethereum,EXRD,0x6468e79A80C0eaB0F9A2B574c8d5bC374Af59414,9615,eXRD,E-RADIX,18,18,case,verify,,,no
+772,Avalanche,FEED,0xab592d197ACc575D16C3346f4EB70C703F308D1E,18964,FEED,chikn feed,18,18,exact,verify,,,yes
+773,BNB Smart Chain,FOR,0x658A109C5900BC6d2357c87549B651670E5b0539,7763,FOR,The Force Token,18,18,exact,verify,,,no
+774,Ethereum,FUN,0x419D0d8BdD9aF5e606Ae2232ed285Aff190E711b,6365,FUN,FunFair,8,8,exact,verify,,,yes
+775,Polygon,GAME,0x8d1566569d5b695d44a9a234540f68D393cDC40D,23727,GAME,GAME Credits,18,18,exact,verify,,,no
+776,Avalanche,GDL,0xD606199557c8Ab6F4Cc70bD03FaCc96ca576f142,4244,GDL,Gondola,18,18,exact,verify,,,no
+777,Polygon,GFARM2,0x7075cAB6bCCA06613e2d071bd918D1a0241379E2,10636,GFARM2,Gains V2,18,18,exact,verify,,,yes
+778,Ethereum,GTC,0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F,9477,GTC,Gitcoin,18,18,exact,verify,,,yes
+779,BNB Smart Chain,GUM,0xc53708664b99DF348dd27C3Ac0759d2DA9c40462,4930,GUM,GourmetGalaxy,18,18,exact,verify,,,no
+780,Ethereum,GYEN,0xC08512927D12348F6620a698105e1BAac6EcD911,1563,GYEN,GMO JPY,6,6,exact,verify,,,yes
+782,Avalanche,HEC,0xC7f4debC8072e23fe9259A5C0398326d8EfB7f5c,5013,HeC,HeroesChained,18,18,case,verify,,,no
+783,Ethereum,HEZ,0xEEF9f339514298C6A857EfCfC1A762aF84438dEE,4766,HEZ,Hermez Network Token,18,18,exact,verify,,,yes
+784,Arbitrum,HND,0x10010078a54396F62c96dF8532dc2B4847d47ED3,10668,HND,Hundred Finance,18,18,exact,verify,,,no
+785,Avalanche,HON,0xEd2b42D3C9c6E97e11755BB37df29B6375ede3EB,9125,HON,HonToken,18,18,exact,verify,,,yes
+786,Ethereum,HOT,0x6c6EE5e31d828De241282B9606C8e98Ea48526E2,3636,HOT,HoloToken,18,18,exact,verify,,,yes
+787,Ethereum,HT,0x6f259637dcD74C767781E37Bc6133cd6A68aa161,1425,HT,HuobiToken,18,18,exact,verify,,,yes
+788,Ethereum,HUSD,0xdF574c24545E5FfEcb9a659c229253D4111d87e1,13446,HUSD,HUSD,8,8,exact,verify,,,no
+789,Ethereum,ICE,0xf16e81dce15B08F326220742020379B855B87DF9,5048,ICE,IceToken,18,18,exact,verify,,,no
+790,BNB Smart Chain,IF,0xB0e1fc65C1a741b4662B813eB787d369b8614Af1,11040,IF,Impossible Finance,18,18,exact,verify,,,no
+791,BNB Smart Chain,INSUR,0x3192CCDdf1CDcE4Ff055EbC80f3F0231b86A7E30,2141,INSUR,Bsc-Peg INSUR Token,18,18,exact,verify,,,no
+792,Ethereum,INV,0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68,18366,INV,Inverse DAO,18,18,exact,verify,,,yes
+793,Polygon,IRIS,0xdaB35042e63E93Cc8556c9bAE482E5415B5Ac4B1,3647,IRIS,Iris,18,18,exact,verify,,,no
+794,Polygon,IRON,0xD86b5923F3AD7b585eD81B448170ae026c65ae9a,5243,IRON,IRON Stablecoin,18,18,exact,verify,,,no
+795,Polygon,JPYC,0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c,2949,JPYC,JPY Coin (PoS),18,18,exact,verify,,,yes
+796,Ethereum,JRT,0x8A9C67fee641579dEbA04928c4BC45F66e26343A,2151,JRT,Jarvis Reward Token,18,18,exact,verify,,,no
+797,Ethereum,KISHU,0xA2b4C0Af19cC16a6CfAcCe81F192B024d625817D,13784,KISHU,Kishu Inu,9,9,exact,verify,,,yes
+798,Polygon,KLIMA,0x4e78011Ce80ee02d2c3e649Fb657E45898257815,7016,KLIMA,Klima DAO,9,9,exact,verify,,,no
+799,Polygon,KNC,0x1C954E8fe737F99f68Fa1CCda3e51ebDB291948C,2949,KNC,Kyber Network Crystal v2 (PoS),18,18,exact,verify,,,yes
+800,Polygon,KOM,0xC004e2318722EA2b15499D6375905d75Ee5390B8,6733,KOM,Kommunitas,8,8,exact,verify,,,no
+801,Ethereum,LCX,0x037A54AaB062628C9Bbae1FDB1583c195585fe41,6490,LCX,LCX,18,18,exact,verify,,,yes
+802,Ethereum,LEND,0x80fB784B7eD66730e8b1DBd9820aFD29931aab03,6872,LEND,EthLend Token,18,18,exact,verify,,,no
+803,BNB Smart Chain,LIEN,0x5d684ADaf3FcFe9CFb5ceDe3abf02F0Cdd1012E3,234,LIEN,lien on xDai from xDai,8,8,exact,verify,,,no
+804,Ethereum,LON,0x0000000000095413afC295d19EDeb1Ad7B71c952,10240,LON,Tokenlon,18,18,exact,verify,,,yes
+805,Avalanche,LOST,0x449674B82F05d498E126Dd6615a1057A9c088f2C,7663,LOST,LostToken,18,18,exact,verify,,,no
+806,Ethereum,LUNC,0xd2877702675e6cEb975b4A1dFf9fb7BAF4C91ea9,7084,LUNA,Wrapped LUNA Token,18,18,mismatch,renamed_ticker,,Wrapped LUNA (LUNA renamed LUNC),yes
+807,Optimism,LYRA,0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb,4299,LYRA,Lyra Token,18,18,exact,verify,,,yes
+808,Ethereum,MAHA,0xB4d930279552397bbA2ee473229f89Ec245bc365,7013,MAHA,MahaDAO,18,18,exact,verify,,,no
+809,BNB Smart Chain,MARSH,0x2FA5dAF6Fe0708fBD63b1A7D1592577284f52256,4930,MARSH,UnmarshalToken,18,18,exact,verify,,,no
+810,Ethereum,MASQ,0x06F3C323f0238c72BF35011071f2b5B7F43A054c,4077,MASQ,MASQ,18,18,exact,verify,,,no
+811,Ethereum,MDT,0x814e0908b12A99FeCf5BC101bB5d0b8B5cDf7d26,4880,MDT,Measurable Data Token,18,18,exact,verify,,,yes
+812,Ethereum,MIR,0x09a3EcAFa817268f77BE1283176B946C4ff2E608,7084,MIR,Wrapped MIR Token,18,18,exact,verify,,,no
+813,Ethereum,MIST,0x88ACDd2a6425c3FaAE4Bc9650Fd7E27e0Bebb7aB,9893,⚗️,Alchemist,18,18,mismatch,renamed_ticker,,"Alchemist, emoji ticker",yes
+814,Polygon,MOD,0x8346Ab8d5EA7A9Db0209aEd2d1806AFA0E2c4C21,2949,MOD,MODEFI  (PoS),18,18,exact,verify,,,no
+815,Ethereum,MTL,0xF433089366899D83a9f26A773D59ec7eCF30355e,1906,MTL,Metal,8,8,exact,verify,,,yes
+816,Ethereum,MULTI,0x65Ef703f5594D2573eb71Aaf55BC0CB548492df4,2244,MULTI,Multichain,18,18,exact,verify,,,yes
+817,Polygon,MYST,0x1379E8886A944d2D9d440b3d88DF536Aea08d9F3,2949,MYST,Mysterium (PoS),18,18,exact,verify,,,yes
+818,Ethereum,NCT,0x9E46A38F5DaaBe8683E10793b06749EEF7D733d1,7474,NCT,Nectar,18,18,exact,verify,,,no
+819,Ethereum,NDX,0x86772b1409b61c639EaAc9Ba0AcfBb6E238e5F83,9096,NDX,Indexed,18,18,exact,verify,,,no
+820,Ethereum,NFTX,0x87d73E916D7057945c9BcD8cdd94e42A6F47f776,7440,NFTX,NFTX,18,18,exact,verify,,,no
+821,Arbitrum,NYAN,0xeD3fB761414DA74b74F33e5c5a1f78104b188DfC,2480,NYAN,ArbiNYAN,18,18,exact,verify,,,no
+822,BNB Smart Chain,ODDZ,0xCD40F2670CF58720b694968698A5514e924F742d,4978,ODDZ,OddzToken,18,18,exact,verify,,,no
+823,Polygon,OMEN,0x76e63a3E7Ba1e2E61D3DA86a87479f983dE89a7E,11916,OMEN,Augury Finance,18,18,exact,verify,,,yes
+824,Avalanche,OOE,0x0ebd9537A25f56713E34c45b38F421A1e7191469,10660,OOE,OpenOcean,18,18,exact,verify,,,no
+825,Ethereum,OPIUM,0x888888888889C00c67689029D7856AAC1065eC11,4077,OPIUM,Opium Governance Token,18,18,exact,verify,,,no
+826,BNB Smart Chain,ORBS,0xeBd49b26169e1b52c04cFd19FCf289405dF55F80,10607,ORBS,Orbs,18,18,exact,verify,,,yes
+827,Avalanche,ORCA,0x8B1d98A91F853218ddbb066F20b8c63E782e2430,7325,ORCA,OrcaDAO,18,18,exact,verify,,,no
+828,Ethereum,OXT,0x4575f41308EC1483f3d399aa9a2826d74Da13Deb,2559,OXT,Orchid,18,18,exact,verify,,,no
+829,BNB Smart Chain,PBTC,0xeD28A457A5A76596ac48d87C0f577020F6Ea1c4C,1581,pBTC,pTokens BTC,18,18,case,verify,,,no
+830,Polygon,PECO,0xA9536B9c75A9E0faE3B56a96AC8EdF76AbC91978,1416,PECO,Polygon Ecosystem Index,18,18,exact,verify,,,no
+831,Ethereum,PICKLE,0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5,3647,PICKLE,PickleToken,18,18,exact,verify,,,yes
+832,Ethereum,PLU,0xD8912C10681D8B21Fd3742244f44658dBA12264E,1754,PLU,Pluton,18,18,exact,verify,,,no
+833,Avalanche,POLAR,0x6C1c0319d8dDcb0ffE1a68C5b3829Fd361587DB4,19485,POLAR,POLAR,18,18,exact,verify,,,no
+834,Ethereum,POLS,0x83e6f1E41cdd28eAcEB20Cb649155049Fac3D5Aa,6726,POLS,PolkastarterToken,18,18,exact,verify,,,yes
+835,Polygon,POLYBUNNY,0x4C16f69302CcB511c5Fac682c7626B9eF0Dc126a,2141,polyBUNNY,Polygon BUNNY Token,18,18,case,verify,,,no
+836,Ethereum,POND,0x57B946008913B82E4dF85f501cbAeD910e58D26C,990,POND,Marlin POND,18,18,exact,verify,,,yes
+837,Polygon,PPDEX,0x127984b5E6d5c59f81DACc9F1C8b3Bdc8494572e,2949,PPDEX,Pepedex (PoS),18,18,exact,verify,,,no
+838,Ethereum,PRE,0xEC213F83defB583af3A000B1c0ada660b1902A0F,2317,PRE,Presearch,18,18,exact,verify,,,no
+839,BNB Smart Chain,PROM,0xaF53d56ff99f1322515E54FdDE93FF8b3b7DAFd5,6313,PROM,Prometeus,18,18,exact,verify,,,yes
+840,Ethereum,PRQ,0x362bc847A3a9637d3af6624EeC853618a43ed7D2,10518,PRQ,Parsiq Token,18,18,exact,verify,,,no
+841,Ethereum,PSP,0xcAfE001067cDEF266AfB7Eb5A286dCFD277f3dE5,12567,PSP,ParaSwap,18,18,exact,verify,,,no
+842,Ethereum,QRDO,0x4123a133ae3c521FD134D7b13A2dEC35b56c2463,9800,QRDO,Qredo Token,8,8,exact,verify,,,no
+843,Avalanche,RACEX,0x7086e045b78E1e72F741F25231c08d238812CF8a,3426,RACEX,RaceX,18,18,exact,verify,,,no
+844,Ethereum,RAD,0x31c8EAcBFFdD875c74b94b077895Bd78CF1E64A3,7967,RAD,Radicle,18,18,exact,verify,,,yes
+845,Ethereum,RBC,0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3,6727,RBC,Rubic,18,18,exact,verify,,,no
+846,Ethereum,RCN,0xF970b8E36e23F7fC3FD752EeA86f8Be8D83375A6,3480,RCN,Ripio Credit Network Token,18,18,exact,verify,,,no
+847,Ethereum,RENBCH,0x459086F2376525BdCebA5bDDA135e4E9d3FeF5bf,2428,renBCH,renBCH,8,8,case,verify,,,no
+848,Ethereum,RENZEC,0x1C5db575E2Ff833E46a2E9864C22F4B22E0B37C2,2428,renZEC,renZEC,8,8,case,verify,,,no
+849,BNB Smart Chain,RFG,0x4477b28E8b797eBaebd2539bb24290Fdfcc27807,11178,$RFG,Refugees Token,9,9,mismatch,renamed_ticker,,"Refugees Token, $RFG",no
+850,BNB Smart Chain,RFOX,0x0a3A21356793B49154Fd3BbE91CBc2A16c0457f5,10622,RFOX,RFOX,18,18,exact,verify,,,yes
+851,Ethereum,RLY,0xf1f955016EcbCd7321c7266BccFB96c68ea5E49b,2581,RLY,Rally,18,18,exact,verify,,,yes
+852,Ethereum,RUNE,0x3155BA85D5F96b2d030a4966AF206230e46849cb,4740,RUNE,THORChain ETH.RUNE,18,18,exact,verify,,,no
+853,Polygon,SAFLE,0x04b33078Ea1aEf29bf3fB29c6aB7B200C58ea126,12451,SAFLE,Safle,18,18,exact,verify,,,no
+854,BNB Smart Chain,SBDO,0x0d9319565be7f53CeFE84Ad201Be3f40feAE2740,7886,sBDO,bDollar Share,18,18,case,verify,,,no
+855,Optimism,SETH,0xE405de8F52ba7559f9df3C368500B6E6ae6Cee49,3715,sETH,Synth sETH,18,18,case,verify,,,no
+856,Ethereum,SETH2,0xFe2e637202056d30016725477c5da089Ab0A043A,2261,sETH2,StakeWise Staked ETH2,18,18,case,verify,,,yes
+857,Ethereum,SFI,0xb753428af26E81097e7fD17f40c88aaA3E04902c,6094,SFI,Spice,18,18,exact,verify,,,yes
+858,Ethereum,SI,0xD23Ac27148aF6A2f339BD82D0e3CFF380b5093de,11035,SI,SIREN,18,18,exact,verify,,,no
+859,BNB Smart Chain,SKILL,0x154A9F9cbd3449AD22FDaE23044319D6eF2a1Fab,7967,SKILL,CryptoBlades Skill Token,18,18,exact,verify,,,yes
+860,Ethereum,SKL,0x00c83aeCC790e8a4453e5dD3B0B4b3680501a7A7,13263,SKL,SKALE,18,18,exact,verify,,,yes
+861,Avalanche,SMRTR,0x6D923f688C7FF287dc3A5943CAeefc994F97b290,7671,SMRTr,SmarterCoin,18,18,case,verify,,,no
+862,Ethereum,SNT,0x744d70FDBE2Ba4CF95131626614a1763DF805B9E,7076,SNT,Status Network Token,18,18,exact,verify,,,yes
+863,Ethereum,SPANK,0x42d6622deCe394b54999Fbd73D108123806f6a18,2559,SPANK,SPANK,18,18,exact,verify,,,no
+864,BNB Smart Chain,SPS,0x1633b7157e7638C4d6593436111Bf125Ee74703F,14884,SPS,Splintershards,18,18,exact,verify,,,yes
+865,BNB Smart Chain,STACK,0x6855f7bb6287F94ddcC8915E37e73a3c9fEe5CF3,10129,STACK,StackOS,18,18,exact,verify,,,no
+866,Ethereum,STAKE,0x0Ae055097C6d159879521C384F1D2123D1f195e6,10411,STAKE,STAKE,18,18,exact,verify,,,no
+867,BNB Smart Chain,STAX,0x0Da6Ed8B13214Ff28e9Ca979Dd37439e8a88F6c4,6897,STAX,StableX Token,18,18,exact,verify,,,no
+868,Polygon,STMATIC,0x3A58a54C066FdC0f2D55FC9C89F0415C92eBf3C4,2949,stMATIC,Staked MATIC (PoS),18,18,case,verify,,,no
+869,Ethereum,STRONG,0x990f341946A3fdB507aE7e52d17851B87168017c,4331,STRONG,Strong,18,18,exact,verify,,,yes
+870,Arbitrum,STRP,0x326c33FD1113c1F29B35B4407F3d6312a8518431,760,STRP,Strips Token,18,18,exact,verify,,,no
+871,Ethereum,SUKU,0x0763fdCCF1aE541A5961815C0872A8c5Bc6DE4d7,11775,SUKU,SUKU,18,18,exact,verify,,,no
+872,Ethereum,SWAP,0xCC4304A31d09258b0029eA7FE63d032f52e44EFe,2240,SWAP,TrustSwap Token,18,18,exact,verify,,,yes
+873,BNB Smart Chain,SWINGBY,0x71DE20e0C4616E7fcBfDD3f875d568492cBE4739,7295,SWINGBY,SWINGBY token,18,18,exact,verify,,,no
+874,Arbitrum,TCR,0xA72159FC390f0E3C6D415e658264c7c4051E9b87,760,TCR,Tracer,18,18,exact,verify,,,no
+875,BNB Smart Chain,THG,0x9fD87aEfe02441B123c3c32466cD9dB4c578618f,5543,THG,Thetan Gem,18,18,exact,verify,,,yes
+876,Ethereum,TIME,0x485d17A6f1B8780392d53D64751824253011A260,3609,TIME,ChronoTech Token,8,8,exact,verify,,,no
+877,Avalanche,TUNDRA,0x21c5402C3B7d40C89Cc472C9dF5dD7E51BbAb1b1,12950,TUNDRA,TUNDRAToken,18,18,exact,verify,,,no
+878,Ethereum,TVK,0xd084B83C305daFD76AE3E1b4E1F1fe2eCcCb3988,10493,TVK,Terra Virtua Kolect,18,18,exact,verify,,,no
+879,BNB Smart Chain,TXL,0x1FFD0b47127fdd4097E54521C9E2c7f0D66AafC5,8688,TXL,Tixl Token,18,18,exact,verify,,,no
+880,BNB Smart Chain,UBXT,0xBbEB90cFb6FAFa1F69AA130B7341089AbeEF5811,10622,UBXT,UpBots,18,18,exact,verify,,,no
+881,Avalanche,VTX,0x5817D4F0b62A59b17f75207DA1848C2cE75e7AF4,6322,VTX,Vector,18,18,exact,verify,,,no
+882,BNB Smart Chain,WATCH,0x7A9f28EB62C791422Aa23CeAE1dA9C847cBeC9b0,3670,WATCH,yieldwatch,18,18,exact,verify,,,yes
+883,Avalanche,WMEMO,0x0da67235dD5787D67955420C84ca1cEcd4E5Bb3b,5126,wMEMO,Wrapped MEMO,18,18,case,verify,,,no
+884,Ethereum,WNXM,0x0d438F3b5175Bebc262bF23753C1E53d03432bDE,8658,wNXM,Wrapped NXM,18,18,case,verify,,,yes
+885,BNB Smart Chain,WOM,0xAD6742A35fB341A9Cc6ad674738Dd8da98b94Fb1,4130,WOM,Wombat Token,18,18,exact,verify,,,yes
+886,BNB Smart Chain,WONE,0x03fF0ff224f904be3118461335064bB48Df47938,4504,ONE,Harmony ONE,18,18,mismatch,renamed_ticker,representation,Binance-peg Harmony ONE,no
+887,BNB Smart Chain,WOOP,0x8b303d5BbfBbf46F1a4d9741E491e06986894e18,12782,WOOP,Woonkly Power,18,18,exact,verify,,,no
+888,Polygon,WRX,0x72d6066F486bd0052eefB9114B66ae40e0A6031a,2949,WRX,Wazirx (PoS),8,8,exact,verify,,,no
+889,Ethereum,X2Y2,0x1E4EDE388cbc9F4b5c79681B7f94d36a11ABEBC9,3110,X2Y2,X2Y2Token,18,18,exact,verify,,,yes
+890,Ethereum,XCHF,0xB4272071eCAdd69d933AdcD19cA99fe80664fc08,10877,XCHF,CryptoFranc,18,18,exact,verify,,,no
+891,Ethereum,XDEFI,0x72B886d09C117654aB7dA13A14d603001dE0B777,45,XDEFI,XDEFI,18,18,exact,verify,,,no
+892,BNB Smart Chain,XED,0x5621b5A3f4a8008c4CCDd1b942B121c8B1944F1f,10607,XED,Exeedme,18,18,exact,verify,,,no
+893,BNB Smart Chain,XEND,0x4a080377f83D669D7bB83B3184a8A5E61B500608,10622,XEND,XEND,18,18,exact,verify,,,no
+894,Polygon,XGEM,0x02649C1Ff4296038De4b9bA8F491b42b940A8252,2843,XGEM,Exchange Genesis Ethlas Medium,18,18,exact,verify,,,no
+895,BNB Smart Chain,XMARK,0x26A5dFab467d4f58fB266648CAe769503CEC9580,234,xMARK,Standard on xDai on BSC,9,9,case,verify,,,no
+896,Ethereum,XOR,0x40FD72257597aA14C7231A7B1aaa29Fce868F677,2796,XOR,Sora Token,18,18,exact,verify,,,no
+897,Ethereum,XPR,0xD7EFB00d12C2c13131FD319336Fdf952525dA2af,4811,XPR,Proton,4,4,exact,verify,,,yes
+898,Ethereum,XSUSHI,0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272,4260,xSUSHI,SushiBar,18,18,case,verify,,,yes
+899,Avalanche,YAY,0x01C2086faCFD7aA38f69A6Bd8C91BEF3BB5adFCa,2092,YAY,YAY Games,18,18,exact,verify,,,no
+900,Ethereum,YFII,0xa1d0E215a23d7030842FC67cE582a6aFa3CCaB83,3619,YFII,YFII.finance,18,18,exact,verify,,,no
+901,Avalanche,YTS,0x488F73cddDA1DE3664775fFd91623637383D6404,13586,YTS,YetiSwap,18,18,exact,verify,,,no
+902,Avalanche,YUSD,0x111111111111ed1D73f860F57b2798b683f2d325,7105,YUSD,YUSD Stablecoin,18,18,exact,verify,,,yes
+903,Avalanche,ZOO,0x1B88D7aD51626044Ec62eF9803EA264DA4442F32,4836,ZOO,ZooToken,18,18,exact,verify,,,no
+904,Avalanche,aAVAXb,0x6C6f910A79639dcC94b4feEF59Ff507c2E843929,2141,aAVAXb,Ankr Reward Earning AVAX,18,18,exact,verify,,,no
+905,Ethereum,0XMR,0x035dF12E0F3ac6671126525f1015E47D79dFEDDF,8529,0xMR,0xMonero,18,18,case,verify,,,no
+906,Ethereum,2KEY,0xE48972fCd82a274411c01834e2f031D4377Fa2c0,5681,2KEY,TwoKeyEconomy,18,18,exact,verify,,,no
+907,Ethereum,ABAT,0xE1BA0FB44CCb0D11b80F92f4f8Ed94CA3fF51D00,8057,aBAT,Aave Interest bearing BAT,18,18,case,verify,,,no
+908,Polygon,ABI,0x6d5f5317308C6fE7D6CE16930353a8Dfd92Ba4D7,9339,ABI,Abachi,9,9,exact,verify,,,no
+909,Avalanche,ABLOCK,0xC931f61B1534EB21D8c11B24f3f5Ab2471d4aB50,11705,aaBLOCK,Blocknet,8,8,mismatch,renamed_ticker,,Blocknet on Avalanche (aaBLOCK),no
+910,Ethereum,ABYSS,0x0E8d6b471e332F140e7d9dbB99E5E3822F728DA6,6212,ABYSS,ABYSS,18,18,exact,verify,,,yes
+911,Polygon,ACAR,0xcBce9f77921C2E90522d438dF4C5582F4c617768,4992,AGAcr,AGA Carbon Rewards,18,18,mismatch,renamed_ticker,,AGA Carbon Rewards (AGAcr),no
+912,Avalanche,ACRE,0x00EE200Df31b869a321B10400Da10b561F3ee60d,3344,ACRE,Arable Protocol,18,18,exact,verify,,,no
+913,BNB Smart Chain,ACS,0x4197C6EF3879a08cD51e5560da5064B773aa1d29,3811,ACS,ACryptoS,18,18,exact,verify,,,no
+914,BNB Smart Chain,ACSI,0x5b17b4d5e4009B5C43e3e3d63A5229F794cBA389,3811,ACSI,ACryptoS(I),18,18,exact,verify,,,no
+915,Ethereum,ADAI,0xfC1E690f61EFd961294b3e1Ce3313fBD8aa4f85d,8057,aDAI,Aave Interest bearing DAI,18,18,case,verify,,,no
+916,Avalanche,ADAI,0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE,2400,aAvaDAI,Aave Avalanche DAI,18,18,mismatch,renamed_ticker,,Aave Avalanche aToken (aAvaDAI),no
+917,Arbitrum,ADOGE,0x155f0DD04424939368972f4e1838687d6a831151,5128,ADoge,ArbiDoge,18,18,case,verify,,,yes
+918,BNB Smart Chain,ADS,0xcfcEcFe2bD2FED07A9145222E8a7ad9Cf1Ccd22A,12043,ADS,Adshares,11,11,exact,verify,,,no
+919,Ethereum,AERGO,0x91Af0fBB28ABA7E31403Cb457106Ce79397FD4E6,9220,AERGO,Aergo,18,18,exact,verify,,,no
+920,Polygon,AGAC,0x669ddc70273084Ea30e6cd4f28CA6e2C70735065,2949,AGAc,AGA Carbon Credit (PoS),18,18,case,verify,,,no
+921,Avalanche,AGF,0xb67a9374Da03d4114a6FB8f0E7F2b82b5cB34ee3,1550,AGF,Augmented Finance,18,18,exact,verify,,,no
+922,Ethereum,AGLD,0x32353A6C91143bfd6C7d363B546e62a9A2489A20,5499,AGLD,Adventure Gold,18,18,exact,verify,,,no
+923,Avalanche,AKITAX,0xE06fba763C2104dB5027F57f6A5Be0a0D86308af,13114,AKITAX,AKITAVAX,18,18,exact,verify,,,no
+924,Ethereum,AKNC,0x9D91BE44C06d373a8a226E1f3b146956083803eB,8057,aKNC,Aave Interest bearing KNC,18,18,case,verify,,,no
+925,Avalanche,ALBT,0x9E037dE681CaFA6E661e6108eD9c2bd1AA567Ecd,6407,WALBT,Wrapped AllianceBlock Token,18,18,mismatch,renamed_ticker,representation,Wrapped AllianceBlock,no
+926,Avalanche,ALINK,0x191c10Aa4AF7C30e871E70C95dB0E4eb77237530,2400,aAvaLINK,Aave Avalanche LINK,18,18,mismatch,renamed_ticker,,Aave Avalanche aToken (aAvaLINK),no
+927,Ethereum,ALINK,0xA64BD6C70Cb9051F6A9ba1F163Fdc07E0DfB5F84,8057,aLINK,Aave Interest bearing LINK,18,18,case,verify,,,no
+928,BNB Smart Chain,ALU,0x8263CD1601FE73C066bf49cc09841f35348e3be0,6405,ALU,Altura,18,18,exact,verify,,,yes
+929,Ethereum,ALUSD,0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9,8579,alUSD,Alchemix USD,18,18,case,verify,,,yes
+930,Ethereum,AMANA,0x6FCE4A401B6B80ACe52baAefE4421Bd188e76F6f,8057,aMANA,Aave Interest bearing MANA,18,18,case,verify,,,no
+931,Polygon,AMATICC,0x0E9b89007eEE9c958c0EDA24eF70723C2C93dD58,533,ankrMATIC,Ankr Staked MATIC,18,18,mismatch,renamed_ticker,,Ankr aMATICc renamed ankrMATIC,no
+932,Polygon,AMDAI,0x27F8D03b3a2196956ED754baDc28D73be8830A6e,1779,amDAI,Aave Matic Market DAI,18,18,case,verify,,,no
+933,Ethereum,AMKR,0x7deB5e830be29F91E298ba5FF1356BB7f8146998,8057,aMKR,Aave Interest bearing MKR,18,18,case,verify,,,no
+934,Polygon,AMUSDC,0x1a13F4Ca1d028320A707D99520AbFefca3998b7F,1779,amUSDC,Aave Matic Market USDC,6,6,case,verify,,,no
+935,Polygon,AMUSDT,0x60D55F02A771d515e077c9C2403a1ef324885CeC,1779,amUSDT,Aave Matic Market USDT,6,6,case,verify,,,no
+936,Polygon,AMWBTC,0x5c2ed810328349100A66B82b78a1791B101C9D61,1779,amWBTC,Aave Matic Market WBTC,8,8,case,verify,,,yes
+937,Polygon,AMWETH,0x28424507fefb6f7f8E9D3860F56504E4e5f5f390,1779,amWETH,Aave Matic Market WETH,18,18,case,verify,,,yes
+938,Polygon,AMWMATIC,0x8dF3aad3a84da6b69A4DA8aeC3eA40d9091B2Ac4,1779,amWMATIC,Aave Matic Market WMATIC,18,18,case,verify,,,no
+939,BNB Smart Chain,ANN,0x98936Bde1CF1BFf1e7a8012Cee5e2583851f2067,12275,ANN,Annex,18,18,exact,verify,,,no
+940,BNB Smart Chain,AOG,0x40C8225329Bd3e28A043B029E0D07a5344d2C27C,5311,AOG,AgeOfGods,18,18,exact,verify,,,yes
+941,Avalanche,APEIN,0x938FE3788222A74924E062120E7BFac829c719Fb,5692,APEIN,Ape In,18,18,exact,verify,,,no
+942,Ethereum,APW,0x4104b135DBC9609Fc1A9490E61369036497660c8,1581,APW,APWine Token,18,18,exact,verify,,,no
+943,BNB Smart Chain,APX,0x78F5d389F5CDCcFc41594aBaB4B0Ed02F31398b3,7184,APX,ApolloX Token,18,18,exact,verify,,,yes
+944,Arbitrum,ARBIS,0x9f20de1fc9b161b34089cbEAE888168B44b03461,2244,ARBIS,ARBIS | We have the yields,18,18,exact,verify,,,no
+945,Arbitrum,ARBYS,0x86A1012d437BBFf84fbDF62569D12d4FD3396F8c,2322,ARBYS,Arbys,18,18,exact,verify,,,no
+946,Ethereum,ARCH,0x1F3f9D3068568F8040775be2e8C03C103C61f3aF,11879,ARCH,Archer DAO Governance Token,18,18,exact,verify,,,no
+947,Ethereum,ARCX,0x1321f1f1aa541A56C31682c57b80ECfCCd9bB288,7218,ARCX,ARCx Governance Token,18,18,exact,verify,,,no
+948,Ethereum,ARMOR,0x1337DEF16F9B486fAEd0293eb623Dc8395dFE46a,2546,ARMOR,Armor,18,18,exact,verify,,,yes
+949,Ethereum,ARNXM,0x1337DEF18C680aF1f9f45cBcab6309562975b1dD,3745,arNXM,Armor NXM,18,18,case,verify,,,no
+950,Ethereum,ASKO,0xeEEE2a622330E6d2036691e983DEe87330588603,2240,ASKO,Askobar Network,18,18,exact,verify,,,no
+951,Ethereum,ASNX,0x328C4c80BC7aCa0834Db37e6600A6c49E12Da4DE,8057,aSNX,Aave Interest bearing SNX,18,18,case,verify,,,no
+952,Ethereum,ASUSD,0x625aE63000f46200499120B906716420bd059240,8057,aSUSD,Aave Interest bearing SUSD,18,18,case,verify,,,no
+953,BNB Smart Chain,ATA,0xA2120b9e674d3fC3875f415A7DF52e382F141225,9875,ATA,Automata,18,18,exact,verify,,,yes
+954,Ethereum,ATIS,0x821144518dfE9e7b44fCF4d0824e15e8390d4637,3173,ATIS,ATIS Token,18,18,exact,verify,,,no
+955,Ethereum,ATUSD,0x4DA9b813057D04BAef4e5800E36083717b4a0341,8057,aTUSD,Aave Interest bearing TUSD,18,18,case,verify,,,no
+956,Polygon,AURUM,0x34d4ab47Bee066F361fA52d792e69AC7bD05ee23,13340,AURUM,RaiderAurum,18,18,exact,verify,,,yes
+957,Avalanche,AUSDC,0x625E7708f30cA75bfd92586e17077590C60eb4cD,2400,aAvaUSDC,Aave Avalanche USDC,6,6,mismatch,renamed_ticker,,Aave Avalanche aToken (aAvaUSDC),no
+958,Ethereum,AUSDC,0x9bA00D6856a4eDF4665BcA2C2309936572473B7E,8057,aUSDC,Aave Interest bearing USDC,6,6,case,verify,,,no
+959,Ethereum,AUSDT,0x71fc860F7D3A592A4a98740e39dB31d25db65ae8,8057,aUSDT,Aave Interest bearing USDT,6,6,case,verify,,,no
+960,Avalanche,AUSDT,0x6ab707Aca953eDAeFBc4fD23bA73294241490620,2400,aAvaUSDT,Aave Avalanche USDT,6,6,mismatch,renamed_ticker,,Aave Avalanche aToken (aAvaUSDT),no
+961,Ethereum,AWBTC,0xFC4B8ED459e00e5400be803A9BB3954234FD50e3,8057,aWBTC,Aave Interest bearing WBTC,8,8,case,verify,,,no
+962,Avalanche,AWBTC,0x078f358208685046a11C85e8ad32895DED33A249,2400,aAvaWBTC,Aave Avalanche WBTC,8,8,mismatch,renamed_ticker,,Aave Avalanche aToken (aAvaWBTC),no
+963,Avalanche,AWETH,0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8,2400,aAvaWETH,Aave Avalanche WETH,18,18,mismatch,renamed_ticker,,Aave Avalanche aToken (aAvaWETH),no
+964,Ethereum,AZRX,0x6Fb0855c404E09c47C3fBCA25f08d4E41f9F062f,8057,aZRX,Aave Interest bearing ZRX,18,18,case,verify,,,no
+965,Ethereum,BASE,0x07150e919B4De5fD6a63DE1F9384828396f25fDC,2261,BASE,Base Protocol,9,9,exact,verify,,,no
+966,Ethereum,BASK,0x44564d0bd94343f72E3C8a0D22308B7Fa71DB0Bb,4310,BASK,BasketDAO Gov,18,18,exact,verify,,,no
+967,Ethereum,BBTC,0x9BE89D2a4cd102D8Fecc6BF9dA793be995C22541,1506,BBTC,Binance Wrapped BTC,8,8,exact,verify,,,yes
+968,Ethereum,BCDT,0xAcfa209Fb73bF3Dd5bBfb1101B9Bc999C49062a5,6992,BCDT,Blockchain Certified Data Token,18,18,exact,verify,,,no
+969,Polygon,BCMC,0xc10358f062663448a3489fC258139944534592ac,680,BCMC,Blockchain Monster Coin,18,18,exact,verify,,,no
+970,BNB Smart Chain,BCOIN,0x00e1656e45f18ec6747F5a8496Fd39B50b38396D,7683,BCOIN,Bomber Coin,18,18,exact,verify,,,yes
+971,Polygon,BCT,0x2F800Db0fdb5223b3C3f354886d907A671414A7F,811,BCT,Base Carbon Tonne,18,18,exact,verify,,,no
+972,Ethereum,BEPRO,0xCF3C8Be2e2C42331Da80EF210e9B1b307C03d36A,6726,BEPRO,BetProtocolToken,18,18,exact,verify,,,yes
+973,BNB Smart Chain,BETA,0xBe1a001FE942f96Eea22bA08783140B9Dcc09D28,7946,BETA,Beta Token,18,18,exact,verify,,,yes
+975,Ethereum,NEAR,0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4,10528,NEAR,NEAR,24,24,exact,verify,,,yes
+976,Ethereum,TAO,0x77e06c9eccf2e797fd462a92b6d7642ef85b0a44,13919,wTAO,Wrapped TAO,9,9,mismatch,renamed_ticker,representation,Wrapped TAO,yes
+979,Ethereum,THETA,0x3883f5e181fccaf8410fa61e12b59bad963fb645,5255,THETA,Theta Token,18,18,exact,verify,,,no
+982,Ethereum,VET,0xd850942ef8811f2a866692a623011bde52a462c1,4523,VEN,VeChain Token,18,18,mismatch,renamed_ticker,representation,VeChain's old ERC-20 VEN (VET is now native),no
+986,Ethereum,FLOW,0x5c147e74d63b1d31aa3fd78eb229b65161983b2b,130,WFLOW,Wrapped Flow,18,18,mismatch,renamed_ticker,representation,Wrapped Flow,no
+987,Ethereum,KAVA,0x0c356b7fd36a5357e5a017ef11887ba100c9ab76,5725,KAVA,Kava.io,6,6,exact,verify,,,no
+988,Ethereum,ONE,0x799a4202c12ca952cb311598a024c80ed371a41e,6024,ONE,HarmonyOne,18,18,exact,verify,,,no
+990,Ethereum,XDC,0x41ab1b6fcbb2fa9dced81acbdec13ea6315f2bf2,14223,XDC,XDC,18,18,exact,verify,,,no
+992,BNB Smart Chain,BTT,0x352Cb5E19b12FC216548a2677bD0fce83BaE434B,7088,BTT,BitTorrent,18,18,exact,verify,,,yes
+993,BNB Smart Chain,WIN,0xaeF0d72a118ce24feE3cD1d43d383897D05B4e99,1596,WIN,WINk,18,18,exact,verify,,,yes
+996,Ethereum,KSM,0x69cf3091c91eb72db05e45c76e58225177dea742,8065,ZOOM,CoinZoom,18,18,mismatch,fail,symbol_mismatch,contract is CoinZoom (ZOOM),no
+998,Ethereum,ZIL,0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27,8645,ZIL,Zilliqa,12,12,exact,verify,,,no
+999,Base,LionOG,0x6731F2d7ADF86cfba30d15c4D10113Ce98f3492A,45,LIONOG,LionOG,9,9,case,verify,,"dropped (LionOG), not checked on 2026-10-19",no
+1000,Base,FrogOG,0x0E3b564bdD09348840811C7e1106BbD0e98b5b4f,45,FROGOG,FrogOG,9,9,case,verify,,"dropped (FrogOG), not checked on 2026-10-19",no
+1001,Ethereum,KEKEC,0x8c7ac134ed985367eadc6f727d79e8295e11435c,16187,Kekec,The Balkan Dwarf,18,18,case,verify,,,yes
