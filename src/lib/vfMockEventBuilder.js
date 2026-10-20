@@ -129,29 +129,6 @@ export function buildStellarMockEvent(duration, outputToken) {
   };
 }
 
-export function buildCosmosMockEvent(duration, outputToken) {
-  const gross = 1000000n; // 1 ATOM (6 dec)
-  const bps = feeBpsForDuration(duration);
-  const fee = (gross * bps) / 10000n;
-  return {
-    lock_id: `vf-cosmos-${Date.now()}`,
-    source_account: 'cosmos1' + 'a'.repeat(38),
-    gross_amount: gross.toString(),
-    fee_amount: fee.toString(),
-    principal_amount: (gross - fee).toString(),
-    fee_destination: 'cosmos1devfund' + 'b'.repeat(30),
-    fee_transfer_evidence: 'cosmos1devfund' + 'b'.repeat(30),
-    fee_tx_hash: 'MOCKCOSMOSFEE' + Date.now(),
-    creation_time_secs: now(),
-    maturity_time_secs: now() + Number(duration),
-    duration_secs: Number(duration),
-    output_token: outputToken,
-    base_recipient: '0x' + '5'.repeat(40),
-    release_destination: 'cosmos1' + 'a'.repeat(38),
-    chonx_activation_receipt: outputToken === 'CHONX' ? 'base-act-42' : null,
-  };
-}
-
 export function buildEvmMockEvent(env, duration, outputToken) {
   const gross = 1000000000000000000n; // 1 ETH (18 dec)
   const bps = feeBpsForDuration(duration);
@@ -208,7 +185,6 @@ const _PROOFS = {
   BitcoinCash: { confirmations: 6, blockHash: '0xbch_block', blockHeight: 800000 },
   XRPL:      { validated: true, ledgerIndex: 85000000, ledgerHash: '0xxrp_ledger' },
   Stellar:   { closed: true, ledgerSequence: 50000000, ledgerHash: '0xxlm_ledger' },
-  CosmosHub: { validated: true, height: 1000, hash: '0xabc' },
 };
 
 export function buildFinalityProof(envId) {
@@ -219,7 +195,6 @@ export function buildMockEvent(env, duration, outputToken) {
   if (env === 'Solana') return { type: 'solana', event: buildSolanaMockEvent(duration, outputToken) };
   if (env === 'XRPL') return { type: 'xrpl', event: buildXrplMockEvent(duration, outputToken) };
   if (env === 'Stellar') return { type: 'stellar', event: buildStellarMockEvent(duration, outputToken) };
-  if (env === 'CosmosHub') return { type: 'cosmos', event: buildCosmosMockEvent(duration, outputToken) };
   if (['Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash'].includes(env))
     return { type: 'utxo', event: buildUtxoMockEvent(env, duration, outputToken) };
   return { type: 'evm', event: buildEvmMockEvent(env, duration, outputToken) };
