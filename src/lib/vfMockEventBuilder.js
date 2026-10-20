@@ -75,13 +75,23 @@ export const UTXO_PRACTICE_GROSS = {
   Litecoin: 8400000n,     // 0.084 LTC
 };
 
+// Practice Handshake gross (t239u): mid-band of the Handshake unit band
+// (vfUtxoMinimumLock.js UTXO_HANDSHAKE_UNIT_BAND, same as the verifier and lock.py).
+// No price is involved: the Handshake is a set coin amount on these three chains.
+export const UTXO_PRACTICE_HANDSHAKE_GROSS = {
+  Bitcoin: 16500n,       // band 11,000 to 22,000 sats
+  BitcoinCash: 16500n,   // band 11,000 to 22,000 sats
+  Litecoin: 165000n,     // band 110,000 to 220,000 litoshis
+};
+
 export function buildUtxoMockEvent(env, duration, outputToken) {
   const sym = env === 'Bitcoin' ? 'BTC' : env === 'Litecoin' ? 'LTC' : env === 'Dogecoin' ? 'DOGE' : env === 'DigiByte' ? 'DGB' : env === 'Zcash' ? 'ZEC' : 'BCH';
   // Practice gross, 8 decimals. Bitcoin Cash and Litecoin are sized to clear the $1
   // minimum lock (t230u) with room for price drops: about $5 at the 2026-10-20 12:30 PM ET
   // CoinGecko prices (BCH $276.69, LTC $59.70). Bitcoin stays 0.001 BTC (about $82 at
   // $82,405), over its $20 minimum. Other UTXO chains keep 100,000 units.
-  const gross = UTXO_PRACTICE_GROSS[env] ?? 100000n;
+  const handshakeGross = Number(duration) === 3600 ? UTXO_PRACTICE_HANDSHAKE_GROSS[env] : undefined;
+  const gross = handshakeGross ?? UTXO_PRACTICE_GROSS[env] ?? 100000n;
   const bps = feeBpsForDuration(duration);
   const fee = (gross * bps) / 10000n;
   return {
