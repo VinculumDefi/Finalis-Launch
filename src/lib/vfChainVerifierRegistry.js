@@ -3,14 +3,14 @@
 //
 // PROVENANCE: Built from Revision 6:
 //   - Vinculum_Finalis_Architecture_Design.md (Section O — per-environment verifiers)
-//   - Vinculum_Finalis_Protocol_Constants.json (17 environments, finality models)
+//   - Vinculum_Finalis_Protocol_Constants.json (environments, finality models)
 //
 // VF-XCH-006: Source finality gate — dispatches to the correct IChainVerifier.
 // VF-XCH-010: Finality must be objective (chain-native evidence, not timers/mempool).
 // VF-XCH-011: Immutable facts extracted independently from the raw lock event proof.
 //
-// 16 environments have registered verifiers. Cosmos Hub (EVIDENCE_REQUIRED) is
-// intentionally unregistered — the verifier engine rejects it before finality.
+// All 16 environments of this deployment have registered verifiers. An
+// unknown environment has none, and the verifier engine rejects it.
 // =============================================================================
 
 import { findEnvironment } from './vfBaseRegistry.js';
