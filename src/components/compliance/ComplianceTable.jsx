@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { STATUS, STATUS_META, REQUIREMENTS, CATEGORIES } from '@/lib/vfComplianceData';
 import { Search, ChevronDown, ChevronRight } from 'lucide-react';
 
