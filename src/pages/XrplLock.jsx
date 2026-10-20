@@ -6,7 +6,7 @@ import LockConfigForm from '@/components/xrpl/LockConfigForm';
 import PreflightPanel from '@/components/xrpl/PreflightPanel';
 import LifecyclePanel from '@/components/xrpl/LifecyclePanel';
 import { Button } from '@/components/ui/button';
-import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES, XRPL_HANDSHAKE_ALLOWANCE } from '@/lib/vfXrplAuthority';
+import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfXrplAuthority';
 import { validateLockRequest, computeOutput } from '@/lib/vfXrplLockEngine';
 import { XrplMockAdapter } from '@/lib/vfXrplMockAdapter';
 import { buildAtomicBatch } from '@/lib/vfXrplTransactionBuilder';
