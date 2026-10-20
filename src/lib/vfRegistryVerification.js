@@ -41,7 +41,9 @@ export const S2_RECORDS = [
   { row: 14, symbol: 'AAVE', name: 'Aave', env: 'Ethereum', contract: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9', pricing: 'aave' },
 ];
 
-// VF-XCH-001: 17 environments confirmed
+// Environment names as they appear in the hosted Revision 6 registry (1,001
+// rows). This describes that file only. One row there is not an environment of
+// this deployment and is hidden by the active asset list (Revision B).
 export const ENVIRONMENT_DISTRIBUTION = [
   { env: 'Ethereum', count: 495 },
   { env: 'BNB Smart Chain', count: 156 },
@@ -67,7 +69,6 @@ export const ENV_NAME_MAPPING = {
   'XRP Ledger': 'XRPL',
   'BNB Smart Chain': 'BNB',
   'Bitcoin Cash': 'BitcoinCash',
-  'Cosmos': 'CosmosHub',
 };
 
 // Per-requirement verification results
