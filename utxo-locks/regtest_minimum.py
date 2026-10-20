@@ -16,6 +16,11 @@ price (the USD minimum wins) and at a high price (the native floor wins):
      (STRESS_RELEASE_FEE_RATE) and its output still clears dust.
   4. One unit under the dust floor (gross 20 x dust - 20), lock.py refuses,
      and the node itself rejects an exact-5% lock there as "dust".
+  5. Handshake (operator t239u): at the band minimum and maximum
+     (HANDSHAKE_UNIT_BAND, duration 3600 s, no price), lock.py refuses one unit
+     outside the band; the in-band lock is accepted and mined with an exact 5%
+     fee; its release (maturity = one hour of blocks) is refused before
+     maturity and accepted and mined after, at the typical release fee rate.
 Any failed check raises. Exit code 0 means every check passed.
 """
 from __future__ import annotations
@@ -26,7 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from crypto import hash160
-from lock import (MIN_LOCK_FLOOR_UNITS, P2PKH_DUST_MINIMUM, STRESS_RELEASE_FEE_RATE, LockFixture, LockRefused,
+from lock import (HANDSHAKE_UNIT_BAND, MIN_LOCK_FLOOR_UNITS, P2PKH_DUST_MINIMUM, STRESS_RELEASE_FEE_RATE, LockFixture, LockRefused,
                   min_gross_for, split_outputs, usd_min_gross_for)
 from script import p2pkh_script
 from tx import Tx, TxIn, TxOut, p2sh_script_sig, serialize, sign_input
@@ -37,6 +42,7 @@ NOW = 1_792_510_532
 RELEASE_RATE = {"bitcoin": 2, "bitcoin-cash": 1, "litecoin": 1}  # units per byte, current typical
 # High prices where the native floor wins (BTC $1,000,000; BCH and LTC 100x today).
 HIGH_PRICE = {"bitcoin": "1000000", "bitcoin-cash": "27628", "litecoin": "5959"}
+HOUR_BLOCKS = {"bitcoin": 6, "bitcoin-cash": 6, "litecoin": 24}  # 3600 s / block spacing
 CHAINS = {
     "bitcoin": dict(env="BTC_BIN", d="bitcoind", c="bitcoin-cli", rpc=28543),
     "bitcoin-cash": dict(env="BCH_BIN", d="bitcoind", c="bitcoin-cli", rpc=28553),
@@ -175,12 +181,47 @@ def run(chain: str) -> None:
             check(True, f"lock.py refuses gross {below} (5% = {dust - 1}): {e}")
         else:
             raise AssertionError("dust-raised split still produced on " + chain)
-        raw = LockFixture(chain, maturity + 50)
+        raw = LockFixture(chain, maturity + 50)  # standard script fixture, outputs overwritten below
         fee = below * 500 // 10_000
         raw.fee_output, raw.principal, raw.funding_value = fee, below - fee, below
         fund(node, raw, below + lock_fee)
         ok, why = node.accept(raw.lock_transaction())
         check(not ok and "dust" in why, f"node rejects an exact-5% lock with a {fee}-unit fee output ({why})")
+        node.mine(1)
+        # 5. Handshake at the unit band minimum and maximum, no price
+        low, high = HANDSHAKE_UNIT_BAND[chain]
+        for g, outside in ((low, low - 1), (high, high + 1)):
+            try:
+                LockFixture(chain, 10, gross=outside, duration_secs=3600)
+            except LockRefused as e:
+                check("band" in str(e), f"Handshake {outside} refused by lock.py: {e}")
+            else:
+                raise AssertionError("Handshake outside the band was built")
+            maturity = node.cli("getblockcount") + 1 + HOUR_BLOCKS[chain]
+            fx = LockFixture(chain, maturity, gross=g, duration_secs=3600)
+            check(fx.fee_output == g * 500 // 10_000 and fx.principal == g - fx.fee_output and fx.funding_value == g,
+                  f"Handshake {g}: fee {fx.fee_output} is exactly floor(5%), principal {fx.principal}")
+            fund(node, fx, fx.funding_value + lock_fee)
+            lock = fx.lock_transaction()
+            ok, why = node.accept(lock)
+            check(ok, f"node accepts the Handshake lock of {g} ({why or 'allowed'})")
+            node.cli("sendrawtransaction", serialize(lock).hex())
+            node.mine(1)
+            check(node.cli("getmempoolinfo")["size"] == 0, "Handshake lock mined")
+            lock_txid = lock.txid()
+            rate = RELEASE_RATE[chain]
+            size = len(serialize(release_tx(fx, lock_txid, fx.principal - 1))) + 2
+            out = fx.principal - rate * size
+            check(out >= dust, f"Handshake release output {out} after a {rate}/byte fee is at least dust {dust}")
+            ok, why = node.accept(release_tx(fx, lock_txid, out))
+            check(not ok and "final" in why, f"Handshake release before maturity refused ({why})")
+            node.mine(maturity - node.cli("getblockcount"))
+            rel = release_tx(fx, lock_txid, out)
+            ok, why = node.accept(rel)
+            check(ok, f"Handshake release after maturity accepted ({why or 'allowed'}): pays {out}")
+            node.cli("sendrawtransaction", serialize(rel).hex())
+            node.mine(1)
+            check(node.cli("getmempoolinfo")["size"] == 0, "Handshake release mined")
     finally:
         node.stop()
 
