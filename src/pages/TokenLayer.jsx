@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { TokenLayerState, formatTokenAmount } from '@/lib/vfTokenEngine';
 import { VerifierState, verifyProof } from '@/lib/vfVerifierEngine';
 import { buildMockEvent, buildFinalityProof } from '@/lib/vfMockEventBuilder';
-import { normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeStellarEvidence, normalizeCosmosEvidence, normalizeEvmEvidence } from '@/lib/vfProofNormalizer';
+import { normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeStellarEvidence, normalizeEvmEvidence } from '@/lib/vfProofNormalizer';
 import { COMMITMENT_DURATIONS, SCALE, CHONX_ACTIVATION_THRESHOLD, SYNTH_ACTIVATION_THRESHOLD, SYNTH_FORGE } from '@/lib/vfRevision6Authority';
 import TokenOverview from '@/components/tokens/TokenOverview';
 import ForgePanel from '@/components/tokens/ForgePanel';
@@ -17,14 +17,16 @@ import { Coins, Zap, Activity, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchAssetPrice, getAssetPricingInfo, computeVerifiedGrossUsdMicro } from '@/lib/vfPriceService';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
+import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 import { hasUtxoMinimum, checkUtxoMinimumLock, priceAsOfSecs, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
-// Only environments whose simulated native asset is on the active list are offered (Solana hidden).
+// Only environments whose simulated native asset is on the active list are offered.
+// Solana is not part of this deployment and is not offered for new locks.
 const ENV_OPTIONS = [
-  'Solana', 'XRPL', 'Stellar',
+  'XRPL', 'Stellar',
   'Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash',
   'Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Optimism',
-].filter(isOfferableEnvironmentNative);
+].filter((e) => isInThisDeployment(e) && isOfferableEnvironmentNative(e));
 
 export default function TokenLayer() {
   const [tokenState, setTokenState] = useState(() => new TokenLayerState());
@@ -62,7 +64,6 @@ export default function TokenLayer() {
     else if (mock.type === 'xrpl') normResult = normalizeXrplEvidence(mock.event.escrow, mock.event.payment, finalityProof);
     else if (mock.type === 'utxo') normResult = normalizeUtxoEvidence(env, mock.event, finalityProof);
     else if (mock.type === 'stellar') normResult = normalizeStellarEvidence(mock.event, finalityProof);
-    else if (mock.type === 'cosmos') normResult = normalizeCosmosEvidence(mock.event, finalityProof);
     else normResult = normalizeEvmEvidence(env, mock.event, finalityProof);
 
     if (!normResult.ok) {
