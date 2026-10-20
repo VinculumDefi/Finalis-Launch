@@ -30,6 +30,7 @@ import {
   SOLANA_HANDSHAKE_ALLOWANCE,
 } from './vfRevision6Authority.js';
 import { SOLANA_REGISTRY } from './vfSolanaRegistry.js';
+import { isOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
 
 // ---------------------------------------------------------------------------
 // Duration helpers — VF-COM-001/002
@@ -261,6 +262,10 @@ export function validateLockRequest({
   if (!asset) {
     errors.push(`VF-REG-001: asset "${assetSymbol}" is not in the approved Solana registry`);
     checks.push({ id: 'VF-REG-001', pass: false });
+  } else if (!isOfferable(asset)) {
+    // Active list (Revision B + on-chain verification): Solana rows are hidden and refused.
+    errors.push(`${NOT_ACTIVE_MESSAGE}: ${asset.symbol} (Solana)`);
+    checks.push({ id: 'VF-REG-001', pass: false, detail: 'not on the active asset list' });
   } else {
     checks.push({ id: 'VF-REG-001', pass: true, detail: `${asset.symbol} · row ${asset.registry_row}` });
   }
