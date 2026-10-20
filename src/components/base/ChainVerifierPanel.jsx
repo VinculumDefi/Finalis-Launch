@@ -18,9 +18,9 @@ export default function ChainVerifierPanel() {
       </CardHeader>
       <CardContent className="space-y-2">
         <p className="text-xs text-[#6b6b65] mb-3">
-          Each of the 17 environments has a dedicated IChainVerifier that performs
+          Each of the 16 environments has a dedicated IChainVerifier that performs
           objective chain-native finality verification and independent fact extraction.
-          16 are registered; Cosmos Hub is EVIDENCE_REQUIRED.
+          All 16 are registered. Solana is not part of this deployment.
         </p>
         <div className="grid gap-1.5">
           {ENVIRONMENTS.map((env) => {
