@@ -23,12 +23,16 @@ from decimal import Decimal
 from lock import (
     COUNTS_PER_IDENTITY,
     EXACT_FEE_CHAINS,
+    MIN_LOCK_FLOOR_UNITS,
     MIN_LOCK_USD,
+    RELEASE_SPEND_BYTES,
+    STRESS_RELEASE_FEE_RATE,
     PRICE_MAX_AGE_SECS,
     LockRefused,
     check_minimum_lock,
     lock_outputs,
     min_gross_for,
+    usd_min_gross_for,
     FEE_SATS,
     FINGERPRINT_BINDING_CHAINS,
     GROSS_SATS,
@@ -338,12 +342,54 @@ class MinimumLockTests(unittest.TestCase):
                     self.assertEqual(fee + principal, funding)
                     self.assertEqual(funding, g)
 
+    def test_native_floors_and_their_derivation(self):
+        self.assertEqual(MIN_LOCK_FLOOR_UNITS, {"bitcoin": 22_000, "bitcoin-cash": 11_000, "litecoin": 110_000})
+        self.assertEqual(RELEASE_SPEND_BYTES, 200)
+        self.assertEqual(STRESS_RELEASE_FEE_RATE, {"bitcoin": 100, "bitcoin-cash": 5, "litecoin": 20})
+        for chain, floor in MIN_LOCK_FLOOR_UNITS.items():
+            dust = P2PKH_DUST_MINIMUM[chain]
+            need = dust + STRESS_RELEASE_FEE_RATE[chain] * RELEASE_SPEND_BYTES
+            raw = max(20 * dust, -(-need * 100 // 95))
+            with self.subTest(chain=chain):
+                self.assertGreaterEqual(floor, raw)
+                self.assertLess(floor - raw, 1_000)  # clean round-up, not padded
+                fee, principal, _ = split_outputs(chain, floor)
+                self.assertGreaterEqual(fee, dust)
+                self.assertGreaterEqual(principal - STRESS_RELEASE_FEE_RATE[chain] * RELEASE_SPEND_BYTES, dust)
+
+    def test_effective_minimum_at_today_and_high_prices(self):
+        # (chain, price, expected effective minimum, which one wins)
+        cases = [
+            ("bitcoin", "82000", 24_391, "usd"),
+            ("bitcoin", "250000", 22_000, "floor"),
+            ("bitcoin", "1000000", 22_000, "floor"),
+            ("bitcoin-cash", "276.69", 361_416, "usd"),
+            ("bitcoin-cash", "2766.9", 36_142, "usd"),
+            ("bitcoin-cash", "27669", 11_000, "floor"),
+            ("litecoin", "59.7", 1_675_042, "usd"),
+            ("litecoin", "597", 167_505, "usd"),
+            ("litecoin", "5970", 110_000, "floor"),
+        ]
+        for chain, price, expected, wins in cases:
+            with self.subTest(chain=chain, price=price):
+                g = min_gross_for(chain, price)
+                self.assertEqual(g, expected)
+                usd_g, floor = usd_min_gross_for(chain, price), MIN_LOCK_FLOOR_UNITS[chain]
+                self.assertEqual(wins, "floor" if floor > usd_g else "usd")
+                fee, principal, funding = lock_outputs(chain, g, price_usd=price, price_as_of=NOW, now=NOW)
+                self.assertEqual((fee, principal, funding), (g * 500 // 10_000, g - g * 500 // 10_000, g))
+                with self.assertRaisesRegex(LockRefused, "floor" if wins == "floor" else "minimum"):
+                    lock_outputs(chain, g - 1, price_usd=price, price_as_of=NOW, now=NOW)
+
     def test_price_rise_refuses_instead_of_raising_the_fee(self):
-        # At $200,000 per BTC, $20 is 10,000 sats and 5% is 500 < 546: refused, not dust-raised.
-        g = min_gross_for("bitcoin", "200000")
-        self.assertEqual(g, 10_000)
+        # At $200,000 per BTC, $20 is 10,000 sats (5% = 500 < 546). The floor refuses it;
+        # split_outputs alone also refuses it rather than raising the fee.
+        self.assertEqual(usd_min_gross_for("bitcoin", "200000"), 10_000)
+        with self.assertRaisesRegex(LockRefused, "floor"):
+            lock_outputs("bitcoin", 10_000, price_usd="200000", price_as_of=NOW, now=NOW)
         with self.assertRaisesRegex(LockRefused, "dust"):
-            lock_outputs("bitcoin", g, price_usd="200000", price_as_of=NOW, now=NOW)
+            split_outputs("bitcoin", 10_000)
+        self.assertEqual(min_gross_for("bitcoin", "200000"), 22_000)
 
     def test_other_chains_unchanged(self):
         self.assertEqual(split_outputs("dogecoin", GROSS_SATS), (100_000, GROSS_SATS, GROSS_SATS + 100_000))
