@@ -11,6 +11,17 @@ import VerificationFlow from '@/components/base/VerificationFlow';
 import ChainVerifierPanel from '@/components/base/ChainVerifierPanel';
 import PendingAttemptPanel from '@/components/base/PendingAttemptPanel';
 import { PendingAttemptLifecycle } from '@/lib/vfPendingAttemptLifecycle';
+import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
+
+// Only environments whose simulated native asset is on the active list are offered
+// (Revision B + on-chain verification). Solana and Cosmos Hub are hidden.
+const ENV_GROUPS = [
+  { label: 'EVM (3-use, source-enforced)', envs: ['Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Base', 'Optimism'] },
+  { label: 'Non-EVM (3-use)', envs: ['Solana'] },
+  { label: 'UTXO (1-use, Base-enforced)', envs: ['Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash'] },
+  { label: 'Account-model (1-use, Base-enforced)', envs: ['XRPL', 'Stellar'] },
+  { label: 'CometBFT (EVIDENCE REQUIRED)', envs: ['CosmosHub'] },
+].map((g) => ({ ...g, envs: g.envs.filter(isOfferableEnvironmentNative) })).filter((g) => g.envs.length);
 
 function parseUsdToFixedPoint(usdStr) {
   if (!usdStr) return 0n;
@@ -26,7 +37,7 @@ export default function BaseVerifier() {
   const lifecycleRef = useRef(new PendingAttemptLifecycle());
   const lifecycle = lifecycleRef.current;
 
-  const [env, setEnv] = useState('Solana');
+  const [env, setEnv] = useState('Ethereum');
   const [verifiedUsd, setVerifiedUsd] = useState('10.00');
   const [daysSinceLaunch, setDaysSinceLaunch] = useState('0');
   const [duration, setDuration] = useState(604800);
@@ -52,6 +63,13 @@ export default function BaseVerifier() {
 
     if (!rawPkg.ok) {
       setResult({ ok: false, decision: 'NORMALIZE_FAILED', checks: [], reason: rawPkg.errors.join('; ') });
+      setPkg(null);
+      return;
+    }
+
+    // Active asset list: refuse a package whose asset is not offerable, however it was entered.
+    if (!isOfferablePackageAsset(rawPkg.package.source_environment_id, rawPkg.package.canonical_asset_id)) {
+      setResult({ ok: false, decision: 'NOT_ON_ACTIVE_LIST', checks: [], reason: NOT_ACTIVE_MESSAGE });
       setPkg(null);
       return;
     }
@@ -134,19 +152,9 @@ export default function BaseVerifier() {
             <label className="text-xs space-y-1">
               <span className="text-[#6b6b65]">Source Environment</span>
               <select value={env} onChange={(e) => setEnv(e.target.value)} className="w-full border border-[#18324b]/20 rounded px-2 py-1 text-sm">
-                <optgroup label="EVM (3-use, source-enforced)">
-                  <option>Ethereum</option><option>BNB</option><option>Avalanche</option>
-                  <option>Polygon</option><option>Arbitrum</option><option>Base</option><option>Optimism</option>
-                </optgroup>
-                <optgroup label="Non-EVM (3-use)"><option>Solana</option></optgroup>
-                <optgroup label="UTXO (1-use, Base-enforced)">
-                  <option>Bitcoin</option><option>Litecoin</option><option>Dogecoin</option>
-                  <option>DigiByte</option><option>Zcash</option><option>BitcoinCash</option>
-                </optgroup>
-                <optgroup label="Account-model (1-use, Base-enforced)">
-                  <option>XRPL</option><option>Stellar</option>
-                </optgroup>
-                <optgroup label="CometBFT (EVIDENCE REQUIRED)"><option>CosmosHub</option></optgroup>
+                {ENV_GROUPS.map((g) => (
+                  <optgroup key={g.label} label={g.label}>{g.envs.map((e) => <option key={e}>{e}</option>)}</optgroup>
+                ))}
               </select>
             </label>
             <label className="text-xs space-y-1">
