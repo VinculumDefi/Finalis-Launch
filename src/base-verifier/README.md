@@ -4,7 +4,7 @@
 
 The canonical Base-chain verifier (`BASE-VERIFY`) that accepts deterministic proof packages from native source-chain Commitment Locks and performs protocol verification before minting VCLM/CHONX tokens.
 
-**Chain-agnostic design:** the same `verifyAndMint()` function handles all 17 supported source environments — Solana, XRPL, Cosmos, Bitcoin, Litecoin, Dogecoin, DigiByte, Zcash, Bitcoin Cash, Stellar, Ethereum, BNB, Avalanche, Polygon, Arbitrum, Base, and Optimism — without changing protocol behavior. Per-environment finality proof verification is dispatched to `IChainVerifier` implementations.
+**Chain-agnostic design:** the same `verifyAndMint()` function handles all 16 supported source environments — Solana, XRPL, Bitcoin, Litecoin, Dogecoin, DigiByte, Zcash, Bitcoin Cash, Stellar, Ethereum, BNB, Avalanche, Polygon, Arbitrum, Base, and Optimism — without changing protocol behavior. Per-environment finality proof verification is dispatched to `IChainVerifier` implementations.
 
 ## Authority
 
@@ -20,7 +20,7 @@ The canonical Base-chain verifier (`BASE-VERIFY`) that accepts deterministic pro
 | `contracts/VinculumFinalisVerifier.sol` | Solidity 0.8.19 contract — the on-chain recognition boundary |
 | `../../lib/vfVerifierEngine.js` | Off-chain verification engine (mirrors Solidity logic) |
 | `../../lib/vfProofNormalizer.js` | Chain-agnostic proof package normalization |
-| `../../lib/vfBaseRegistry.js` | Immutable asset-precision table (BASE-QNORM) + 17-environment registry |
+| `../../lib/vfBaseRegistry.js` | Immutable asset-precision table (BASE-QNORM) + 16-environment registry |
 | `../../lib/vfMockEventBuilder.js` | Mock event builders for all environment families |
 | `../../components/base/VerifierArchitecture.jsx` | Contract structure display |
 | `../../components/base/ProofPackageViewer.jsx` | Normalized ProofPackage viewer |
@@ -107,7 +107,6 @@ ProofPackage {
 | UTXO (6) | Bitcoin, Litecoin, Dogecoin, DigiByte, Zcash, BitcoinCash | 1 | Base (recognition counter) |
 | XRPL | XRPL | 1 | Base (recognition counter) |
 | Stellar | Stellar | 1 | Base (recognition counter) |
-| Cosmos Hub | CosmosHub | — | EVIDENCE REQUIRED (mechanism incomplete) |
 
 ## Deployment Status
 
@@ -119,10 +118,10 @@ ProofPackage {
 | SYNTH token + forge contract | ✅ Written (`VinculumFinalisSynth.sol`) — not compiled/deployed |
 | Off-chain token engine (JS) | ✅ Validated in Base44 (14 tests pass) |
 | Token layer UI | ✅ Functional (`/token-layer` page) |
-| Per-environment `IChainVerifier` (off-chain JS) | ✅ Implemented (16/17 environments; Cosmos Hub = EVIDENCE_REQUIRED) |
+| Per-environment `IChainVerifier` (off-chain JS) | ✅ Implemented (16/16 environments; Solana not part of this deployment) |
 | Per-environment `IChainVerifier` (Solidity) | ✅ Written — not compiled/deployed |
 | Finality dispatch + fact cross-check | ✅ Integrated into off-chain engine (VF-XCH-006/010/011) |
-| Dev Fund destinations (17) | ⚠️ PENDING_DEPLOYMENT (deferred external input) |
+| Dev Fund destinations (16) | ⚠️ PENDING_DEPLOYMENT (deferred external input) |
 | Canonical chain identifiers | ⚠️ PENDING_DEPLOYMENT (deferred external input) |
 
 ## Running Tests
