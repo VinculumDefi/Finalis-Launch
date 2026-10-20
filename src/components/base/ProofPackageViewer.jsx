@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package } from 'lucide-react';
-import { PROOF_PACKAGE_FIELDS, OUTPUT_TOKEN } from '@/lib/vfProofNormalizer';
+import { PROOF_PACKAGE_FIELDS } from '@/lib/vfProofNormalizer';
 
 export default function ProofPackageViewer({ pkg }) {
   if (!pkg) {
