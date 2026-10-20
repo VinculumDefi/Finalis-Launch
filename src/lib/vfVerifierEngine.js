@@ -34,23 +34,18 @@ import { findEnvironment, findAssetPrecision, getAssetMultiplierBps, isDevFundCo
 import { OUTPUT_TOKEN, outputTokenToString, computeRacIdentity } from './vfProofNormalizer.js';
 import { dispatchFinalityCheck, dispatchFactExtraction, isVerifierRegistered } from './vfChainVerifierRegistry.js';
 import { isUtxoHandshake, checkUtxoHandshakeLock, capHandshakeUsd18 } from './vfUtxoMinimumLock.js';
+import { HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP, feeBpsForDuration } from './vfLiveRules.js';
 
 // ---------------------------------------------------------------------------
 // Fixed-point USD boundary thresholds (VF-COM-003/009)
 // Exact BigInt, so the acceptance decision never touches IEEE-754.
-// 18-decimal fixed-point (SCALE).
-//
-// Handshake band (t239u): aligned with the Revision B verifier
-// (base-contracts/contracts/VinculumFinalisVerifier.sol HANDSHAKE_USD_MIN/MAX),
-// $0.01 to $0.02 inclusive. The Revision 6 record (vfRevision6Authority.js
-// FIXED_RULES, $0.95 to $1.05) is a historical transcription and is left as is.
+// The values come from vfLiveRules.js, which matches the contracts:
+// Handshake $0.01 to $0.02 inclusive (Rev 12), standard minimum $0.01, and a
+// 5% fee on every duration. The Revision 6 record (vfRevision6Authority.js
+// FIXED_RULES: $0.95 to $1.05, 250 bps, $10.00) is historical and not read here.
 // Bitcoin, Bitcoin Cash and Litecoin native Handshakes use the unit band from
 // vfUtxoMinimumLock.js instead, and their USD for VCLM and RAC is capped at $0.02.
-// The standard minimum here is unchanged by t239u.
 // ---------------------------------------------------------------------------
-const HANDSHAKE_USD_MIN_FP = SCALE / 100n;          // $0.01 inclusive
-const HANDSHAKE_USD_MAX_FP = (2n * SCALE) / 100n;   // $0.02 inclusive
-const STANDARD_USD_MIN_FP = 10n * SCALE;           // $10.00 inclusive
 
 // ---------------------------------------------------------------------------
 // State: consumed replay set, RAC set, Handshake counters, lifetime caps
@@ -168,8 +163,7 @@ export function checkFeeMath(pkg) {
   if (fee === 0n) return { ok: false, reason: 'VF-COM-013: zero fee' };
   if (principal === 0n) return { ok: false, reason: 'VF-COM-013: zero principal' };
   // VF-COM-011: verify fee = floor(gross × bps / 10000)
-  const isHandshake = Number(pkg.duration_secs) === HANDSHAKE_DURATION_SECS;
-  const bps = BigInt(isHandshake ? FIXED_RULES.handshake_fee_bps : FIXED_RULES.standard_fee_bps);
+  const bps = feeBpsForDuration(pkg.duration_secs); // 500 bps on every duration (Rev 12)
   const expectedFee = (gross * bps) / 10000n;
   if (fee !== expectedFee) {
     return { ok: false, reason: `VF-COM-011: fee ${fee} != expected ${expectedFee} (bps=${bps})` };
@@ -203,7 +197,7 @@ export function checkUsdBounds(pkg, verifiedGrossUsdMicro) {
   } else {
     if (usdMicro < STANDARD_USD_MIN_FP) {
       const usd = Number(usdMicro) / Number(SCALE);
-      return { ok: false, reason: `VF-COM-009: standard USD $${usd.toFixed(4)} below $10.00 minimum` };
+      return { ok: false, reason: `VF-COM-009: standard USD $${usd.toFixed(4)} below $0.01 minimum` };
     }
   }
   const usd = Number(usdMicro) / Number(SCALE);
