@@ -107,7 +107,8 @@ Then open `http://localhost:8080/<page>.html`. Use only these pages:
 `ethereum.html`, `arbitrum.html`, `optimism.html`, `polygon.html`,
 `bnb-smart-chain.html`, `avalanche.html`, `base.html`. Do not use
 `scripts/broadcast.html`, `scripts/ceremony.html` or the `broadcast*.cjs`
-scripts.
+scripts. They are retired stubs: they send nothing and only point back to this
+runbook.
 
 Make a folder outside the repository, for example `~/vf-ceremony/`, with an
 empty text file `new-locks.json` and an empty text file `ceremony-log.txt` to
