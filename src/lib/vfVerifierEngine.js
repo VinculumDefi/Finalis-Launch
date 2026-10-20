@@ -10,8 +10,8 @@
 // This engine is the Base-side recognition boundary (BASE-VERIFY).
 // It accepts a normalized ProofPackage and performs the complete protocol
 // verification before authorizing issuance. It is chain-agnostic: the same
-// verifyProof() function handles Solana, XRPL, Cosmos, Bitcoin, Stellar,
-// and all 17 supported environments.
+// verifyProof() function handles Solana, XRPL, Bitcoin, Stellar, EVM
+// and all 16 supported environments.
 //
 // VF-XCH-006: Issuance occurs only after source finality is verified.
 // VF-XCH-011: All immutable-facts fields are validated.
@@ -243,7 +243,7 @@ export function checkOutputEligibility(state, pkg) {
 // ---------------------------------------------------------------------------
 
 export function checkHandshakeAllowance(state, pkg, env) {
-  // Cosmos Hub: allowance dependent on mechanism — EVIDENCE REQUIRED
+  // Fail closed: an environment with no defined allowance is refused.
   if (env.handshakeAllowance === null) {
     return { ok: false, reason: 'VF-COM-006: Handshake allowance undefined (mechanism incomplete)' };
   }
