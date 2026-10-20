@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { FileText, Lock, ScrollText } from 'lucide-react';
+import { FileText, Lock, ScrollText, Ban } from 'lucide-react';
 import ProvenanceBanner from '@/components/solana/ProvenanceBanner';
 import ProgramStructure from '@/components/solana/ProgramStructure';
 import PdaDerivation from '@/components/solana/PdaDerivation';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
 import { validateLockRequest, computeOutput, buildHandshakeIdentity } from '@/lib/vfSolanaLockEngine';
 import { SolanaMockAdapter } from '@/lib/vfSolanaMockAdapter';
+import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE, NOT_IN_THIS_DEPLOYMENT_LABEL } from '@/lib/vfDeploymentScope';
 
 // Parse a decimal string (e.g. "1.00") into 18-decimal fixed-point BigInt.
 function parseUsdToFixedPoint(usdStr) {
@@ -60,13 +61,15 @@ export default function SolanaLock() {
       cumulativeVclmIssued: BigInt(values.cumulativeVclmIssued || '0'),
     });
     setPreflight(result);
-    if (result.ok) {
+    if (result.ok && SOLANA_LOCKS_ENABLED) {
       setLockState(LOCK_STATES.PREFLIGHT_PASSED);
       setIdentity(result.identity);
     }
   }
 
   function onSubmit() {
+    // Not part of this deployment: never submit (the adapter refuses too).
+    if (!SOLANA_LOCKS_ENABLED) return;
     const id = `vf-sol-lock-${Date.now()}`;
     setLockId(id);
     const isHandshake = String(values.durationSecs) === '3600';
@@ -135,12 +138,23 @@ export default function SolanaLock() {
   return (
     <div className="min-h-screen bg-[#fafaf8] text-[#0a0a0a]">
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        <div role="alert" data-testid="solana-not-deployed" className="rounded-lg border-2 border-rose-300 bg-rose-50 p-4 space-y-1">
+          <div className="flex items-center gap-2">
+            <Ban className="w-5 h-5 text-rose-700" />
+            <h2 className="text-base font-bold text-rose-800">{NOT_IN_THIS_DEPLOYMENT_LABEL}</h2>
+          </div>
+          <p className="text-sm text-rose-800">{SOLANA_NOT_DEPLOYED_MESSAGE}</p>
+          <p className="text-xs text-rose-700">
+            This page is kept for reference only. A preflight here always fails and nothing can be submitted.
+          </p>
+        </div>
+
         <ProvenanceBanner />
 
         <header className="space-y-1">
           <div className="flex items-center gap-2">
             <Lock className="w-6 h-6 text-[#18324b]" />
-            <h1 className="text-2xl font-bold text-[#18324b]">Native Solana Commitment Vault Lock</h1>
+            <h1 className="text-2xl font-bold text-[#18324b]">Native Solana Commitment Vault Lock ({NOT_IN_THIS_DEPLOYMENT_LABEL})</h1>
           </div>
           <p className="text-sm text-[#6b6b65]">
             Built directly from Revision 6. Environment: Solana (Non-EVM, account-model).
