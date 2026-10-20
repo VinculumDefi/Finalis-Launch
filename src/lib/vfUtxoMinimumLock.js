@@ -18,9 +18,16 @@
 //   Bitcoin Cash 11,000 sats      = max(20 x 546, ceil((546 + 5 sat/B x 200 B) / 0.95) = 1,628), rounded up
 //   Litecoin     110,000 litoshis = max(20 x 5,460, ceil((5,460 + 20 lit/vB x 200 B) / 0.95) = 9,958), rounded up
 //
-// Other chains are not affected. The Base verifier's Handshake band
-// ($0.01 to $0.02) is not changed and still refuses every Bitcoin, Bitcoin
-// Cash and Litecoin Handshake, because 5% of $0.02 is under dust on all three.
+// Handshake (t239u, same as the Revision B verifier, t238u, and lock.py
+// HANDSHAKE_UNIT_BAND): on these three chains a 1-hour Handshake (3600 s) is a
+// set coin amount, not a USD value. Gross must be within the unit band
+// (inclusive): Bitcoin and Bitcoin Cash 11,000 to 22,000 sats, Litecoin 110,000
+// to 220,000 litoshis. No price is needed. The fee is still exactly 5% and a
+// fee under dust is refused. The verifier counts the Handshake as at most $0.02
+// for VCLM and RAC, however much it is worth. The USD minimum and floor above
+// apply to the other fifteen durations only.
+//
+// Other chains are not affected; their Handshake stays the $0.01 to $0.02 USD band.
 
 export const UTXO_MIN_LOCK_USD = { Bitcoin: '20', BitcoinCash: '1', Litecoin: '1' };
 export const UTXO_P2PKH_DUST = { Bitcoin: 546n, BitcoinCash: 546n, Litecoin: 5460n }; // lock.py P2PKH_DUST_MINIMUM
@@ -32,6 +39,23 @@ export const PRICE_MAX_AGE_SECS = 24 * 60 * 60;
 export const PRICE_MAX_FUTURE_SECS = 5 * 60;
 const FEE_BPS = 500n;
 const SCALE18 = 10n ** 18n;
+
+// Handshake unit band, inclusive. Equal to VinculumFinalisVerifier.sol
+// BTC/BCH/LTC_HANDSHAKE_MIN_UNITS / _MAX_UNITS and lock.py HANDSHAKE_UNIT_BAND.
+export const UTXO_HANDSHAKE_DURATION_SECS = 3600;
+export const UTXO_HANDSHAKE_UNIT_BAND = {
+  Bitcoin: [11000n, 22000n],
+  BitcoinCash: [11000n, 22000n],
+  Litecoin: [110000n, 220000n],
+};
+// The USD the verifier uses for these Handshakes' VCLM and RAC is capped here
+// (VinculumFinalisVerifier.sol HANDSHAKE_USD_MAX = 0.02e18).
+export const HANDSHAKE_ISSUANCE_USD_CAP = '0.02';
+export const HANDSHAKE_ISSUANCE_USD_CAP_18 = 2n * 10n ** 16n;
+const NATIVE_ASSET = { Bitcoin: 'native-BTC', BitcoinCash: 'native-BCH', Litecoin: 'native-LTC' };
+const COIN = { Bitcoin: 'BTC', BitcoinCash: 'BCH', Litecoin: 'LTC' };
+const UNIT_NAME = { Bitcoin: 'sats', BitcoinCash: 'sats', Litecoin: 'litoshis' };
+const NAME = { Bitcoin: 'Bitcoin', BitcoinCash: 'Bitcoin Cash', Litecoin: 'Litecoin' };
 
 const ALIASES = { 'Bitcoin Cash': 'BitcoinCash', BCH: 'BitcoinCash', BTC: 'Bitcoin', LTC: 'Litecoin' };
 export function minimumEnv(env) {
@@ -113,6 +137,61 @@ export function checkUtxoMinimumLock({ env, grossSmallestUnits, priceUsd, priceA
     return { ok: false, reason: `5% fee output ${fee} is under the ${UTXO_P2PKH_DUST[e]} dust minimum; refused (fee is never raised)` };
   }
   return { ok: true, grossUsd18, fee, principal: gross - fee };
+}
+
+// True for a Bitcoin, Bitcoin Cash or Litecoin Handshake (3600 s). When a canonical
+// asset id is given it must be that chain's native coin (same key the verifier uses).
+export function isUtxoHandshake(env, durationSecs, canonicalAssetId) {
+  const e = minimumEnv(env);
+  if (!e || Number(durationSecs) !== UTXO_HANDSHAKE_DURATION_SECS) return false;
+  return canonicalAssetId === undefined || canonicalAssetId === NATIVE_ASSET[e];
+}
+
+// Handshake check, no price. Returns { ok: true, fee, principal, band } or { ok: false, reason }.
+export function checkUtxoHandshakeLock({ env, grossSmallestUnits }) {
+  const e = minimumEnv(env);
+  if (!e) return { ok: false, reason: `no Handshake unit band recorded for ${env}` };
+  let gross;
+  try { gross = BigInt(grossSmallestUnits); } catch { return { ok: false, reason: 'gross is not a whole number of smallest units' }; }
+  const [low, high] = UTXO_HANDSHAKE_UNIT_BAND[e];
+  if (gross < low) return { ok: false, reason: `VF-COM-003: ${NAME[e]} Handshake is ${gross} ${UNIT_NAME[e]}, under the ${low} band minimum; refused` };
+  if (gross > high) return { ok: false, reason: `VF-COM-003: ${NAME[e]} Handshake is ${gross} ${UNIT_NAME[e]}, over the ${high} band maximum; refused` };
+  const fee = (gross * FEE_BPS) / 10000n;
+  if (fee < UTXO_P2PKH_DUST[e]) {
+    return { ok: false, reason: `5% fee output ${fee} is under the ${UTXO_P2PKH_DUST[e]} dust minimum; refused (fee is never raised)` };
+  }
+  return { ok: true, fee, principal: gross - fee, band: [low, high] };
+}
+
+// The USD (18 decimals) the verifier uses for a BTC/BCH/LTC Handshake's VCLM and RAC.
+export function capHandshakeUsd18(usd18) {
+  const v = BigInt(usd18);
+  return v > HANDSHAKE_ISSUANCE_USD_CAP_18 ? HANDSHAKE_ISSUANCE_USD_CAP_18 : v;
+}
+
+function coins(units) {
+  const s = (Number(units) / 1e8).toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
+  return s;
+}
+
+// Plain-words note for choosing a Handshake on these chains. priceUsd is shown
+// only when it is fresh (priceAsOf under 24 hours old at nowSecs).
+export function utxoHandshakeNote(env, { priceUsd, priceAsOf, nowSecs } = {}) {
+  const e = minimumEnv(env);
+  if (!e) return null;
+  const [low, high] = UTXO_HANDSHAKE_UNIT_BAND[e];
+  let usdText = 'No fresh price, so the dollar value is not shown.';
+  const p = toUsd18(priceUsd);
+  const fresh = p !== null && Number.isInteger(priceAsOf) && Number.isInteger(nowSecs)
+    && priceAsOf <= nowSecs + PRICE_MAX_FUTURE_SECS && nowSecs - priceAsOf < PRICE_MAX_AGE_SECS;
+  if (fresh) {
+    const usd = (u) => (Number((u * p) / 10n ** BigInt(UTXO_DECIMALS)) / 1e18).toFixed(2);
+    usdText = `That is about $${usd(low)} to $${usd(high)} at the current price.`;
+  }
+  return `A ${NAME[e]} Handshake is a set amount: ${coins(low)} to ${coins(high)} ${COIN[e]} `
+    + `(${low.toLocaleString('en-US')} to ${high.toLocaleString('en-US')} ${UNIT_NAME[e]}). ${usdText} `
+    + `It earns VCLM as if it were worth $${HANDSHAKE_ISSUANCE_USD_CAP}, whatever it is worth. `
+    + 'The 5% fee goes to the Dev Fund and the rest is yours to release after one hour.';
 }
 
 export const NO_FRESH_PRICE_MESSAGE = 'Minimum lock: Bitcoin, Bitcoin Cash and Litecoin locks need a fresh price (under 24 hours) to check the $20 / $1 / $1 minimum (or the native floor, whichever is higher); refused';
