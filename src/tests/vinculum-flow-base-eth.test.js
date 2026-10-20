@@ -1,0 +1,128 @@
+// VinculumFlow page: Cosmos removed, Base ETH lock call built for the new 5% Base lock.
+// Run: node --test src/tests/vinculum-flow-base-eth.test.js
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import {
+  buildCreateNativeLock, computeFee, resolvePageAsset, submitLock, submitRelease, buildRelease,
+  valuationReferenceFor, CREATE_NATIVE_LOCK_SELECTOR, ethToWei,
+} from '../lib/vfBaseEthLock.js';
+import { PERMITTED_DURATIONS, BASE_CHAIN, PENDING } from '../lib/vfIntegrationConfig.js';
+import * as cfg from '../lib/vfIntegrationConfig.js';
+
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const { ethers } = createRequire(path.join(ROOT, 'base-contracts', 'package.json'))('ethers');
+// Compiled ABI when base-contracts has been compiled (artifacts are not committed);
+// otherwise the same two signatures as written in CommitmentVaultLock.sol.
+const ART = path.join(ROOT, 'base-contracts', 'artifacts', 'contracts', 'CommitmentVaultLock.sol', 'CommitmentVaultLock.json');
+const CVL_ABI = existsSync(ART) ? JSON.parse(readFileSync(ART, 'utf8')).abi : [
+  'function createNativeLock(bytes32 lockId, address baseRecipient, uint8 outputToken, bytes32 assetIdentity, bytes32 valuationReference, address releaseDestination, uint256 duration, uint256 verifiedGrossUsd) payable returns (uint256 fee, uint256 principal)',
+  'function release(bytes32 lockId)',
+];
+const CVL = new ethers.Interface(CVL_ABI);
+const REVB = JSON.parse(readFileSync(path.join(ROOT, 'base-contracts', 'deployment', 'assetRegistry.revB.json'), 'utf8'));
+
+const A = '0x' + '11'.repeat(20);
+const B = '0x' + '22'.repeat(20);
+const ID = '0x' + 'ab'.repeat(32);
+const ok = { lockId: ID, baseRecipient: A, releaseDestination: B, outputToken: 'VCLM', durationSecs: 604800, grossEth: '0.01', priceUsd: '2500' };
+
+test('page asset is Base ETH from the active list, with the Revision B Base ETH asset id', () => {
+  const r = resolvePageAsset();
+  assert.equal(r.ok, true);
+  assert.equal(r.entry.environmentId, 'Base');
+  assert.equal(r.entry.symbol, 'ETH');
+  assert.equal(r.entry.row, 2);
+  const entries = REVB.entries || REVB;
+  const revbEth = (Array.isArray(entries) ? entries : []).find((e) => e.environmentId === 'Base' && /eth/i.test(e.symbol || ''));
+  if (revbEth && revbEth.canonicalAssetId) assert.equal(revbEth.canonicalAssetId.toLowerCase(), r.entry.canonicalAssetId.toLowerCase());
+});
+
+test('no Cosmos anywhere on the page or its config; Cosmos-only libraries removed', () => {
+  const page = readFileSync(path.join(ROOT, 'src', 'pages', 'VinculumFlow.jsx'), 'utf8');
+  for (const s of ['COSMOS_HUB', 'Keplr', 'keplr', 'uatom', 'cosmoshub-4', 'vfCosmosLock', 'vfProofAdapter']) assert.ok(!page.includes(s), s);
+  assert.equal('COSMOS_HUB' in cfg, false);
+  assert.equal(existsSync(path.join(ROOT, 'src', 'lib', 'vfCosmosLock.js')), false);
+  assert.equal(existsSync(path.join(ROOT, 'src', 'lib', 'vfProofAdapter.js')), false);
+});
+
+test('durations equal CommitmentDurations.sol (16 rows)', () => {
+  const sol = readFileSync(path.join(ROOT, 'base-contracts', 'contracts', 'CommitmentDurations.sol'), 'utf8');
+  const rows = [...sol.matchAll(/if \(secs == (\d+)\) return (\d+);/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  assert.equal(rows.length, 16);
+  assert.deepEqual(PERMITTED_DURATIONS.map((d) => [d.secs, d.multiplier_bps]), rows);
+});
+
+test('fee is floor(5%) on every duration, Handshake included', () => {
+  assert.deepEqual(computeFee(1000n), { gross: '1000', fee: '50', principal: '950' });
+  assert.deepEqual(computeFee(39n), { gross: '39', fee: '1', principal: '38' });
+  for (const d of PERMITTED_DURATIONS) {
+    const usd = d.secs === 3600 ? '1.5' : '2500'; // Handshake: 0.000006 ETH x $2,500 = $0.015
+    const r = buildCreateNativeLock({ ...ok, durationSecs: d.secs, grossEth: d.secs === 3600 ? '0.00001' : '0.01', priceUsd: usd === '1.5' ? '1500' : usd });
+    assert.equal(r.ok, true, `${d.secs}: ${r.errors}`);
+    const gross = BigInt(r.call.value);
+    assert.equal(BigInt(r.quote.fee), (gross * 500n) / 10000n);
+  }
+});
+
+test('calldata decodes with the compiled CommitmentVaultLock ABI to exactly the arguments built', () => {
+  const r = buildCreateNativeLock(ok);
+  assert.equal(r.ok, true);
+  assert.equal(CVL.getFunction('createNativeLock').selector, CREATE_NATIVE_LOCK_SELECTOR);
+  assert.equal(CVL.getFunction('release').selector, buildRelease(ID).data.slice(0, 10));
+  const d = CVL.decodeFunctionData('createNativeLock', r.call.data);
+  assert.equal(d.lockId, ID);
+  assert.equal(d.baseRecipient.toLowerCase(), A);
+  assert.equal(d.outputToken, 0n);
+  assert.equal(d.assetIdentity, resolvePageAsset().entry.canonicalAssetId);
+  assert.equal(d.releaseDestination.toLowerCase(), B);
+  assert.equal(d.duration, 604800n);
+  assert.equal(d.verifiedGrossUsd, 25n * 10n ** 18n); // 0.01 ETH x $2,500 = $25
+  assert.equal(r.call.value, (10n ** 16n).toString());
+  const p = 2500n * 10n ** 18n;
+  assert.equal(valuationReferenceFor(p), ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [p])));
+  assert.equal(d.valuationReference, valuationReferenceFor(p));
+});
+
+test('fails closed: no price, zero price, bad addresses, bad id, bad duration, CHONX without receipt', () => {
+  const bad = (o) => buildCreateNativeLock({ ...ok, ...o });
+  assert.match(bad({ priceUsd: '' }).errors.join(), /VF-ORC-005/);
+  assert.match(bad({ priceUsd: '0' }).errors.join(), /VF-ORC-005/);
+  assert.equal(bad({ baseRecipient: '0x' + '0'.repeat(40) }).ok, false);
+  assert.equal(bad({ releaseDestination: 'cosmos1abc' }).ok, false);
+  assert.equal(bad({ lockId: 'abc' }).ok, false);
+  assert.equal(bad({ durationSecs: 3601 }).ok, false);
+  assert.equal(bad({ grossEth: '0' }).ok, false);
+  assert.equal(bad({ grossEth: '0.0000000000000000001' }).ok, false); // 19 decimals
+  assert.match(bad({ outputToken: 'CHONX' }).errors.join(), /VF-COM-025/);
+  assert.equal(bad({ outputToken: 'CHONX', chonxActivationReceipt: 'r' }).ok, true);
+  assert.equal(bad({ grossEth: '0.000000000000000019' }).ok, false); // fee rounds to zero
+});
+
+test('USD bounds mirror CommitmentVaultLock.sol (Handshake $0.01 to $0.02; others at least $0.01)', () => {
+  const sol = readFileSync(path.join(ROOT, 'base-contracts', 'contracts', 'CommitmentVaultLock.sol'), 'utf8');
+  assert.match(sol, /HANDSHAKE_USD_MIN = 0\.01e18/);
+  assert.match(sol, /HANDSHAKE_USD_MAX = 0\.02e18/);
+  assert.match(sol, /STANDARD_USD_MIN = 0\.01e18/);
+  const hs = (eth) => buildCreateNativeLock({ ...ok, durationSecs: 3600, grossEth: eth, priceUsd: '1000' });
+  assert.equal(hs('0.00001').ok, true);   // $0.01
+  assert.equal(hs('0.00002').ok, true);   // $0.02
+  assert.equal(hs('0.000021').ok, false); // $0.021
+  assert.equal(hs('0.000009').ok, false); // $0.009
+  assert.equal(buildCreateNativeLock({ ...ok, grossEth: '0.000009', priceUsd: '1000' }).ok, false);
+  assert.equal(buildCreateNativeLock({ ...ok, grossEth: '0.00001', priceUsd: '1000' }).ok, true);
+});
+
+test('nothing is sent: lock and release are blocked while the new Base lock is pending', async () => {
+  assert.equal(BASE_CHAIN.lock_address, PENDING);
+  const r = buildCreateNativeLock(ok);
+  assert.equal(r.call.to, PENDING);
+  const s = await submitLock(r);
+  assert.equal(s.ok, false); assert.equal(s.blocked, true); assert.equal(s.missing, 'BASE_CHAIN.lock_address');
+  const rel = await submitRelease(ID);
+  assert.equal(rel.ok, false); assert.equal(rel.blocked, true);
+  assert.equal(ethToWei('1.5'), 15n * 10n ** 17n);
+});
