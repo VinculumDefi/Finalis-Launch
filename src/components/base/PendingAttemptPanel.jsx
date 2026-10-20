@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ENVIRONMENTS, findEnvironment } from '@/lib/vfBaseRegistry';
 import { getTerminalDispositions, isSuccessDisposition } from '@/lib/vfPendingAttemptLifecycle';
 import { ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
+import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 
 const STATE_STYLES = {
   [ATTEMPT_STATES.OBJECTIVELY_PENDING]: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
@@ -15,7 +16,7 @@ const STATE_STYLES = {
 };
 
 export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, onResolve }) {
-  const [envId, setEnvId] = useState('Solana');
+  const [envId, setEnvId] = useState('Ethereum');
   const [handshakeIdentity, setHandshakeIdentity] = useState('');
   const [lockId, setLockId] = useState('');
   const [resolveLockId, setResolveLockId] = useState('');
@@ -97,7 +98,7 @@ export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, 
             <label className="text-xs space-y-1">
               <span className="text-[#6b6b65]">Environment</span>
               <select value={envId} onChange={(e) => setEnvId(e.target.value)} className="w-full border border-[#18324b]/20 rounded px-2 py-1 text-sm">
-                {ENVIRONMENTS.filter(e => e.verificationStatus !== 'EVIDENCE_REQUIRED').map((env) => (
+                {ENVIRONMENTS.filter(e => e.verificationStatus !== 'EVIDENCE_REQUIRED' && isInThisDeployment(e.id)).map((env) => (
                   <option key={env.id} value={env.id}>{env.id}</option>
                 ))}
               </select>
