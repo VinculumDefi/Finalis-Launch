@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {
-  UTXO_MIN_LOCK_USD, UTXO_P2PKH_DUST, PRICE_MAX_AGE_SECS, hasUtxoMinimum, minGrossFor,
-  checkUtxoMinimumLock, priceAsOfSecs, toUsd18,
+  UTXO_MIN_LOCK_USD, UTXO_P2PKH_DUST, PRICE_MAX_AGE_SECS, hasUtxoMinimum, minGrossFor, usdMinGrossFor,
+  checkUtxoMinimumLock, priceAsOfSecs, toUsd18, UTXO_MIN_LOCK_FLOOR_UNITS, RELEASE_SPEND_BYTES, STRESS_RELEASE_FEE_RATE,
 } from '../lib/vfUtxoMinimumLock.js';
 import { buildMockEvent, UTXO_PRACTICE_GROSS } from '../lib/vfMockEventBuilder.js';
 
@@ -77,13 +77,60 @@ test('a fetch-time stamp is not a price age; only last_updated_at / price_as_of 
   assert.equal(priceAsOfSecs(null), null);
 });
 
-test('never raises the fee: a price rise that puts 5% under dust refuses', () => {
-  // $200,000 per BTC: $20 is 10,000 sats, 5% is 500 < 546.
-  const g = minGrossFor('Bitcoin', '200000');
-  assert.equal(g, 10000n);
-  const r = checkUtxoMinimumLock({ env: 'Bitcoin', grossSmallestUnits: g, priceUsd: '200000', priceAsOf: NOW, nowSecs: NOW });
+test('native floors match lock.py and their derivation', () => {
+  const py = readFileSync(path.join(ROOT, 'utxo-locks', 'lock.py'), 'utf8');
+  assert.match(py, /"bitcoin": 22_000,/);
+  assert.match(py, /"bitcoin-cash": 11_000,/);
+  assert.match(py, /"litecoin": 110_000,/);
+  assert.match(py, /RELEASE_SPEND_BYTES = 200/);
+  assert.match(py, /STRESS_RELEASE_FEE_RATE = \{"bitcoin": 100, "bitcoin-cash": 5, "litecoin": 20\}/);
+  assert.deepEqual(UTXO_MIN_LOCK_FLOOR_UNITS, { Bitcoin: 22000n, BitcoinCash: 11000n, Litecoin: 110000n });
+  for (const env of Object.keys(UTXO_MIN_LOCK_FLOOR_UNITS)) {
+    const dust = UTXO_P2PKH_DUST[env];
+    const need = dust + STRESS_RELEASE_FEE_RATE[env] * RELEASE_SPEND_BYTES;
+    const viaRelease = (need * 100n + 94n) / 95n;
+    const raw = 20n * dust > viaRelease ? 20n * dust : viaRelease;
+    const floor = UTXO_MIN_LOCK_FLOOR_UNITS[env];
+    assert.ok(floor >= raw && floor - raw < 1000n, env);
+    const fee = (floor * 500n) / 10000n;
+    assert.ok(fee >= dust, env);
+    assert.ok(floor - fee - STRESS_RELEASE_FEE_RATE[env] * RELEASE_SPEND_BYTES >= dust, env);
+  }
+});
+
+test('effective minimum: USD minimum wins at today\'s price, the floor wins at high prices; at it accepted with exact 5%, one below refused', () => {
+  const cases = [
+    ['Bitcoin', '82000', 24391n, 'usd'],
+    ['Bitcoin', '250000', 22000n, 'floor'],
+    ['Bitcoin', '1000000', 22000n, 'floor'],
+    ['BitcoinCash', '276.69', 361416n, 'usd'],
+    ['BitcoinCash', '2766.9', 36142n, 'usd'],
+    ['BitcoinCash', '27669', 11000n, 'floor'],
+    ['Litecoin', '59.7', 1675042n, 'usd'],
+    ['Litecoin', '597', 167505n, 'usd'],
+    ['Litecoin', '5970', 110000n, 'floor'],
+  ];
+  for (const [env, price, expected, wins] of cases) {
+    const g = minGrossFor(env, price);
+    assert.equal(g, expected, `${env} ${price}`);
+    assert.equal(UTXO_MIN_LOCK_FLOOR_UNITS[env] > usdMinGrossFor(env, price) ? 'floor' : 'usd', wins, `${env} ${price}`);
+    const r = checkUtxoMinimumLock({ env, grossSmallestUnits: g, priceUsd: price, priceAsOf: NOW, nowSecs: NOW });
+    assert.equal(r.ok, true, `${env} ${price}: ${r.reason}`);
+    assert.equal(r.fee, (g * 500n) / 10000n);
+    assert.equal(r.principal, g - r.fee);
+    const b = checkUtxoMinimumLock({ env, grossSmallestUnits: g - 1n, priceUsd: price, priceAsOf: NOW, nowSecs: NOW });
+    assert.equal(b.ok, false);
+    assert.match(b.reason, wins === 'floor' ? /native floor/ : /needs at least \$/);
+  }
+});
+
+test('never raises the fee: a price rise that would put 5% under dust is refused by the floor', () => {
+  // $200,000 per BTC: $20 is 10,000 sats, 5% is 500 < 546. The floor (22,000) refuses it.
+  assert.equal(usdMinGrossFor('Bitcoin', '200000'), 10000n);
+  assert.equal(minGrossFor('Bitcoin', '200000'), 22000n);
+  const r = checkUtxoMinimumLock({ env: 'Bitcoin', grossSmallestUnits: 10000n, priceUsd: '200000', priceAsOf: NOW, nowSecs: NOW });
   assert.equal(r.ok, false);
-  assert.match(r.reason, /dust/);
+  assert.match(r.reason, /native floor/);
 });
 
 test('other chains are refused by this check (no minimum recorded), not silently passed', () => {
