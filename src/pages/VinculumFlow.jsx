@@ -14,7 +14,6 @@ import {
 import { useApprovedAssetRegistry } from '@/hooks/useApprovedAssetRegistry';
 
 // The asset this page locks: Base native ETH (Revision B row 2), from the active list.
-// Cosmos Hub is permanently dropped (t228u) and is not offered anywhere on this page.
 
 function StatusPill({ ok, children }) {
   return ok
