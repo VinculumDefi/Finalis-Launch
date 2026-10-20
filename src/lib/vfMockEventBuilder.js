@@ -69,9 +69,19 @@ export function buildXrplMockEvent(duration, outputToken) {
   };
 }
 
+export const UTXO_PRACTICE_GROSS = {
+  Bitcoin: 100000n,       // 0.001 BTC
+  BitcoinCash: 1800000n,  // 0.018 BCH
+  Litecoin: 8400000n,     // 0.084 LTC
+};
+
 export function buildUtxoMockEvent(env, duration, outputToken) {
   const sym = env === 'Bitcoin' ? 'BTC' : env === 'Litecoin' ? 'LTC' : env === 'Dogecoin' ? 'DOGE' : env === 'DigiByte' ? 'DGB' : env === 'Zcash' ? 'ZEC' : 'BCH';
-  const gross = 100000n; // 0.001 BTC-like (8 dec)
+  // Practice gross, 8 decimals. Bitcoin Cash and Litecoin are sized to clear the $1
+  // minimum lock (t230u) with room for price drops: about $5 at the 2026-10-20 12:30 PM ET
+  // CoinGecko prices (BCH $276.69, LTC $59.70). Bitcoin stays 0.001 BTC (about $82 at
+  // $82,405), over its $20 minimum. Other UTXO chains keep 100,000 units.
+  const gross = UTXO_PRACTICE_GROSS[env] ?? 100000n;
   const bps = feeBpsForDuration(duration);
   const fee = (gross * bps) / 10000n;
   return {
