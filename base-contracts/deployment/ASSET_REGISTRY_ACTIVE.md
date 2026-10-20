@@ -1,4 +1,9 @@
-# Active asset registry
+# Active asset registry (superseded)
+
+> **Superseded by Revision B** (`assetRegistry.revB.json`, 487 entries, 2026-10-19).
+> This 822-entry file is kept unchanged as a record and is not read by the
+> ceremony, the verifier registration, the token address index, the price runs
+> or the deploy pages. See `ASSET_REGISTRY_REVISIONS.md`.
 
 `assetRegistry.active.json` is the set of registry rows that are currently
 usable. It is a strict subset of the historical registry
