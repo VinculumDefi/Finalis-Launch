@@ -7,9 +7,10 @@
 // building. SHA-256 for lock_id hashing uses the browser Web Crypto API,
 // matching the on-chain solana_program::hash::hashv.
 //
-// STATUS: Functional in the Base44 environment. PDA derivation and instruction
-// encoding work client-side. Transaction submission requires a deployed
-// program (program ID is currently a placeholder).
+// STATUS: Not part of this deployment (vfDeploymentScope.js). The constants
+// below mirror the Rust program and are kept unchanged for later. PDA
+// derivation and read-only queries still work; the lock instruction builder
+// refuses (fail closed). Program ID is a placeholder.
 // =============================================================================
 
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -17,6 +18,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token
 
 // Buffer polyfill for browser/Vite (needed by @solana/web3.js internals)
 import { Buffer } from 'buffer';
+import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE } from './vfDeploymentScope.js';
 if (typeof globalThis.Buffer === 'undefined') {
   globalThis.Buffer = Buffer;
 }
@@ -93,6 +95,8 @@ export function deriveVaultPda(mint, programId = PROGRAM_ID) {
 // --- Instruction parameter builder (serializable for Anchor) ---
 
 export async function buildCommitVaultLockParams(params) {
+  // Solana is not part of this deployment: no lock instruction is built.
+  if (!SOLANA_LOCKS_ENABLED) throw new Error(SOLANA_NOT_DEPLOYED_MESSAGE);
   const lockIdHash = await hashLockId(params.lockId);
 
   return {
