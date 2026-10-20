@@ -7,7 +7,7 @@ import LockConfigForm from '@/components/solana/LockConfigForm';
 import PreflightPanel from '@/components/solana/PreflightPanel';
 import LifecyclePanel from '@/components/solana/LifecyclePanel';
 import { Button } from '@/components/ui/button';
-import { AUTHORITY, SCALE, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
+import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
 import { validateLockRequest, computeOutput, buildHandshakeIdentity } from '@/lib/vfSolanaLockEngine';
 import { SolanaMockAdapter } from '@/lib/vfSolanaMockAdapter';
 
