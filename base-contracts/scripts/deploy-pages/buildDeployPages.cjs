@@ -4,7 +4,9 @@
  * Reads only repository sources:
  *   artifacts/ (npx hardhat compile --force, current contracts/)
  *   deployment/representativeBase.cjs   (environments, locks, Dev Funds)
- *   deployment/assetRegistry.resolved.json (scripts/deploy-pages/resolveAssetRegistry.cjs)
+ *   deployment/assetRegistry.revB.json (Revision B, scripts/buildRevisionB.cjs,
+ *     via scripts/registryFile.cjs; the prior revision assetRegistry.resolved.json
+ *     from resolveAssetRegistry.cjs is no longer read here)
  *   ../utxo-locks/{finality,lock}.py    (confirmations, dust, binding rule)
  *   ../src/solana-vault                 (program id, config seed)
  *
@@ -57,7 +59,8 @@ const ARTS = {
   stake: artifact("VinculumFinalisStake.sol", "VinculumFinalisStake"),
 };
 
-const registry = JSON.parse(fs.readFileSync(path.join(BC, "deployment/assetRegistry.resolved.json"), "utf8"));
+const { REGISTRY_NAME, loadRegistry } = require("../registryFile.cjs");
+const registry = loadRegistry().reg; // Revision B: every entry is written (Base ETH is row 2 under Base)
 
 const utxo = JSON.parse(
   execFileSync("python3", ["-B", "-c",
@@ -256,11 +259,11 @@ function basePage() {
 <li>Stake: VinculumFinalisStake(VCLM, CHONX, Forge, Verifier, launchTimestamp).</li>
 <li>Verifier.setScheduledPricePoster(price fetcher).</li>
 <li>Verifier.configureDevFund for ${evmDevFunds.map((d) => esc(d.env)).join(", ")} = ${BASE_DEV_FUND} (deployment/representativeBase.cjs).</li>
-<li>Verifier.registerAssetPrecision for ${writes.length} registry entries (${registry.counts.entries} rows from ${registry.registry.count}, Cosmos row dropped; ${notWritten.length} rows cannot be written, listed below).</li>
+<li>Verifier.registerAssetPrecision for ${writes.length} registry entries (Revision B, ${esc(REGISTRY_NAME)}: ${registry.counts.tokens} tokens and ${registry.counts.native} native entries; ${notWritten.length} rows cannot be written, listed below).</li>
 <li><b>Stop.</b> Not sent: Verifier.finalize(); VCLM.initialize(Verifier, Stake); CHONX.initialize(Verifier, 0x0000000000000000000000000000000000000000).</li>
 </ol>
 <p>Non-EVM Dev Fund destinations are not addresses, and configureDevFund(string, address) in the current Verifier cannot hold them. They are printed, not written: ${nonEvmDevFunds.map((d) => esc(d.env) + " " + esc(d.devFund)).join("; ")}.</p>
-<p>Registry source: <code>${esc(registry.registry.url)}</code> sha256 <code>${registry.registry.sha256}</code>, resolved ${esc(registry.resolvedAt)} by scripts/deploy-pages/resolveAssetRegistry.cjs (deployment/assetRegistry.resolved.json).</p>
+<p>Registry source: <code>${esc(registry.registry.url)}</code> sha256 <code>${registry.registry.sha256}</code>. Revision B (${esc(registry.date)}, ${esc(REGISTRY_NAME)}), a subset of the prior revision deployment/assetRegistry.resolved.json with rows copied unchanged.</p>
 <h3>Registry rows that are not written</h3>
 <ul>${notWritten.map((n) => `<li>row ${n.row} ${esc(n.env)} ${esc(n.symbol)}: ${esc(n.why)}</li>`).join("")}</ul>
 ${CDN}

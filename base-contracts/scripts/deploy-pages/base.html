@@ -20,7 +20,7 @@
 <main>
   <h1>Base ceremony</h1>
   <p>Deploys a new 5% CommitmentVaultLock("Base"), VCLM, CHONX, the Verifier, Forge (VinculumFinalisSynth) and Stake. Stake is on from the start: VCLM is initialised with the Verifier and Stake as its minters. Every lock duration, including the 1-hour Handshake, charges 5.00% of gross.</p>
-  <p>Before finalize it deploys and registers 15 readers: Base; Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche (bound to the NEW 5% locks entered below); Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash (live Dev Fund scripts); Stellar and XRP Ledger (live Dev Fund key and account). Solana is not registered. Then: registry in batches of 50 (961 rows plus Base ETH), Dev Fund for the seven EVM chains, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
+  <p>Before finalize it deploys and registers 15 readers: Base; Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche (bound to the NEW 5% locks entered below); Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash (live Dev Fund scripts); Stellar and XRP Ledger (live Dev Fund key and account). Solana is not registered. Then: registry in batches of 50 (Revision B: 486 rows plus Base ETH = 487), Dev Fund for the seven EVM chains, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
   <p>Run the six non-Base lock pages first and paste the new lock addresses here. The page refuses the old 2.5% locks.</p>
   <div id="locks"></div>
   <p><button id="connect">Connect wallet</button> <span id="who"></span></p>

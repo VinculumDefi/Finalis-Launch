@@ -40,7 +40,7 @@ address equal to the poster, the Dev Fund or the wallet. It then runs
    - Stellar (public network, live Dev Fund key) and XRP Ledger (live Dev Fund account).
    - Solana is not registered.
    The Dev Fund wiring is decoded and checksum-checked from the recorded Dev Funds by `scripts/build_ceremony_artifacts.cjs` into `ceremony-data.json`.
-5. Write the registry in batches of 50: the 961 existing rows plus the Base ETH row.
+5. Write the registry in batches of 50: the Revision B rows (`deployment/assetRegistry.revB.json`): 486 rows plus the Base ETH row, 487 lines. Then the token address index (475 addresses) and the native-coin aliases (Polygon POL to row 114, Arbitrum and Optimism ETH to row 2).
 6. Set the Dev Fund for all seven EVM chains.
 7. Set the price poster to the deployer wallet for the first Base ETH price only (run 1). Write that price, then read it back as usable.
 8. Hand the price poster to `0x6001…0DB4` and read it back.

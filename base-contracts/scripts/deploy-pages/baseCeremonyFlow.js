@@ -7,8 +7,8 @@
 //   -> 15 readers deployed and registered: Base, 6 EVM (bound to the NEW
 //      non-Base 5% locks typed into the page), 6 UTXO, Stellar, XRP Ledger.
 //      Solana is not registered.
-//   -> registry (batches of 50, 961 rows + Base ETH) -> token address index
-//      (823 addresses) and the Polygon native POL alias -> Dev Fund for the 7 EVM
+//   -> registry (batches of 50, Revision B: 486 rows + Base ETH = 487) -> token
+//      address index (475 addresses) and the Polygon native POL alias -> Dev Fund for the 7 EVM
 //      chains -> poster = this wallet, price run 1, read usable
 //   -> poster handed to the live poster -> finalize.
 (function (root) {

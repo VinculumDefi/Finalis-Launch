@@ -26,8 +26,12 @@ Dev Funds come from `deployment/representativeBase.cjs`. The Base Dev Fund is `0
 ```
 npm install --legacy-peer-deps
 npx hardhat compile --force
-node scripts/deploy-pages/resolveAssetRegistry.cjs   # read-only RPC reads; writes deployment/assetRegistry.resolved.json
-node scripts/deploy-pages/buildDeployPages.cjs       # writes the sixteen pages
+node scripts/deploy-pages/resolveAssetRegistry.cjs   # read-only RPC reads; writes deployment/assetRegistry.resolved.json (prior revision, historical)
+node scripts/buildRevisionB.cjs                      # writes deployment/assetRegistry.revB.json (current, Revision B)
+node scripts/buildTokenAddressIndex.cjs              # writes deployment/tokenAddressIndex.json from Revision B
+node scripts/deploy-pages/buildDeployPages.cjs       # writes the sixteen pages from Revision B
 ```
+
+The pages, the ceremony data and the test-chain ceremony read Revision B (`deployment/assetRegistry.revB.json`, 487 entries) through `scripts/registryFile.cjs`. `assetRegistry.resolved.json` is the prior revision and is kept unchanged. See `deployment/ASSET_REGISTRY_REVISIONS.md`.
 
 `resolveAssetRegistry.cjs` reads the 1,001-row registry from the URL in `src/lib/vfRegistryVerification.js` and drops the Cosmos row. Token decimals come from `decimals()` on each token's own network or from the Solana mint account. Native decimals come from `src/lib/vfBaseRegistry.js`. If a row's decimals cannot be read, the script records the reason and the row is not written. No decimals are guessed. Two Solana rows share a mint with an earlier row, so they map to the same Verifier key and are not written a second time.
