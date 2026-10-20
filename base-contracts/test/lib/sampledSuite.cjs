@@ -3,7 +3,11 @@
 // here from Revision 6 constants in src/lib/vfRevision6Authority.js, not from
 // the contract), release refused before maturity, release at maturity returns
 // exactly rec.principal (95% of gross) to the destination, second release
-// refused. One CHONX case per lock configuration.
+// refused, a wallet other than the recorded destination refused. TRS: each of
+// the four staking positions holds exactly the staked VCLM, withdraw is refused
+// before maturity and for a non-owner, returns exactly the staked VCLM to the
+// owner at maturity, and a second withdraw is refused (t224u piece 4).
+// One CHONX case per lock configuration.
 // Sampled CVL + TRS tests (t204u/t205u). For each of the seven EVM lock
 // configurations, every sampled token (all when few, the seeded 10% plus the
 // always-included well-known tokens and the native coin when many - see
@@ -146,6 +150,7 @@ async function lockProveMint(env, user, recipient, dest, asset, duration, opt = 
   expect(rec.gross).to.equal(units);
   expect(rec.fee).to.equal((units * 500n) / 10000n); // 5% on every duration, Handshake included
   expect(rec.principal).to.equal(units - (units * 500n) / 10000n);
+  expect(rec.releaseDestination).to.equal(dest); // the recorded destination is the one given at lock creation
   let proof, finality = "0x";
   if (env === "Base") proof = coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
     [lockId, rec.gross, rec.fee, rec.principal, rec.duration, rec.createdAt, rec.maturity]);
@@ -197,8 +202,13 @@ async function releaseAtMaturity(env, destSigner, asset, l) {
   }
   const now2 = BigInt((await ethers.provider.getBlock("latest")).timestamp);
   if (l.rec.maturity > now2) await network.provider.send("evm_setNextBlockTimestamp", [Number(l.rec.maturity)]);
+  // At maturity, any wallet other than the recorded destination is refused.
+  const other = (await ethers.getSigners())[3];
+  expect(other.address).to.not.equal(l.rec.releaseDestination);
+  await expect(V.locks[env].connect(other).release(l.lockId)).to.be.revertedWith("CVL: destination");
   // principal = gross - floor(5% of gross); exactly 95% when 5% of gross is a whole unit.
   expect(l.rec.principal).to.equal(l.rec.gross - (l.rec.gross * 500n) / 10000n);
+  expect(l.rec.releaseDestination).to.equal(destSigner.address);
   if ((l.rec.gross * 500n) % 10000n === 0n) expect(l.rec.principal * 100n).to.equal(l.rec.gross * 95n);
   if (asset.token) {
     const tok = await ethers.getContractAt("TestFixtureERC20", asset.token);
@@ -215,14 +225,42 @@ async function stakeAllFour(holder) {
   const each = bal / 4n;
   expect(each).to.be.gt(0n);
   await V.vclm.connect(holder).approve(await V.stake.getAddress(), bal);
+  const ids = [];
+  const stakeBefore = await V.vclm.balanceOf(await V.stake.getAddress());
   for (const [secs, bps] of TRS) {
     const id = await V.stake.nextPositionId();
     await V.stake.connect(holder).createPosition(0, each, secs);
     const pos = await V.stake.positions(id);
     expect(pos.owner).to.equal(holder.address);
+    expect(pos.amount).to.equal(each);
     expect(pos.durationSecs).to.equal(secs);
     expect(pos.multiplierBps).to.equal(bps);
+    expect(pos.endTimestamp - pos.startTimestamp).to.equal(secs);
+    ids.push(id);
   }
+  expect((await V.vclm.balanceOf(await V.stake.getAddress())) - stakeBefore).to.equal(each * 4n);
+  expect(await V.vclm.balanceOf(holder.address)).to.equal(bal - each * 4n);
+  // Withdraw each position (in a snapshot, so the next token's timing is unchanged):
+  // refused before maturity and for a non-owner; at maturity exactly the staked VCLM
+  // returns to the owner; a second withdraw is refused.
+  const snap = await network.provider.send("evm_snapshot", []);
+  const other = (await ethers.getSigners())[3];
+  for (const id of ids) {
+    const pos = await V.stake.positions(id);
+    const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+    if (pos.endTimestamp - 1n > now) {
+      await network.provider.send("evm_setNextBlockTimestamp", [Number(pos.endTimestamp - 1n)]);
+      await expect(V.stake.connect(holder).withdrawPosition(id)).to.be.revertedWith("VFS: not matured");
+    }
+    const now2 = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+    if (pos.endTimestamp > now2) await network.provider.send("evm_setNextBlockTimestamp", [Number(pos.endTimestamp)]);
+    await expect(V.stake.connect(other).withdrawPosition(id)).to.be.revertedWith("VFS: not owner");
+    await expect(V.stake.connect(holder).withdrawPosition(id)).to.changeTokenBalances(V.vclm, [holder, V.stake], [each, -each]);
+    expect((await V.stake.positions(id)).withdrawn).to.equal(true);
+    await expect(V.stake.connect(holder).withdrawPosition(id)).to.be.revertedWith("VFS: withdrawn");
+  }
+  expect(await V.vclm.balanceOf(holder.address)).to.equal(bal);
+  await network.provider.send("evm_revert", [snap]);
 }
 
 async function funded() {
