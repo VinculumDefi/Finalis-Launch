@@ -61,7 +61,7 @@ export default function LockConfigForm({ values, onChange }) {
       <div className="space-y-1">
         <Label className="text-xs text-[#6b6b65]">SIMULATION — Verified Gross USD Value ($)</Label>
         <Input value={values.verifiedGrossUsd} onChange={set('verifiedGrossUsd')} placeholder="e.g. 1.00 or 10.50" inputMode="decimal" />
-        <p className="text-[10px] text-[#6b6b65]">Price lookup simulated. VF-COM-003: Handshake $0.95–$1.05. VF-COM-009: Standard ≥ $10.00.</p>
+        <p className="text-[10px] text-[#6b6b65]">Price lookup simulated. VF-COM-003 (Rev 12): Handshake $0.01 to $0.02. VF-COM-009: Standard minimum $0.01. Fee 5% on every duration.</p>
       </div>
 
       <div className="space-y-1">
