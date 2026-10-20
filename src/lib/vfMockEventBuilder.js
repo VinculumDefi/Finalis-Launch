@@ -3,16 +3,11 @@
 
 import { findAssetPrecision } from './vfBaseRegistry.js';
 import { OUTPUT_TOKEN } from './vfProofNormalizer.js';
-import { HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority.js';
+// Rev 12: every duration, the 1-hour Handshake included, uses 500 bps (5%).
+// feeBpsForDuration comes from vfLiveRules.js, which matches the contracts.
+import { feeBpsForDuration } from './vfLiveRules.js';
 
 function now() { return Math.floor(Date.now() / 1000); }
-
-// VF-COM-004/009: Handshake durations use 250 bps (2.5%), standard use 500 bps (5%).
-function feeBpsForDuration(duration) {
-  return BigInt(Number(duration) === HANDSHAKE_DURATION_SECS
-    ? FIXED_RULES.handshake_fee_bps
-    : FIXED_RULES.standard_fee_bps);
-}
 
 export function buildSolanaMockEvent(duration, outputToken) {
   const gross = 1000000000n; // 1 SOL (9 dec)
