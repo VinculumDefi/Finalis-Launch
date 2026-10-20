@@ -39,10 +39,9 @@ test('S1 and S2 are the named assets and everyone else in the table is S3', () =
   assert.equal(findAssetPrecision('Ethereum', 'UNI').custodyClass, 'S2');
   assert.equal(findAssetPrecision('Base', 'native-ETH').custodyClass, 'S3');
   assert.equal(findAssetPrecision('BNB', 'native-BNB').custodyClass, 'S3');
-  assert.equal(findAssetPrecision('CosmosHub', 'native-uatom').custodyClass, 'S3');
 });
 
-test('handshake allowance is derived and Cosmos is not given a count', () => {
+test('handshake allowance is derived for all 16 environments', () => {
   const sixteen = [
     'Base', 'Ethereum', 'Polygon', 'Optimism', 'Arbitrum', 'BNB', 'Avalanche',
     'Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash',
@@ -53,8 +52,7 @@ test('handshake allowance is derived and Cosmos is not given a count', () => {
     assert.ok(env, id);
     assert.equal(env.handshakeAllowance, handshakeAllowanceFor(env.countsPerIdentity));
   }
-  const cosmos = ENVIRONMENTS.find((row) => row.id === 'CosmosHub');
-  assert.equal(cosmos.handshakeAllowance, null);
+  assert.equal(ENVIRONMENTS.length, sixteen.length);
   assert.equal(handshakeAllowanceFor(true), 3);
   assert.equal(handshakeAllowanceFor(false), 1);
 });
