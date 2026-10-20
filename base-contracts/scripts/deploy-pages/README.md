@@ -18,7 +18,7 @@ the whole Base ceremony and ends with `finalize()`, which is permanent.
 | BNB Smart Chain | `bnb-smart-chain.html` | MetaMask, chain id 56 only. CommitmentVaultLock("BNB Smart Chain", Dev Fund). |
 | Avalanche | `avalanche.html` | MetaMask, chain id 43114 only. CommitmentVaultLock("Avalanche", Dev Fund). |
 | Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash | `bitcoin.html`, `bitcoin-cash.html`, `litecoin.html`, `dogecoin.html`, `digibyte.html`, `zcash.html` | Plan only. The utxo-locks CLTV P2SH lock is a per-user transaction, so there is nothing to deploy. Prints the Dev Fund, confirmations, dust and binding rule. |
-| Solana | `solana.html` | Plan only. Prints the vf-solana-vault program id, config PDA and Dev Fund. Program upload needs the program keypair through the CLI. The page has one read-only mainnet status check. |
+| Solana | `solana.html` | Not part of this deployment (no Solana reader is registered; the app refuses Solana locks). Plan only, kept for later. Prints the vf-solana-vault program id, config PDA and Dev Fund. Program upload needs the program keypair through the CLI. The page has one read-only mainnet status check. |
 | Stellar | `stellar.html` | Plan only. Claimable-balance lock; nothing to deploy. |
 | XRP Ledger | `xrp-ledger.html` | Plan only. EscrowCreate FinishAfter lock; nothing to deploy. |
 
@@ -43,8 +43,11 @@ node scripts/deploy-pages/buildDeployPages.cjs       # the fifteen chain pages (
 node scripts/build_ceremony_artifacts.cjs            # ceremony.json, and ceremony-data.json with a fresh first Base ETH price
 ```
 
-`broadcast.html` and `ceremony.html` in `scripts/` are not used for this
-deployment.
+Retired, not used for this deployment: `scripts/broadcast.html`,
+`scripts/ceremony.html`, `scripts/broadcastBaseTest.cjs`,
+`scripts/broadcastRepresentativeBase.cjs`, `scripts/broadcastMintPath.cjs` and
+`scripts/buildBroadcastPage.cjs`. Each is a stub that sends nothing and points
+to `deployment/DEPLOYMENT_DAY_RUNBOOK.md`. The old versions are in git history.
 
 ## Registry rebuild (NOT on the day)
 
@@ -56,7 +59,6 @@ registry revision.
 node scripts/deploy-pages/resolveAssetRegistry.cjs   # read-only RPC reads; writes deployment/assetRegistry.resolved.json (prior revision, historical)
 node scripts/buildRevisionB.cjs                      # writes deployment/assetRegistry.revB.json (current, Revision B)
 node scripts/buildTokenAddressIndex.cjs              # writes deployment/tokenAddressIndex.json from Revision B
-node scripts/buildBroadcastPage.cjs                  # rewrites the contracts embedded in scripts/broadcast.html
 ```
 
 The pages, the ceremony data and the test-chain ceremony read Revision B (`deployment/assetRegistry.revB.json`, 487 entries) through `scripts/registryFile.cjs`. `assetRegistry.resolved.json` is the prior revision and is kept unchanged. See `deployment/ASSET_REGISTRY_REVISIONS.md`.
