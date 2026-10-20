@@ -15,6 +15,7 @@ import { VerifierState, verifyProof, computeIssuanceFromUsd, checkUsdBounds } fr
 import { normalizeUtxoEvidence, normalizeEvmEvidence } from '../lib/vfProofNormalizer.js';
 import { findAssetPrecision } from '../lib/vfBaseRegistry.js';
 import { FIXED_RULES } from '../lib/vfRevision6Authority.js';
+import { feeBpsForDuration } from '../lib/vfLiveRules.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (rel) => readFileSync(path.join(ROOT, rel), 'utf8');
@@ -25,7 +26,7 @@ const NATIVE = { Bitcoin: 'native-BTC', BitcoinCash: 'native-BCH', Litecoin: 'na
 function utxoPkg(env, duration = 3600, gross) {
   const mock = buildMockEvent(env, duration, 'VCLM');
   if (gross !== undefined) {
-    const fee = (BigInt(gross) * BigInt(Number(duration) === 3600 ? FIXED_RULES.handshake_fee_bps : FIXED_RULES.standard_fee_bps)) / 10000n;
+    const fee = (BigInt(gross) * feeBpsForDuration(duration)) / 10000n; // 5% on every duration (Rev 12)
     mock.event.gross_satoshis = String(gross);
     mock.event.fee_satoshis = String(fee);
     mock.event.principal_satoshis = String(BigInt(gross) - fee);
