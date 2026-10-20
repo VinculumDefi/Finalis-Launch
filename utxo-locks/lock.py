@@ -13,6 +13,11 @@ Minimum lock size (operator, t230u): a standard lock on Bitcoin must be at
 least $20 gross, on Bitcoin Cash and Litecoin at least $1 gross, valued at lock
 time from a fresh price (under 24 hours old). No price, a bad price or a stale
 price refuses the lock. Real locks on those chains go through lock_outputs().
+
+Native floor (operator, t235u): the minimum is the HIGHER of the USD minimum
+and a fixed floor in smallest units (MIN_LOCK_FLOOR_UNITS), so a lock at the
+minimum keeps an exact 5% fee at or above dust, and a release that still
+clears a stress fee rate, however high the coin price goes.
 The Handshake band is not changed here: the Base verifier's $0.01-$0.02
 Handshake band still refuses every Bitcoin, Bitcoin Cash and Litecoin Handshake.
 
@@ -165,6 +170,24 @@ MIN_LOCK_USD = {
     "bitcoin-cash": Decimal("1"),
     "litecoin": Decimal("1"),
 }
+# Native floor per chain, smallest units (operator, t235u). Each is the larger of
+#   20 x the P2PKH dust minimum (so floor(5%) >= dust), and
+#   the smallest gross whose 95% principal pays a RELEASE_SPEND_BYTES release
+#   at STRESS_RELEASE_FEE_RATE and still leaves at least dust,
+# rounded up to a clean number. Derivation (dust, release 200 bytes):
+#   bitcoin:      max(10,920, ceil((546 + 100 x 200) / 0.95) = 21,628)  -> 22,000 sats
+#   bitcoin-cash: max(10,920, ceil((546 + 5 x 200) / 0.95) = 1,628)     -> 11,000 sats
+#   litecoin:     max(109,200, ceil((5,460 + 20 x 200) / 0.95) = 9,958) -> 110,000 litoshis
+# The release spend (one P2SH CLTV input, one P2PKH output) measured 198 to
+# 200 bytes on local Bitcoin Core 31.1, Bitcoin Cash Node 29.2.0 and Litecoin
+# Core 0.21.4 regtest nodes; 200 is used.
+MIN_LOCK_FLOOR_UNITS = {
+    "bitcoin": 22_000,
+    "bitcoin-cash": 11_000,
+    "litecoin": 110_000,
+}
+RELEASE_SPEND_BYTES = 200
+STRESS_RELEASE_FEE_RATE = {"bitcoin": 100, "bitcoin-cash": 5, "litecoin": 20}  # units per byte
 # BTC, BCH and LTC all have 8 decimals (satoshi / litoshi).
 SMALLEST_UNITS_PER_COIN = 100_000_000
 # Fresh price: under 24 hours old at lock time (same rule as the price fetcher's natives).
@@ -239,17 +262,25 @@ def check_minimum_lock(chain: str, gross: int, *, price_usd, price_as_of, now) -
     minimum = MIN_LOCK_USD[chain]
     if usd < minimum:
         raise LockRefused(f"{chain}: lock is ${usd:.4f}, under the ${minimum} minimum; refused")
+    floor = MIN_LOCK_FLOOR_UNITS[chain]
+    if gross < floor:
+        raise LockRefused(f"{chain}: lock is {gross} units, under the {floor}-unit floor; refused")
     return usd
 
 
-def min_gross_for(chain: str, price_usd) -> int:
-    """Smallest gross (smallest units) worth at least the chain's minimum at this price."""
+def usd_min_gross_for(chain: str, price_usd) -> int:
+    """Smallest gross (smallest units) worth at least the chain's USD minimum at this price."""
     if chain not in MIN_LOCK_USD:
         raise LockRefused(f"no minimum lock size recorded for {chain}")
     p = _price(price_usd)
     units = MIN_LOCK_USD[chain] * SMALLEST_UNITS_PER_COIN / p
     whole = int(units)
     return whole if Decimal(whole) == units else whole + 1
+
+
+def min_gross_for(chain: str, price_usd) -> int:
+    """Effective minimum: the higher of the USD minimum at this price and the native floor."""
+    return max(usd_min_gross_for(chain, price_usd), MIN_LOCK_FLOOR_UNITS[chain])
 
 
 def lock_outputs(chain: str, gross: int, *, price_usd=None, price_as_of=None, now=None) -> tuple[int, int, int]:
