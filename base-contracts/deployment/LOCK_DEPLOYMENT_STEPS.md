@@ -88,9 +88,9 @@ For each of Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche:
 The new Base lock is deployed by `scripts/deploy-pages/base.html` as step 1 of
 the Base ceremony (see `LIVE_DEPLOYMENT_ORDER.md`). There is no separate Base
 lock page, because the ceremony must bind its Base reader to the lock it just
-deployed. After the page reports the Base lock address, run
+deployed. The page logs the new Base lock address first. Run
 `node scripts/prepareLockDeploy.cjs --check Base <newBaseLockAddress>` before
-letting the ceremony continue past the reader step.
+signing the next MetaMask prompt; if it fails, reject the prompt and stop.
 
 ## Later steps (separate, NOT done now)
 These come after all seven locks pass the check. Each needs its own approval.
@@ -115,11 +115,22 @@ These come after all seven locks pass the check. Each needs its own approval.
   cannot be added later. Do not start the ceremony until all six checks pass.
 - The live finalized verifier `0xb067…f47D` is not changed by any of this.
 
-## Open issue: BTC, BCH and LTC Handshakes (flagged, not changed)
-The verifier accepts a Handshake only when the lock is worth $0.01 to $0.02.
-On Bitcoin, Bitcoin Cash and Litecoin, a 5% fee output that small is below the
-dust limit, and the verifier requires the fee to equal exactly 5%. So a
-Handshake on these three chains is always refused. Fixing this needs a
-verifier contract change (for example a different Handshake band or rule for
-these chains). It is not part of this preparation, and no verifier contract
-was changed.
+## Resolved: BTC, BCH and LTC Handshakes (commit b1ef1f5)
+Before: the verifier accepted a Handshake only when the lock was worth $0.01
+to $0.02. On Bitcoin, Bitcoin Cash and Litecoin a 5% fee output that small is
+below dust, so every Handshake on these chains was refused.
+
+What changed, in the Revision B verifier only (`contracts/VinculumFinalisVerifier.sol`,
+not yet deployed; the live finalized verifier `0xb067…f47D` is unchanged):
+- For a Bitcoin, Bitcoin Cash or Litecoin native Handshake (3600 s), the gross
+  must be inside a band in coin units, inclusive: Bitcoin and Bitcoin Cash
+  11,000 to 22,000 sats, Litecoin 110,000 to 220,000 litoshis. Outside it the
+  verifier refuses with "VF-COM-003: handshake gross below unit band" or
+  "above unit band". The three chains are found by their proven native asset
+  id and environment together.
+- The USD used for that Handshake's VCLM and RAC is capped at $0.02.
+- The fee must still be exactly 5% of the real gross.
+- Every other chain keeps the $0.01 to $0.02 USD Handshake band, unchanged.
+- No lock contract changed. `ceremony.json` and `broadcast.html` carry the new
+  verifier (creation code hash `0x63128c66…572263`).
+- `utxo-locks/lock.py`, its regtest and the app use the same band (t239u).
