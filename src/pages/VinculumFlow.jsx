@@ -243,7 +243,7 @@ export default function VinculumFlow() {
             </div>
           </div>
           <Button disabled className="w-full">Submit to Base Verifier (blocked: pending deployment)</Button>
-          <div className="text-xs text-muted-foreground">VCLM / CHONX: <span className="font-mono">PENDING_DEPLOYMENT</span>.</div>
+          <div className="text-xs text-muted-foreground">VCLM / CHONX: <span className="font-mono">{short(BASE_CHAIN.vclm_address)}</span> / <span className="font-mono">{short(BASE_CHAIN.chonx_address)}</span>.</div>
         </section>
 
         {/* Step 3 - maturity & release */}
