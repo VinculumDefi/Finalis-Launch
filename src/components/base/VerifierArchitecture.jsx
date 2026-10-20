@@ -23,7 +23,7 @@ export default function VerifierArchitecture() {
           <div className="ml-4 space-y-0.5 font-mono text-[#18324b]">
             <div>IChainVerifier.verifyFinality()</div>
             <div>→ dispatched per environmentId</div>
-            <div>→ same verifyAndMint() for all 17</div>
+            <div>→ same verifyAndMint() for all 16</div>
           </div>
         </div>
         <div className="space-y-1">
