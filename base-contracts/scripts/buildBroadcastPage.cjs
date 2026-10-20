@@ -1,21 +1,19 @@
-// Rebuilds the embedded contracts (const ARTS = {...}) in scripts/broadcast.html
-// from the current compiled artifacts, so the page deploys exactly current main
-// (incl. the corrected four-duration TRS stake table, 120 days = 2.10x).
-// Writes the file only; sends nothing. Run after `npx hardhat compile`.
-const fs = require("fs");
-const path = require("path");
-const ART = path.join(__dirname, "..", "artifacts", "contracts");
-const PAGE = path.join(__dirname, "broadcast.html");
-const pick = (rel) => { const j = require(path.join(ART, rel)); return { abi: j.abi, bytecode: j.bytecode }; };
-const ARTS = {
-  token: pick("VinculumFinalisToken.sol/VinculumFinalisToken.json"),
-  lock: pick("CommitmentVaultLock.sol/CommitmentVaultLock.json"),
-  verifier: pick("VinculumFinalisVerifier.sol/VinculumFinalisVerifier.json"),
-  synth: pick("VinculumFinalisSynth.sol/VinculumFinalisSynth.json"),
-  stake: pick("VinculumFinalisStake.sol/VinculumFinalisStake.json"),
-};
-const html = fs.readFileSync(PAGE, "utf8");
-const re = /^const ARTS = \{.*\};$/m;
-if (!re.test(html)) throw new Error("ARTS line not found in broadcast.html");
-fs.writeFileSync(PAGE, html.replace(re, () => "const ARTS = " + JSON.stringify(ARTS) + ";"));
-console.log("broadcast.html rebuilt from current artifacts");
+// RETIRED (t251u). Do not use. This script sends nothing.
+//
+// It rewrote the contracts embedded in scripts/broadcast.html, which is
+// retired too.
+// It is not part of the Revision B deployment.
+//
+// For the deployment use only the pages in scripts/deploy-pages/: the six lock
+// pages, then base.html. The order is in deployment/DEPLOYMENT_DAY_RUNBOOK.md.
+// The previous version of this script is in git history (before commit t251u).
+//
+// This file loads no wallet, network or contract code. Running it, directly or
+// through "npx hardhat run", prints this notice and exits with an error.
+"use strict";
+
+console.error(
+  "RETIRED: scripts/buildBroadcastPage.cjs is retired and sends nothing.\n" +
+  "Use the deploy pages in scripts/deploy-pages/ and follow deployment/DEPLOYMENT_DAY_RUNBOOK.md."
+);
+process.exitCode = 1;
