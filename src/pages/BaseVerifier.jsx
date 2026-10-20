@@ -3,7 +3,7 @@ import { ShieldCheck, FlaskConical, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AUTHORITY, SCALE, COMMITMENT_DURATIONS, TOKEN_HARD_CAPS, CHONX_ACTIVATION_THRESHOLD } from '@/lib/vfRevision6Authority';
 import { VerifierState, verifyProof } from '@/lib/vfVerifierEngine';
-import { normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeStellarEvidence, normalizeCosmosEvidence, normalizeEvmEvidence } from '@/lib/vfProofNormalizer';
+import { normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeStellarEvidence, normalizeEvmEvidence } from '@/lib/vfProofNormalizer';
 import { buildMockEvent, buildFinalityProof } from '@/lib/vfMockEventBuilder';
 import VerifierArchitecture from '@/components/base/VerifierArchitecture';
 import ProofPackageViewer from '@/components/base/ProofPackageViewer';
@@ -12,17 +12,17 @@ import ChainVerifierPanel from '@/components/base/ChainVerifierPanel';
 import PendingAttemptPanel from '@/components/base/PendingAttemptPanel';
 import { PendingAttemptLifecycle } from '@/lib/vfPendingAttemptLifecycle';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
+import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered
-// (Revision B + on-chain verification). Solana and Cosmos Hub are hidden.
+// (Revision B + on-chain verification). Solana is not part of this deployment
+// and is not offered for new locks.
 const ENV_GROUPS = [
   { label: 'EVM (3-use, source-enforced)', envs: ['Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Base', 'Optimism'] },
-  { label: 'Non-EVM (3-use)', envs: ['Solana'] },
   { label: 'UTXO (1-use, Base-enforced)', envs: ['Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash'] },
   { label: 'Account-model (1-use, Base-enforced)', envs: ['XRPL', 'Stellar'] },
-  { label: 'CometBFT (EVIDENCE REQUIRED)', envs: ['CosmosHub'] },
-].map((g) => ({ ...g, envs: g.envs.filter(isOfferableEnvironmentNative) })).filter((g) => g.envs.length);
+].map((g) => ({ ...g, envs: g.envs.filter((e) => isInThisDeployment(e) && isOfferableEnvironmentNative(e)) })).filter((g) => g.envs.length);
 
 function parseUsdToFixedPoint(usdStr) {
   if (!usdStr) return 0n;
@@ -59,7 +59,6 @@ export default function BaseVerifier() {
     else if (mock.type === 'xrpl') rawPkg = normalizeXrplEvidence(mock.event.escrow, mock.event.payment, finalityProof);
     else if (mock.type === 'utxo') rawPkg = normalizeUtxoEvidence(env, mock.event, finalityProof);
     else if (mock.type === 'stellar') rawPkg = normalizeStellarEvidence(mock.event, finalityProof);
-    else if (mock.type === 'cosmos') rawPkg = normalizeCosmosEvidence(mock.event, finalityProof);
     else rawPkg = normalizeEvmEvidence(env, mock.event, finalityProof);
 
     if (!rawPkg.ok) {
@@ -144,7 +143,7 @@ export default function BaseVerifier() {
           </div>
           <p className="text-sm text-[#6b6b65]">
             The canonical verifier (BASE-VERIFY) — chain-agnostic recognition boundary.
-            Accepts normalized ProofPackages from all 17 source environments and performs
+            Accepts normalized ProofPackages from all 16 source environments and performs
             protocol verification before minting VCLM/CHONX.
           </p>
         </header>
