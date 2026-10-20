@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { formatTokenAmount } from '@/lib/vfTokenEngine';
 import { ArrowRight, Lock, CheckCircle2, XCircle } from 'lucide-react';
 
