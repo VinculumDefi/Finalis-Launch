@@ -28,7 +28,10 @@ from lock import (
     RELEASE_SPEND_BYTES,
     STRESS_RELEASE_FEE_RATE,
     PRICE_MAX_AGE_SECS,
+    HANDSHAKE_DURATION_SECS,
+    HANDSHAKE_UNIT_BAND,
     LockRefused,
+    check_handshake_band,
     check_minimum_lock,
     lock_outputs,
     min_gross_for,
@@ -416,6 +419,97 @@ class MinimumLockTests(unittest.TestCase):
                     LockFixture(chain, MATURITY, gross=g - 1, price_usd=price, price_as_of=NOW, now=NOW)
                 with self.assertRaises(LockRefused):
                     LockFixture(chain, MATURITY, gross=g)  # no price
+
+
+VERIFIER_SOL = Path(__file__).resolve().parent.parent / "base-contracts" / "contracts" / "VinculumFinalisVerifier.sol"
+
+
+class HandshakeBandTests(unittest.TestCase):
+    """Operator t239u: BTC/BCH/LTC Handshake (3600 s) sized in units, no price."""
+
+    def test_band_equals_the_verifier_constants(self):
+        import re
+        src = VERIFIER_SOL.read_text()
+        def const(name):
+            m = re.search(rf"uint256 public constant {name} = ([0-9_]+);", src)
+            self.assertIsNotNone(m, name)
+            return int(m.group(1).replace("_", ""))
+        self.assertEqual(HANDSHAKE_DURATION_SECS, const("HANDSHAKE_DURATION_SECS"))
+        for chain, tag in (("bitcoin", "BTC"), ("bitcoin-cash", "BCH"), ("litecoin", "LTC")):
+            self.assertEqual(HANDSHAKE_UNIT_BAND[chain], (const(f"{tag}_HANDSHAKE_MIN_UNITS"), const(f"{tag}_HANDSHAKE_MAX_UNITS")))
+        self.assertEqual(HANDSHAKE_UNIT_BAND, {"bitcoin": (11_000, 22_000), "bitcoin-cash": (11_000, 22_000), "litecoin": (110_000, 220_000)})
+
+    def test_min_and_max_accepted_with_exact_5pct_and_no_price(self):
+        for chain, (low, high) in HANDSHAKE_UNIT_BAND.items():
+            for g in (low, (low + high) // 2, high):
+                with self.subTest(chain=chain, gross=g):
+                    fee, principal, funding = lock_outputs(chain, g, duration_secs=3600)  # no price at all
+                    self.assertEqual(fee, g * 500 // 10_000)
+                    self.assertEqual(principal, g - fee)
+                    self.assertEqual(funding, g)
+                    self.assertGreaterEqual(fee, P2PKH_DUST_MINIMUM[chain])
+                    check_handshake_band(chain, g)
+            print(f"{chain}: Handshake {low} and {high} accepted, fee {low * 500 // 10_000} and {high * 500 // 10_000}")
+
+    def test_min_minus_one_and_max_plus_one_refused(self):
+        for chain, (low, high) in HANDSHAKE_UNIT_BAND.items():
+            with self.subTest(chain=chain):
+                with self.assertRaisesRegex(LockRefused, "under the .*band minimum"):
+                    lock_outputs(chain, low - 1, duration_secs=3600)
+                with self.assertRaisesRegex(LockRefused, "over the .*band maximum"):
+                    lock_outputs(chain, high + 1, duration_secs=3600)
+                # A fresh price does not let a Handshake outside the band through.
+                with self.assertRaises(LockRefused):
+                    lock_outputs(chain, high * 100, price_usd=FIXTURE_PRICE[chain], price_as_of=NOW, now=NOW, duration_secs=3600)
+                for bad in (0, -1, True, 11_000.0):
+                    with self.assertRaises(LockRefused):
+                        check_handshake_band(chain, bad)
+
+    def test_fee_under_dust_is_still_refused_never_raised(self):
+        # Inside-band gross always clears dust; split_outputs still refuses under-dust fees.
+        for chain in HANDSHAKE_UNIT_BAND:
+            dust = P2PKH_DUST_MINIMUM[chain]
+            with self.assertRaisesRegex(LockRefused, "dust"):
+                split_outputs(chain, 20 * dust - 20)
+
+    def test_non_handshake_durations_unchanged(self):
+        for chain, price in FIXTURE_PRICE.items():
+            g = min_gross_for(chain, price)
+            for d in (None, 604800, 2592000, 315360000):
+                with self.subTest(chain=chain, duration=d):
+                    kw = {} if d is None else {"duration_secs": d}
+                    self.assertEqual(lock_outputs(chain, g, price_usd=price, price_as_of=NOW, now=NOW, **kw),
+                                     (g * 500 // 10_000, g - g * 500 // 10_000, g))
+                    with self.assertRaisesRegex(LockRefused, "under the"):
+                        lock_outputs(chain, g - 1, price_usd=price, price_as_of=NOW, now=NOW, **kw)
+                    with self.assertRaises(LockRefused):
+                        lock_outputs(chain, g, **kw)  # no price: refused
+                    # An in-band Handshake amount is not a valid standard lock.
+                    with self.assertRaises(LockRefused):
+                        lock_outputs(chain, HANDSHAKE_UNIT_BAND[chain][0], price_usd=price, price_as_of=NOW, now=NOW, **kw)
+        with self.assertRaises(ValueError):
+            lock_outputs("bitcoin", 11_000, duration_secs=3601)
+
+    def test_other_chains_handshake_unchanged(self):
+        for chain in ("dogecoin", "digibyte", "zcash"):
+            self.assertEqual(lock_outputs(chain, GROSS_SATS, duration_secs=3600), split_outputs(chain, GROSS_SATS))
+            with self.assertRaises(LockRefused):
+                check_handshake_band(chain, GROSS_SATS)
+
+    def test_handshake_fixture_holds_and_releases(self):
+        for chain, (low, high) in HANDSHAKE_UNIT_BAND.items():
+            for g in (low, high):
+                with self.subTest(chain=chain, gross=g):
+                    fix = LockFixture(chain, MATURITY, gross=g, duration_secs=3600)
+                    self.assertEqual((fix.fee_output, fix.principal, fix.funding_value), (g * 500 // 10_000, g - g * 500 // 10_000, g))
+                    ledger = Ledger()
+                    fix.funding_output = fix.funding_output.__class__(fix.funding_value, fix.funding_output.script_pubkey)
+                    ledger.credit(fix.funding_txid, fix.funding_vout, fix.funding_output)
+                    lock_txid = ledger.apply(fix.lock_transaction())
+                    release_txid = ledger.apply(fix.spend_principal(lock_txid, MATURITY, fix.release_key))
+                    self.assertEqual(ledger.utxos[(release_txid, 0)].value, fix.principal)
+            with self.assertRaises(LockRefused):
+                LockFixture(chain, MATURITY, gross=low - 1, duration_secs=3600)
 
 
 if __name__ == "__main__":
