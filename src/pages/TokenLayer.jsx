@@ -17,6 +17,7 @@ import { Coins, Zap, Activity, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchAssetPrice, getAssetPricingInfo, computeVerifiedGrossUsdMicro } from '@/lib/vfPriceService';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
+import { hasUtxoMinimum, checkUtxoMinimumLock, priceAsOfSecs, NO_FRESH_PRICE_MESSAGE } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered (Solana hidden).
 const ENV_OPTIONS = [
@@ -85,6 +86,21 @@ export default function TokenLayer() {
       return;
     }
 
+    // Minimum lock (t230u): standard Bitcoin $20, Bitcoin Cash $1, Litecoin $1, from a
+    // fresh price. The simulation value is not a price, so these chains need live prices.
+    const minimumApplies = hasUtxoMinimum(env) && Number(duration.secs) !== 3600;
+    const refuse = (detail, reason) => {
+      newPipeline.verify = { status: 'failed', detail };
+      newPipeline.mint = { status: 'pending' };
+      newPipeline.forge = { status: 'pending' };
+      newPipeline.result = { ok: false, reason };
+      setPipeline(newPipeline);
+    };
+    if (minimumApplies && !livePrices) {
+      refuse(NO_FRESH_PRICE_MESSAGE, 'Minimum lock size not checked: no fresh price');
+      return;
+    }
+
     // Step 3: Verify — fetch live price or use simulation value
     let usd;
     if (livePrices) {
@@ -112,6 +128,17 @@ export default function TokenLayer() {
       }
       const grossAmount = normResult.package.gross_amount_smallest_units;
       const decimals = normResult.package.asset_precision;
+      if (minimumApplies) {
+        const min = checkUtxoMinimumLock({
+          env, grossSmallestUnits: grossAmount, priceUsd: priceResult.usd,
+          priceAsOf: priceAsOfSecs(priceResult), nowSecs: Math.floor(Date.now() / 1000),
+        });
+        if (!min.ok) {
+          setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol });
+          refuse(min.reason, 'Minimum lock size not met or price not fresh');
+          return;
+        }
+      }
       usd = computeVerifiedGrossUsdMicro(grossAmount, decimals, priceResult.usd, SCALE).toString();
       setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol });
     } else {
