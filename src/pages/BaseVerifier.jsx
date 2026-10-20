@@ -12,6 +12,7 @@ import ChainVerifierPanel from '@/components/base/ChainVerifierPanel';
 import PendingAttemptPanel from '@/components/base/PendingAttemptPanel';
 import { PendingAttemptLifecycle } from '@/lib/vfPendingAttemptLifecycle';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
+import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered
 // (Revision B + on-chain verification). Solana and Cosmos Hub are hidden.
@@ -70,6 +71,15 @@ export default function BaseVerifier() {
     // Active asset list: refuse a package whose asset is not offerable, however it was entered.
     if (!isOfferablePackageAsset(rawPkg.package.source_environment_id, rawPkg.package.canonical_asset_id)) {
       setResult({ ok: false, decision: 'NOT_ON_ACTIVE_LIST', checks: [], reason: NOT_ACTIVE_MESSAGE });
+      setPkg(null);
+      return;
+    }
+
+    // Minimum lock (t230u): a standard Bitcoin, Bitcoin Cash or Litecoin lock must be
+    // checked against $20 / $1 / $1 with a fresh price. This page has only a typed
+    // USD value and no fresh price, so it refuses (Token Layer with live prices checks it).
+    if (hasUtxoMinimum(env) && Number(duration) !== 3600) {
+      setResult({ ok: false, decision: 'MINIMUM_NOT_CHECKED', checks: [], reason: NO_FRESH_PRICE_MESSAGE });
       setPkg(null);
       return;
     }
