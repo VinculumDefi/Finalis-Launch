@@ -20,7 +20,6 @@ import { findAssetPrecision } from './vfBaseRegistry.js';
 // App and hosted-registry environment names -> Revision B environment ids.
 const ENV_ALIASES = {
   XRPL: 'XRP Ledger', BNB: 'BNB Smart Chain', BSC: 'BNB Smart Chain', BitcoinCash: 'Bitcoin Cash',
-  CosmosHub: 'Cosmos', 'Cosmos Hub': 'Cosmos', 'cosmoshub-4': 'Cosmos',
 };
 export function normalizeEnvironment(env) {
   const s = String(env ?? '').trim();
@@ -116,7 +115,7 @@ const APP_ENV_NATIVE_ID = {
   Ethereum: 'native-ETH', Base: 'native-ETH', Optimism: 'native-ETH', Arbitrum: 'native-ETH',
   BNB: 'native-BNB', Avalanche: 'native-AVAX', Polygon: 'native-POL', Solana: 'native-SOL',
   Bitcoin: 'native-BTC', Litecoin: 'native-LTC', Dogecoin: 'native-DOGE', DigiByte: 'native-DGB',
-  Zcash: 'native-ZEC', BitcoinCash: 'native-BCH', XRPL: 'native-XRP', Stellar: 'native-XLM', CosmosHub: 'native-uatom',
+  Zcash: 'native-ZEC', BitcoinCash: 'native-BCH', XRPL: 'native-XRP', Stellar: 'native-XLM',
 };
 export function isOfferableEnvironmentNative(appEnv) {
   const id = APP_ENV_NATIVE_ID[appEnv];
