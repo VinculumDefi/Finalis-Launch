@@ -29,9 +29,11 @@ fs.writeFileSync(path.join(pages, "ceremony.json"), JSON.stringify(out));
 const rep = require(path.join(root, "deployment", "representativeBase.cjs"));
 const base = rep.rows.find((r) => r.environment === "Base");
 if (!base || !base.devFund) { console.error("Base Dev Fund missing"); process.exit(1); }
-const registry = JSON.parse(fs.readFileSync(path.join(root, "deployment", "assetRegistry.resolved.json"), "utf8"));
-const entries = registry.entries.filter((e) => !e.unresolvedReason && e.sameKeyAsRow == null);
-const row2 = registry.entries.find((e) => e.row === 2);
+// Registry: Revision B (deployment/assetRegistry.revB.json, scripts/registryFile.cjs).
+// entries = the 486 rows under their own environment; the page appends Base ETH
+// (row2 under Base), so 487 lines are registered.
+const { written: entries } = require("./registryFile.cjs").loadRegistry();
+const row2 = entries.find((e) => e.row === 2 && e.environmentId === "Ethereum");
 if (!row2 || row2.symbol !== "ETH" || row2.pricingIdentifier !== "ethereum") {
   console.error("row 2 is not native ETH"); process.exit(1);
 }

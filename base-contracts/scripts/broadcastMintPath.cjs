@@ -12,14 +12,15 @@
 //
 // Inputs read from the repo (the operator is not asked for these):
 //   - Dev Fund: deployment/representativeBase.cjs, row environment "Base"
-//   - Assets:   deployment/assetRegistry.resolved.json, entries[]
-//     Rows with unresolvedReason or sameKeyAsRow are not written, matching
-//     counts.writes in that file.
+//   - Assets:   deployment/assetRegistry.revB.json (Revision B, via
+//     scripts/registryFile.cjs), entries[]: 486 rows under their own
+//     environment (counts.written) plus Base ETH (row 2 under Base) = 487.
+//     The prior revision (assetRegistry.resolved.json) is not read.
 //
 // Refuses before any transaction if:
 //   - the Base Dev Fund row is missing or not an address
 //   - the registry file is missing, has no entries, or the written-row count
-//     does not equal counts.writes
+//     does not equal counts.written (Base ETH excluded)
 //   - a written row has a malformed canonicalAssetId, decimals, custodyClass,
 //     or custodyPath
 //   - registry row 2 is not native ETH (symbol "ETH", assetId "native-ETH",
@@ -51,7 +52,7 @@ const { rows: DEPLOYMENT_ROWS } = require("../deployment/representativeBase.cjs"
 
 const BASE_CHAIN_ID = 8453n;
 const MIN_PRICE_USD18 = ethers.parseUnits("0.95", 18);
-const REGISTRY_FILE = path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json");
+const { REGISTRY_FILE, REGISTRY_NAME, isBaseEth } = require("./registryFile.cjs");
 
 function die(msg) {
   console.error("REFUSAL:", msg);
@@ -70,14 +71,16 @@ function loadDevFund() {
 }
 
 function loadAssets() {
-  if (!fs.existsSync(REGISTRY_FILE)) die("deployment/assetRegistry.resolved.json not found.");
+  if (!fs.existsSync(REGISTRY_FILE)) die(REGISTRY_NAME + " not found.");
   const registry = JSON.parse(fs.readFileSync(REGISTRY_FILE, "utf8"));
   const entries = registry.entries;
   if (!Array.isArray(entries) || entries.length === 0) die("registry has no entries.");
-  const written = entries.filter((a) => a.unresolvedReason == null && a.sameKeyAsRow == null);
-  const expected = registry.counts && registry.counts.writes;
+  if (entries.some((a) => a.unresolvedReason != null || a.sameKeyAsRow != null)) die("registry has an unresolved or same-key row.");
+  // Base ETH (row 2 under Base) is appended below from row 2, as before.
+  const written = entries.filter((a) => !isBaseEth(a));
+  const expected = registry.counts && registry.counts.written;
   if (written.length !== expected) {
-    die(`registry written rows ${written.length} do not equal counts.writes ${expected}.`);
+    die(`registry written rows ${written.length} do not equal counts.written ${expected}.`);
   }
   for (const a of written) {
     const where = `registry row ${a.row}`;
@@ -87,7 +90,7 @@ function loadAssets() {
     if (!isUint8(a.custodyClass)) die(`${where}: custodyClass is not uint8.`);
     if (!isUint8(a.custodyPath)) die(`${where}: custodyPath is not uint8.`);
   }
-  const nativeEth = written.find((a) => a.row === 2);
+  const nativeEth = written.find((a) => a.row === 2 && a.environmentId === "Ethereum");
   if (
     !nativeEth ||
     nativeEth.symbol !== "ETH" ||

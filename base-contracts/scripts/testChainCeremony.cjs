@@ -18,14 +18,16 @@
 //      Solana is NOT registered (blocked reader).
 //   4. Price poster = a freshly generated wallet (test only); Dev Fund for the
 //      seven EVM environments.
-//   5. Registry: exactly the 961 written rows of assetRegistry.resolved.json
-//      (decimals known, no duplicate key) plus the Base native-ETH row
-//      ("Base", row 2 canonical id). Batches of at most 50.
+//   5. Registry: exactly the Revision B rows (deployment/assetRegistry.revB.json,
+//      scripts/registryFile.cjs): 486 rows under their own environment plus the
+//      Base native-ETH row ("Base", row 2 canonical id) = 487. Batches of at
+//      most 50. The prior revision (assetRegistry.resolved.json) is not read.
 //   6. The poster posts a TEST Base ETH price (run 1). Test value only.
 const path = require("path");
 const fs = require("fs");
 const bs58mod = require("bs58");
 const bs58 = bs58mod.default || bs58mod;
+const { loadRegistry } = require("./registryFile.cjs");
 
 const READY_EVM = [
   ["Ethereum", "SimpleEthereumLockReader"],
@@ -147,13 +149,14 @@ const ASSET_ROW_ALIASES = [
   { environmentId: "Optimism", canonicalAssetId: _k("Ethereum", "native-ETH"), rowEnvironmentId: "Ethereum" },
 ];
 
+// Revision B (deployment/assetRegistry.revB.json, scripts/registryFile.cjs):
+// written = the 486 entries under their own environment, baseEth = row 2 under
+// Base, all = 487 registered lines. Rows are not changed or added.
 function registryRows() {
-  const reg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "deployment", "assetRegistry.resolved.json"), "utf8"));
-  const written = reg.entries.filter((e) => e.decimals != null && e.sameKeyAsRow == null);
-  const row2 = reg.entries.find((e) => e.row === 2);
+  const { written, baseEth } = loadRegistry();
+  const row2 = written.find((e) => e.row === 2 && e.environmentId === "Ethereum");
   if (!row2 || row2.symbol !== "ETH") throw new Error("row 2 is not native ETH");
-  const baseEth = { environmentId: "Base", canonicalAssetId: row2.canonicalAssetId, symbol: "ETH", decimals: 18,
-    custodyClass: row2.custodyClass, custodyPath: row2.custodyPath };
+  if (baseEth.canonicalAssetId !== row2.canonicalAssetId || baseEth.decimals !== 18) throw new Error("Base ETH is not row 2");
   if (written.some((e) => e.environmentId === "Base" && e.canonicalAssetId === row2.canonicalAssetId)) throw new Error("Base ETH already present");
   return { written, baseEth, all: [...written, baseEth] };
 }
