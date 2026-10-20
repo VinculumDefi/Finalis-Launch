@@ -78,7 +78,7 @@ export const REQUIREMENTS = [
 
   // VF-ARC (6)
   { id: 'VF-ARC-001', category: 'Architecture', title: 'Base canonical issuance', status: STATUS.IMPLEMENTED, trace: 'VinculumFinalisToken.sol + vfTokenEngine.js' },
-  { id: 'VF-ARC-002', category: 'Architecture', title: 'Principal stays on source', status: STATUS.PARTIAL, trace: 'Solana/XRPL implemented; Cosmos Hub EVIDENCE REQUIRED' },
+  { id: 'VF-ARC-002', category: 'Architecture', title: 'Principal stays on source', status: STATUS.PARTIAL, trace: 'XRPL implemented; Solana code kept but not part of this deployment; 16 environments' },
   { id: 'VF-ARC-003', category: 'Architecture', title: 'One output per lock', status: STATUS.IMPLEMENTED, trace: 'checkOutputEligibility() in verifier' },
   { id: 'VF-ARC-004', category: 'Architecture', title: 'Invalid request rejected before assets move', status: STATUS.PARTIAL, trace: 'Solana/XRPL implemented; UTXO/XRPL/Stellar deployable verifier pending' },
   { id: 'VF-ARC-005', category: 'Architecture', title: 'Proof/retry cannot change terms', status: STATUS.IMPLEMENTED, trace: 'checkFinalityProof() fact cross-check' },
@@ -127,10 +127,10 @@ export const REQUIREMENTS = [
   { id: 'VF-COM-023', category: 'Commitment Vault', title: 'Lock not renewable', status: STATUS.IMPLEMENTED, trace: 'Solana — unique PDA per lock; no renewal' },
   { id: 'VF-COM-024', category: 'Commitment Vault', title: 'Non-1h consumes no Handshake allowance', status: STATUS.IMPLEMENTED, trace: 'Solana: if is_handshake { consume }' },
   { id: 'VF-COM-025', category: 'Commitment Vault', title: 'CHONX active at creation via causal receipt', status: STATUS.PARTIAL, trace: 'checkOutputEligibility requires receipt; deployable activation channel pending' },
-  { id: 'VF-COM-026', category: 'Commitment Vault', title: 'Out-of-range 1h cannot become recognized lock', status: STATUS.PARTIAL, trace: 'checkUsdBounds(); deployable verifier pending; Cosmos Hub EVIDENCE REQUIRED' },
+  { id: 'VF-COM-026', category: 'Commitment Vault', title: 'Out-of-range 1h cannot become recognized lock', status: STATUS.PARTIAL, trace: 'checkUsdBounds() (Rev 12 band $0.01 to $0.02); deployable verifier pending' },
 
   // VF-REG (11)
-  { id: 'VF-REG-001', category: 'Registry', title: '1,001 entries', status: STATUS.IMPLEMENTED, trace: 'AUTHORITY.approved_asset_count=1001; ENVIRONMENT_COUNT=17' },
+  { id: 'VF-REG-001', category: 'Registry', title: '1,001 entries', status: STATUS.IMPLEMENTED, trace: 'AUTHORITY.approved_asset_count=1001; ENVIRONMENT_COUNT=16' },
   { id: 'VF-REG-002', category: 'Registry', title: 'S1 = Ethereum USDC+USDT', status: STATUS.IMPLEMENTED, trace: 'ASSET_PRECISION_TABLE custodyClass=S1' },
   { id: 'VF-REG-003', category: 'Registry', title: 'S2 = native ETH/BTC + AAVE/LINK/UNI', status: STATUS.IMPLEMENTED, trace: 'ASSET_PRECISION_TABLE custodyClass=S2' },
   { id: 'VF-REG-004', category: 'Registry', title: 'Remaining 994 = S3', status: STATUS.IMPLEMENTED, trace: 'All other assets custodyClass=S3' },
@@ -162,7 +162,7 @@ export const REQUIREMENTS = [
   { id: 'VF-FEE-001', category: 'Fee Routing', title: 'Dev Fund receives 100% of fee', status: STATUS.IMPLEMENTED, trace: 'Solana transfers fee to config.dev_fund_destination' },
   { id: 'VF-FEE-002', category: 'Fee Routing', title: 'Fee stays in original asset', status: STATUS.IMPLEMENTED, trace: 'No swap/convert in any lock mechanism' },
   { id: 'VF-FEE-003', category: 'Fee Routing', title: 'Principal never to Dev Fund', status: STATUS.IMPLEMENTED, trace: 'Solana: principal to PDA, fee to Dev Fund — separate' },
-  { id: 'VF-FEE-004', category: 'Fee Routing', title: 'One fixed Dev Fund per env', status: STATUS.EXTERNAL, trace: '17 Dev Fund addresses deferred external input' },
+  { id: 'VF-FEE-004', category: 'Fee Routing', title: 'One fixed Dev Fund per env', status: STATUS.EXTERNAL, trace: '16 Dev Fund addresses in DEV_FUND_DESTINATIONS (EVM shares one)' },
   { id: 'VF-FEE-005', category: 'Fee Routing', title: 'Deterministic binding', status: STATUS.EXTERNAL, trace: 'Addresses not provisioned' },
   { id: 'VF-FEE-006', category: 'Fee Routing', title: 'No actor may substitute destination', status: STATUS.IMPLEMENTED, trace: 'Solana constraint: dev_fund.key() == config.dev_fund_destination' },
   { id: 'VF-FEE-007', category: 'Fee Routing', title: 'Proof establishes fee + transfer', status: STATUS.IMPLEMENTED, trace: 'checkFeeMath() + fact cross-check' },
@@ -216,13 +216,13 @@ export const REQUIREMENTS = [
   { id: 'VF-STK-031', category: 'Staking', title: 'Positive nonzero amount, no other minimum', status: STATUS.IMPLEMENTED, trace: 'if (amt <= 0n) return error' },
 
   // VF-XCH (21)
-  { id: 'VF-XCH-001', category: 'Cross-Chain', title: '17 environments', status: STATUS.IMPLEMENTED, trace: 'ENVIRONMENTS array (17 entries); T-01, PAL-16' },
+  { id: 'VF-XCH-001', category: 'Cross-Chain', title: '16 environments', status: STATUS.IMPLEMENTED, trace: 'ENVIRONMENTS array (16 entries); T-01, PAL-13, PAL-16' },
   { id: 'VF-XCH-002', category: 'Cross-Chain', title: 'No env add/remove', status: STATUS.IMPLEMENTED, trace: 'ENVIRONMENTS is immutable const' },
-  { id: 'VF-XCH-003', category: 'Cross-Chain', title: 'Canonical chain IDs', status: STATUS.EXTERNAL, trace: '17 canonical chain identifiers deferred external input' },
+  { id: 'VF-XCH-003', category: 'Cross-Chain', title: 'Canonical chain IDs', status: STATUS.EXTERNAL, trace: '16 canonical chain identifiers deferred external input' },
   { id: 'VF-XCH-004', category: 'Cross-Chain', title: 'Principal remains on source', status: STATUS.IMPLEMENTED, trace: 'No bridge in lock mechanism' },
-  { id: 'VF-XCH-005', category: 'Cross-Chain', title: 'Source binds all fields', status: STATUS.PARTIAL, trace: 'Solana/XRPL fully implemented (buildAtomicBatch + memo); Cosmos Hub EVIDENCE REQUIRED' },
+  { id: 'VF-XCH-005', category: 'Cross-Chain', title: 'Source binds all fields', status: STATUS.PARTIAL, trace: 'XRPL fully implemented (buildAtomicBatch + memo); Solana not part of this deployment' },
   { id: 'VF-XCH-006', category: 'Cross-Chain', title: 'No issuance until finality', status: STATUS.PARTIAL, trace: 'checkFinalityProof() dispatches; deployable Solidity verifiers DESIGN DEFINED' },
-  { id: 'VF-XCH-007', category: 'Cross-Chain', title: 'Finality documented for all 17', status: STATUS.IMPLEMENTED, trace: 'All 17 finality models defined: EVM(7) + Solana + UTXO(6: BTC=6, LTC=6, DOGE=6, DGB=6, ZEC=10, BCH=6) + XRPL + Stellar + CosmosHub' },
+  { id: 'VF-XCH-007', category: 'Cross-Chain', title: 'Finality documented for all 16', status: STATUS.IMPLEMENTED, trace: 'All 16 finality models defined: EVM(7) + Solana + UTXO(6: BTC=6, LTC=6, DOGE=6, DGB=6, ZEC=10, BCH=6) + XRPL + Stellar' },
   { id: 'VF-XCH-008', category: 'Cross-Chain', title: 'Relayer cannot shorten finality', status: STATUS.IMPLEMENTED, trace: 'Finality verified by chain verifier, not relayer' },
   { id: 'VF-XCH-009', category: 'Cross-Chain', title: 'Delays do not alter terms', status: STATUS.IMPLEMENTED, trace: 'ProofPackage fields immutable after normalization' },
   { id: 'VF-XCH-010', category: 'Cross-Chain', title: 'Premature/reversed events cannot authorize', status: STATUS.PARTIAL, trace: 'Chain verifiers reject non-finalized; deployable reorg handling pending' },
@@ -299,7 +299,7 @@ export const REQUIREMENTS = [
   // VF-EXT (3)
   { id: 'VF-EXT-001', category: 'External', title: 'Design within spec requirements', status: STATUS.IMPLEMENTED, trace: 'Chain-equivalent principle in architecture' },
   { id: 'VF-EXT-002', category: 'External', title: 'Unavailable address reported incomplete, not invented', status: STATUS.IMPLEMENTED, trace: 'All deferred items null, not fabricated; UI shows PENDING_DEPLOYMENT' },
-  { id: 'VF-EXT-003', category: 'External', title: 'No live deployment until all complete', status: STATUS.DEPLOYMENT, trace: 'Cosmos Hub EVIDENCE REQUIRED; deployable verifiers DESIGN DEFINED' },
+  { id: 'VF-EXT-003', category: 'External', title: 'No live deployment until all complete', status: STATUS.DEPLOYMENT, trace: 'Deployment planned 2026-10-21 per DEPLOYMENT_DAY_RUNBOOK.md; deployable verifiers DESIGN DEFINED' },
 ];
 
 export const CATEGORIES = [
