@@ -4,7 +4,17 @@ Fee is 5% (500 bps) of the gross. The standard fixture gross is 1,000,000
 smallest units, so the calculated fee is 50,000 and the principal is 950,000.
 If that fee output is under the chain's P2PKH dust minimum, the client keeps
 the unrelayable fee (principal becomes the gross) and the relayed fee output
-is exactly the dust minimum, funded on top of the gross.
+is exactly the dust minimum, funded on top of the gross. That dust-raised
+path is kept ONLY for Dogecoin, DigiByte and Zcash. On Bitcoin, Bitcoin Cash
+and Litecoin a fee output under dust is refused (LockRefused), so lock.py can
+never produce a non-5% fee there.
+
+Minimum lock size (operator, t230u): a standard lock on Bitcoin must be at
+least $20 gross, on Bitcoin Cash and Litecoin at least $1 gross, valued at lock
+time from a fresh price (under 24 hours old). No price, a bad price or a stale
+price refuses the lock. Real locks on those chains go through lock_outputs().
+The Handshake band is not changed here: the Base verifier's $0.01-$0.02
+Handshake band still refuses every Bitcoin, Bitcoin Cash and Litecoin Handshake.
 
 Binding: the 117-byte payload, or its 32-byte SHA-256 where the cited node
 policy rejects a raw 117-byte nulldata script. The fingerprint is the hash
@@ -17,6 +27,7 @@ Dogecoin is not a witness script. P2SH is the form these networks relay.
 from __future__ import annotations
 
 import os
+from decimal import Decimal, InvalidOperation
 
 from crypto import FixtureKey, sha256
 from script import (
@@ -139,22 +150,114 @@ def split_fee(gross: int) -> tuple[int, int]:
     return fee, principal
 
 
+class LockRefused(ValueError):
+    """The lock is refused before anything is built. Nothing is substituted."""
+
+
+# Chains where the fee output must be exactly floor(5%) and is never raised
+# to the dust minimum. The Base readers (UtxoLockReader.sol) require
+# fee == floor(gross * 500 / 10000), so a dust-raised fee could never verify.
+EXACT_FEE_CHAINS = ("bitcoin", "bitcoin-cash", "litecoin")
+
+# Standard-lock minimums, gross USD at lock time (operator, t230u).
+MIN_LOCK_USD = {
+    "bitcoin": Decimal("20"),
+    "bitcoin-cash": Decimal("1"),
+    "litecoin": Decimal("1"),
+}
+# BTC, BCH and LTC all have 8 decimals (satoshi / litoshi).
+SMALLEST_UNITS_PER_COIN = 100_000_000
+# Fresh price: under 24 hours old at lock time (same rule as the price fetcher's natives).
+PRICE_MAX_AGE_SECS = 24 * 60 * 60
+# A price stamped more than 5 minutes in the future is not trusted.
+PRICE_MAX_FUTURE_SECS = 5 * 60
+
+
 def split_outputs(chain: str, gross: int) -> tuple[int, int, int]:
     """Return (fee_output, principal, funding_value).
 
     Standard split: fee = floor(gross * 500 / 10000), principal = gross - fee,
-    and the funding coin is the gross. When that fee is under the chain dust
-    minimum, the client keeps it (principal = gross) and the output that must
-    relay is exactly the dust minimum, not more. That relay output is funded
-    on top of the gross, so the funding coin is principal + fee_output.
+    and the funding coin is the gross.
+
+    Bitcoin, Bitcoin Cash, Litecoin: a fee under the chain dust minimum is
+    refused (LockRefused). The fee is always exactly 5%.
+
+    Dogecoin, DigiByte, Zcash (unchanged): when that fee is under the chain
+    dust minimum, the client keeps it (principal = gross) and the output that
+    must relay is exactly the dust minimum, not more. That relay output is
+    funded on top of the gross, so the funding coin is principal + fee_output.
     """
     if chain not in P2PKH_DUST_MINIMUM:
         raise ValueError(f"no dust limit recorded for {chain}")
     fee, principal = split_fee(gross)
     dust = P2PKH_DUST_MINIMUM[chain]
     if fee < dust:
+        if chain in EXACT_FEE_CHAINS:
+            raise LockRefused(
+                f"{chain}: 5% fee output {fee} is under the {dust} dust minimum; "
+                "refused (no dust-raised fee on this chain)"
+            )
         return dust, gross, gross + dust
     return fee, principal, gross
+
+
+def _price(price_usd) -> Decimal:
+    if price_usd is None or isinstance(price_usd, bool):
+        raise LockRefused("no fresh price; lock refused")
+    try:
+        p = Decimal(str(price_usd).strip())
+    except (InvalidOperation, ValueError):
+        raise LockRefused(f"price {price_usd!r} is not a number; lock refused") from None
+    if not p.is_finite() or p <= 0:
+        raise LockRefused(f"price {price_usd!r} is not a positive number; lock refused")
+    return p
+
+
+def gross_usd(gross: int, price_usd) -> Decimal:
+    """Exact USD value of `gross` smallest units at `price_usd` per coin."""
+    return Decimal(int(gross)) * _price(price_usd) / SMALLEST_UNITS_PER_COIN
+
+
+def check_minimum_lock(chain: str, gross: int, *, price_usd, price_as_of, now) -> Decimal:
+    """Refuse unless `gross` is at least the chain's minimum, valued with a fresh price.
+
+    price_as_of and now are Unix seconds. Returns the gross USD value.
+    """
+    if chain not in MIN_LOCK_USD:
+        raise LockRefused(f"no minimum lock size recorded for {chain}")
+    if not isinstance(gross, int) or isinstance(gross, bool) or gross <= 0:
+        raise LockRefused("gross must be a positive whole number of smallest units")
+    if price_as_of is None or now is None:
+        raise LockRefused("no fresh price; lock refused")
+    if not all(isinstance(t, int) and not isinstance(t, bool) for t in (price_as_of, now)):
+        raise LockRefused("price time and lock time must be whole Unix seconds")
+    if price_as_of > now + PRICE_MAX_FUTURE_SECS:
+        raise LockRefused("price is stamped in the future; lock refused")
+    if now - price_as_of >= PRICE_MAX_AGE_SECS:
+        raise LockRefused("price is 24 hours old or older; lock refused")
+    usd = gross_usd(gross, price_usd)
+    minimum = MIN_LOCK_USD[chain]
+    if usd < minimum:
+        raise LockRefused(f"{chain}: lock is ${usd:.4f}, under the ${minimum} minimum; refused")
+    return usd
+
+
+def min_gross_for(chain: str, price_usd) -> int:
+    """Smallest gross (smallest units) worth at least the chain's minimum at this price."""
+    if chain not in MIN_LOCK_USD:
+        raise LockRefused(f"no minimum lock size recorded for {chain}")
+    p = _price(price_usd)
+    units = MIN_LOCK_USD[chain] * SMALLEST_UNITS_PER_COIN / p
+    whole = int(units)
+    return whole if Decimal(whole) == units else whole + 1
+
+
+def lock_outputs(chain: str, gross: int, *, price_usd=None, price_as_of=None, now=None) -> tuple[int, int, int]:
+    """Outputs for a real lock. Bitcoin, Bitcoin Cash, Litecoin: minimum and
+    fresh-price check first, then the exact 5% split. Other chains: split_outputs."""
+    if chain in MIN_LOCK_USD:
+        check_minimum_lock(chain, gross, price_usd=price_usd, price_as_of=price_as_of, now=now)
+    return split_outputs(chain, gross)
 
 
 def binding_payload(lock_id: bytes, base_recipient: bytes, output_token: int, asset_id: bytes, valuation: bytes) -> bytes:
@@ -184,12 +287,26 @@ def binding_script(chain: str, payload: bytes) -> tuple[bytes, bytes]:
 
 
 class LockFixture:
-    def __init__(self, chain: str, maturity: int):
+    """Script-level lock fixture.
+
+    Without `gross` it is the standard 1,000,000-unit script fixture used by the
+    hold/release tests and the Base reader fixtures; it carries no price and is
+    not a priced lock. With `gross`, it is built through lock_outputs(), so on
+    Bitcoin, Bitcoin Cash and Litecoin the minimum and fresh-price check apply.
+    """
+
+    def __init__(self, chain: str, maturity: int, *, gross: int | None = None,
+                 price_usd=None, price_as_of: int | None = None, now: int | None = None):
         if FEE_SATS != 50_000 or PRINCIPAL_SATS != 950_000:
             raise RuntimeError("standard split is not 50_000 / 950_000")
         self.chain = chain
         self.maturity = maturity
-        self.fee_output, self.principal, self.funding_value = split_outputs(chain, GROSS_SATS)
+        if gross is None:
+            self.fee_output, self.principal, self.funding_value = split_outputs(chain, GROSS_SATS)
+        else:
+            self.fee_output, self.principal, self.funding_value = lock_outputs(
+                chain, gross, price_usd=price_usd, price_as_of=price_as_of, now=now
+            )
         self.funding_key = FixtureKey(f"{chain} funding fixture")
         self.dev_fund_key = FixtureKey(f"{chain} dev fund fixture")
         self.release_key = FixtureKey(f"{chain} release fixture")
