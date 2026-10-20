@@ -24,17 +24,15 @@ console.log('\n=== Per-Environment Chain Verifier Tests ===\n');
 
 // --- Registry Tests ---
 
-test('CV-01: 16 of 17 environments have registered chain verifiers', () => {
+test('CV-01: all 16 environments have registered chain verifiers', () => {
   const registered = getRegisteredEnvironments();
+  assert.strictEqual(ENVIRONMENTS.length, 16);
   assert.strictEqual(registered.length, 16);
-  // Cosmos Hub is NOT registered (EVIDENCE_REQUIRED)
-  assert.ok(!isVerifierRegistered('CosmosHub'));
-  // All 16 deployable environments are registered
   for (const env of ENVIRONMENTS) {
-    if (env.verificationStatus !== 'EVIDENCE_REQUIRED') {
-      assert.ok(isVerifierRegistered(env.id), `${env.id} should be registered`);
-    }
+    assert.ok(isVerifierRegistered(env.id), `${env.id} should be registered`);
   }
+  // An environment outside the 16 has no verifier
+  assert.ok(!isVerifierRegistered('Cardano'));
 });
 
 test('CV-02: Each verifier has correct environmentId and finalityModel', () => {
