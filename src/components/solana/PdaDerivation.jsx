@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { KeyRound, Loader2, Search, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { KeyRound, Loader2, Search, CheckCircle2, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import {
   PROGRAM_ID,
