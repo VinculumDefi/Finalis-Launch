@@ -11,7 +11,7 @@
 // identity/allowance, and the lock state machine.
 //
 // Every function cites the governing requirement IDs it enforces.
-// No value is fabricated. No Cosmos-derived logic is reused (clean-room rule).
+// No value is fabricated. No logic from other environments is reused (clean-room rule).
 // =============================================================================
 
 import {
@@ -31,6 +31,11 @@ import {
 import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP } from './vfLiveRules.js';
 import { SOLANA_REGISTRY } from './vfSolanaRegistry.js';
 import { isOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
+import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE, NOT_IN_THIS_DEPLOYMENT_LABEL } from './vfDeploymentScope.js';
+
+// Solana is not part of this deployment (vfDeploymentScope.js). Every lock
+// request is refused, whatever its other checks say (fail closed).
+export { SOLANA_LOCKS_ENABLED };
 
 // ---------------------------------------------------------------------------
 // Duration helpers — VF-COM-001/002
@@ -257,6 +262,12 @@ export function validateLockRequest({
 }) {
   const errors = [];
   const checks = [];
+
+  // Not part of this deployment: refuse first, then still report the other checks.
+  if (!SOLANA_LOCKS_ENABLED) {
+    errors.push(SOLANA_NOT_DEPLOYED_MESSAGE);
+    checks.push({ id: 'VF-DEP-SOL', pass: false, detail: NOT_IN_THIS_DEPLOYMENT_LABEL });
+  }
 
   // VF-REG-001: asset must be in the approved Solana registry
   const asset = findSolanaAsset(assetSymbol);
