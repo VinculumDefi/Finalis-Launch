@@ -18,8 +18,15 @@ Native floor (operator, t235u): the minimum is the HIGHER of the USD minimum
 and a fixed floor in smallest units (MIN_LOCK_FLOOR_UNITS), so a lock at the
 minimum keeps an exact 5% fee at or above dust, and a release that still
 clears a stress fee rate, however high the coin price goes.
-The Handshake band is not changed here: the Base verifier's $0.01-$0.02
-Handshake band still refuses every Bitcoin, Bitcoin Cash and Litecoin Handshake.
+Handshake (operator t239u, matching the Revision B verifier, t238u): on
+Bitcoin, Bitcoin Cash and Litecoin a 1-hour Handshake (3600 s) is sized in
+smallest units, not USD: gross must be within HANDSHAKE_UNIT_BAND (inclusive),
+Bitcoin and Bitcoin Cash 11,000 to 22,000 sats, Litecoin 110,000 to 220,000
+litoshis. No price is needed for it. The fee is still exactly floor(5%) and a
+fee under dust is still refused, never raised. The verifier counts such a
+Handshake as at most $0.02 for VCLM and RAC. Other durations keep the USD
+minimum, native floor and fresh-price rule above. Pass duration_secs to
+lock_outputs() / LockFixture(); without it a lock is treated as a standard lock.
 
 Binding: the 117-byte payload, or its 32-byte SHA-256 where the cited node
 policy rejects a raw 117-byte nulldata script. The fingerprint is the hash
@@ -195,6 +202,17 @@ PRICE_MAX_AGE_SECS = 24 * 60 * 60
 # A price stamped more than 5 minutes in the future is not trusted.
 PRICE_MAX_FUTURE_SECS = 5 * 60
 
+# Handshake band in smallest units, inclusive (operator t239u). Equal to the
+# Revision B verifier constants BTC/BCH/LTC_HANDSHAKE_MIN_UNITS and _MAX_UNITS
+# (contracts/VinculumFinalisVerifier.sol). The minimum is 20 x dust rounded up,
+# so floor(5%) of it is at least dust; the maximum is twice the minimum.
+HANDSHAKE_DURATION_SECS = 3600
+HANDSHAKE_UNIT_BAND = {
+    "bitcoin": (11_000, 22_000),
+    "bitcoin-cash": (11_000, 22_000),
+    "litecoin": (110_000, 220_000),
+}
+
 
 def split_outputs(chain: str, gross: int) -> tuple[int, int, int]:
     """Return (fee_output, principal, funding_value).
@@ -268,6 +286,19 @@ def check_minimum_lock(chain: str, gross: int, *, price_usd, price_as_of, now) -
     return usd
 
 
+def check_handshake_band(chain: str, gross: int) -> None:
+    """Refuse a Bitcoin, Bitcoin Cash or Litecoin Handshake outside the unit band. No price."""
+    if chain not in HANDSHAKE_UNIT_BAND:
+        raise LockRefused(f"no Handshake unit band recorded for {chain}")
+    if not isinstance(gross, int) or isinstance(gross, bool) or gross <= 0:
+        raise LockRefused("gross must be a positive whole number of smallest units")
+    low, high = HANDSHAKE_UNIT_BAND[chain]
+    if gross < low:
+        raise LockRefused(f"{chain}: Handshake is {gross} units, under the {low}-unit band minimum; refused")
+    if gross > high:
+        raise LockRefused(f"{chain}: Handshake is {gross} units, over the {high}-unit band maximum; refused")
+
+
 def usd_min_gross_for(chain: str, price_usd) -> int:
     """Smallest gross (smallest units) worth at least the chain's USD minimum at this price."""
     if chain not in MIN_LOCK_USD:
@@ -283,11 +314,22 @@ def min_gross_for(chain: str, price_usd) -> int:
     return max(usd_min_gross_for(chain, price_usd), MIN_LOCK_FLOOR_UNITS[chain])
 
 
-def lock_outputs(chain: str, gross: int, *, price_usd=None, price_as_of=None, now=None) -> tuple[int, int, int]:
-    """Outputs for a real lock. Bitcoin, Bitcoin Cash, Litecoin: minimum and
-    fresh-price check first, then the exact 5% split. Other chains: split_outputs."""
+def lock_outputs(chain: str, gross: int, *, price_usd=None, price_as_of=None, now=None,
+                 duration_secs: int | None = None) -> tuple[int, int, int]:
+    """Outputs for a real lock.
+
+    Bitcoin, Bitcoin Cash, Litecoin: a Handshake (duration_secs == 3600) must be
+    inside HANDSHAKE_UNIT_BAND and needs no price; any other duration (or None)
+    must pass the USD minimum, native floor and fresh-price check. Then the exact
+    5% split (a fee under dust is refused). Other chains: split_outputs, unchanged.
+    """
+    if duration_secs is not None:
+        multiplier_bps(duration_secs)  # one of the sixteen rows, or ValueError
     if chain in MIN_LOCK_USD:
-        check_minimum_lock(chain, gross, price_usd=price_usd, price_as_of=price_as_of, now=now)
+        if duration_secs == HANDSHAKE_DURATION_SECS:
+            check_handshake_band(chain, gross)
+        else:
+            check_minimum_lock(chain, gross, price_usd=price_usd, price_as_of=price_as_of, now=now)
     return split_outputs(chain, gross)
 
 
@@ -323,11 +365,13 @@ class LockFixture:
     Without `gross` it is the standard 1,000,000-unit script fixture used by the
     hold/release tests and the Base reader fixtures; it carries no price and is
     not a priced lock. With `gross`, it is built through lock_outputs(), so on
-    Bitcoin, Bitcoin Cash and Litecoin the minimum and fresh-price check apply.
+    Bitcoin, Bitcoin Cash and Litecoin the minimum and fresh-price check apply,
+    or, with duration_secs=3600, the Handshake unit band (no price).
     """
 
     def __init__(self, chain: str, maturity: int, *, gross: int | None = None,
-                 price_usd=None, price_as_of: int | None = None, now: int | None = None):
+                 price_usd=None, price_as_of: int | None = None, now: int | None = None,
+                 duration_secs: int | None = None):
         if FEE_SATS != 50_000 or PRINCIPAL_SATS != 950_000:
             raise RuntimeError("standard split is not 50_000 / 950_000")
         self.chain = chain
@@ -336,7 +380,8 @@ class LockFixture:
             self.fee_output, self.principal, self.funding_value = split_outputs(chain, GROSS_SATS)
         else:
             self.fee_output, self.principal, self.funding_value = lock_outputs(
-                chain, gross, price_usd=price_usd, price_as_of=price_as_of, now=now
+                chain, gross, price_usd=price_usd, price_as_of=price_as_of, now=now,
+                duration_secs=duration_secs,
             )
         self.funding_key = FixtureKey(f"{chain} funding fixture")
         self.dev_fund_key = FixtureKey(f"{chain} dev fund fixture")
