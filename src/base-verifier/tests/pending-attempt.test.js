@@ -2,6 +2,7 @@ import assert from 'assert';
 
 import { PendingAttemptLifecycle, getTerminalDispositions, isSuccessDisposition } from '../../lib/vfPendingAttemptLifecycle.js';
 import { ATTEMPT_STATES, SOLANA_DISPOSITION } from '../../lib/vfRevision6Authority.js';
+import { ENVIRONMENTS } from '../../lib/vfBaseRegistry.js';
 
 let passed = 0, failed = 0;
 
@@ -128,12 +129,14 @@ test('PAL-12: unknown environment rejected', () => {
   assert.ok(!r.ok);
 });
 
-// PAL-13: Cosmos Hub rejected (EVIDENCE_REQUIRED)
-test('PAL-13: Cosmos Hub rejected (EVIDENCE_REQUIRED)', () => {
-  const lc = new PendingAttemptLifecycle();
-  const r = lc.registerAttempt('CosmosHub', '(CosmosHub, addr1)', 'lock-001', 1000);
-  assert.ok(!r.ok);
-  assert.ok(r.reason.includes('incomplete') || r.reason.includes('EVIDENCE'));
+// PAL-13: each of the 16 environments accepts an attempt; none is held back
+test('PAL-13: all 16 environments accept a pending attempt', () => {
+  assert.strictEqual(ENVIRONMENTS.length, 16);
+  for (const env of ENVIRONMENTS) {
+    const lc = new PendingAttemptLifecycle();
+    const r = lc.registerAttempt(env.id, `(${env.id}, addr1)`, 'lock-001', 1000);
+    assert.ok(r.ok, `${env.id}: ${r.reason}`);
+  }
 });
 
 // PAL-14: isIdentityPending correctly reflects state
