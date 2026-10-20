@@ -175,7 +175,10 @@ export function getAssetMultiplierBps(custodyClass) {
 // there — a functioning preview does not require a CosmosHub Dev Fund address.
 // ---------------------------------------------------------------------------
 
-const EVM_DEV_FUND_ADDRESS = '0xD667644052eceF4118eFa34ea4381053a435b252';
+// The live EVM Dev Fund, the same address the contracts are deployed with
+// (base-contracts/deployment/representativeBase.cjs EVM_DEV_FUND, ceremony-data.json
+// devFund). An older address was here before t249u; the simulator now matches.
+const EVM_DEV_FUND_ADDRESS = '0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a';
 
 export const DEV_FUND_DESTINATIONS = {
   // --- EVM family (7) — shared 0x address (valid on all EVM chains) ---
