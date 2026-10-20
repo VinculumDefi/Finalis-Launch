@@ -175,7 +175,7 @@ export default function RegistryPanel() {
 
       {/* Environment Distribution */}
       <Card className="p-4 bg-slate-900 border-slate-700">
-        <h4 className="text-sm font-bold text-slate-200 mb-3">Environment Distribution (17 environments)</h4>
+        <h4 className="text-sm font-bold text-slate-200 mb-3">Environment Distribution (hosted Revision 6 registry)</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {ENVIRONMENT_DISTRIBUTION.map((e) => (
             <div key={e.env} className="flex items-center justify-between text-xs bg-slate-950/40 rounded px-2 py-1.5">
