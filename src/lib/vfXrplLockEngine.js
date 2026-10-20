@@ -27,6 +27,7 @@ import {
 } from './vfRevision6Authority.js';
 import { XRPL_ENVIRONMENT, XRPL_HANDSHAKE_ALLOWANCE } from './vfXrplAuthority.js';
 import { XRPL_REGISTRY } from './vfXrplRegistry.js';
+import { isOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
 
 // ---------------------------------------------------------------------------
 // Duration helpers — VF-COM-001/002
@@ -262,6 +263,9 @@ export function validateLockRequest({
   if (!asset) {
     errors.push(`VF-REG-001: asset "${assetSymbol}" is not in the approved XRPL registry`);
     checks.push({ id: 'VF-REG-001', pass: false });
+  } else if (!isOfferable(asset)) {
+    errors.push(`${NOT_ACTIVE_MESSAGE}: ${asset.symbol} (XRP Ledger)`);
+    checks.push({ id: 'VF-REG-001', pass: false, detail: 'not on the active asset list' });
   } else {
     checks.push({ id: 'VF-REG-001', pass: true, detail: `${asset.symbol} (class ${asset.class})` });
   }
