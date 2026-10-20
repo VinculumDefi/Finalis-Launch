@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Send, CheckCircle2, XCircle, Clock, Coins, Unlock, FileText } from 'lucide-react';
+import { Send, CheckCircle2, XCircle, Clock, Coins, Unlock } from 'lucide-react';
 import { SCALE, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
 
 function fmtFP(value, displayDecimals = 6) {
