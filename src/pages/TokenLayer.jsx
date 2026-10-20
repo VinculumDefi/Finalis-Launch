@@ -17,7 +17,7 @@ import { Coins, Zap, Activity, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchAssetPrice, getAssetPricingInfo, computeVerifiedGrossUsdMicro } from '@/lib/vfPriceService';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
-import { hasUtxoMinimum, checkUtxoMinimumLock, priceAsOfSecs, NO_FRESH_PRICE_MESSAGE } from '@/lib/vfUtxoMinimumLock';
+import { hasUtxoMinimum, checkUtxoMinimumLock, priceAsOfSecs, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered (Solana hidden).
 const ENV_OPTIONS = [
@@ -100,6 +100,15 @@ export default function TokenLayer() {
       refuse(NO_FRESH_PRICE_MESSAGE, 'Minimum lock size not checked: no fresh price');
       return;
     }
+    // Handshake (t239u): on Bitcoin, Bitcoin Cash and Litecoin a Handshake is a set coin
+    // amount (unit band, same as the verifier and lock.py). No price is needed for it.
+    if (isUtxoHandshake(env, duration.secs, normResult.package.canonical_asset_id)) {
+      const band = checkUtxoHandshakeLock({ env, grossSmallestUnits: normResult.package.gross_amount_smallest_units });
+      if (!band.ok) {
+        refuse(band.reason, 'Handshake amount outside the set band');
+        return;
+      }
+    }
 
     // Step 3: Verify — fetch live price or use simulation value
     let usd;
@@ -134,18 +143,20 @@ export default function TokenLayer() {
           priceAsOf: priceAsOfSecs(priceResult), nowSecs: Math.floor(Date.now() / 1000),
         });
         if (!min.ok) {
-          setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol });
+          setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol, env, asOf: priceAsOfSecs(priceResult) });
           refuse(min.reason, 'Minimum lock size not met or price not fresh');
           return;
         }
       }
       usd = computeVerifiedGrossUsdMicro(grossAmount, decimals, priceResult.usd, SCALE).toString();
-      setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol });
+      setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol, env, asOf: priceAsOfSecs(priceResult) });
     } else {
-      // VF-COM-003/009: Handshake durations require $0.95–$1.05; standard requires >= $10.00.
+      // VF-COM-003: a Handshake is $0.01 to $0.02 (Revision B verifier), so the simulation
+      // uses $0.015. Bitcoin, Bitcoin Cash and Litecoin Handshakes are checked by the unit
+      // band above and counted as at most $0.02. Standard simulation value: $10.00.
       const isHandshake = Number(duration.secs) === 3600;
-      usd = (isHandshake ? 1n : 10n) * SCALE; // Simulation: $1.00 handshake, $10.00 standard
-      setPriceInfo({ simulation: true, usd: isHandshake ? 1 : 10 });
+      usd = isHandshake ? (15n * SCALE) / 1000n : 10n * SCALE;
+      setPriceInfo({ simulation: true, usd: isHandshake ? 0.015 : 10 });
     }
     const verifyResult = verifyProof(vs, normResult.package, { verifiedGrossUsdMicro: usd, daysSinceLaunch: 0 });
     if (!verifyResult.ok) {
@@ -326,6 +337,13 @@ export default function TokenLayer() {
               </Button>
             </div>
           </div>
+          {isUtxoHandshake(env, duration.secs) && (
+            <p className="text-xs text-amber-300 mt-3 leading-relaxed">
+              {utxoHandshakeNote(env, priceInfo && priceInfo.env === env && !priceInfo.simulation && !priceInfo.error
+                ? { priceUsd: priceInfo.price, priceAsOf: priceInfo.asOf, nowSecs: Math.floor(Date.now() / 1000) }
+                : {})}
+            </p>
+          )}
           <div className="flex gap-2 mt-3">
             <Button onClick={simulateActivation} variant="outline" size="sm" className="border-slate-700 text-slate-300">
               Simulate Full Activation
@@ -352,7 +370,7 @@ export default function TokenLayer() {
               </span>
             )}
             {priceInfo?.simulation && (
-              <span className="text-xs text-amber-500">Simulation: $10.00 (not live)</span>
+              <span className="text-xs text-amber-500">Simulation: ${priceInfo.usd < 1 ? priceInfo.usd.toFixed(3) : priceInfo.usd.toFixed(2)} (not live)</span>
             )}
             {priceInfo?.error && (
               <span className="text-xs text-rose-400">Price fetch failed: {priceInfo.error}</span>
