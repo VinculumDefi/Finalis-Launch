@@ -12,7 +12,7 @@ import ChainVerifierPanel from '@/components/base/ChainVerifierPanel';
 import PendingAttemptPanel from '@/components/base/PendingAttemptPanel';
 import { PendingAttemptLifecycle } from '@/lib/vfPendingAttemptLifecycle';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
-import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE } from '@/lib/vfUtxoMinimumLock';
+import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered
 // (Revision B + on-chain verification). Solana and Cosmos Hub are hidden.
@@ -82,6 +82,17 @@ export default function BaseVerifier() {
       setResult({ ok: false, decision: 'MINIMUM_NOT_CHECKED', checks: [], reason: NO_FRESH_PRICE_MESSAGE });
       setPkg(null);
       return;
+    }
+    // Handshake (t239u): on these three chains a Handshake is a set coin amount (unit
+    // band, same as the verifier and lock.py), checked here with no price. The typed USD
+    // value is counted as at most $0.02 for VCLM and RAC by the engine.
+    if (isUtxoHandshake(env, duration, rawPkg.package.canonical_asset_id)) {
+      const band = checkUtxoHandshakeLock({ env, grossSmallestUnits: rawPkg.package.gross_amount_smallest_units });
+      if (!band.ok) {
+        setResult({ ok: false, decision: 'HANDSHAKE_OUTSIDE_BAND', checks: [], reason: band.reason });
+        setPkg(null);
+        return;
+      }
     }
 
     setPkg(rawPkg.package);
@@ -193,6 +204,9 @@ export default function BaseVerifier() {
               </Button>
             </div>
           </div>
+          {isUtxoHandshake(env, duration) && (
+            <p className="text-xs text-[#6b6b65] leading-relaxed">{utxoHandshakeNote(env)}</p>
+          )}
         </section>
 
         {pkg && <ProofPackageViewer pkg={pkg} />}
