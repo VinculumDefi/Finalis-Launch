@@ -9,6 +9,7 @@ import {
   UTXO_MIN_LOCK_USD, UTXO_P2PKH_DUST, PRICE_MAX_AGE_SECS, hasUtxoMinimum, minGrossFor,
   checkUtxoMinimumLock, priceAsOfSecs, toUsd18,
 } from '../lib/vfUtxoMinimumLock.js';
+import { buildMockEvent, UTXO_PRACTICE_GROSS } from '../lib/vfMockEventBuilder.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // CoinGecko USD prices read 2026-10-20 11:35 AM ET (test inputs only).
@@ -102,4 +103,34 @@ test('both app pages that build Bitcoin, Bitcoin Cash, Litecoin lock events run 
   const tl = readFileSync(path.join(ROOT, 'src', 'pages', 'TokenLayer.jsx'), 'utf8');
   assert.match(tl, /checkUtxoMinimumLock\(/);
   assert.match(tl, /priceAsOfSecs\(/);
+});
+
+test('practice lock amounts clear the minimum with margin (BCH and LTC about $5, BTC about $82)', () => {
+  // CoinGecko USD prices read 2026-10-20 12:30 PM ET (test inputs only).
+  const P = { Bitcoin: '82405', BitcoinCash: '276.69', Litecoin: '59.7' };
+  const AS_OF = 1792513842;
+  assert.deepEqual(UTXO_PRACTICE_GROSS, { Bitcoin: 100000n, BitcoinCash: 1800000n, Litecoin: 8400000n });
+  for (const env of Object.keys(P)) {
+    const { type, event } = buildMockEvent(env, 604800, 'VCLM');
+    assert.equal(type, 'utxo');
+    assert.equal(BigInt(event.gross_satoshis), UTXO_PRACTICE_GROSS[env]);
+    assert.equal(BigInt(event.fee_satoshis), (UTXO_PRACTICE_GROSS[env] * 500n) / 10000n);
+    const r = checkUtxoMinimumLock({ env, grossSmallestUnits: event.gross_satoshis, priceUsd: P[env], priceAsOf: AS_OF, nowSecs: AS_OF });
+    assert.equal(r.ok, true, `${env}: ${r.reason}`);
+    // Margin: still at or above the minimum after the price falls by 60% (BCH, LTC) or 70% (BTC).
+    const fallen = (Number(P[env]) * (env === 'Bitcoin' ? 0.3 : 0.4)).toFixed(4);
+    assert.equal(checkUtxoMinimumLock({ env, grossSmallestUnits: event.gross_satoshis, priceUsd: fallen, priceAsOf: AS_OF, nowSecs: AS_OF }).ok, true, `${env} at ${fallen}`);
+  }
+  for (const env of ['Dogecoin', 'DigiByte', 'Zcash']) assert.equal(buildMockEvent(env, 604800, 'VCLM').event.gross_satoshis, '100000');
+});
+
+test('the documented fetchAssetPrice response (price_as_of, integer Unix seconds) is read; null refuses', () => {
+  const resp = { usd: 82405, source: 'CoinGecko', timestamp: '2026-10-20T16:30:52.000Z', price_as_of: 1792513842 };
+  const asOf = priceAsOfSecs(resp);
+  assert.equal(asOf, 1792513842);
+  const now = 1792513852;
+  assert.equal(checkUtxoMinimumLock({ env: 'Bitcoin', grossSmallestUnits: 100000n, priceUsd: resp.usd, priceAsOf: asOf, nowSecs: now }).ok, true);
+  const none = { ...resp, price_as_of: null };
+  assert.equal(priceAsOfSecs(none), null);
+  assert.equal(checkUtxoMinimumLock({ env: 'Bitcoin', grossSmallestUnits: 100000n, priceUsd: none.usd, priceAsOf: priceAsOfSecs(none), nowSecs: now }).ok, false);
 });
