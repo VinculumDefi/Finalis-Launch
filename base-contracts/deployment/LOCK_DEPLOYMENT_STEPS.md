@@ -133,6 +133,7 @@ not yet deployed; the live finalized verifier `0xb067…f47D` is unchanged):
 - The USD used for that Handshake's VCLM and RAC is capped at $0.02.
 - The fee must still be exactly 5% of the real gross.
 - Every other chain keeps the $0.01 to $0.02 USD Handshake band, unchanged.
-- No lock contract changed. `ceremony.json` and `broadcast.html` carry the new
-  verifier (creation code hash `0x63128c66…572263`).
+- No lock contract changed. `ceremony.json` carries the new verifier
+  (creation code hash `0x63128c66…572263`). `scripts/broadcast.html` is retired
+  (t251u) and embeds no contract.
 - `utxo-locks/lock.py`, its regtest and the app use the same band (t239u).
