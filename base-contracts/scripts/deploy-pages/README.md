@@ -30,21 +30,34 @@ in `deployment/LIVE_DEPLOYMENT_ORDER.md` and `deployment/LOCK_DEPLOYMENT_STEPS.m
 
 Dev Funds come from `deployment/representativeBase.cjs`. The EVM Dev Fund, used on Base and the six EVM chains, is `0xFD21…3e9a`.
 
-## Rebuild
+## Build on the day (deploy files only)
+
+Run these once, from main, right before the ceremony (see
+`deployment/DEPLOYMENT_DAY_RUNBOOK.md`). They rebuild only the deploy files
+from the committed source and registry files. They do not change the registry.
 
 ```
 npm install --legacy-peer-deps
-npx hardhat compile --force
+npx hardhat compile --force                          # full compile; the reference build
+node scripts/deploy-pages/buildDeployPages.cjs       # the fifteen chain pages (base.html is kept)
+node scripts/build_ceremony_artifacts.cjs            # ceremony.json, and ceremony-data.json with a fresh first Base ETH price
+```
+
+`broadcast.html` and `ceremony.html` in `scripts/` are not used for this
+deployment.
+
+## Registry rebuild (NOT on the day)
+
+These re-read live sources and can change the registry files. They are not
+part of the deployment day. Run them only when the operator asks for a new
+registry revision.
+
+```
 node scripts/deploy-pages/resolveAssetRegistry.cjs   # read-only RPC reads; writes deployment/assetRegistry.resolved.json (prior revision, historical)
 node scripts/buildRevisionB.cjs                      # writes deployment/assetRegistry.revB.json (current, Revision B)
 node scripts/buildTokenAddressIndex.cjs              # writes deployment/tokenAddressIndex.json from Revision B
-node scripts/deploy-pages/buildDeployPages.cjs       # writes the fifteen chain pages from Revision B (base.html is kept)
-node scripts/build_ceremony_artifacts.cjs            # writes ceremony.json (contracts) and ceremony-data.json (fresh Base ETH price)
 node scripts/buildBroadcastPage.cjs                  # rewrites the contracts embedded in scripts/broadcast.html
 ```
-
-Run these once, from main, right before the ceremony (see the checklist in
-`deployment/LIVE_DEPLOYMENT_ORDER.md`).
 
 The pages, the ceremony data and the test-chain ceremony read Revision B (`deployment/assetRegistry.revB.json`, 487 entries) through `scripts/registryFile.cjs`. `assetRegistry.resolved.json` is the prior revision and is kept unchanged. See `deployment/ASSET_REGISTRY_REVISIONS.md`.
 
