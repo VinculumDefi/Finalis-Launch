@@ -22,6 +22,7 @@
 // =============================================================================
 
 import { SOLANA_HANDSHAKE_ALLOWANCE, LOCK_STATES, ATTEMPT_STATES } from './vfRevision6Authority.js';
+import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE } from './vfDeploymentScope.js';
 
 export class SolanaMockAdapter {
   constructor() {
@@ -62,6 +63,11 @@ export class SolanaMockAdapter {
   // VF-COM-007: "The official application must refuse an additional Handshake before broadcast
   // while the identity is used or has an objectively pending attempt."
   submitSimulation({ lockId, identity, isHandshake }) {
+    // Solana is not part of this deployment: nothing is submitted (fail closed).
+    if (!SOLANA_LOCKS_ENABLED) {
+      this._log({ type: 'SUBMISSION_PREVENTED', lockId, identity, reason: SOLANA_NOT_DEPLOYED_MESSAGE });
+      return { ok: false, reason: SOLANA_NOT_DEPLOYED_MESSAGE };
+    }
     if (isHandshake) {
       const check = this.checkHandshakeEligibility(identity);
       if (!check.ok) {
