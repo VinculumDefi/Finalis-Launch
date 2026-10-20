@@ -4,6 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { COMMITMENT_DURATIONS } from '@/lib/vfRevision6Authority';
 import { SOLANA_REGISTRY } from '@/lib/vfSolanaRegistry';
+import { filterOfferable } from '@/lib/vfActiveAssetAllowlist';
+
+// Only active-list assets are offered. No Solana row is on the active list, so this is empty.
+const OFFERED = filterOfferable(SOLANA_REGISTRY);
 
 export default function LockConfigForm({ values, onChange }) {
   const set = (key) => (e) => onChange({ ...values, [key]: e?.target ? e.target.value : e });
@@ -13,9 +17,9 @@ export default function LockConfigForm({ values, onChange }) {
       <div className="space-y-1">
         <Label className="text-xs text-[#6b6b65]">Source asset (VF-REG-001)</Label>
         <Select value={values.assetSymbol} onValueChange={set('assetSymbol')}>
-          <SelectTrigger><SelectValue placeholder="Select Solana asset…" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={OFFERED.length ? 'Select Solana asset…' : 'No Solana asset is on the active list'} /></SelectTrigger>
           <SelectContent className="max-h-72">
-            {SOLANA_REGISTRY.map((a) => (
+            {OFFERED.map((a) => (
               <SelectItem key={a.registry_row} value={a.symbol}>
                 {a.symbol} · {a.asset_name}
               </SelectItem>
