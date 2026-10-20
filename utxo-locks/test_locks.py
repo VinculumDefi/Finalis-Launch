@@ -18,8 +18,17 @@ from finality import (
     ConfirmationTooShallow,
     enforce_confirmation_depth,
 )
+from decimal import Decimal
+
 from lock import (
     COUNTS_PER_IDENTITY,
+    EXACT_FEE_CHAINS,
+    MIN_LOCK_USD,
+    PRICE_MAX_AGE_SECS,
+    LockRefused,
+    check_minimum_lock,
+    lock_outputs,
+    min_gross_for,
     FEE_SATS,
     FINGERPRINT_BINDING_CHAINS,
     GROSS_SATS,
@@ -261,6 +270,106 @@ class LockTests(unittest.TestCase):
         self.assertEqual(handshake_allowance(COUNTS_PER_IDENTITY), 1)
         self.assertEqual(handshake_allowance(True), 3)
         self.assertEqual(handshake_allowance(False), 1)
+
+
+# Fixture prices for the minimum-lock tests: the CoinGecko USD prices read on
+# 2026-10-20 at 11:35 AM ET. They are test inputs only, never posted anywhere.
+FIXTURE_PRICE = {"bitcoin": "82410", "bitcoin-cash": "276.28", "litecoin": "59.59"}
+NOW = 1_792_510_532
+
+
+class MinimumLockTests(unittest.TestCase):
+    """Operator t230u: $20 BTC, $1 BCH, $1 LTC; fresh price; fee exactly 5%."""
+
+    def test_minimums_are_the_operator_values_and_only_three_chains(self):
+        self.assertEqual(MIN_LOCK_USD, {"bitcoin": Decimal("20"), "bitcoin-cash": Decimal("1"), "litecoin": Decimal("1")})
+        self.assertEqual(EXACT_FEE_CHAINS, ("bitcoin", "bitcoin-cash", "litecoin"))
+        self.assertEqual(PRICE_MAX_AGE_SECS, 86_400)
+
+    def test_accept_at_minimum_refuse_one_unit_below(self):
+        expected = {"bitcoin": 24_269, "bitcoin-cash": 361_952, "litecoin": 1_678_134}
+        for chain, price in FIXTURE_PRICE.items():
+            with self.subTest(chain=chain):
+                g = min_gross_for(chain, price)
+                self.assertEqual(g, expected[chain])
+                usd = check_minimum_lock(chain, g, price_usd=price, price_as_of=NOW, now=NOW)
+                self.assertGreaterEqual(usd, MIN_LOCK_USD[chain])
+                fee, principal, funding = lock_outputs(chain, g, price_usd=price, price_as_of=NOW, now=NOW)
+                self.assertEqual(fee, g * 500 // 10_000)
+                self.assertEqual(principal, g - fee)
+                self.assertEqual(funding, g)
+                with self.assertRaisesRegex(LockRefused, "under the"):
+                    lock_outputs(chain, g - 1, price_usd=price, price_as_of=NOW, now=NOW)
+                print(f"{chain}: {g} accepted at ${MIN_LOCK_USD[chain]} minimum, {g - 1} refused")
+
+    def test_fail_closed_without_a_fresh_price(self):
+        for chain, price in FIXTURE_PRICE.items():
+            g = min_gross_for(chain, price) * 10
+            ok = dict(price_usd=price, price_as_of=NOW, now=NOW)
+            bad = [
+                dict(ok, price_usd=None), dict(ok, price_usd="0"), dict(ok, price_usd="-1"),
+                dict(ok, price_usd="abc"), dict(ok, price_usd="NaN"), dict(ok, price_usd="Infinity"),
+                dict(ok, price_usd=True), dict(ok, price_as_of=None), dict(ok, now=None),
+                dict(ok, price_as_of=NOW - PRICE_MAX_AGE_SECS),        # exactly 24 hours old
+                dict(ok, price_as_of=NOW - 10 * PRICE_MAX_AGE_SECS),
+                dict(ok, price_as_of=NOW + 301),                        # stamped in the future
+                dict(ok, price_as_of=float(NOW)),
+            ]
+            for kw in bad:
+                with self.subTest(chain=chain, kw=kw):
+                    with self.assertRaises(LockRefused):
+                        lock_outputs(chain, g, **kw)
+            lock_outputs(chain, g, price_usd=price, price_as_of=NOW - PRICE_MAX_AGE_SECS + 1, now=NOW)
+            with self.assertRaises(LockRefused):
+                lock_outputs(chain, g)  # no price at all
+
+    def test_dust_raised_split_is_gone_on_btc_bch_ltc(self):
+        for chain in EXACT_FEE_CHAINS:
+            dust = P2PKH_DUST_MINIMUM[chain]
+            with self.subTest(chain=chain):
+                self.assertEqual(split_outputs(chain, 20 * dust), (dust, 19 * dust, 20 * dust))
+                with self.assertRaisesRegex(LockRefused, "dust"):
+                    split_outputs(chain, 20 * dust - 20)
+                with self.assertRaises(LockRefused):
+                    split_outputs(chain, 1_213)  # $1 of BTC at the fixture price
+                for g in [x for x in (20 * dust, 20 * dust + 7, 24_269, 361_952, 1_000_000, 1_678_134) if x >= 20 * dust]:
+                    fee, principal, funding = split_outputs(chain, g)
+                    self.assertEqual(fee, g * 500 // 10_000)
+                    self.assertEqual(fee + principal, funding)
+                    self.assertEqual(funding, g)
+
+    def test_price_rise_refuses_instead_of_raising_the_fee(self):
+        # At $200,000 per BTC, $20 is 10,000 sats and 5% is 500 < 546: refused, not dust-raised.
+        g = min_gross_for("bitcoin", "200000")
+        self.assertEqual(g, 10_000)
+        with self.assertRaisesRegex(LockRefused, "dust"):
+            lock_outputs("bitcoin", g, price_usd="200000", price_as_of=NOW, now=NOW)
+
+    def test_other_chains_unchanged(self):
+        self.assertEqual(split_outputs("dogecoin", GROSS_SATS), (100_000, GROSS_SATS, GROSS_SATS + 100_000))
+        self.assertEqual(split_outputs("digibyte", 100_000), (5_460, 100_000, 105_460))
+        self.assertEqual(split_outputs("zcash", 1_000), (55, 1_000, 1_055))
+        for chain in ("dogecoin", "digibyte", "zcash"):
+            self.assertEqual(lock_outputs(chain, GROSS_SATS), split_outputs(chain, GROSS_SATS))
+            with self.assertRaises(LockRefused):
+                check_minimum_lock(chain, GROSS_SATS, price_usd="1", price_as_of=NOW, now=NOW)
+
+    def test_priced_fixture_holds_and_releases_with_exact_5pct(self):
+        for chain, price in FIXTURE_PRICE.items():
+            with self.subTest(chain=chain):
+                g = min_gross_for(chain, price)
+                fix = LockFixture(chain, MATURITY, gross=g, price_usd=price, price_as_of=NOW, now=NOW)
+                self.assertEqual((fix.fee_output, fix.principal, fix.funding_value), (g * 500 // 10_000, g - g * 500 // 10_000, g))
+                ledger = Ledger()
+                ledger.credit(fix.funding_txid, fix.funding_vout, fix.funding_output.__class__(fix.funding_value, fix.funding_output.script_pubkey))
+                fix.funding_output = fix.funding_output.__class__(fix.funding_value, fix.funding_output.script_pubkey)
+                lock_txid = ledger.apply(fix.lock_transaction())
+                release_txid = ledger.apply(fix.spend_principal(lock_txid, MATURITY, fix.release_key))
+                self.assertEqual(ledger.utxos[(release_txid, 0)].value, fix.principal)
+                with self.assertRaises(LockRefused):
+                    LockFixture(chain, MATURITY, gross=g - 1, price_usd=price, price_as_of=NOW, now=NOW)
+                with self.assertRaises(LockRefused):
+                    LockFixture(chain, MATURITY, gross=g)  # no price
 
 
 if __name__ == "__main__":
