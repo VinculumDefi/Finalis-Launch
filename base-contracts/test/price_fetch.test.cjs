@@ -37,13 +37,17 @@ describe("Price fetcher -> price run (test chain)", function () {
   const toshi = rows.find((r) => r.environmentId === "Base" && r.symbol === "TOSHI");
   const usdcPol = rows.find((r) => r.environmentId === "Polygon" && r.symbol === "USDC_POL");
   const btc = rows.find((r) => r.row === 3);
-  const sol = rows.find((r) => r.row === 5);
+  // Solana SOL (row 5) is not in Revision B; the prior-revision row is used only
+  // to exercise the fetcher's GeckoTerminal path on a non-EVM address.
+  const sol = require("../scripts/registryFile.cjs").loadHistoricalWritten().find((r) => r.row === 5);
   const usdt = rows.find((r) => r.row === 6);
   const thin = rows.find((r) => r.environmentId === "Base" && /^0x[0-9a-fA-F]{40}$/.test(r.identifier) && ![aero, toshi].includes(r) && r.pricingIdentifier !== aero.pricingIdentifier && r.pricingIdentifier !== toshi.pricingIdentifier);
 
-  it("reads the 962 registered rows: the 961 written rows plus Base ETH", () => {
-    expect(rows.length).to.equal(962);
+  it("reads the 487 Revision B rows: the 486 written rows plus Base ETH; no Solana", () => {
+    expect(rows.length).to.equal(487);
     expect(rows.filter((r) => r.environmentId === "Base" && r.row === 2).length).to.equal(1);
+    expect(rows.filter((r) => r.environmentId === "Solana").length).to.equal(0);
+    expect(sol.environmentId).to.equal("Solana");
     expect(rows.every((r) => r.pricingIdentifier)).to.equal(true);
   });
 
@@ -95,7 +99,7 @@ describe("Price fetcher -> price run (test chain)", function () {
     expect(rowAddress(btc)).to.equal(null);
   });
 
-  describe("on the test chain (ceremony: 962 rows, poster = live poster)", function () {
+  describe("on the test chain (ceremony: Revision B, 487 rows, poster = live poster)", function () {
     let v;
     before(async () => {
       const [signer] = await ethers.getSigners();
@@ -105,19 +109,25 @@ describe("Price fetcher -> price run (test chain)", function () {
       v = (await runBaseCeremony({ ethers, signer, art, data, newLocks })).verifier;
     });
 
-    it("the real-fetch fixture feeds priceRun and posts: priced rows usable at the exact price, failed rows unusable", async () => {
+    it("the real-fetch fixture feeds priceRun and posts: Revision B rows usable at the exact price; rows not in Revision B skipped and unusable", async () => {
       expect(SAMPLE.length).to.be.gte(8);
+      const inRevB = new Set(rows.map((x) => x.environmentId + "|" + x.canonicalAssetId.toLowerCase()));
+      const isIn = (f) => inRevB.has(f.environmentId + "|" + f.canonicalAssetId.toLowerCase());
       const r = buildPriceRun(SAMPLE, await nextRunId(v));
-      expect(r.skipped.length).to.equal(0);
+      // Fixture rows dropped by Revision B (Solana SOL, sUSD, ggAVAX, TigerOG, SWEAT, GT, IPOR) are skipped, never posted.
+      expect(r.skipped.map((x) => x.symbol).sort()).to.deep.equal(SAMPLE.filter((f) => !isIn(f)).map((f) => f.symbol).sort());
+      expect(r.skipped.length).to.equal(7);
+      for (const x of r.skipped) expect(x.why).to.equal("not in registry");
+      expect(r.updates.length).to.equal(SAMPLE.filter(isIn).length);
       await postOnTestChain(hre, v, r);
       for (const f of SAMPLE) {
         const sp = await v.scheduledPrices(key(f.environmentId, f.canonicalAssetId));
-        expect(sp.usable, f.symbol).to.equal(f.usd != null);
-        if (f.usd != null) expect(sp.priceUsd18).to.equal(r.updates.find((u) => u.canonicalAssetId === f.canonicalAssetId && u.environmentId === f.environmentId).priceUsd18);
+        expect(sp.usable, f.symbol).to.equal(isIn(f) && f.usd != null);
+        if (isIn(f) && f.usd != null) expect(sp.priceUsd18).to.equal(r.updates.find((u) => u.canonicalAssetId === f.canonicalAssetId && u.environmentId === f.environmentId).priceUsd18);
       }
     });
 
-    it("a full 962-row fetch (mocked HTTP) builds consecutive runs of <= 250 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
+    it("a full 487-row Revision B fetch (mocked HTTP) builds consecutive runs of <= 250 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
       const failIds = new Set(rows.filter((r, i) => i % 7 === 0).map((r) => r.pricingIdentifier));
       const m = mock([
         [/coingecko/, (u) => Object.fromEntries(cgIds(u).filter((id) => !failIds.has(id)).map((id, j) => [id, { usd: (j + 1) / 8, last_updated_at: NOW }]))],
@@ -125,14 +135,14 @@ describe("Price fetcher -> price run (test chain)", function () {
         [/geckoterminal/, () => ({ data: { attributes: { token_prices: {}, total_reserve_in_usd: {} } } })],
       ]);
       const res = await fetchPrices({ rows, get: m.get, now: () => NOW, pause: NOPAUSE });
-      expect(res.length).to.equal(962);
+      expect(res.length).to.equal(487);
       const c = summarize(res);
-      expect(c.CoinGecko + c.fail).to.equal(962);
+      expect(c.CoinGecko + c.fail).to.equal(487);
       expect(c.fail).to.be.gt(0);
       const first = await nextRunId(v);
       const runs = buildPriceRuns(res, first);
-      expect(runs.length).to.equal(Math.ceil(962 / MAX_LINES_PER_RUN));
-      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(962);
+      expect(runs.length).to.equal(Math.ceil(487 / MAX_LINES_PER_RUN));
+      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(487);
       expect(runs.map((r) => r.runId)).to.deep.equal(runs.map((_, i) => first + BigInt(i)));
       for (const r of runs) {
         const rc = await postOnTestChain(hre, v, r);

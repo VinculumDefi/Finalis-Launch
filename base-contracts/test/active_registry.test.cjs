@@ -1,16 +1,21 @@
-// deployment/assetRegistry.active.json: strict subset of the historical
-// registry, no excluded row, counts as built (t209u item 5). No chain needed.
+// deployment/assetRegistry.active.json (interim 822 set, superseded by
+// Revision B, deployment/assetRegistry.revB.json; kept unchanged as a record):
+// strict subset of the historical registry, no excluded row, counts as built
+// (t209u item 5). No chain needed. Revision B: test/revision_b_registry.test.cjs.
 const { expect } = require("chai");
 const HIST = require("../deployment/assetRegistry.resolved.json").entries;
 const ACTIVE = require("../deployment/assetRegistry.active.json");
 const { buildTokenAddressIndex } = require("../scripts/buildTokenAddressIndex.cjs");
+const { loadHistoricalWritten } = require("../scripts/registryFile.cjs");
+// The index rule applied to the prior revision's 961 rows (the set this file was cut from).
+const HIST_INDEX = buildTokenAddressIndex(loadHistoricalWritten());
 
 const FIELDS = ["row", "assetId", "canonicalAssetId", "symbol", "decimals", "custodyClass", "custodyPath", "identifier", "pricingIdentifier"];
 const SYMBOL_FAILURES = [77, 259, 286, 323, 359, 366, 370, 406, 714, 996];
 const DROPPED = [138, 999, 1000];
 const MISLABELLED = [152, 991, 980, 345];
 
-describe("Active asset registry (subset of the 961 + Base ETH)", function () {
+describe("Active asset registry, interim 822 set (subset of the 961 + Base ETH; superseded by Revision B)", function () {
   const written = HIST.filter((e) => e.decimals != null && e.sameKeyAsRow == null);
   const histKeys = new Set(written.map((e) => e.environmentId + "|" + e.row));
   histKeys.add("Base|2"); // Base ETH
@@ -38,10 +43,10 @@ describe("Active asset registry (subset of the 961 + Base ETH)", function () {
     for (const r of [...SYMBOL_FAILURES, ...DROPPED, ...MISLABELLED]) expect(rows.has(r), "row " + r).to.equal(false);
     expect(E.filter((a) => a.environmentId === "Solana").length).to.equal(0);
     // Duplicate-losing rows: on a duplicated address only the index's chosen row may appear.
-    const { duplicates } = buildTokenAddressIndex();
+    const { duplicates } = HIST_INDEX;
     for (const d of duplicates) for (const r of d.rows) if (r.row !== d.chosenRow) expect(rows.has(r.row), "loser row " + r.row).to.equal(false);
     // Every token entry is an address-index entry.
-    const idx = new Set(buildTokenAddressIndex().entries.map((x) => x.environmentId + "|" + x.row));
+    const idx = new Set(HIST_INDEX.entries.map((x) => x.environmentId + "|" + x.row));
     for (const a of E.filter((x) => x.kind === "token")) expect(idx.has(a.environmentId + "|" + a.row), "row " + a.row).to.equal(true);
   });
 

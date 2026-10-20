@@ -1,6 +1,6 @@
 // Test-chain ceremony for the new main verifier (scripts/testChainCeremony.cjs).
 // In-process Hardhat network only. Checks deploy wiring, the 15 registered
-// readers (13 + Stellar and XRP Ledger), exactly 961 + 1 registry rows, a generated poster, a test Base ETH
+// readers (13 + Stellar and XRP Ledger), exactly the Revision B registry (486 + Base ETH = 487 rows), a generated poster, a test Base ETH
 // price, and finalize gates VF-DEP-010..014 by static call (not finalized).
 const { expect } = require("chai");
 const hre = require("hardhat");
@@ -71,23 +71,34 @@ describe("Test-chain ceremony: new main verifier", function () {
     expect(() => xrplAccount(bump(df["XRP Ledger"], 10))).to.throw();
   });
 
-  it("indexes the rows' own token addresses (823, one row per environment + address) and aliases Polygon native POL to the POL row", async function () {
-    expect(c.tokenAddresses.length).to.equal(823);
-    for (const t of [c.tokenAddresses[0], c.tokenAddresses[400], c.tokenAddresses[822]])
+  it("indexes the rows' own token addresses (475, one row per environment + address) and aliases Polygon native POL to the POL row", async function () {
+    expect(c.tokenAddresses.length).to.equal(475);
+    for (const t of [c.tokenAddresses[0], c.tokenAddresses[237], c.tokenAddresses[474]])
       expect(await c.verifier.tokenAssetIndex(await c.verifier.tokenAddressKey(t.environmentId, t.token))).to.equal(t.canonicalAssetId);
     const pol = ethers.solidityPackedKeccak256(["string", "string"], ["Ethereum", "POL"]);
     expect(await c.verifier.assetRowAlias(ethers.solidityPackedKeccak256(["string", "bytes32"], ["Polygon", pol])))
       .to.equal(ethers.solidityPackedKeccak256(["string", "bytes32"], ["Ethereum", pol]));
     expect(await c.readers.Polygon.nativeAssetId()).to.equal(pol);
-    expect(c.all.length).to.equal(962); // no POL row added
+    expect(c.all.length).to.equal(487); // no POL row added
+    // Every alias target row is a registered Revision B row (POL row 114, ETH row 2).
+    expect(c.written.some((e) => e.row === 114 && e.environmentId === "Ethereum" && e.symbol === "POL")).to.equal(true);
+    for (const env of ["Arbitrum", "Optimism"]) {
+      const eth = ethers.solidityPackedKeccak256(["string", "string"], ["Ethereum", "native-ETH"]);
+      expect(await c.verifier.assetRowAlias(key(env, eth))).to.equal(key("Ethereum", eth));
+    }
+    // Every indexed token resolves to its own row.
+    for (const t of c.tokenAddresses)
+      expect(await c.verifier.tokenAssetIndex(await c.verifier.tokenAddressKey(t.environmentId, t.token)), t.symbol).to.equal(t.canonicalAssetId);
   });
 
-  it("writes exactly the 961 existing rows plus the Base ETH row, nothing extra", async function () {
+  it("writes exactly the Revision B rows (486 plus the Base ETH row = 487), nothing extra", async function () {
     const { written, baseEth } = registryRows();
-    expect(written.length).to.equal(961);
-    expect(c.all.length).to.equal(962);
+    expect(written.length).to.equal(486);
+    expect(c.all.length).to.equal(487);
     const keys = new Set(c.all.map((e) => key(e.environmentId, e.canonicalAssetId)));
-    expect(keys.size).to.equal(962);
+    expect(keys.size).to.equal(487);
+    expect(c.all.filter((e) => e.kind === "native").length).to.equal(12);
+    expect(c.all.some((e) => e.environmentId === "Solana")).to.equal(false);
     for (const e of c.all) {
       const r = await c.verifier.assetPrecisionTable(key(e.environmentId, e.canonicalAssetId));
       expect(r.canonicalAssetId).to.equal(e.canonicalAssetId);
@@ -97,7 +108,20 @@ describe("Test-chain ceremony: new main verifier", function () {
     expect(baseEth.canonicalAssetId).to.equal(await c.verifier.BASE_NATIVE_ETH_ASSET_ID());
     // A row that is not in the file is not in the verifier.
     expect((await c.verifier.assetPrecisionTable(key("Base", ethers.id("not-a-row")))).canonicalAssetId).to.equal(ethers.ZeroHash);
-    console.log("      registry gas:", c.registryGas.toString(), "in", Math.ceil(962 / 50), "batches");
+    // Prior-revision rows that Revision B dropped are not registered: Solana SOL
+    // (row 5), and SWEAT / SYRUP / WLFI / XOR / PROM (no qualifying pool).
+    const { loadHistoricalWritten } = require("../scripts/registryFile.cjs");
+    const hist = loadHistoricalWritten();
+    const inRevB = new Set(c.all.map((e) => e.environmentId + "|" + e.row));
+    const dropped = hist.filter((e) => !inRevB.has(e.environmentId + "|" + e.row));
+    expect(dropped.length).to.equal(961 - 486);
+    for (const sym of ["SOL", "SWEAT", "SYRUP", "WLFI", "XOR", "PROM"]) {
+      const h = hist.find((e) => e.symbol === sym);
+      expect(h, sym).to.not.equal(undefined);
+      expect(inRevB.has(h.environmentId + "|" + h.row), sym).to.equal(false);
+      expect((await c.verifier.assetPrecisionTable(key(h.environmentId, h.canonicalAssetId))).canonicalAssetId, sym).to.equal(ethers.ZeroHash);
+    }
+    console.log("      registry gas:", c.registryGas.toString(), "in", Math.ceil(487 / 50), "batches");
   });
 
   it("uses a generated poster: only it can post; the test Base ETH price is usable; others are not", async function () {

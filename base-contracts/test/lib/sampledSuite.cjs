@@ -18,7 +18,8 @@ const { ethers, network } = require("hardhat");
 const { ethLockEvidence, encodeEvidence, EVIDENCE_TYPE } = require("./ethProof.cjs");
 const { sampleTokens, SEED } = require("./sampling.cjs");
 const { ASSET_ROW_ALIASES } = require("../../scripts/testChainCeremony.cjs");
-const REG = require("../../deployment/assetRegistry.resolved.json").entries;
+// Revision B rows under their own environment (deployment/assetRegistry.revB.json).
+const REG = require("../../scripts/registryFile.cjs").loadRegistry().written;
 
 const coder = ethers.AbiCoder.defaultAbiCoder();
 const SCALE = 10n ** 18n;
@@ -67,7 +68,7 @@ async function deployAll() {
     await verifier.registerChainVerifier(env, await readers[env].getAddress());
     await verifier.configureDevFund(env, devFund.address);
   }
-  // Registry rows (exact rows from the 961 + Base ETH) for the natives and every sampled token.
+  // Registry rows (exact Revision B rows, Base ETH = row 2 under Base) for the natives and every sampled token.
   const rows = new Map();
   const add = (env, e) => rows.set(env + "|" + e.canonicalAssetId, [env, e.canonicalAssetId, e.symbol, e.decimals, e.custodyClass, e.custodyPath]);
   add("Base", row(2));

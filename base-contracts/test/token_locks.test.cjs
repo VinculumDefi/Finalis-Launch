@@ -1,12 +1,17 @@
 // Token locks resolve through the Verifier's token address index (environment +
-// token address -> registry row), built from the addresses already on the 961
-// rows. Polygon native POL resolves to the existing POL row (environment
-// Ethereum) through a ceremony alias. In-process Hardhat chain only.
+// token address -> registry row), built from the addresses already on the
+// Revision B rows (deployment/assetRegistry.revB.json). Polygon native POL
+// resolves to the existing POL row (environment Ethereum, row 114, in Revision
+// B) through a ceremony alias. The duplicate-address rule is also checked on
+// the prior revision's 961 rows, where the duplicates occur. In-process Hardhat
+// chain only.
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const { ethLockEvidence, encodeEvidence } = require("./lib/ethProof.cjs");
 const { buildTokenAddressIndex } = require("../scripts/buildTokenAddressIndex.cjs");
-const REG = require("../deployment/assetRegistry.resolved.json").entries;
+const { loadRegistry, loadHistoricalWritten } = require("../scripts/registryFile.cjs");
+const REG = loadRegistry().written; // Revision B rows under their own environment (Base ETH excluded)
+const HIST_INDEX = buildTokenAddressIndex(loadHistoricalWritten()); // prior revision, 961 rows
 
 const SCALE = 10n ** 18n;
 const DAY7 = 604800n;
@@ -140,12 +145,26 @@ describe("Token locks: registered token addresses verify and mint", function () 
 });
 
 describe("Duplicate addresses: one row per (environment, address)", function () {
-  const pick = (env, prefix) => INDEX.duplicates.find((x) => x.environmentId === env && x.address.toLowerCase().startsWith(prefix)).chosenRow;
-  it("52 addresses on two or more same-environment rows, each resolved to exactly one row", () => {
-    expect(INDEX.duplicates.length).to.equal(52);
+  const pick = (env, prefix) => HIST_INDEX.duplicates.find((x) => x.environmentId === env && x.address.toLowerCase().startsWith(prefix)).chosenRow;
+  it("prior revision: 52 addresses on two or more same-environment rows, each resolved to exactly one row (823 addresses)", () => {
+    expect(HIST_INDEX.entries.length).to.equal(823);
+    expect(HIST_INDEX.duplicates.length).to.equal(52);
+    const keys = HIST_INDEX.entries.map((e) => e.environmentId + "|" + e.token.toLowerCase());
+    expect(new Set(keys).size).to.equal(keys.length);
+    for (const d of HIST_INDEX.duplicates) expect(d.rows.map((r) => r.row)).to.include(d.chosenRow);
+  });
+  it("Revision B: 475 addresses, one per token entry, no duplicate left, and no duplicate-losing row present", () => {
+    expect(INDEX.entries.length).to.equal(475);
+    expect(INDEX.duplicates.length).to.equal(0);
     const keys = INDEX.entries.map((e) => e.environmentId + "|" + e.token.toLowerCase());
     expect(new Set(keys).size).to.equal(keys.length);
-    for (const d of INDEX.duplicates) expect(d.rows.map((r) => r.row)).to.include(d.chosenRow);
+    const tokenRows = REG.filter((e) => e.kind === "token");
+    expect(tokenRows.length).to.equal(475);
+    const idxRows = new Set(INDEX.entries.map((e) => e.environmentId + "|" + e.row));
+    for (const e of tokenRows) expect(idxRows.has(e.environmentId + "|" + e.row), "row " + e.row).to.equal(true);
+    const revRows = new Set(REG.map((e) => e.environmentId + "|" + e.row));
+    for (const d of HIST_INDEX.duplicates) for (const r of d.rows)
+      if (r.row !== d.chosenRow) expect(revRows.has(d.environmentId + "|" + r.row), "loser row " + r.row).to.equal(false);
   });
   it("rule: the row matching the contract's own symbol() wins; else case-insensitive; else lowest row", () => {
     expect(pick("Ethereum", "0xfc82bb")).to.equal(369); // PROM, not ASR (row 345)
