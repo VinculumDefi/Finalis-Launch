@@ -5,9 +5,6 @@
 // Contract addresses are NOT typed here. They come from vfDeployedAddresses.js,
 // which base-contracts/scripts/applyCeremonyAddresses.cjs writes from the Base
 // ceremony output. Until then every address there is PENDING_DEPLOYMENT.
-//
-// Cosmos Hub is permanently dropped (operator, t228u). It is not on Revision B,
-// so it is not configured here and the page does not offer it.
 
 import { CEREMONY, BASE_CONTRACTS, LOCKS_5PCT, READERS, RETIRED_LOCKS, RETIRED_BASE_CONTRACTS } from './vfDeployedAddresses.js';
 
