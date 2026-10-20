@@ -13,8 +13,9 @@ Per-chain values, gas and the post-deploy check are in
 
 ## On the day: checklist before anything is signed
 None of these steps sends anything.
-1. Build all deploy files from main once, right before the ceremony (the
-   commands are in `scripts/deploy-pages/README.md`, under Rebuild). This also
+1. Build all deploy files from main once, right before the ceremony (the three
+   commands are in `scripts/deploy-pages/README.md`, under "Build on the day";
+   the full day is in `deployment/DEPLOYMENT_DAY_RUNBOOK.md`). This also
    takes a fresh first Base ETH price into `ceremony-data.json`. Check that
    the verifier creation code hash is `0x63128c66…572263` and the
    CommitmentVaultLock creation code hash is `0x2daadaf6…80bd99`; if either
