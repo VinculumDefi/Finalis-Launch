@@ -2,10 +2,19 @@
 // REAL values present in the workspace are used verbatim. Genuinely-undeployed or
 // absent addresses are marked "PENDING_DEPLOYMENT" or "NOT_PRESENT", never invented.
 //
+// Contract addresses are NOT typed here. They come from vfDeployedAddresses.js,
+// which base-contracts/scripts/applyCeremonyAddresses.cjs writes from the Base
+// ceremony output. Until then every address there is PENDING_DEPLOYMENT.
+//
 // Cosmos Hub is permanently dropped (operator, t228u). It is not on Revision B,
 // so it is not configured here and the page does not offer it.
 
-export const DEPLOYMENT_STATE = 'AWAITING_DEPLOYMENT'; // Preview / Awaiting deployment / Configured / Live
+import { CEREMONY, BASE_CONTRACTS, LOCKS_5PCT, READERS, RETIRED_LOCKS, RETIRED_BASE_CONTRACTS } from './vfDeployedAddresses.js';
+
+export { CEREMONY, LOCKS_5PCT, READERS, RETIRED_LOCKS, RETIRED_BASE_CONTRACTS };
+
+// Preview / Awaiting deployment / Configured / Live
+export const DEPLOYMENT_STATE = CEREMONY.finalized ? 'CONFIGURED' : 'AWAITING_DEPLOYMENT';
 
 export const PENDING = 'PENDING_DEPLOYMENT';
 export const NOT_PRESENT = 'NOT_PRESENT';
@@ -36,23 +45,52 @@ export const DURATION_HANDSHAKE = 3600;
 
 // --- Base chain ---
 // The Revision B Base ceremony (base-contracts/deployment/LIVE_DEPLOYMENT_ORDER.md,
-// Step 2) deploys a NEW 5% Base lock and a NEW Verifier. Neither exists yet, so
-// both stay PENDING_DEPLOYMENT. The older 2026-10-12 Base lock charges 2.5% on the
-// Handshake and is deliberately NOT used here (Rev 12 is 5% on every duration).
-export const BASE_CHAIN = {
+// Step 2) deploys a NEW 5% Base lock and a NEW Verifier, VCLM, CHONX, Forge and
+// Stake. The older 2026-10-12 Base lock charges 2.5% on the Handshake and is
+// RETIRED (RETIRED_LOCKS): it is never offered for a new lock.
+export const BASE_CHAIN = Object.freeze({
   name: 'Base',
   environment_id: 'Base',
   chain_id: 8453,
-  lock_address: PENDING,             // new 5% CommitmentVaultLock("Base", Dev Fund), not deployed
-  proof_verifier_address: PENDING,   // new Revision B VinculumFinalisVerifier, not deployed
-  vclm_address: PENDING,
-  chonx_address: PENDING,
+  lock_address: BASE_CONTRACTS.lock,             // new 5% CommitmentVaultLock("Base", Dev Fund)
+  proof_verifier_address: BASE_CONTRACTS.verifier, // new Revision B VinculumFinalisVerifier
+  vclm_address: BASE_CONTRACTS.vclm,
+  chonx_address: BASE_CONTRACTS.chonx,
+  forge_address: BASE_CONTRACTS.forge,
+  stake_address: BASE_CONTRACTS.stake,
   explorer_tx: 'https://basescan.org/tx/{txHash}',
-};
+});
+
+const isAddr = (a) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a) && !/^0x0{40}$/.test(a);
+
+export function isRetiredLock(address) {
+  if (typeof address !== 'string') return false;
+  const a = address.toLowerCase();
+  return RETIRED_LOCKS.some((r) => r.address.toLowerCase() === a);
+}
+
+export function isRetiredBaseContract(address) {
+  if (typeof address !== 'string') return false;
+  const a = address.toLowerCase();
+  return RETIRED_BASE_CONTRACTS.some((r) => r.address.toLowerCase() === a);
+}
+
+// The lock a NEW lock on this environment must use, or null. Never a retired lock.
+export function lockForNewLock(environmentId) {
+  const a = LOCKS_5PCT[environmentId];
+  if (!isAddr(a) || isRetiredLock(a)) return null;
+  return a;
+}
+
+// Release of an existing lock may target a retired lock (the recorded destination
+// releases its own principal at maturity) or a new one.
+export function lockAllowedForRelease(address) {
+  return isRetiredLock(address) || Object.values(LOCKS_5PCT).some((a) => isAddr(a) && a.toLowerCase() === String(address).toLowerCase());
+}
 
 export function isBaseLockDeployed() {
-  return BASE_CHAIN.lock_address !== PENDING;
+  return isAddr(BASE_CHAIN.lock_address) && !isRetiredLock(BASE_CHAIN.lock_address);
 }
 export function isBaseVerifierPresent() {
-  return BASE_CHAIN.proof_verifier_address !== PENDING;
+  return isAddr(BASE_CHAIN.proof_verifier_address) && !isRetiredBaseContract(BASE_CHAIN.proof_verifier_address);
 }
