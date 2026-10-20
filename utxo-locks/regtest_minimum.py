@@ -1,4 +1,4 @@
-"""Regtest check of the minimum lock sizes (operator t230u) on real nodes.
+"""Regtest check of the minimum lock sizes (operator t230u, native floor t235u) on real nodes.
 
 LOCAL REGTEST ONLY. Starts throwaway regtest nodes, never a public network.
 Not part of the unittest run (it needs node binaries). Usage:
@@ -6,12 +6,14 @@ Not part of the unittest run (it needs node binaries). Usage:
   BTC_BIN=/path/bitcoin-31.1/bin BCH_BIN=/path/bitcoin-cash-node-29.2.0/bin \
   LTC_BIN=/path/litecoin-0.21.4/bin python3 utxo-locks/regtest_minimum.py
 
-For each of Bitcoin, Bitcoin Cash and Litecoin, with the fixture price below:
-  1. lock.py refuses one unit under the minimum (LockRefused, nothing built).
-  2. A lock exactly at the minimum is built by LockFixture(gross=..., price),
+For each of Bitcoin, Bitcoin Cash and Litecoin, twice: at today's fixture
+price (the USD minimum wins) and at a high price (the native floor wins):
+  1. lock.py refuses one unit under the effective minimum (LockRefused, nothing built).
+  2. A lock exactly at the effective minimum is built by LockFixture(gross=..., price),
      accepted by the node and mined; fee output is exactly floor(5%).
-  3. Its release is refused before maturity, then accepted and mined after,
-     paying a release fee at the stated rate.
+  3. Its release is refused before maturity, then accepted and mined after.
+     At the floor, the release pays the stress fee rate from lock.py
+     (STRESS_RELEASE_FEE_RATE) and its output still clears dust.
   4. One unit under the dust floor (gross 20 x dust - 20), lock.py refuses,
      and the node itself rejects an exact-5% lock there as "dust".
 Any failed check raises. Exit code 0 means every check passed.
@@ -24,7 +26,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from crypto import hash160
-from lock import P2PKH_DUST_MINIMUM, LockFixture, LockRefused, lock_outputs, min_gross_for, split_outputs
+from lock import (MIN_LOCK_FLOOR_UNITS, P2PKH_DUST_MINIMUM, STRESS_RELEASE_FEE_RATE, LockFixture, LockRefused,
+                  min_gross_for, split_outputs, usd_min_gross_for)
 from script import p2pkh_script
 from tx import Tx, TxIn, TxOut, p2sh_script_sig, serialize, sign_input
 
@@ -32,6 +35,8 @@ from tx import Tx, TxIn, TxOut, p2sh_script_sig, serialize, sign_input
 PRICE = {"bitcoin": "82410", "bitcoin-cash": "276.28", "litecoin": "59.59"}
 NOW = 1_792_510_532
 RELEASE_RATE = {"bitcoin": 2, "bitcoin-cash": 1, "litecoin": 1}  # units per byte, current typical
+# High prices where the native floor wins (BTC $1,000,000; BCH and LTC 100x today).
+HIGH_PRICE = {"bitcoin": "1000000", "bitcoin-cash": "27628", "litecoin": "5959"}
 CHAINS = {
     "bitcoin": dict(env="BTC_BIN", d="bitcoind", c="bitcoin-cli", rpc=28543),
     "bitcoin-cash": dict(env="BCH_BIN", d="bitcoind", c="bitcoin-cli", rpc=28553),
@@ -125,39 +130,43 @@ def run(chain: str) -> None:
         node.cli("createwallet", "w")
         node.mine(150)
         lock_fee = 20_000 if chain == "litecoin" else 2_000  # lock tx network fee, funded on top
-        g = min_gross_for(chain, price)
-        print(f"{chain}: minimum gross {g} at ${price}")
-        # 1. one unit under the minimum: refused before anything is built
-        try:
-            LockFixture(chain, 10, gross=g - 1, price_usd=price, price_as_of=NOW, now=NOW)
-        except LockRefused as e:
-            check("under the" in str(e), f"{g - 1} refused by lock.py: {e}")
-        else:
-            raise AssertionError("lock under the minimum was built")
-        # 2. exactly at the minimum
+        for label, px, rate in (("USD minimum", price, RELEASE_RATE[chain]), ("native floor", HIGH_PRICE[chain], STRESS_RELEASE_FEE_RATE[chain])):
+            g = min_gross_for(chain, px)
+            wins = "native floor" if MIN_LOCK_FLOOR_UNITS[chain] > usd_min_gross_for(chain, px) else "USD minimum"
+            check(wins == label, f"at ${px} the {label} sets the minimum: {g} units")
+            # 1. one unit under the minimum: refused before anything is built
+            try:
+                LockFixture(chain, 10, gross=g - 1, price_usd=px, price_as_of=NOW, now=NOW)
+            except LockRefused as e:
+                check("under the" in str(e), f"{g - 1} refused by lock.py: {e}")
+            else:
+                raise AssertionError("lock under the minimum was built")
+            # 2. exactly at the minimum
+            maturity = node.cli("getblockcount") + 40
+            fx = LockFixture(chain, maturity, gross=g, price_usd=px, price_as_of=NOW, now=NOW)
+            check(fx.fee_output == g * 500 // 10_000 and fx.principal == g - fx.fee_output, f"fee {fx.fee_output} is exactly floor(5%) of {g}")
+            fund(node, fx, fx.funding_value + lock_fee)
+            lock = fx.lock_transaction()
+            ok, why = node.accept(lock)
+            check(ok, f"node accepts the lock at the minimum ({why or 'allowed'})")
+            node.cli("sendrawtransaction", serialize(lock).hex())
+            node.mine(1)
+            lock_txid = lock.txid()
+            # 3. release: refused early, accepted after maturity
+            # +2: a DER signature can be one byte longer than the probe's
+            size = len(serialize(release_tx(fx, lock_txid, fx.principal - 1))) + 2
+            out = fx.principal - rate * size
+            check(out >= dust, f"release output {out} after a {rate}/byte fee is at least dust {dust}")
+            ok, why = node.accept(release_tx(fx, lock_txid, out))
+            check(not ok and "final" in why, f"release before maturity refused ({why})")
+            node.mine(maturity - node.cli("getblockcount"))
+            rel = release_tx(fx, lock_txid, out)
+            ok, why = node.accept(rel)
+            check(ok, f"release after maturity accepted ({why or 'allowed'}): {size} bytes, fee {rate * size}, pays {out}")
+            node.cli("sendrawtransaction", serialize(rel).hex())
+            node.mine(1)
+            check(node.cli("getmempoolinfo")["size"] == 0, "release mined")
         maturity = node.cli("getblockcount") + 40
-        fx = LockFixture(chain, maturity, gross=g, price_usd=price, price_as_of=NOW, now=NOW)
-        check(fx.fee_output == g * 500 // 10_000 and fx.principal == g - fx.fee_output, f"fee {fx.fee_output} is exactly floor(5%) of {g}")
-        fund(node, fx, fx.funding_value + lock_fee)
-        lock = fx.lock_transaction()
-        ok, why = node.accept(lock)
-        check(ok, f"node accepts the lock at the minimum ({why or 'allowed'})")
-        node.cli("sendrawtransaction", serialize(lock).hex())
-        node.mine(1)
-        lock_txid = lock.txid()
-        # 3. release: refused early, accepted after maturity
-        # +2: a DER signature can be one byte longer than the probe's
-        size = len(serialize(release_tx(fx, lock_txid, fx.principal - 1))) + 2
-        out = fx.principal - RELEASE_RATE[chain] * size
-        ok, why = node.accept(release_tx(fx, lock_txid, out))
-        check(not ok and "final" in why, f"release before maturity refused ({why})")
-        node.mine(maturity - node.cli("getblockcount"))
-        rel = release_tx(fx, lock_txid, out)
-        ok, why = node.accept(rel)
-        check(ok, f"release after maturity accepted ({why or 'allowed'}): {size} bytes, fee {RELEASE_RATE[chain] * size}, pays {out}")
-        node.cli("sendrawtransaction", serialize(rel).hex())
-        node.mine(1)
-        check(node.cli("getmempoolinfo")["size"] == 0, "release mined")
         # 4. just under the dust floor
         below = 20 * dust - 20
         try:
