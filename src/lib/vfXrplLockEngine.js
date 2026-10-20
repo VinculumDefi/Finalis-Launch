@@ -11,7 +11,7 @@
 // identity/allowance, and the lock state machine.
 //
 // Every function cites the governing requirement IDs it enforces.
-// No value is fabricated. No Solana/Cosmos/EVM logic is reused (clean-room rule).
+// No value is fabricated. No Solana/EVM logic is reused (clean-room rule).
 // =============================================================================
 
 import {
