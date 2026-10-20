@@ -201,6 +201,28 @@ contract VinculumFinalisVerifier {
     uint256 public constant HANDSHAKE_USD_MAX = 0.02e18;
     uint256 public constant STANDARD_USD_MIN = 0.01e18;
 
+    // VF-COM-003 (t238u): Bitcoin, Bitcoin Cash and Litecoin native Handshakes.
+    // 5% of $0.02 is under dust on these three chains, so the USD band refused
+    // every Handshake there. For these three only, the Handshake band is in
+    // smallest units (inclusive): the minimum is 20 x the P2PKH dust limit
+    // (546 / 546 / 5,460) rounded up, the maximum is twice the minimum. The USD
+    // used for their Handshake issuance and RAC is capped at HANDSHAKE_USD_MAX,
+    // so a larger Handshake does not mint more than a $0.02 Handshake.
+    // Every other chain keeps the USD band above, unchanged.
+    uint256 public constant BTC_HANDSHAKE_MIN_UNITS = 11_000;   // sats
+    uint256 public constant BTC_HANDSHAKE_MAX_UNITS = 22_000;
+    uint256 public constant BCH_HANDSHAKE_MIN_UNITS = 11_000;   // sats
+    uint256 public constant BCH_HANDSHAKE_MAX_UNITS = 22_000;
+    uint256 public constant LTC_HANDSHAKE_MIN_UNITS = 110_000;  // litoshis
+    uint256 public constant LTC_HANDSHAKE_MAX_UNITS = 220_000;
+    // Native asset ids exactly as the UTXO readers report them
+    // (UtxoLockReader.nativeAssetId = keccak256(abi.encodePacked(env, nativeAsset)))
+    // and as the registry rows carry them. _verifySource requires the proven
+    // asset to equal pkg.canonicalAssetId.
+    bytes32 public constant BTC_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Bitcoin", "native-BTC"));
+    bytes32 public constant BCH_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Bitcoin Cash", "native-BCH"));
+    bytes32 public constant LTC_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Litecoin", "native-LTC"));
+
     // Ethereum USDC/USDT: a last successful scheduled price below $0.95 makes
     // the asset unavailable for a new Handshake valuation until a later run
     // is >= $0.95. Standard locks have no price floor beyond STANDARD_USD_MIN.
@@ -626,22 +648,17 @@ contract VinculumFinalisVerifier {
         // CL-01: derive USD; never trust a caller-supplied verifiedGrossUsdMicro
         uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry);
 
-        // VF-COM-003/009: USD value bounds
-        if (isHandshake) {
-            require(
-                verifiedGrossUsdMicro >= HANDSHAKE_USD_MIN && verifiedGrossUsdMicro <= HANDSHAKE_USD_MAX,
-                "VF-COM-003: handshake USD outside $0.01-$0.02"
-            );
-        } else {
-            require(verifiedGrossUsdMicro >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $0.01");
-        }
+        // VF-COM-003/009: value bounds. Returns the USD used for RAC: equal to
+        // verifiedGrossUsdMicro except for a BTC/BCH/LTC native Handshake, where
+        // it is capped at HANDSHAKE_USD_MAX.
+        uint256 creditUsd = _checkValueBounds(pkg, isHandshake, verifiedGrossUsdMicro);
 
         // VF-FEE-011 / VF-RAC-002: Record RAC on fee verification, independent of issuance.
         // VF-RAC-008: No RAC after VCLM capacity = 0 (fee verification still proceeds).
         // VF-SUP-012: At zero VCLM capacity, fees still reach Dev Fund but no RAC.
         recordedRacs[pkg.racIdentity] = true;
         if (cumulativeVclmIssued < VCLM_HARD_CAP) {
-            uint256 feeUsd = (verifiedGrossUsdMicro * fee) / gross;
+            uint256 feeUsd = (creditUsd * fee) / gross;
             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
             uint256 epoch = block.timestamp / EPOCH_DURATION_SECS;
             racCredits[pkg.racIdentity] = racCredit;
@@ -740,14 +757,9 @@ contract VinculumFinalisVerifier {
 
         // Step 6: USD value — derived, never caller-supplied (CL-01)
         uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry);
-        if (isHandshake) {
-            require(
-                verifiedGrossUsdMicro >= HANDSHAKE_USD_MIN && verifiedGrossUsdMicro <= HANDSHAKE_USD_MAX,
-                "VF-COM-003: handshake USD outside $0.01-$0.02"
-            );
-        } else {
-            require(verifiedGrossUsdMicro >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $0.01");
-        }
+        // VF-COM-003/009: value bounds. issuanceUsd equals verifiedGrossUsdMicro
+        // except for a BTC/BCH/LTC native Handshake, capped at HANDSHAKE_USD_MAX.
+        uint256 issuanceUsd = _checkValueBounds(pkg, isHandshake, verifiedGrossUsdMicro);
 
         // Step 7: Output eligibility (VF-COM-020/025, VF-TOK-002)
         require(pkg.selectedOutputToken <= 1, "VF-COM-020: invalid output token");
@@ -782,7 +794,7 @@ contract VinculumFinalisVerifier {
         // daysSinceLaunch retained in the ABI for callers; valuation path is authoritative.
         daysSinceLaunch;
         uint256 issuanceAmount = _computeIssuance(
-            verifiedGrossUsdMicro,
+            issuanceUsd,
             pkg.selectedOutputToken,
             entry.custodyClass,
             pkg.durationSecs,
@@ -822,6 +834,46 @@ contract VinculumFinalisVerifier {
 
         emit VerificationSucceeded(lockIdHash, pkg.sourceEnvironmentId, pkg.baseRecipient, pkg.selectedOutputToken, issuanceAmount);
         return true;
+    }
+
+    // ===== Value bounds (VF-COM-003/009) =====
+
+    /// @dev Smallest-unit Handshake band for the Bitcoin, Bitcoin Cash and
+    ///      Litecoin native assets; (0, 0) for every other environment or asset.
+    ///      Keyed on the proven native asset id and the environment together.
+    function _utxoHandshakeUnits(ProofPackage calldata pkg) internal pure returns (uint256, uint256) {
+        bytes32 a = pkg.canonicalAssetId;
+        bytes32 e = keccak256(bytes(pkg.sourceEnvironmentId));
+        if (a == BTC_NATIVE_ASSET_ID && e == keccak256("Bitcoin")) return (BTC_HANDSHAKE_MIN_UNITS, BTC_HANDSHAKE_MAX_UNITS);
+        if (a == BCH_NATIVE_ASSET_ID && e == keccak256("Bitcoin Cash")) return (BCH_HANDSHAKE_MIN_UNITS, BCH_HANDSHAKE_MAX_UNITS);
+        if (a == LTC_NATIVE_ASSET_ID && e == keccak256("Litecoin")) return (LTC_HANDSHAKE_MIN_UNITS, LTC_HANDSHAKE_MAX_UNITS);
+        return (0, 0);
+    }
+
+    /// @dev Applies VF-COM-003/009 and returns the USD to use for RAC and
+    ///      issuance. For every lock except a BTC/BCH/LTC native Handshake this
+    ///      is the unchanged USD check and returns verifiedGrossUsd as is.
+    function _checkValueBounds(
+        ProofPackage calldata pkg,
+        bool isHandshake,
+        uint256 verifiedGrossUsd
+    ) internal pure returns (uint256) {
+        if (isHandshake) {
+            (uint256 minUnits, uint256 maxUnits) = _utxoHandshakeUnits(pkg);
+            if (minUnits != 0) {
+                uint256 g = pkg.grossAmountSmallestUnits;
+                require(g >= minUnits, "VF-COM-003: handshake gross below unit band");
+                require(g <= maxUnits, "VF-COM-003: handshake gross above unit band");
+                return verifiedGrossUsd > HANDSHAKE_USD_MAX ? HANDSHAKE_USD_MAX : verifiedGrossUsd;
+            }
+            require(
+                verifiedGrossUsd >= HANDSHAKE_USD_MIN && verifiedGrossUsd <= HANDSHAKE_USD_MAX,
+                "VF-COM-003: handshake USD outside $0.01-$0.02"
+            );
+        } else {
+            require(verifiedGrossUsd >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $0.01");
+        }
+        return verifiedGrossUsd;
     }
 
     // ===== Handshake mechanism lookup (VF-COM-006 / CL-11) =====
