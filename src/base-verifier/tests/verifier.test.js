@@ -145,17 +145,26 @@ test('T-10: CHONX rejected before activation (VF-COM-025/VF-TOK-002)', () => {
   assert.ok(r.reason.includes('CHONX') || r.reason.includes('activated'));
 });
 
-// T-11: Standard USD below $10.00 rejected
-test('T-11: Standard USD below $10.00 rejected (VF-COM-009)', () => {
-  const state = new VerifierState();
-  const mock = buildMockEvent('Solana', 604800, 'VCLM');
-  const raw = normalizeSolanaEvidence(mock.event, buildFinalityProof('Solana'));
-  const r = verifyProof(state, raw.package, { verifiedGrossUsdMicro: '5000000000000000000', daysSinceLaunch: 0 }); // $5.00
-  assert.ok(!r.ok);
-  assert.ok(r.reason.includes('USD') || r.reason.includes('standard'));
+// T-11: Standard minimum is the contract minimum, $0.01 inclusive
+// (CommitmentVaultLock.sol / VinculumFinalisVerifier.sol STANDARD_USD_MIN = 0.01e18).
+// The Revision 6 $10.00 figure is historical and not used.
+test('T-11: Standard USD below $0.01 rejected, $0.01 and $5.00 accepted (VF-COM-009)', () => {
+  const run = (usd) => {
+    const state = new VerifierState();
+    const mock = buildMockEvent('Solana', 604800, 'VCLM');
+    const raw = normalizeSolanaEvidence(mock.event, buildFinalityProof('Solana'));
+    return verifyProof(state, raw.package, { verifiedGrossUsdMicro: usd, daysSinceLaunch: 0 });
+  };
+  const below = run('9999999999999999'); // $0.0099...
+  assert.ok(!below.ok);
+  assert.ok(below.reason.includes('below $0.01'), below.reason);
+  const atMin = run('10000000000000000'); // $0.01
+  assert.ok(atMin.ok, atMin.reason);
+  const five = run('5000000000000000000'); // $5.00, refused under the old $10 rule
+  assert.ok(five.ok, five.reason);
 });
 
-// T-12: Handshake USD outside $0.95–$1.05 rejected
+// T-12: Handshake USD outside $0.01 to $0.02 rejected (Rev 12)
 test('T-12: Handshake USD outside range rejected (VF-COM-003)', () => {
   const state = new VerifierState();
   const mock = buildMockEvent('Solana', HANDSHAKE_DURATION_SECS, 'VCLM');
