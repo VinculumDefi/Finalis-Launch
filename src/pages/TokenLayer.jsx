@@ -16,17 +16,19 @@ import EpochRewardPanel from '@/components/tokens/EpochRewardPanel';
 import { Coins, Zap, Activity, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchAssetPrice, getAssetPricingInfo, computeVerifiedGrossUsdMicro } from '@/lib/vfPriceService';
+import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
 
+// Only environments whose simulated native asset is on the active list are offered (Solana hidden).
 const ENV_OPTIONS = [
   'Solana', 'XRPL', 'Stellar',
   'Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash',
   'Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Optimism',
-];
+].filter(isOfferableEnvironmentNative);
 
 export default function TokenLayer() {
   const [tokenState, setTokenState] = useState(() => new TokenLayerState());
   const [verifierState, setVerifierState] = useState(() => new VerifierState());
-  const [env, setEnv] = useState('Solana');
+  const [env, setEnv] = useState('Ethereum');
   const [durationIdx, setDurationIdx] = useState(1); // 7 days
   const [outputToken, setOutputToken] = useState('VCLM');
   const [pipeline, setPipeline] = useState({});
@@ -72,6 +74,16 @@ export default function TokenLayer() {
       return;
     }
     newPipeline.normalize = { status: 'done', detail: '24-field ProofPackage' };
+
+    // Active asset list: refuse any package whose asset is not offerable, however it was entered.
+    if (!isOfferablePackageAsset(normResult.package.source_environment_id, normResult.package.canonical_asset_id)) {
+      newPipeline.verify = { status: 'failed', detail: NOT_ACTIVE_MESSAGE };
+      newPipeline.mint = { status: 'pending' };
+      newPipeline.forge = { status: 'pending' };
+      newPipeline.result = { ok: false, reason: 'Asset not on the active asset list' };
+      setPipeline(newPipeline);
+      return;
+    }
 
     // Step 3: Verify — fetch live price or use simulation value
     let usd;
