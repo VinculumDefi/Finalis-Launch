@@ -3,7 +3,7 @@
 //
 // PROVENANCE: Built directly from Revision 6 authoritative documents:
 //   - Vinculum_Finalis_Protocol_Constants.json (Revision 6, 2026-07-28)
-//   - Vinculum_Finalis_Architecture_Design.md (Section C — 17 environments; Section P — precision)
+//   - Vinculum_Finalis_Architecture_Design.md (Section C environments, 16 in this deployment; Section P — precision)
 //   - Vinculum_Finalis_Requirement_Traceability.csv
 //
 // This module is the Base-chain on-chain immutable table that BASE-VERIFY reads
@@ -26,7 +26,7 @@ export function handshakeAllowanceFor(countsPerIdentity) {
 }
 
 // ---------------------------------------------------------------------------
-// VF-XCH-001/002/003: 17 supported source environments
+// VF-XCH-001/002/003: 16 supported source environments
 // Each entry carries the environment identity, family, Handshake allowance
 // (determined by source-mechanism state capability — Q.2), and finality model.
 // `registryName` is the display name used by the Approved Asset Registry and the
@@ -56,16 +56,6 @@ const ENVIRONMENT_ROWS = [
   // --- Non-EVM account-model (2) — 1-use per account (unless deployable stateful), Base-enforced ---
   { id: 'XRPL',        family: 'XRPL',   registryName: 'XRP Ledger', countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'validated ledger', verificationStatus: 'DESIGN_DEFINED' },
   { id: 'Stellar',     family: 'Stellar', registryName: 'Stellar',   countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'SCP closed',      verificationStatus: 'DESIGN_DEFINED' },
-  // --- Non-EVM CometBFT (1) — supported environment (VF-XCH-001; one of 17), held in
-  //     EVIDENCE REQUIRED — CHAIN-NATIVE FEASIBILITY ANALYSIS INCOMPLETE per governing spec
-  //     (Architecture Design §C.12 / §Q.5). Source mechanism, preflight, and Handshake
-  //     allowance are pending CODA's complete six-step analysis; finality (CometBFT) and
-  //     principal release are RESOLVED. This is a spec-defined evidence status, NOT an
-  //     owner-decision/exclusion (§Q.5: a governance summary is not the required evidence;
-  //     OWNER DECISION is reserved for when the complete analysis shows no design works).
-  //     The verifier gates proofs at Step 3 until a mechanism is established. Do not clear
-  //     these values without resolving the six-step feasibility conditionals.
-  { id: 'CosmosHub',   family: 'CometBFT', registryName: 'Cosmos', countsPerIdentity: null, handshakeEnforcement: 'dependent', finality: 'CometBFT instant', verificationStatus: 'EVIDENCE_REQUIRED' },
 ];
 
 export const ENVIRONMENTS = ENVIRONMENT_ROWS.map((row) => ({
@@ -74,7 +64,7 @@ export const ENVIRONMENTS = ENVIRONMENT_ROWS.map((row) => ({
 }));
 
 
-export const ENVIRONMENT_COUNT = ENVIRONMENTS.length; // 17
+export const ENVIRONMENT_COUNT = ENVIRONMENTS.length; // 16
 
 // Lookup by environment id
 export function findEnvironment(envId) {
@@ -120,9 +110,6 @@ export const ASSET_PRECISION_TABLE = {
 
   // --- Stellar native ---
   'Stellar/native-XLM':   { symbol: 'XLM', decimals: 7,  custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'stellar',  contract: null },
-
-  // --- Cosmos Hub native ---
-  'CosmosHub/native-uatom':{ symbol: 'ATOM', decimals: 6, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'cosmos',  contract: null },
 
   // --- UTXO family native (all 10^8) ---
   'Bitcoin/native-BTC':      { symbol: 'BTC',  decimals: 8, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'bitcoin',       contract: null },
@@ -170,9 +157,6 @@ export function getAssetMultiplierBps(custodyClass) {
 // private preview. VF-FEE-009 requires a fixed receive address per environment;
 // it does NOT require uniqueness across environments, so the 7 EVM environments
 // legitimately share a single EVM address (identical 0x address space).
-// CosmosHub remains PENDING_DEPLOYMENT: handshake allowance is null
-// (EVIDENCE_REQUIRED), so the verifier rejects its proofs and no fees route
-// there — a functioning preview does not require a CosmosHub Dev Fund address.
 // ---------------------------------------------------------------------------
 
 // The live EVM Dev Fund, the same address the contracts are deployed with
@@ -202,8 +186,6 @@ export const DEV_FUND_DESTINATIONS = {
   XRPL: 'raNwavDEycJ8XtAN71eezNMM6fQbMh1rJt',
   // --- Stellar (G-address) ---
   Stellar: 'GAN5TFL7YMDL6Z7WEDVRTDFTERFA5YASYJYXOTLEVOAKUMRIMZZMAZDL',
-  // --- CosmosHub — EVIDENCE_REQUIRED (mechanism incomplete); no address required for preview ---
-  CosmosHub: null,
 };
 
 export function isDevFundConfigured(environmentId) {
