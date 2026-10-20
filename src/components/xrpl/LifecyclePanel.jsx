@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Lock, Unlock, ArrowRight } from 'lucide-react';
 import { LOCK_STATES, ATTEMPT_STATES, XRPL_HANDSHAKE_ALLOWANCE } from '@/lib/vfXrplAuthority';
-import { XRPL_DISPOSITION } from '@/lib/vfXrplAuthority';
 import { XRPL_DROPS_PER_XRP } from '@/lib/vfXrplAuthority';
 
 function StatusBadge({ state, active }) {
