@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
-import CosmosHubCandidate from '@/pages/CosmosHubCandidate';
 import SolanaLock from '@/pages/SolanaLock';
 import VinculumFlow from '@/pages/VinculumFlow';
 import XrplLock from '@/pages/XrplLock';
@@ -45,7 +44,6 @@ const AuthenticatedApp = () => {
       {/* Add your page Route elements here */}
       <Route path="/" element={<VinculumFlow />} />
       <Route path="/vinculum-flow" element={<VinculumFlow />} />
-      <Route path="/cosmos-hub-candidate" element={<CosmosHubCandidate />} />
       <Route path="/solana-lock" element={<SolanaLock />} />
       <Route path="/xrpl-lock" element={<XrplLock />} />
       <Route path="/base-verifier" element={<BaseVerifier />} />
