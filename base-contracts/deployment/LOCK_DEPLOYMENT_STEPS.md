@@ -99,9 +99,11 @@ These come after all seven locks pass the check. Each needs its own approval.
    seven new locks, register them, write the registry, set the Dev Funds, the
    first price, the poster `0x6001…0DB4`, then `finalize()`. Finalize is
    permanent. The page refuses an old 2.5% lock address.
-2. Update the app config with the seven new lock addresses
-   (`src/lib/vfIntegrationConfig.js`, which now reports the Base lock as
-   pending). Base44 app changes are made in the Base44 app, not here.
+2. Update the app config with the seven new lock addresses and the new Base
+   contracts in one step: `scripts/applyCeremonyAddresses.cjs` writes
+   `src/lib/vfDeployedAddresses.js`, which `src/lib/vfIntegrationConfig.js`
+   reads (see `DEPLOYMENT_DAY_RUNBOOK.md`). Base44 app changes are made in the
+   Base44 app, not here (Base44 instructions, section 6).
 3. Retire the 2.5% locks in the app: stop offering the old Base lock
    `0x968B…C946` and the old non-Base locks. They stay on-chain; existing
    locks there can still be released by their destinations at maturity.
