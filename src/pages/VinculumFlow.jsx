@@ -1,23 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { Eye, ShieldAlert, Link2, Lock, FileCheck2, Coins, Unlock, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
+import { Eye, ShieldAlert, Lock, Coins, Unlock, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
 import {
-  COSMOS_HUB, BASE_CHAIN, PERMITTED_DURATIONS, DEPLOYMENT_STATE, isVaultDeployed, isBaseVerifierPresent,
+  BASE_CHAIN, PERMITTED_DURATIONS, DEPLOYMENT_STATE, isBaseLockDeployed, isBaseVerifierPresent,
 } from '@/lib/vfIntegrationConfig';
 import {
-  buildCommitVaultLockMsg, buildReleasePrincipalMsg, computeFee,
-  connectKeplr, isKeplrAvailable, submitLock, submitRelease,
-} from '@/lib/vfCosmosLock';
-import { normalizeLockEvent } from '@/lib/vfProofAdapter';
+  buildCreateNativeLock, buildRelease, computeFee, ethToWei, resolvePageAsset, submitLock, submitRelease,
+} from '@/lib/vfBaseEthLock';
 import { useApprovedAssetRegistry } from '@/hooks/useApprovedAssetRegistry';
-import { resolveOfferable, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
 
-// The asset this page locks (Cosmos Hub ATOM). It is offered only if it is on the active list.
-const PAGE_ASSET = { environment: 'Cosmos', contract_or_native_identifier: 'NATIVE', symbol: COSMOS_HUB.asset_symbol };
+// The asset this page locks: Base native ETH (Revision B row 2), from the active list.
+// Cosmos Hub is permanently dropped (t228u) and is not offered anywhere on this page.
 
 function StatusPill({ ok, children }) {
   return ok
@@ -25,103 +22,51 @@ function StatusPill({ ok, children }) {
     : <span className="inline-flex items-center gap-1 text-rose-600"><XCircle className="w-4 h-4" />{children}</span>;
 }
 
+const short = (a) => (/^0x[0-9a-fA-F]{40}$/.test(String(a)) ? `${a.slice(0, 6)}…${a.slice(-4)}` : a);
+
 export default function VinculumFlow() {
   const [outputToken, setOutputToken] = useState('VCLM');
-  const [durationSecs, setDurationSecs] = useState(3600);
-  const [amountUatom, setAmountUatom] = useState('');
+  const [durationSecs, setDurationSecs] = useState(604800);
+  const [grossEth, setGrossEth] = useState('');
+  const [priceUsd, setPriceUsd] = useState('');
   const [baseRecipient, setBaseRecipient] = useState('');
   const [releaseDestination, setReleaseDestination] = useState('');
   const [lockId, setLockId] = useState('');
   const [chonxReceipt, setChonxReceipt] = useState('');
-  const [verifiedUsd, setVerifiedUsd] = useState('');
-
-  const [wallet, setWallet] = useState({ address: null, signer: null });
-  const [walletErr, setWalletErr] = useState(null);
-  const [connectBusy, setConnectBusy] = useState(false);
 
   const [constructed, setConstructed] = useState(null);
-  const [normalizeResult, setNormalizeResult] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
   const [releaseResult, setReleaseResult] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const registry = useApprovedAssetRegistry();
-  // No default asset: the old default (row 479 ATOM) is not on the active list.
-  const [selectedAssetRow, setSelectedAssetRow] = useState(null);
-  const offeredRows = useMemo(() => new Set(registry.offerable.map((r) => r.registry_row)), [registry.offerable]);
-  const pageAssetCheck = resolveOfferable(PAGE_ASSET);
+  const pageAsset = resolvePageAsset();
 
   const feePreview = useMemo(() => {
-    if (!amountUatom) return null;
-    try { return computeFee(amountUatom, Number(durationSecs)); } catch { return null; }
-  }, [amountUatom, durationSecs]);
-
-  async function onConnectWallet() {
-    setConnectBusy(true); setWalletErr(null);
-    const r = await connectKeplr();
-    if (r.ok) setWallet({ address: r.address, signer: r.signer });
-    else setWalletErr(r.reason);
-    setConnectBusy(false);
-  }
+    const wei = ethToWei(grossEth);
+    if (wei === null || wei === 0n) return null;
+    return computeFee(wei);
+  }, [grossEth]);
 
   async function onConstructAndSubmitLock() {
-    setBusy(true); setConstructed(null); setNormalizeResult(null); setSubmitResult(null);
-    // Active asset list: refuse before building anything if this page's asset is not offerable.
-    if (!pageAssetCheck.ok) {
-      setConstructed({ ok: false, errors: [`${NOT_ACTIVE_MESSAGE}: ${COSMOS_HUB.asset_symbol} (Cosmos Hub)`] });
-      setBusy(false);
-      return;
-    }
-    const built = buildCommitVaultLockMsg({
-      durationSecs: Number(durationSecs),
-      baseRecipient, releaseDestination, outputToken,
-      verifiedGrossUsdMicro: verifiedUsd, lockId, chonxActivationReceipt: chonxReceipt,
+    setBusy(true); setConstructed(null); setSubmitResult(null);
+    const built = buildCreateNativeLock({
+      lockId, baseRecipient, outputToken, releaseDestination,
+      durationSecs: Number(durationSecs), grossEth, priceUsd, chonxActivationReceipt: chonxReceipt,
     });
-    if (!built.ok) { setConstructed({ ok: false, errors: built.errors }); setBusy(false); return; }
-    setConstructed({ ok: true, msg: built.msg });
-
-    // Feed the constructed facts into the REAL existing proof adapter normalizer.
-    const facts = {
-      source_environment: COSMOS_HUB.source_environment,
-      lock_id: lockId,
-      canonical_asset: COSMOS_HUB.base_denom,
-      source_account: wallet.address || '(wallet not connected)',
-      gross_amount: feePreview ? feePreview.gross : '0',
-      fee_amount: feePreview ? feePreview.fee : '0',
-      principal_amount: feePreview ? feePreview.principal : '0',
-      verified_gross_usd_micro: String(verifiedUsd),
-      duration_secs: Number(durationSecs),
-      creation_time_secs: 0,
-      maturity_time_secs: Number(durationSecs),
-      base_recipient: baseRecipient,
-      release_destination: releaseDestination,
-      output_token: outputToken,
-      fee_destination: '(set by contract at deployment)',
-      fee_transfer_evidence: '(no source transaction — broadcast blocked)',
-      handshake_identity: `(${COSMOS_HUB.source_environment}, ${wallet.address || '(no wallet)'})`,
-      handshake_allowance_count: 0,
-      chonx_activation_receipt: outputToken === 'CHONX' ? chonxReceipt : 'not_applicable',
-    };
-    setNormalizeResult(normalizeLockEvent(facts));
-
-    // Attempt real submission — blocked at broadcast because the vault is PENDING_DEPLOYMENT.
-    const r = await submitLock({
-      signer: wallet.signer, senderAddress: wallet.address, msg: built.msg,
-      funds: amountUatom ? [{ denom: COSMOS_HUB.base_denom, amount: amountUatom }] : [],
-    });
-    setSubmitResult(r);
+    setConstructed(built);
+    if (built.ok) setSubmitResult(await submitLock(built));
     setBusy(false);
   }
 
   async function onRelease() {
-    setBusy(true); setReleaseResult(null);
-    const r = await submitRelease({ signer: wallet.signer, senderAddress: wallet.address, lockId });
-    setReleaseResult(r);
+    setBusy(true);
+    setReleaseResult(await submitRelease(lockId));
     setBusy(false);
   }
 
-  const vaultDeployed = isVaultDeployed();
-  const baseVerifierPresent = isBaseVerifierPresent();
+  const lockDeployed = isBaseLockDeployed();
+  const verifierPresent = isBaseVerifierPresent();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -130,27 +75,27 @@ export default function VinculumFlow() {
         <div className="rounded-lg border-2 border-sky-500/60 bg-sky-500/5 p-4 flex items-start gap-3">
           <Eye className="w-6 h-6 text-sky-500 mt-0.5 shrink-0" />
           <div>
-            <p className="font-semibold text-sky-700 dark:text-sky-300">Preview — contract not connected.</p>
+            <p className="font-semibold text-sky-700 dark:text-sky-300">Preview. Contract not connected.</p>
             <p className="text-sm text-muted-foreground">
-              Base44 application preview for visual inspection. Mode: <b>{DEPLOYMENT_STATE}</b>. No contract is deployed,
-              no blockchain transaction is broadcast, and no hash, balance, receipt, address, lock record, or mint result
-              is fabricated. Each button calls a real implemented function; unavailable deployments are blocked at the
-              broadcast boundary with the exact missing configuration shown.
+              Mode: <b>{DEPLOYMENT_STATE}</b>. This page builds the exact Base lock call and shows it. Nothing is
+              broadcast, and no hash, balance, receipt, lock record or mint result is made up. The new 5% Base lock
+              and the Revision B Verifier are not deployed yet, so sending is blocked and the missing setting is shown.
             </p>
           </div>
         </div>
 
         <header className="space-y-2">
-          <h1 className="text-3xl font-heading font-bold">Vinculum Finalis — Native Lock → Proof → Base Mint</h1>
+          <h1 className="text-3xl font-heading font-bold">Vinculum Finalis: Base ETH Lock, Proof, Mint</h1>
           <p className="text-sm text-muted-foreground">
-            Source environment: <span className="font-mono">{COSMOS_HUB.source_environment}</span> · asset{' '}
-            <span className="font-mono">{COSMOS_HUB.base_denom}</span> ({COSMOS_HUB.asset_symbol}).
+            Source environment: <span className="font-mono">{BASE_CHAIN.environment_id}</span> (chain id {BASE_CHAIN.chain_id}) · asset{' '}
+            {pageAsset.ok
+              ? <span className="font-mono">ETH, Revision B row {pageAsset.entry.row}</span>
+              : <span className="text-rose-600">{pageAsset.reason}</span>}
           </p>
           <div className="flex flex-wrap gap-2 pt-2">
             <Link to="/base-verifier"><Button variant="outline" size="sm">Base Verifier</Button></Link>
             <Link to="/token-layer"><Button variant="outline" size="sm">Token Layer</Button></Link>
             <Link to="/stake-layer"><Button variant="outline" size="sm">Stake Layer</Button></Link>
-            <Link to="/solana-lock"><Button variant="outline" size="sm">Solana Lock</Button></Link>
             <Link to="/xrpl-lock"><Button variant="outline" size="sm">XRPL Lock</Button></Link>
           </div>
         </header>
@@ -168,21 +113,16 @@ export default function VinculumFlow() {
               : <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />}
           <div className="text-sm text-muted-foreground">
             {registry.loading ? (
-              <span>Loading authoritative Approved Asset Registry…</span>
+              <span>Loading hosted asset registry…</span>
             ) : registry.error ? (
-              <span>Registry load failed: {registry.error}</span>
+              <span>Hosted registry load failed: {registry.error}. The Base ETH lock still uses the active list bundled with the app.</span>
             ) : (
               <>
-                <span className="font-medium text-foreground">{registry.count} assets loaded</span> from{' '}
-                <span className="font-mono text-xs">{registry.url}</span>
+                <span className="font-medium text-foreground">{registry.count} assets in the hosted registry</span>,{' '}
+                {registry.offerable.length} on the active list, {registry.hiddenCount} hidden.
                 {registry.sha256 && (
                   <span className="block text-xs mt-0.5">
                     SHA-256: <span className="font-mono">{registry.sha256.slice(0, 16)}…{registry.sha256.slice(-8)}</span>
-                  </span>
-                )}
-                {registry.source && (
-                  <span className="block text-xs">
-                    Governing source: {registry.source.file_name} · {registry.source.revision} · {registry.source.date}
                   </span>
                 )}
               </>
@@ -190,33 +130,23 @@ export default function VinculumFlow() {
           </div>
         </div>
 
-        {/* Step 1 — lock parameters */}
+        {/* Step 1 - lock parameters */}
         <section className="rounded-lg border bg-card p-4 space-y-4">
-          <div className="flex items-center gap-2"><Lock className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">1. Native lock construction</h2></div>
+          <div className="flex items-center gap-2"><Lock className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">1. Base lock construction</h2></div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Chain</Label>
-              <Select value="cosmoshub-4" disabled>
+              <Select value="base" disabled>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="cosmoshub-4">Cosmos Hub (cosmoshub-4)</SelectItem></SelectContent>
+                <SelectContent><SelectItem value="base">Base (8453)</SelectItem></SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">
-                Asset {registry.loading ? '(loading…)' : `(${registry.offerable.length} offered of ${registry.count} in registry; ${registry.hiddenCount} hidden)`}
-              </Label>
-              <Select
-                value={selectedAssetRow != null && offeredRows.has(selectedAssetRow) ? String(selectedAssetRow) : undefined}
-                onValueChange={(v) => { if (offeredRows.has(Number(v))) setSelectedAssetRow(Number(v)); }}
-                disabled={registry.loading || !!registry.error}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {!registry.loading && !registry.error && registry.offerable.map((r) => (
-                    <SelectItem key={r.registry_row} value={String(r.registry_row)}>
-                      {r.symbol} · {r.asset_name} ({r.environment}, row {r.registry_row})
-                    </SelectItem>
-                  ))}
+              <Label className="text-xs text-muted-foreground">Asset</Label>
+              <Select value={pageAsset.ok ? 'eth' : undefined} disabled>
+                <SelectTrigger><SelectValue placeholder="Not on the active list" /></SelectTrigger>
+                <SelectContent>
+                  {pageAsset.ok && <SelectItem value="eth">ETH · Base native (row {pageAsset.entry.row})</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
@@ -242,24 +172,24 @@ export default function VinculumFlow() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Gross amount ({COSMOS_HUB.base_denom})</Label>
-              <Input value={amountUatom} onChange={(e) => setAmountUatom(e.target.value)} placeholder="e.g. 1000000" inputMode="numeric" />
+              <Label className="text-xs text-muted-foreground">Gross amount (ETH)</Label>
+              <Input value={grossEth} onChange={(e) => setGrossEth(e.target.value)} placeholder="e.g. 0.01" inputMode="decimal" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Verified gross USD (micro-USD)</Label>
-              <Input value={verifiedUsd} onChange={(e) => setVerifiedUsd(e.target.value)} placeholder="e.g. 1000000 ($1.00)" inputMode="numeric" />
+              <Label className="text-xs text-muted-foreground">Scheduled Base ETH price read from the Verifier (USD)</Label>
+              <Input value={priceUsd} onChange={(e) => setPriceUsd(e.target.value)} placeholder="required; empty refuses" inputMode="decimal" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Base recipient (0x + 40 hex)</Label>
               <Input value={baseRecipient} onChange={(e) => setBaseRecipient(e.target.value)} placeholder="0x…" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Release destination (cosmos1…)</Label>
-              <Input value={releaseDestination} onChange={(e) => setReleaseDestination(e.target.value)} placeholder="cosmos1…" />
+              <Label className="text-xs text-muted-foreground">Release destination (0x + 40 hex, must send the release)</Label>
+              <Input value={releaseDestination} onChange={(e) => setReleaseDestination(e.target.value)} placeholder="0x…" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Lock ID</Label>
-              <Input value={lockId} onChange={(e) => setLockId(e.target.value)} placeholder="unique lock id" />
+              <Label className="text-xs text-muted-foreground">Lock ID (0x + 64 hex)</Label>
+              <Input value={lockId} onChange={(e) => setLockId(e.target.value)} placeholder="0x…" />
             </div>
             {outputToken === 'CHONX' && (
               <div className="space-y-1">
@@ -271,38 +201,24 @@ export default function VinculumFlow() {
 
           {feePreview && (
             <div className="rounded-md border bg-muted/30 p-3 text-sm font-mono">
-              fee = floor(gross × bps/10000): <b>{feePreview.fee}</b> {COSMOS_HUB.base_denom} · principal{' '}
-              <b>{feePreview.principal}</b> {COSMOS_HUB.base_denom}
+              fee = floor(gross × 500 / 10000), every duration: <b>{feePreview.fee}</b> wei · principal{' '}
+              <b>{feePreview.principal}</b> wei
             </div>
           )}
 
-          {/* Wallet */}
-          <div className="rounded-md border p-3 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm"><Link2 className="w-4 h-4" /> Keplr wallet</div>
-              <Button size="sm" onClick={onConnectWallet} disabled={connectBusy || !isKeplrAvailable()}>
-                {connectBusy ? 'Connecting…' : wallet.address ? 'Reconnect' : 'Connect Keplr'}
-              </Button>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {isKeplrAvailable() ? (wallet.address ? `Connected: ${wallet.address}` : 'Keplr detected — not yet connected.') : 'Keplr extension not detected in this browser.'}
-            </div>
-            {walletErr && <div className="text-xs text-rose-600">{walletErr}</div>}
-          </div>
-
-          <Button onClick={onConstructAndSubmitLock} disabled={busy} className="w-full">
-            {busy ? 'Working…' : 'Construct & submit lock'}
+          <Button onClick={onConstructAndSubmitLock} disabled={busy || !pageAsset.ok} className="w-full">
+            {busy ? 'Working…' : 'Build lock call'}
           </Button>
           <div className="text-xs text-muted-foreground">
-            Vault contract address: <span className="font-mono">{COSMOS_HUB.vault_contract_address}</span> ·{' '}
-            <StatusPill ok={vaultDeployed}>{vaultDeployed ? 'deployed' : 'pending deployment'}</StatusPill>
+            New 5% Base lock: <span className="font-mono">{short(BASE_CHAIN.lock_address)}</span> ·{' '}
+            <StatusPill ok={lockDeployed}>{lockDeployed ? 'deployed' : 'pending deployment'}</StatusPill>
           </div>
 
           {constructed && (
             <div className="rounded-md border p-3 text-xs space-y-1">
-              <div className="font-medium">Constructed ExecuteMsg</div>
+              <div className="font-medium">createNativeLock call</div>
               {constructed.ok
-                ? <pre className="font-mono whitespace-pre-wrap break-all">{JSON.stringify(constructed.msg, null, 2)}</pre>
+                ? <pre className="font-mono whitespace-pre-wrap break-all">{JSON.stringify(constructed.call, null, 2)}</pre>
                 : <div className="text-rose-600">{constructed.errors.join('; ')}</div>}
             </div>
           )}
@@ -310,69 +226,45 @@ export default function VinculumFlow() {
             <div className="rounded-md border p-3 text-xs">
               {submitResult.blocked
                 ? <span className="text-amber-600">⚠ {submitResult.reason} <span className="font-mono">[{submitResult.missing}]</span></span>
-                : (submitResult.ok ? <span className="text-emerald-600">Submitted.</span> : <span className="text-rose-600">{submitResult.reason}</span>)}
+                : <span className="text-rose-600">{submitResult.reason}</span>}
             </div>
           )}
         </section>
 
-        {/* Step 2 — proof */}
+        {/* Step 2 - Base mint */}
         <section className="rounded-lg border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2"><FileCheck2 className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">2. Proof normalization (existing adapter)</h2></div>
-          <p className="text-sm text-muted-foreground">
-            The constructed lock facts are fed to the real existing proof adapter
-            (<span className="font-mono">src/cosmos-hub-proof-adapter</span>, ported to the client). No proof is marked
-            complete without a real finalized source transaction.
-          </p>
-          {normalizeResult ? (
-            <div className="rounded-md border p-3 text-xs">
-              <StatusPill ok={normalizeResult.ok}>{normalizeResult.ok ? 'facts normalized' : 'normalization failed'}</StatusPill>
-              {normalizeResult.errors && <pre className="font-mono mt-1 text-rose-600">{normalizeResult.errors.join('\n')}</pre>}
-              {normalizeResult.facts && <pre className="font-mono mt-1 whitespace-pre-wrap break-all">{JSON.stringify(normalizeResult.facts, null, 2)}</pre>}
-            </div>
-          ) : <div className="text-xs text-muted-foreground">Awaiting lock construction.</div>}
-          <div className="text-xs text-amber-600">Source finality: no real source transaction exists (broadcast blocked) — proof status awaiting.</div>
-        </section>
-
-        {/* Step 3 — Base mint */}
-        <section className="rounded-lg border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2"><Coins className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">3. Base proof-verification &amp; mint</h2></div>
-          <div className="rounded-md border-2 border-rose-500/50 bg-rose-500/5 p-3 flex items-start gap-2">
-            <ShieldAlert className="w-5 h-5 text-rose-500 mt-0.5 shrink-0" />
-            <div className="text-sm">
-              <p className="font-semibold text-rose-600">Genuine missing component — cannot be implemented without inventing it.</p>
-              <p className="text-muted-foreground">
-                No Base-chain (Solidity/EVM) proof-verifier or minting contract, ABI, or deployed address exists anywhere
-                in the accessible workspace. <span className="font-mono">BASE_CHAIN.proof_verifier_address</span> ={' '}
-                <span className="font-mono">{BASE_CHAIN.proof_verifier_address}</span>;{' '}
-                <span className="font-mono">proof_verifier_abi</span> = <span className="font-mono">{BASE_CHAIN.proof_verifier_abi}</span>.
-                Constructing a real proof-submission call is impossible because the entry point does not exist; inventing
-                an ABI or contract is prohibited.
-              </p>
+          <div className="flex items-center gap-2"><Coins className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">2. Base verification and mint</h2></div>
+          <div className="rounded-md border-2 border-amber-500/50 bg-amber-500/5 p-3 flex items-start gap-2">
+            <ShieldAlert className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+            <div className="text-sm text-muted-foreground">
+              After a lock confirms, the app reads the lock record, then calls recordFeeAndRac and verifyAndMint on the
+              Verifier with one package built from that record. The Revision B Verifier is{' '}
+              <StatusPill ok={verifierPresent}>{verifierPresent ? 'deployed' : 'pending deployment'}</StatusPill>, so this step is not available.
             </div>
           </div>
-          <Button disabled className="w-full">Submit proof to Base verifier (blocked: no contract/ABI)</Button>
-          <div className="text-xs text-muted-foreground">VCLM / CHONX / SYNTH addresses: all <span className="font-mono">PENDING_DEPLOYMENT</span>.</div>
+          <Button disabled className="w-full">Submit to Base Verifier (blocked: pending deployment)</Button>
+          <div className="text-xs text-muted-foreground">VCLM / CHONX: <span className="font-mono">PENDING_DEPLOYMENT</span>.</div>
         </section>
 
-        {/* Step 4 — maturity & release */}
+        {/* Step 3 - maturity & release */}
         <section className="rounded-lg border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2"><Unlock className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">4. Maturity &amp; principal release</h2></div>
+          <div className="flex items-center gap-2"><Unlock className="w-5 h-5" /><h2 className="text-lg font-heading font-semibold">3. Maturity and principal release</h2></div>
           <p className="text-sm text-muted-foreground">
-            Constructs the real <span className="font-mono">release_principal</span> message; broadcast is blocked at the
-            same vault-address boundary.
+            Builds the <span className="font-mono">release(lockId)</span> call. The lock pays only the recorded release
+            destination, and only that address can send it, at or after maturity.
           </p>
           <Button onClick={onRelease} disabled={busy || !lockId} variant="outline" className="w-full">
-            {busy ? 'Working…' : 'Construct & release principal'}
+            {busy ? 'Working…' : 'Build release call'}
           </Button>
           {releaseResult && (
             <div className="rounded-md border p-3 text-xs">
               {releaseResult.blocked
                 ? <span className="text-amber-600">⚠ {releaseResult.reason} <span className="font-mono">[{releaseResult.missing}]</span></span>
-                : (releaseResult.ok ? <span className="text-emerald-600">Released.</span> : <span className="text-rose-600">{releaseResult.reason}</span>)}
+                : <span className="text-rose-600">{releaseResult.reason}</span>}
             </div>
           )}
           {releaseResult && releaseResult.blocked && (
-            <pre className="text-xs font-mono bg-muted/30 rounded p-2 whitespace-pre-wrap break-all">{JSON.stringify(buildReleasePrincipalMsg(lockId), null, 2)}</pre>
+            <pre className="text-xs font-mono bg-muted/30 rounded p-2 whitespace-pre-wrap break-all">{JSON.stringify(buildRelease(lockId), null, 2)}</pre>
           )}
         </section>
       </div>
