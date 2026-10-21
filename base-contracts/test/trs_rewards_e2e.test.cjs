@@ -7,8 +7,8 @@
 //     VCLM, CHONX and SYNTH claim exactly floor(reward x weight / total)
 //     (VF-RAC-005, VF-STK-014/026); a zero-RAC epoch and a zero-weight epoch
 //     pay zero (VF-STK-015); double claim refused (VF-STK-018).
-//   - Reward VCLM counts for the cap (VF-SUP-002) but never toward the
-//     10,000,000 CHONX activation (operator t262u).
+//   - Reward VCLM counts in lifetime VCLM for the cap (VF-SUP-002) and toward
+//     the 10,000,000 CHONX activation (VF-TOK-002, operator t264u).
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
