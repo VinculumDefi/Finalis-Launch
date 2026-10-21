@@ -19,7 +19,7 @@ export default function StakeLayer() {
                 <Lock className="w-7 h-7 text-purple-400" />
                 Treasury Reward Stake
               </h1>
-              <p className="text-sm text-slate-400 mt-1">BASE-STAKE + BASE-EPOCH — Staking, epoch finalization, and reward allocation (Revision 6)</p>
+              <p className="text-sm text-slate-400 mt-1">BASE-STAKE + BASE-EPOCH: staking, epoch finalization, per-position reward claims (Revision 6, mirrors VinculumFinalisStake)</p>
             </div>
             <div className="flex gap-2">
               <Link to="/token-layer">
@@ -38,7 +38,7 @@ export default function StakeLayer() {
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
         <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 text-xs text-slate-400">
           <span className="text-blue-400 font-semibold mr-2">VF-STK-001–031</span>
-          Stake positions (VCLM/CHONX/SYNTH) · 30/60/90/120d durations · two-phase epoch (close N / allocate after N+1) · permanent $0.10 Reward Reference Value · proportional distribution · claimable VCLM · queued extensions · terminal state at zero VCLM capacity.
+          Stake positions (VCLM/CHONX/SYNTH) · 30/60/90/120d durations · two-phase epoch (close N / allocate after N+1) · permanent $0.10 Reward Reference Value · token 1x/2x/4x · 120 days 2.10x · proportional distribution · per-position claims · queued extensions · terminal state at zero VCLM capacity.
         </div>
 
         <StakingPanel engine={engine} account={account} />
