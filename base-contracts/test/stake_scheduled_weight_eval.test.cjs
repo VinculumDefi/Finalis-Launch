@@ -267,6 +267,10 @@ async function scenario(seed, opts = {}) {
     totalMinted += a.mintedVclm;
   }
   expect(await pair.neu.st.cumulativeRewardVclmMinted()).to.equal(await pair.ref.st.cumulativeRewardVclmMinted());
+  // t272u: identical behaviour at and across the VCLM lifetime cap
+  expect(await pair.neu.st.terminalState(), "terminal state").to.equal(await pair.ref.st.terminalState());
+  if (await pair.neu.st.terminalState()) bump("run.endedTerminal");
+  GLOBAL.counts["epochs.finalTotal"] = (GLOBAL.counts["epochs.finalTotal"] || 0) + Number(lastFinal);
   const exact = {};
   const sumW = {};
   for (let i = 0n; i < nextId; i++) {
@@ -316,6 +320,7 @@ async function scenario(seed, opts = {}) {
     const refPaid = (await pair.ref.vc.balanceOf(u.address)) - ra;
     expect(perOwnerNew.get(u.address) || 0n, "owner total vs reference").to.equal(refPaid);
   }
+  { const per = new Map(); for (let i = 0n; i < nextId; i++) per.set(owners[i].address, (per.get(owners[i].address) || 0) + 1); for (const c of per.values()) { bump("wallets.total"); if (c > 1) bump("wallets.withMultiplePositions"); } }
   expect(paid).to.be.lte(totalMinted);
   let vclmPrincipal = 0n;
   for (let i = 0n; i < nextId; i++) { const p = await pair.neu.st.positions(i); if (p.token === 0n && !p.withdrawn) vclmPrincipal += p.amount; }
