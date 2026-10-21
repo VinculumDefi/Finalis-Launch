@@ -61,7 +61,7 @@ async function deployAll() {
   const launch = (await ethers.provider.getBlock("latest")).timestamp;
   const forge = await (await ethers.getContractFactory("VinculumFinalisSynth")).deploy(await verifier.getAddress(), await vclm.getAddress(), await chonx.getAddress());
   const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(
-    await vclm.getAddress(), await chonx.getAddress(), await forge.getAddress(), await verifier.getAddress(), launch);
+    await vclm.getAddress(), await chonx.getAddress(), await forge.getAddress(), await verifier.getAddress());
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
 
