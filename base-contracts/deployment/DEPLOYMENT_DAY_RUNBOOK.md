@@ -35,34 +35,34 @@ Rules that govern the day:
 ## 1. Before you start
 
 ### 1.1 Wallet funding (one deployer wallet, seven chains)
-Figures read from public RPCs on 2026-10-21 at 3:52 PM ET. Gas prices move.
+Figures read from public RPCs on 2026-10-21 at 6:59 PM ET. Gas prices move.
 Re-run `node scripts/prepareLockDeploy.cjs` right before you start (read only;
 it rewrites `deployment/lockDeploy.prepared.json`, which you do not need to
 commit) and fund at least 3 times the figure it prints.
 
-| Chain | What is sent | Gas | Cost at 3:52 PM ET | Fund at least |
+| Chain | What is sent | Gas | Cost at 6:59 PM ET | Fund at least |
 |---|---|---|---|---|
-| Ethereum | 1 lock deploy | 1,596,454 | 0.000163 ETH at 0.102 gwei | 0.0013 ETH (covers up to about 0.27 gwei) |
-| Arbitrum | 1 lock deploy | 1,609,489 | 0.0000322 ETH at 0.020 gwei | 0.0001 ETH |
-| Optimism | 1 lock deploy | 1,596,454 | 0.0000016 ETH at 0.001 gwei, plus at most about 0.00000025 ETH L1 data fee | 0.000006 ETH |
-| Polygon | 1 lock deploy | 1,599,828 | 0.446 POL at 279 gwei | 1.35 POL |
+| Ethereum | 1 lock deploy | 1,596,454 | 0.0000788 ETH at 0.049 gwei | 0.0005 ETH (covers up to about 0.1 gwei) |
+| Arbitrum | 1 lock deploy | 1,611,751 | 0.0000326 ETH at 0.020 gwei | 0.0001 ETH |
+| Optimism | 1 lock deploy | 1,596,454 | 0.0000016 ETH at 0.001 gwei, plus at most about 0.00000025 ETH L1 data fee | 0.00001 ETH |
+| Polygon | 1 lock deploy | 1,599,828 | 0.418 POL at 261 gwei | 1.3 POL |
 | BNB Smart Chain | 1 lock deploy | 1,596,538 | 0.0000798 BNB at 0.05 gwei | 0.00024 BNB |
-| Avalanche | 1 lock deploy | 1,596,466 | 0.00399 AVAX at 2.50 gwei | 0.013 AVAX |
-| Base | the whole Base ceremony, 72 transactions | 109,665,401 | 0.000658 ETH at 0.006 gwei, plus at most 0.0000034 ETH L1 data fee = 0.000661 ETH | 0.002 ETH |
+| Avalanche | 1 lock deploy | 1,596,466 | 0.00399 AVAX at 2.50 gwei | 0.012 AVAX |
+| Base | the whole Base ceremony, 72 transactions | 109,789,439 | 0.000659 ETH at 0.006 gwei, plus at most 0.0000034 ETH L1 data fee = 0.000662 ETH | 0.002 ETH |
 
-Ethereum gas moves the most. If Ethereum is above 0.27 gwei when you start,
-fund 3 times the new figure instead of 0.0013 ETH.
+Ethereum gas moves the most. If Ethereum is above 0.1 gwei when you start,
+fund 3 times the new figure instead of 0.0005 ETH.
 
 How the Base figure was made: `baseCeremonyFlow.js` (the code `base.html`
 runs) was run on the in-process test chain with the committed `ceremony.json`
 and `ceremony-data.json`, and the gas used by every transaction the deployer
 sent was added up: 72 transactions (21 contract deploys and 51 calls),
-109,665,401 gas, 550,794 bytes of transaction data. The largest single
-transaction used 4,132,368 gas. The Base gas price (0.006 gwei) was read with
+109,789,439 gas, 551,319 bytes of transaction data. The largest single
+transaction (the Verifier deploy) used 4,196,639 gas. The Base gas price (0.006 gwei) was read with
 `eth_gasPrice` from `https://mainnet.base.org`, and the L1 data fee upper bound
 for each transaction was read from the Base gas price oracle
 (`getL1FeeUpperBound`). At the CoinGecko ETH price read at the same time
-($2,490.26, read at 5:07 PM ET) the Base total is about $1.65. Base's block gas limit was
+($2,484.39, read at 6:59 PM ET) the Base total is about $1.64. Base's block gas limit was
 400,000,000, so every transaction fits.
 
 MetaMask may reserve more than the final fee for each transaction while it is
@@ -75,8 +75,8 @@ Sections 1 to 5 of the Base44 instructions (`BASE44_APP_FIX_PROMPT.md`) are
 applied and checked in the live Base44 app before the ceremony. Section 6 is
 done only after the ceremony (step 4.3).
 
-### 1.3 Build the deploy files once, from main
-In a fresh copy of main, from `base-contracts`:
+### 1.3 Build the deploy files once, from `release/2026-10-21`
+In a fresh copy of branch `release/2026-10-21` (main once it is merged), from `base-contracts`:
 
 ```
 git pull
@@ -107,8 +107,8 @@ Run it alone. It must pass with no failures (about 20 minutes).
 node -e "const {ethers}=require('ethers');const a=require('./scripts/deploy-pages/ceremony.json');for(const k of ['VinculumFinalisVerifier','VinculumFinalisStake','BaseCommitmentVaultLock','CommitmentVaultLock'])console.log(k,ethers.keccak256(a[k].bytecode))"
 ```
 Expected:
-- VinculumFinalisVerifier `0x4ad594b4…423fe3`
-- VinculumFinalisStake `0x049de69e…b79f47`
+- VinculumFinalisVerifier `0x3c11faa9…1dcc66`
+- VinculumFinalisStake `0xd2221a1a…b3d07e`
 - BaseCommitmentVaultLock `0x7954931f…789df9` (the Base lock, deployed by `base.html`)
 - CommitmentVaultLock `0x2daadaf6…80bd99` (the six other chains, unchanged)
 
@@ -280,16 +280,27 @@ make these calls.
 
 | Call (on Stake) | When | What it does | Gas (test chain) | Cost at 0.006 gwei |
 |---|---|---|---|---|
-| `closeEpoch(N)` | at or after launch + N x 10 days; epochs strictly in order 1, 2, 3, … (an epoch with no fees must still be closed) | records the Verifier's `epochRewardBasis(N)` and fixes the epoch's total weight | at most about 135,000, the same with 30 or 3,000 positions | under 0.000001 ETH |
-| `allocateEpoch(N)` | at or after launch + (N+1) x 10 days, once N is closed | mints Basis / $0.10 VCLM to Stake once; 0 if no fees or no eligible stake | at most about 151,000, the same with 30 or 3,000 positions | under 0.000001 ETH |
-| `claimPosition(positionId, toEpoch)` or `claimPositions([ids], toEpoch)` | by the position's owner, for epochs whose N+1 has ended and that are allocated | pays floor(epoch VCLM x weight / total weight) for each unclaimed epoch up to toEpoch; a second claim of the same epochs is refused | about 72,000 for 2 epochs, about 7,700 more per epoch (a 120-day position, 11 epochs: about 142,000) | under 0.000001 ETH |
+| `closeEpoch(N)` | at or after launch + N x 10 days; epochs strictly in order 1, 2, 3, … (an epoch with no fees must still be closed) | records the Verifier's `epochRewardBasis(N)` and fixes the epoch's total weight | at most about 135,000, the same with 30 or 5,000 positions | under 0.000001 ETH |
+| `allocateEpoch(N)` | at or after launch + (N+1) x 10 days, once N is closed, strictly in order: only N = `lastAllocatedEpoch()` + 1 is accepted, epoch 1 first (otherwise "VF-STK-010: allocate in epoch order (t270u)"); an epoch with no fees, no eligible stake or no cap room still counts as allocated | mints Basis / $0.10 VCLM to Stake once; 0 if no fees or no eligible stake | at most about 173,000, the same with 30 or 5,000 positions | under 0.000002 ETH |
+| `claimPosition(positionId, toEpoch)` or `claimPositions([ids], toEpoch)` | by the position's owner, for epochs whose N+1 has ended and that are allocated | pays floor(epoch VCLM x weight / total weight) for each unclaimed epoch up to toEpoch; a second claim of the same epochs is refused | about 77,000 for 1 epoch, about 8,600 to 10,000 more per epoch (a 120-day position, 11 epochs: about 144,000); every claim pays the full floor(epoch VCLM x weight / total weight), nothing is deducted | under 0.000001 ETH |
 | `syncChonxActivation()` (on the Verifier) | after an allocation that takes lifetime VCLM to 10,000,000 or more | records CHONX activation (the next CHONX lock would also do it) | small | under 0.000001 ETH |
 
 Schedule: day 10 close 1; day 20 close 2 and allocate 1; day 30 close 3 and
-allocate 2; and so on, every 10 days. Late calls lose nothing (boundaries
+allocate 2; and so on, every 10 days. Allocation is in strict epoch order
+(t270u(g)): if one is missed, allocate the earliest unallocated epoch first. Late calls lose nothing (boundaries
 never move and claims never expire), except that an allocation is refused in
 full if the VCLM cap cannot hold the whole epoch reward at that time.
-Read state with `epochs(N)`, `getCurrentEpoch()`, `claimableVclm(positionId, toEpoch)`, `nextClaimEpoch(positionId)`, `epochTotalWeight(N)`. No call loops over positions, so none can become too large for Base's 16,777,216 per-transaction gas cap; a claim covers at most the epochs the owner chooses (about 2,100 epochs fit in one transaction).
+
+CHONX activation margin (VF-COM-025, t271u): the Verifier mints CHONX for a
+lock only if the lock was created after CHONX activation was recorded
+(`chonxActivationTimestamp()`). A Base lock must be created strictly later
+(a lock in the activation block is refused). A lock on any other chain must be
+created at least 1 day (`CHONX_SOURCE_CLOCK_MARGIN_SECS` = 86,400 seconds)
+after activation, because other chains' clocks are not Base's. Earlier CHONX
+locks are refused forever ("VF-COM-025: lock created before CHONX activation");
+their principal is still released at maturity.
+
+Read state with `epochs(N)`, `getCurrentEpoch()`, `claimableVclm(positionId, toEpoch)`, `nextClaimEpoch(positionId)`, `epochTotalWeight(N)`. No call loops over positions, so none can become too large for Base's 16,777,216 per-transaction gas cap; a claim covers at most the epochs the owner chooses (about 1,677 to 1,937 epochs, 46 years or more, fit in one transaction). Allocation catches up after any delay one epoch per transaction (99 in a row tested, about 88,000 gas each).
 Each call is a normal transaction to the Stake address in `base44-values.json` (STAKE), sent from MetaMask or any wallet that can call a contract function; close and allocate take only N; a claim takes the position id(s) and the last epoch to claim.
 
 ### 4.6 Retire the old locks
