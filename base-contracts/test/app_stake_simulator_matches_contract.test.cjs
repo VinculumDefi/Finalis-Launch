@@ -126,8 +126,9 @@ describe("App staking simulator matches the Stake contract (t270u)", function ()
           expect(await st.epochTotalWeight(n), `weight ${n}`).to.equal(sim.epochTotalWeight(n));
         }
       } else if (k < 80) {
-        const open = [...sim.epochs.values()].filter((e) => e.closed && !e.allocated).map((e) => e.epoch);
-        const n = open.length && r(5) ? open[r(open.length)] : 1 + r(nextClose + 1);
+        // t270u(g): mostly the next epoch in order; sometimes any epoch, so the
+        // out-of-order refusal text is compared too.
+        const n = r(5) ? sim.lastAllocatedEpoch + 1 : 1 + r(nextClose + 1);
         const { s } = await op(r(2) * 86400, `allocate ${n}`, () => st.allocateEpoch(n, { gasLimit: 3_000_000 }), () => sim.allocateEpoch(n));
         if (s.ok) {
           const ep = await st.epochs(n);
