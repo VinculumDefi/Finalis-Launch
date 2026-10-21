@@ -146,7 +146,9 @@ describe("5% lock, seven chains, native and ERC-20, all sixteen durations", func
   describe("scripts/prepareLockDeploy.cjs (dry run, read-only check)", function () {
     it("builds the same init code the pages deploy and an identical runtime for every chain", async function () {
       const p = await prep.prepare({ withRpc: false });
-      expect(p.chains.map((c) => c.environmentId).sort()).to.deep.equal([...ENVS].sort());
+      // Six non-Base chains. The Base lock (BaseCommitmentVaultLock) is deployed
+      // inside the Base ceremony and only checked (t262u).
+      expect(p.chains.map((c) => c.environmentId).sort()).to.deep.equal(ENVS.filter((e) => e !== "Base").sort());
       const art = require("../artifacts/contracts/CommitmentVaultLock.sol/CommitmentVaultLock.json");
       expect(p.creationCodeHash).to.equal(ethers.keccak256(art.bytecode));
       for (const c of p.chains) {
@@ -170,6 +172,25 @@ describe("5% lock, seven chains, native and ERC-20, all sixteen durations", func
       expect((await prep.check(ethers.provider, "Polygon", await wrongFund.getAddress(), { expectedRuntimeHash: exp, probeFrom: probe.address })).pass).to.equal(false);
       const wrongEnv = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Base", EVM_DEV_FUND);
       expect((await prep.check(ethers.provider, "Polygon", await wrongEnv.getAddress(), { expectedRuntimeHash: exp, probeFrom: probe.address })).pass).to.equal(false);
+    });
+
+    it("--check Base passes on a BaseCommitmentVaultLock bound to VCLM, CHONX and SYNTH, and fails on wrong token addresses", async function () {
+      const [d, probe] = await ethers.getSigners();
+      const T = await ethers.getContractFactory("VinculumFinalisToken");
+      const vclm = await T.deploy("Vinculum Finalis VCLM", "VCLM", 10n ** 28n);
+      const chonx = await T.deploy("Vinculum Finalis CHONX", "CHONX", 10n ** 29n);
+      const v = await (await ethers.getContractFactory("VinculumFinalisVerifier")).deploy(await vclm.getAddress(), await chonx.getAddress());
+      const forge = await (await ethers.getContractFactory("VinculumFinalisSynth")).deploy(await v.getAddress(), await vclm.getAddress(), await chonx.getAddress());
+      const B = await ethers.getContractFactory("BaseCommitmentVaultLock");
+      const good = await B.deploy("Base", EVM_DEV_FUND, await vclm.getAddress(), await chonx.getAddress(), await forge.getAddress());
+      const r = await prep.check(ethers.provider, "Base", await good.getAddress(), { probeFrom: probe.address });
+      expect(r.pass, JSON.stringify(r.results.filter((x) => !x.pass))).to.equal(true);
+      expect(r.results.filter((x) => /duration \d+s: fee is exactly 5%/.test(x.name)).length).to.equal(16);
+      const swapped = await B.deploy("Base", EVM_DEV_FUND, await chonx.getAddress(), await vclm.getAddress(), await forge.getAddress());
+      expect((await prep.check(ethers.provider, "Base", await swapped.getAddress(), { probeFrom: probe.address })).pass).to.equal(false);
+      const plain = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Base", EVM_DEV_FUND);
+      await expect(prep.check(ethers.provider, "Base", await plain.getAddress(), { probeFrom: probe.address })).to.be.rejected;
+      void d;
     });
 
     it("refuses --broadcast and reads no key material", function () {
