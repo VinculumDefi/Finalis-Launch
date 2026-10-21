@@ -17,7 +17,7 @@ transaction is a MetaMask prompt you sign. No key is typed, pasted or stored.
       about 20 minutes, 0 failing.
 - [ ] Hash check (runbook 1.5). Expected:
       VinculumFinalisVerifier `0x4ad594b4…423fe3`,
-      VinculumFinalisStake `0x50e8061e…466a76`,
+      VinculumFinalisStake `0x049de69e…b79f47`,
       BaseCommitmentVaultLock `0x7954931f…789df9`,
       CommitmentVaultLock `0x2daadaf6…80bd99`. Any differs: stop.
 
@@ -33,9 +33,9 @@ transaction is a MetaMask prompt you sign. No key is typed, pasted or stored.
 | Polygon | 1 lock deploy | 1,599,828 | 1.35 POL |
 | BNB Smart Chain | 1 lock deploy | 1,596,538 | 0.00024 BNB |
 | Avalanche | 1 lock deploy | 1,596,466 | 0.013 AVAX |
-| Base | ceremony, 72 transactions | 108,965,768 | 0.002 ETH (more if above 0.02 gwei) |
+| Base | ceremony, 72 transactions | 109,665,401 | 0.002 ETH (more if above 0.02 gwei) |
 
-Base at 0.006 gwei: about 0.000658 ETH in all (about $1.64).
+Base at 0.006 gwei: about 0.000661 ETH in all (about $1.65).
 
 ## C. Pages, in this order
 Serve `scripts/deploy-pages` with `python3 -m http.server 8080` and open
@@ -109,14 +109,14 @@ make these calls.
 
 | Call (on Stake) | When | What it does | Gas (test chain) | Cost at 0.006 gwei |
 |---|---|---|---|---|
-| `closeEpoch(N)` | at or after launch + N x 10 days; epochs strictly in order 1, 2, 3, … (an epoch with no fees must still be closed) | records the Verifier's `epochRewardBasis(N)` | about 80,000 to 102,000 | under 0.000001 ETH |
-| `allocateEpoch(N)` | at or after launch + (N+1) x 10 days, once N is closed | mints Basis / $0.10 VCLM to Stake once and sets each staker's share; 0 if no fees or no eligible stake | about 350,000 with 4 positions (155,000 for a zero epoch); grows with the number of positions ever opened | about 0.000002 ETH |
-| `claimVclm()` | any time after allocation, by each staker | sends that staker's claimable VCLM; nothing to claim reverts | about 56,000 | under 0.000001 ETH |
+| `closeEpoch(N)` | at or after launch + N x 10 days; epochs strictly in order 1, 2, 3, … (an epoch with no fees must still be closed) | records the Verifier's `epochRewardBasis(N)` and fixes the epoch's total weight | at most about 135,000, the same with 30 or 3,000 positions | under 0.000001 ETH |
+| `allocateEpoch(N)` | at or after launch + (N+1) x 10 days, once N is closed | mints Basis / $0.10 VCLM to Stake once; 0 if no fees or no eligible stake | at most about 151,000, the same with 30 or 3,000 positions | under 0.000001 ETH |
+| `claimPosition(positionId, toEpoch)` or `claimPositions([ids], toEpoch)` | by the position's owner, for epochs whose N+1 has ended and that are allocated | pays floor(epoch VCLM x weight / total weight) for each unclaimed epoch up to toEpoch; a second claim of the same epochs is refused | about 72,000 for 2 epochs, about 7,700 more per epoch (a 120-day position, 11 epochs: about 142,000) | under 0.000001 ETH |
 | `syncChonxActivation()` (on the Verifier) | after an allocation that takes lifetime VCLM to 10,000,000 or more | records CHONX activation (the next CHONX lock would also do it) | small | under 0.000001 ETH |
 
 Schedule: day 10 close 1; day 20 close 2 and allocate 1; day 30 close 3 and
 allocate 2; and so on, every 10 days. Late calls lose nothing (boundaries
 never move and claims never expire), except that an allocation is refused in
 full if the VCLM cap cannot hold the whole epoch reward at that time.
-Read state with `epochs(N)`, `getCurrentEpoch()`, `claimableVclm(address)`.
-Each call is a normal transaction to the Stake address in `base44-values.json` (STAKE), sent from MetaMask or any wallet that can call a contract function; none needs arguments other than N.
+Read state with `epochs(N)`, `getCurrentEpoch()`, `claimableVclm(positionId, toEpoch)`, `nextClaimEpoch(positionId)`, `epochTotalWeight(N)`. No call loops over positions, so none can become too large for Base's 16,777,216 per-transaction gas cap; a claim covers at most the epochs the owner chooses (about 2,100 epochs fit in one transaction).
+Each call is a normal transaction to the Stake address in `base44-values.json` (STAKE), sent from MetaMask or any wallet that can call a contract function; close and allocate take only N; a claim takes the position id(s) and the last epoch to claim.
