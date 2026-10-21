@@ -272,4 +272,55 @@ describe("t270u Stake scale and worst-case gas", function () {
     rec("withdrawPosition(normal)", await gasOf(neu.st.connect(users[2]).withdrawPosition(2n)));
     console.log(`      after a 100-epoch delay: closeEpoch ${mxc} each (101 transactions), allocateEpoch ${mxa} each`);
   });
+  it("t270u(g) chronological allocation: out of order reverts, every outcome counts as allocated, catch-up after 100 epochs", async () => {
+    const { out, users, t0 } = await setup(["VinculumFinalisStake"], 3);
+    const neu = out.VinculumFinalisStake;
+    const MSG = "VF-STK-010: allocate in epoch order (t270u)";
+    // epoch 1: no stake (zero weight). epoch 2: no RAC. epoch 3: paid. epoch 4: reward does not fit the cap.
+    await at(t0 + 15n * 86400n);
+    await (await neu.st.connect(users[0]).createPosition(0, 100n * SCALE, D120)).wait();
+    await (await neu.v.setBasis(1n, 50n * SCALE)).wait();
+    await (await neu.v.setBasis(3n, 70n * SCALE)).wait();
+    await (await neu.v.setBasis(4n, 90n * SCALE)).wait();
+    await at(t0 + 6n * E + 1n);
+    for (let n = 1n; n <= 5n; n++) await (await neu.st.closeEpoch(n)).wait();
+    await expect(neu.st.allocateEpoch(2n)).to.be.revertedWith(MSG);
+    await expect(neu.st.allocateEpoch(4n)).to.be.revertedWith(MSG);
+    await (await neu.st.connect(users[1]).allocateEpoch(1n)).wait(); // anyone may call
+    expect((await neu.st.epochs(1n)).mintedVclm).to.equal(0n); // zero weight
+    await expect(neu.st.allocateEpoch(1n)).to.be.revertedWith("VFS: already allocated");
+    await expect(neu.st.allocateEpoch(3n)).to.be.revertedWith(MSG);
+    await (await neu.st.connect(users[2]).allocateEpoch(2n)).wait();
+    expect((await neu.st.epochs(2n)).mintedVclm).to.equal(0n); // zero RAC
+    await (await neu.st.allocateEpoch(3n)).wait();
+    expect((await neu.st.epochs(3n)).mintedVclm).to.equal(700n * SCALE); // paid
+    await (await neu.v.setLockIssued(CAP - 1n * SCALE - 700n * SCALE)).wait(); // 1 VCLM capacity left
+    await (await neu.st.allocateEpoch(4n)).wait();
+    expect((await neu.st.epochs(4n)).mintedVclm).to.equal(0n); // cap skipped
+    expect(await neu.st.lastAllocatedEpoch()).to.equal(4n);
+    // terminal state: allocation still proceeds (mints nothing)
+    await (await neu.v.setLockIssued(CAP - 700n * SCALE)).wait();
+    await (await neu.v.setBasis(6n, 10n * SCALE)).wait();
+    await (await neu.st.allocateEpoch(5n)).wait();
+    await at(t0 + 8n * E + 1n);
+    await (await neu.st.closeEpoch(6n)).wait();
+    await (await neu.st.allocateEpoch(6n)).wait(); // zero capacity: mints nothing, enters terminal state
+    expect((await neu.st.epochs(6n)).mintedVclm).to.equal(0n);
+    expect(await neu.st.terminalState()).to.equal(true);
+    await (await neu.v.setLockIssued(0n)).wait();
+    // nobody closes or allocates for 100 epochs, then catch up in order
+    await at(t0 + 107n * E + 1n);
+    for (let n = 7n; n <= 106n; n++) await (await neu.st.closeEpoch(n)).wait();
+    await expect(neu.st.allocateEpoch(106n)).to.be.reverted; // N+1 not ended
+    await expect(neu.st.allocateEpoch(50n)).to.be.revertedWith(MSG);
+    let mx = 0n;
+    for (let n = 7n; n <= 105n; n++) { const g = await gasOf(neu.st.connect(users[n % 3n]).allocateEpoch(n)); if (g > mx) mx = g; }
+    expect(await neu.st.lastAllocatedEpoch()).to.equal(105n);
+    rec("allocateEpoch(in-order catch-up after 100 epochs, each)", mx);
+    // the position still claims epoch 3 exactly
+    const before = await neu.vc.balanceOf(users[0].address);
+    await (await neu.st.connect(users[0]).claimPosition(0n, 105n)).wait();
+    expect((await neu.vc.balanceOf(users[0].address)) - before).to.equal(700n * SCALE);
+    console.log(`      out-of-order refused; zero-weight, zero-RAC, cap-skipped and terminal epochs all count as allocated; 99 in-order catch-up allocations max ${mx} gas each`);
+  });
 });

@@ -6,7 +6,7 @@
 //    every owner's total VCLM paid and every operation's success or failure
 //    must be identical. Scenarios cover all three tokens and four durations,
 //    extensions queued and applied, normal and terminal-state withdrawals,
-//    zero-RAC epochs, late and out-of-order allocation, and the VCLM cap.
+//    zero-RAC epochs, late allocation (in epoch order since t270u(g)), and the VCLM cap.
 // 2. Scale: with thousands of positions, closeEpoch and allocateEpoch gas does
 //    not grow, and claim gas depends only on the epochs claimed.
 // Nothing is broadcast.
@@ -146,7 +146,7 @@ async function scenario(seed, opts = {}) {
     // allocate some final epochs, sometimes late or out of order
     for (let n = 1n; n + 1n < cur && n <= closed; n++) {
       if (allocated.has(n)) continue;
-      if (r(3) === 0 && n + 4n > cur) continue; // leave it for later
+      if (r(3) === 0 && n + 4n > cur) break; // leave it and later epochs for later (t270u(g): allocation in epoch order)
       const a = await bothT(pair, t, (s) => s.st.allocateEpoch(n, { gasLimit: 15_000_000 }));
       expect([...a], "allocate " + n).to.deep.equal([true, true]);
       allocated.add(n); t = tGlobal + 1n;

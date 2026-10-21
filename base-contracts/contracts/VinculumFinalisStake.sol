@@ -182,6 +182,8 @@ contract VinculumFinalisStake {
     mapping(uint256 => uint256) private _weightAddAt;
     mapping(uint256 => uint256) private _weightSubAt;
     uint256 public lastClosedEpoch;
+    // t270u(g): last allocated epoch; allocation is in strict epoch order.
+    uint256 public lastAllocatedEpoch;
 
     // VF-STK-016: Claimable VCLM accumulates and never expires: a position's
     // unclaimed epochs stay claimable from nextClaimEpoch onwards.
@@ -433,6 +435,13 @@ contract VinculumFinalisStake {
         // VF-STK-013: Only after scheduled end of N+1
         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
         require(block.timestamp >= nPlus1End, "VF-STK-013: wait for N+1 end");
+
+        // VF-STK-010 + operator rule t270u(g): permissionless chronological
+        // allocation. Epoch N is allocated only after N-1 (epoch 1 first).
+        // Every outcome below (zero RAC, zero weight, cap skip, paid) marks the
+        // epoch allocated, so the next epoch can always follow: no deadlock.
+        require(epochN == lastAllocatedEpoch + 1, "VF-STK-010: allocate in epoch order (t270u)");
+        lastAllocatedEpoch = epochN;
 
         // Weight is fixed now (VF-STK-013): no change can reach N once N+1
         // has ended. t269u: O(1), the incrementally kept total.

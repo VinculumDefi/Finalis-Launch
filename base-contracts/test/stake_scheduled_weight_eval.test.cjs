@@ -218,16 +218,23 @@ async function scenario(seed, opts = {}) {
       if (caught > 1) bump("close.catchUpExtraEpochs", caught - 1);
     }
     if (opts.lateAlloc && r(3) !== 0) continue;
-    const cand = [];
-    for (let n = 1n; n + 1n < cur && n <= closed; n++) if (!allocated.has(n)) cand.push(n);
-    for (let i = cand.length - 1; i > 0; i--) { const j = r(i + 1); [cand[i], cand[j]] = [cand[j], cand[i]]; }
-    for (const n of cand) {
-      if (r(3) === 0 && n + 5n > cur) continue;
+    // t270u(g): allocation is in strict epoch order. Allocate the next epochs
+    // in order, sometimes stopping early so later epochs are allocated late.
+    for (let n = BigInt(allocated.size) + 1n; n + 1n < cur && n <= closed; n++) {
+      if (r(3) === 0 && n + 5n > cur) break;
+      if (r(4) === 0) {
+        // an out-of-order attempt on the current contract must revert
+        const skip = n + 1n;
+        if (skip + 1n < cur && skip <= closed) {
+          const x = await solo(t, () => pair.neu.st.allocateEpoch(skip, { gasLimit: 15_000_000 }));
+          expect(x.ok, "out-of-order allocate " + skip + " must revert").to.equal(false);
+          bump("allocate.outOfOrderRefused"); t = x.time + 1n;
+        }
+      }
       const a = await both(pair, t, (s) => s.st.allocateEpoch(n, { gasLimit: 15_000_000 }));
       expect(a.ok, "allocate " + n).to.deep.equal([true, true]);
       gmax("allocateEpoch", a.gasNew);
-      let ooo = false; for (let m = 1n; m < n; m++) if (!allocated.has(m)) { ooo = true; break; }
-      bump(ooo ? "allocate.outOfOrder" : "allocate.inOrder");
+      bump("allocate.inOrder");
       if (cur - n >= 4n) bump("allocate.late2plusEpochsAfterFinal");
       allocated.add(n); t = a.time + 1n;
     }

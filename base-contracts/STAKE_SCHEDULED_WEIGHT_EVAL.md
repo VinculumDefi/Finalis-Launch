@@ -25,3 +25,14 @@ checkpoint (`_claimTermIdx`) that closes it. The ABI is unchanged.
   positions, 600-epoch positions, constructed worst cases, 100-epoch delay.
 
 Both pass against the 21ed30b contract and against the branch contract.
+
+## t270u(g): chronological allocation (branch)
+
+`allocateEpoch(N)` now requires `N == lastAllocatedEpoch + 1` (revert
+"VF-STK-010: allocate in epoch order (t270u)"), and stays permissionless. Every
+allocation outcome (zero RAC, zero weight, cap skip, terminal, paid) marks the epoch
+allocated, so the next epoch can always follow. New view `lastAllocatedEpoch()`
+(0x70462f62). All other selectors are unchanged. The differential now allocates in
+order (80 seeds, plus 186 refused out-of-order attempts), and a dedicated test covers
+the order rule, every outcome counting as allocated, and catch-up after 100 epochs.
+App simulator (src/lib/vfStakingEngine.js) and StakingPanel mirror the rule.
