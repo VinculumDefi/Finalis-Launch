@@ -49,7 +49,7 @@ export const BASE_CHAIN = Object.freeze({
   name: 'Base',
   environment_id: 'Base',
   chain_id: 8453,
-  lock_address: BASE_CONTRACTS.lock,             // new 5% CommitmentVaultLock("Base", Dev Fund)
+  lock_address: BASE_CONTRACTS.lock,             // new 5% BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge)
   proof_verifier_address: BASE_CONTRACTS.verifier, // new Revision B VinculumFinalisVerifier
   vclm_address: BASE_CONTRACTS.vclm,
   chonx_address: BASE_CONTRACTS.chonx,
