@@ -42,6 +42,14 @@
 //   VF-RAC-004: Epoch Reward Basis = sum of RAC closed in epoch
 //   VF-RAC-005: Permanent $0.10 Reward Reference Value
 //   VF-RAC-006: Credit becomes Used only at allocation
+//   VF-RAC-003/004 + VF-STK-007 (t262u): Epoch Reward Basis is read from the
+//               Verifier's per-epoch RAC total (epochRewardBasis), on the same
+//               launch-based epochs (Section 10.2, T0 = Verifier
+//               protocolLaunchTimestamp, set at finalize).
+//   VF-SUP-002, VF-TOK-002 (t264u): reward VCLM is counted in the Verifier's
+//               lifetime VCLM (cumulativeRewardVclmMinted, read by the
+//               Verifier), which is used for the cap and for the 10,000,000
+//               CHONX activation threshold (operator t264u).
 //
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
@@ -51,8 +59,9 @@ pragma solidity 0.8.19;
 
 interface IVerifier {
     function cumulativeVclmIssued() external view returns (uint256);
-    function racCredits(bytes32 racIdentity) external view returns (uint256);
-    function racEpoch(bytes32 racIdentity) external view returns (uint256);
+    function lifetimeVclmIssued() external view returns (uint256);
+    function epochRewardBasis(uint256 epochN) external view returns (uint256);
+    function protocolLaunchTimestamp() external view returns (uint256);
 }
 
 interface IStakeToken {
@@ -103,38 +112,52 @@ contract VinculumFinalisStake {
 
     // ===== Storage =====
 
-
-    // CL-05 / CL-24 / §10.2: T0. Epoch N spans [T0+(N-1)E, T0+N*E). Immutable.
-    uint256 public immutable launchTimestamp;
-    IVclmToken public vclmToken;
-    IStakeToken public chonxToken;
-    IStakeToken public synthToken;
-    IVerifier public verifier;
+    // Immutable wiring (no setter). T0 is not stored here: Section 10.2 says
+    // protocol launch defines T0, and the Verifier records protocol launch at
+    // finalize (protocolLaunchTimestamp). Both contracts use that one value.
+    IVclmToken public immutable vclmToken;
+    IStakeToken public immutable chonxToken;
+    IStakeToken public immutable synthToken;
+    IVerifier public immutable verifier;
 
     bool public terminalState;
+
+    // VF-SUP-002: VCLM minted by this contract as epoch rewards. Counted in
+    // lifetime VCLM (Verifier.lifetimeVclmIssued) for the hard cap only.
+    uint256 public cumulativeRewardVclmMinted;
 
     struct Position {
         address owner;
         uint8 token;      // 0=VCLM, 1=CHONX, 2=SYNTH
         uint256 amount;
-        uint256 durationSecs;
-        uint256 startTimestamp;
-        uint256 endTimestamp;
-        uint32 multiplierBps;
+        uint256 durationSecs;     // current term length
+        uint256 startTimestamp;   // current term start
+        uint256 endTimestamp;     // current term scheduled end
+        uint32 multiplierBps;     // current term multiplier
         uint32 queuedExtensionBps;  // 0 = no extension
         uint256 queuedExtensionSecs;
         bool withdrawn;
+        uint256 activeSince;      // first term start; unchanged by extensions
+        uint256 withdrawnAt;      // 0 until withdrawn
+    }
+
+    // Term history: start time and multiplier of every term of a position,
+    // so a delayed epoch uses the multiplier in force for that epoch.
+    struct Term {
+        uint256 start;
+        uint32 multiplierBps;
     }
 
     mapping(uint256 => Position) public positions;
+    mapping(uint256 => Term[]) private _terms;
     uint256 public nextPositionId;
 
     struct Epoch {
         bool closed;
         bool allocated;
-        uint256 rewardBasis;
+        uint256 rewardBasis;      // VF-RAC-004, USD 18 decimals
         uint256 totalWeight;
-        uint256 mintedVclm;
+        uint256 mintedVclm;       // complete Epoch Reward VCLM minted (VF-STK-014)
         uint256 closeTimestamp;
         uint256 allocateTimestamp;
     }
@@ -159,23 +182,50 @@ contract VinculumFinalisStake {
         address _vclmToken,
         address _chonxToken,
         address _synthToken,
-        address _verifier,
-        uint256 _launchTimestamp
+        address _verifier
     ) {
-        // CL-21: an unset T0 is rejected, never defaulted to zero.
-        require(_launchTimestamp > 0, "CL-21: launchTimestamp not set");
-        launchTimestamp = _launchTimestamp;
+        require(_vclmToken != address(0), "VF-DEP-002: zero VCLM");
+        require(_chonxToken != address(0), "VF-DEP-002: zero CHONX");
+        require(_synthToken != address(0), "VF-DEP-002: zero SYNTH");
+        require(_verifier != address(0), "VF-DEP-002: zero verifier");
         vclmToken = IVclmToken(_vclmToken);
         chonxToken = IStakeToken(_chonxToken);
         synthToken = IStakeToken(_synthToken);
         verifier = IVerifier(_verifier);
     }
 
+    /// @notice T0 (Section 10.2): the Verifier's protocol launch time, set once
+    ///         at finalize. Zero before finalize.
+    function launchTimestamp() public view returns (uint256) {
+        return verifier.protocolLaunchTimestamp();
+    }
+
+    function _launched() internal view returns (uint256 t0) {
+        t0 = verifier.protocolLaunchTimestamp();
+        require(t0 > 0, "VF-STK-001: protocol not launched");
+    }
+
+    function _remainingVclmCapacity() internal view returns (uint256) {
+        uint256 issued = verifier.lifetimeVclmIssued();
+        return issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+    }
+
+    function _enterTerminalIfCapReached() internal returns (bool) {
+        if (terminalState) return true;
+        if (_remainingVclmCapacity() == 0) {
+            terminalState = true;
+            emit TerminalStateEntered();
+            return true;
+        }
+        return false;
+    }
+
     // ===== VF-STK-001/002/031: Create stake position =====
 
     function createPosition(uint8 token, uint256 amount, uint256 durationSecs) external returns (uint256) {
-        // VF-STK-029: Terminal state — no new positions
-        require(!terminalState, "VF-STK-029: terminal state");
+        _launched();
+        // VF-STK-029: Terminal state, no new positions
+        require(!_enterTerminalIfCapReached(), "VF-STK-029: terminal state");
 
         // VF-STK-002: Only VCLM/CHONX/SYNTH
         require(token <= 2, "VF-STK-002: invalid token");
@@ -187,9 +237,10 @@ contract VinculumFinalisStake {
         uint32 multBps = _getStakeMultiplier(durationSecs);
         require(multBps > 0, "VF-STK-003: duration not permitted");
 
-        // Transfer staked tokens from caller
-        IStakeToken stakeToken = token == 0 ? vclmToken : (token == 1 ? chonxToken : synthToken);
+        IStakeToken stakeToken = _tokenOf(token);
+        uint256 beforeBal = stakeToken.balanceOf(address(this));
         require(stakeToken.transferFrom(msg.sender, address(this), amount), "VFS: transfer failed");
+        require(stakeToken.balanceOf(address(this)) - beforeBal == amount, "VFS: received amount mismatch");
 
         uint256 id = nextPositionId++;
         uint256 start = block.timestamp;
@@ -203,8 +254,11 @@ contract VinculumFinalisStake {
             multiplierBps: multBps,
             queuedExtensionBps: 0,
             queuedExtensionSecs: 0,
-            withdrawn: false
+            withdrawn: false,
+            activeSince: start,
+            withdrawnAt: 0
         });
+        _terms[id].push(Term({start: start, multiplierBps: multBps}));
 
         emit PositionCreated(id, msg.sender, token, amount, durationSecs);
         return id;
@@ -216,6 +270,8 @@ contract VinculumFinalisStake {
         Position storage pos = positions[positionId];
         require(pos.owner == msg.sender, "VFS: not owner");
         require(!pos.withdrawn, "VFS: withdrawn");
+        // VF-STK-029: Terminal state closes extensions
+        require(!_enterTerminalIfCapReached(), "VF-STK-029: terminal state");
 
         // CL-14 / VF-STK-021: extensions may only be queued while the position
         // is ACTIVE. VF-STK-025 forbids an expired position retroactively
@@ -234,6 +290,10 @@ contract VinculumFinalisStake {
         emit ExtensionQueued(positionId, durationSecs);
     }
 
+    /// @notice Records a queued term that has begun (VF-STK-022: it begins at
+    ///         the scheduled end of the current term whether or not this is
+    ///         called; eligibility already counts it). Lets a further term be
+    ///         queued (VF-STK-023).
     function applyExtensionIfMatured(uint256 positionId) external {
         Position storage pos = positions[positionId];
         require(pos.owner == msg.sender, "VFS: not owner");
@@ -248,6 +308,7 @@ contract VinculumFinalisStake {
         pos.multiplierBps = pos.queuedExtensionBps;
         pos.queuedExtensionBps = 0;
         pos.queuedExtensionSecs = 0;
+        _terms[positionId].push(Term({start: pos.startTimestamp, multiplierBps: pos.multiplierBps}));
         emit PositionExtended(positionId, pos.endTimestamp);
     }
 
@@ -259,117 +320,115 @@ contract VinculumFinalisStake {
         require(!pos.withdrawn, "VFS: withdrawn");
         // CL-15 / VF-STK-030: at terminal state all staked tokens become
         // IMMEDIATELY withdrawable, matured or not.
-        if (!terminalState) {
-            require(block.timestamp >= pos.endTimestamp, "VFS: not matured");
+        if (!_enterTerminalIfCapReached()) {
+            // A queued term that has begun keeps the tokens staked (VF-STK-022).
+            require(block.timestamp >= _scheduledEnd(pos), "VFS: not matured");
         }
-        // VF-STK-025: Without queued extension, position inactive at maturity
 
         pos.withdrawn = true;
+        pos.withdrawnAt = block.timestamp;
 
-        // Return staked tokens (VF-STK-030: immediately withdrawable at terminal state)
-        IStakeToken stakeToken = pos.token == 0 ? vclmToken : (pos.token == 1 ? chonxToken : synthToken);
+        IStakeToken stakeToken = _tokenOf(pos.token);
         require(stakeToken.transfer(pos.owner, pos.amount), "VFS: return failed");
 
         // VF-STK-020: Withdrawal does not erase claimable VCLM
         emit PositionWithdrawn(positionId);
     }
 
-    // ===== BASE-EPOCH Phase 1: Close (VF-RAC-004, VF-STK-006-010) =====
+    // ===== BASE-EPOCH Phase 1: Close (VF-RAC-003/004, VF-STK-006-010) =====
 
+    /// @notice Finalizes epoch N after its scheduled end (VF-STK-008) and fixes
+    ///         its Epoch Reward Basis from the Verifier (VF-RAC-004). No credit
+    ///         can be added to N after it ends (VF-STK-007): the Verifier
+    ///         assigns each credit to the epoch in which it is recorded.
     function closeEpoch(uint256 epochN) external {
-        // VF-STK-008: Permissionless finalization
+        uint256 t0 = _launched();
         Epoch storage ep = epochs[epochN];
         require(!ep.closed, "VFS: already closed");
 
         // CL-22: epochs are 1-indexed.
         require(epochN >= 1, "VF-STK-010: epoch numbering begins at 1");
 
+        // VF-STK-008/009: only after the scheduled end; boundaries never move.
+        require(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS, "VF-STK-008: epoch not ended");
+
         // VF-STK-010: Chronological order
         if (epochN > 1) {
             require(epochs[epochN - 1].closed, "VF-STK-010: chronological order");
         }
 
-        // VF-RAC-004: Epoch Reward Basis = sum of RAC credits in this epoch
-        // In production, this reads from the verifier's RAC storage.
-        // Here we compute totalWeight for proportional allocation.
-
-        ep.totalWeight = 0;
-        for (uint256 i = 0; i < nextPositionId; i++) {
-            Position storage pos = positions[i];
-            if (!pos.withdrawn && _qualifiesForEpoch(pos, epochN)) {
-                ep.totalWeight += _getWeight(pos);
-            }
-        }
-
+        ep.rewardBasis = verifier.epochRewardBasis(epochN);
         ep.closed = true;
         ep.closeTimestamp = block.timestamp;
-        // rewardBasis would be set from verifier RAC storage in production
-        emit EpochClosed(epochN, ep.rewardBasis, ep.totalWeight);
+        emit EpochClosed(epochN, ep.rewardBasis, 0);
     }
 
-    // ===== BASE-EPOCH Phase 2: Allocate (VF-STK-013-015, VF-RAC-005/006) =====
+    // ===== BASE-EPOCH Phase 2: Allocate (VF-STK-013-015/026-028, VF-RAC-005/006, VF-SUP-009) =====
 
     function allocateEpoch(uint256 epochN) external {
+        uint256 t0 = _launched();
         // VF-STK-008: Permissionless
         Epoch storage ep = epochs[epochN];
         require(ep.closed, "VFS: not closed");
         require(!ep.allocated, "VFS: already allocated");
 
         // VF-STK-013: Only after scheduled end of N+1
-        uint256 nPlus1End = launchTimestamp + ((epochN + 1) * EPOCH_DURATION_SECS);
+        uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
         require(block.timestamp >= nPlus1End, "VF-STK-013: wait for N+1 end");
 
-        // VF-STK-015: Zero-eligible epoch
-        if (ep.rewardBasis == 0 || ep.totalWeight == 0) {
-            ep.allocated = true;
-            ep.allocateTimestamp = block.timestamp;
-            emit EpochAllocated(epochN, 0, 0);
-            return;
-        }
-
-        // VF-RAC-005: Permanent $0.10 Reward Reference Value
-        uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
-
-        // VF-STK-028: Cap check
-        uint256 remaining = VCLM_HARD_CAP - verifier.cumulativeVclmIssued();
-
-        // CL-08 / VF-STK-029: terminal state at zero remaining VCLM capacity.
-        if (remaining == 0 && !terminalState) {
-            terminalState = true;
-            emit TerminalStateEntered();
-        }
-
-        if (totalReward > remaining) {
-            ep.allocated = true;
-            ep.allocateTimestamp = block.timestamp;
-            emit EpochAllocated(epochN, 0, 0);
-            return;
-        }
-
-        // VF-STK-014/026: Proportional allocation; rounds down
-        uint256 distributed = 0;
+        // Weight is fixed now (VF-STK-013); eligibility uses scheduled times only.
+        uint256 totalWeight = 0;
         for (uint256 i = 0; i < nextPositionId; i++) {
-            Position storage pos = positions[i];
-            if (!pos.withdrawn && _qualifiesForEpoch(pos, epochN)) {
-                uint256 weight = _getWeight(pos);
-                uint256 share = (totalReward * weight) / ep.totalWeight;
-                if (share > 0) {
-                    // VF-STK-016: Claimable accumulates
-                    claimableVclm[pos.owner] += share;
-                    distributed += share;
-                }
-            }
+            totalWeight += _epochWeight(i, epochN, t0);
         }
+        ep.totalWeight = totalWeight;
 
-        // VF-STK-027: Remainder inaccessible
-        ep.mintedVclm = distributed;
+        // VF-RAC-006 / VF-STK-015: from here the epoch's credits are used.
         ep.allocated = true;
         ep.allocateTimestamp = block.timestamp;
 
-        // Mint VCLM to this contract (VF-STK-004: rewards in newly minted VCLM)
-        vclmToken.mint(address(this), distributed);
+        // VF-STK-015: Zero-eligible epoch mints nothing, carries nothing forward.
+        if (ep.rewardBasis == 0 || totalWeight == 0) {
+            emit EpochAllocated(epochN, 0, 0);
+            return;
+        }
 
-        emit EpochAllocated(epochN, distributed, 0);
+        // VF-RAC-005: Epoch Reward VCLM = Epoch Reward Basis / $0.10
+        uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
+
+        // VF-STK-028 / VF-SUP-009: the complete reward must fit, else mint nothing.
+        uint256 remaining = _remainingVclmCapacity();
+        if (remaining == 0) {
+            _enterTerminalIfCapReached(); // VF-STK-029 / VF-SUP-011
+            emit EpochAllocated(epochN, 0, 0);
+            return;
+        }
+        if (totalReward > remaining) {
+            emit EpochAllocated(epochN, 0, 0);
+            return;
+        }
+
+        // VF-STK-014: the complete Epoch Reward VCLM is minted once to this contract.
+        cumulativeRewardVclmMinted += totalReward;
+        ep.mintedVclm = totalReward;
+        vclmToken.mint(address(this), totalReward);
+
+        // VF-STK-014/026: proportional entitlements, each rounded down.
+        uint256 distributions = 0;
+        for (uint256 i = 0; i < nextPositionId; i++) {
+            uint256 weight = _epochWeight(i, epochN, t0);
+            if (weight == 0) continue;
+            uint256 share = (totalReward * weight) / totalWeight;
+            if (share > 0) {
+                // VF-STK-016: Claimable accumulates
+                claimableVclm[positions[i].owner] += share;
+                distributions++;
+            }
+        }
+        // VF-STK-027: the remainder stays in this contract, never reused.
+
+        emit EpochAllocated(epochN, totalReward, distributions);
+        _enterTerminalIfCapReached(); // VF-SUP-011 if this reward used the last capacity
     }
 
     // ===== VF-STK-016/017/018/019: Claim =====
@@ -393,8 +452,9 @@ contract VinculumFinalisStake {
 
     // CL-23: returns 0 before launch rather than underflowing.
     function getCurrentEpoch() external view returns (uint256) {
-        if (block.timestamp < launchTimestamp) return 0;
-        return ((block.timestamp - launchTimestamp) / EPOCH_DURATION_SECS) + 1;
+        uint256 t0 = verifier.protocolLaunchTimestamp();
+        if (t0 == 0 || block.timestamp < t0) return 0;
+        return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
     }
 
     function stakeDurationCount() external pure returns (uint256) {
@@ -403,6 +463,17 @@ contract VinculumFinalisStake {
 
     function stakeMultiplierBps(uint256 durationSecs) external pure returns (uint256) {
         return _getStakeMultiplier(durationSecs);
+    }
+
+    function termCount(uint256 positionId) external view returns (uint256) {
+        return _terms[positionId].length;
+    }
+
+    /// @notice Weight a position earns for epoch N (0 if it does not qualify).
+    function epochWeight(uint256 positionId, uint256 epochN) external view returns (uint256) {
+        uint256 t0 = verifier.protocolLaunchTimestamp();
+        if (t0 == 0 || epochN == 0) return 0;
+        return _epochWeight(positionId, epochN, t0);
     }
 
     // Four rows only; any other duration reverts (VF-STK-003).
@@ -414,10 +485,42 @@ contract VinculumFinalisStake {
         revert("VF-STK-003: duration not permitted");
     }
 
-    // CL-03 / §10.1: Weight = amount x token multiplier x duration multiplier.
+    function _tokenOf(uint8 token) internal view returns (IStakeToken) {
+        return token == 0 ? IStakeToken(address(vclmToken)) : (token == 1 ? chonxToken : synthToken);
+    }
+
+    // Scheduled end including a queued term (VF-STK-022: it begins at the
+    // scheduled end of the current term).
+    function _scheduledEnd(Position storage pos) internal view returns (uint256) {
+        return pos.endTimestamp + (pos.queuedExtensionBps > 0 ? pos.queuedExtensionSecs : 0);
+    }
+
+    // Duration multiplier of the term in force at time t.
+    function _multiplierAt(uint256 positionId, uint256 t) internal view returns (uint32) {
+        Position storage pos = positions[positionId];
+        if (pos.queuedExtensionBps > 0 && t >= pos.endTimestamp) return pos.queuedExtensionBps;
+        Term[] storage ts = _terms[positionId];
+        for (uint256 k = ts.length; k > 0; k--) {
+            if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+        }
+        return 0;
+    }
+
+    // CL-03 / Section 10.1: Weight = amount x token multiplier x duration multiplier.
     // Single division floors once; do not split into two divisions.
-    function _getWeight(Position storage pos) internal view returns (uint256) {
-        return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    // VF-STK-011/012: active at the start of N and through the scheduled end
+    // of N+1. Withdrawal before that end removes it. The duration multiplier
+    // is the one in force at the start of epoch N.
+    function _epochWeight(uint256 positionId, uint256 epochN, uint256 t0) internal view returns (uint256) {
+        Position storage pos = positions[positionId];
+        if (pos.owner == address(0)) return 0;
+        uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+        uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+        if (pos.activeSince > epochStart) return 0;
+        if (_scheduledEnd(pos) < nPlus1End) return 0;
+        if (pos.withdrawn && pos.withdrawnAt < nPlus1End) return 0;
+        uint32 durBps = _multiplierAt(positionId, epochStart);
+        return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
     }
 
     // VF-STK-002 bounds token to 0..2; revert rather than default (CL-26).
@@ -428,20 +531,11 @@ contract VinculumFinalisStake {
         revert("VF-STK-002: invalid token");
     }
 
-    // CL-34: §10.1 must be observable from outside the contract.
+    // CL-34: Section 10.1 must be observable from outside the contract
+    // (weight of the current term).
     function getPositionWeight(uint256 positionId) external view returns (uint256) {
         Position storage pos = positions[positionId];
         require(pos.owner != address(0), "VFS: unknown position");
-        return _getWeight(pos);
-    }
-
-    // VF-STK-011: Position beginning after epoch start does not qualify for N
-    // VF-STK-012: Position expiring before end of N+1 does not qualify for N
-    function _qualifiesForEpoch(Position storage pos, uint256 epochN) internal view returns (bool) {
-        // CL-22: epochs are 1-indexed; epoch 0 does not exist.
-        require(epochN >= 1, "VF-STK-011: epoch numbering begins at 1");
-        uint256 epochStart = launchTimestamp + ((epochN - 1) * EPOCH_DURATION_SECS);
-        uint256 nPlus1End = launchTimestamp + ((epochN + 1) * EPOCH_DURATION_SECS);
-        return pos.startTimestamp <= epochStart && pos.endTimestamp >= nPlus1End;
+        return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
     }
 }
