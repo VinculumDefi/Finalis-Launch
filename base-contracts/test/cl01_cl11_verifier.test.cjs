@@ -39,8 +39,7 @@ async function deployVerifierFixture({ finalize = true } = {}) {
     await vclm.getAddress(),
     await chonx.getAddress(),
     await vclm.getAddress(),
-    await verifier.getAddress(),
-    launchTimestamp
+    await verifier.getAddress()
   );
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -139,8 +138,7 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
       await vclm.getAddress(),
       await chonx.getAddress(),
       await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
+      await verifier.getAddress()
     );
     await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
     await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -190,8 +188,7 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
       await vclm.getAddress(),
       await chonx.getAddress(),
       await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
+      await verifier.getAddress()
     );
     await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
     await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -284,8 +281,7 @@ async function deployStableFixture() {
     await vclm.getAddress(),
     await chonx.getAddress(),
     await vclm.getAddress(),
-    await verifier.getAddress(),
-    t0
+    await verifier.getAddress()
   );
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -473,8 +469,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
       await vclm.getAddress(),
       await chonx.getAddress(),
       await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
+      await verifier.getAddress()
     );
     await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
     await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -520,8 +515,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
       await vclm.getAddress(),
       await chonx.getAddress(),
       await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
+      await verifier.getAddress()
     );
     await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
     await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -582,8 +576,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
       await vclm.getAddress(),
       await chonx.getAddress(),
       await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
+      await verifier.getAddress()
     );
     await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
     await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
@@ -656,8 +649,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
       await vclm.getAddress(),
       await chonx.getAddress(),
       await vclm.getAddress(),
-      await verifier.getAddress(),
-      t0
+      await verifier.getAddress()
     );
     await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
     await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
