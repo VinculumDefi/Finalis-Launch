@@ -15,7 +15,7 @@ async function deployCeremony() {
   const synth = await (await ethers.getContractFactory("VinculumFinalisSynth")).deploy(predicted, await vclm.getAddress(), await chonx.getAddress());
   const launchTs = BigInt((await ethers.provider.getBlock("latest")).timestamp);
   const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(
-    await vclm.getAddress(), await chonx.getAddress(), await synth.getAddress(), predicted, launchTs
+    await vclm.getAddress(), await chonx.getAddress(), await synth.getAddress(), predicted
   );
   const verifier = await (await ethers.getContractFactory("VinculumFinalisVerifier")).deploy(await vclm.getAddress(), await chonx.getAddress());
   expect(await verifier.getAddress()).to.equal(predicted);
