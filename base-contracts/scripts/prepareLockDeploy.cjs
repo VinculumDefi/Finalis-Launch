@@ -1,6 +1,10 @@
-// Prepare (do not broadcast) the 5% CommitmentVaultLock deployment on the seven
-// EVM chains: Base, Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain,
-// Avalanche C-Chain.
+// Prepare (do not broadcast) the 5% CommitmentVaultLock deployment on the six
+// non-Base EVM chains: Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain,
+// Avalanche C-Chain. The Base lock is BaseCommitmentVaultLock (t262u): it is
+// deployed inside the Base ceremony after VCLM, CHONX and the Forge (its
+// constructor takes their addresses), so it is not prepared here. `--check Base`
+// checks it (code hash with immutables masked, Dev Fund, the three protocol
+// token addresses, 5% on all sixteen durations).
 //
 // What it does (dry run, the only mode):
 //   - builds the exact creation transaction data for each chain:
@@ -35,8 +39,7 @@ const { EVM_DEV_FUND, rows } = require("../deployment/representativeBase.cjs");
 const OUT = path.join(__dirname, "..", "deployment", "lockDeploy.prepared.json");
 const ARTIFACT = path.join(__dirname, "..", "artifacts", "contracts", "CommitmentVaultLock.sol", "CommitmentVaultLock.json");
 
-// Order is the deployment order: the six non-Base locks first, Base last
-// (Base is deployed by base.html as step 1 of the Base ceremony).
+// The six non-Base locks, deployed first, in any order.
 const CHAINS = [
   { env: "Ethereum", chainId: 1, symbol: "ETH", page: "scripts/deploy-pages/ethereum.html", rpc: "https://ethereum-rpc.publicnode.com" },
   { env: "Arbitrum", chainId: 42161, symbol: "ETH", page: "scripts/deploy-pages/arbitrum.html", rpc: "https://arb1.arbitrum.io/rpc" },
@@ -44,16 +47,19 @@ const CHAINS = [
   { env: "Polygon", chainId: 137, symbol: "POL", page: "scripts/deploy-pages/polygon.html", rpc: "https://polygon-bor-rpc.publicnode.com" },
   { env: "BNB Smart Chain", chainId: 56, symbol: "BNB", page: "scripts/deploy-pages/bnb-smart-chain.html", rpc: "https://bsc-dataseed.bnbchain.org" },
   { env: "Avalanche", chainId: 43114, symbol: "AVAX", page: "scripts/deploy-pages/avalanche.html", rpc: "https://api.avax.network/ext/bc/C/rpc" },
-  { env: "Base", chainId: 8453, symbol: "ETH", page: "scripts/deploy-pages/base.html (ceremony step 1)", rpc: "https://mainnet.base.org" },
 ];
+// Base: BaseCommitmentVaultLock, deployed by base.html inside the ceremony
+// (after VCLM, CHONX, Verifier, Forge and Stake). Checked only.
+const BASE = { env: "Base", chainId: 8453, symbol: "ETH", page: "scripts/deploy-pages/base.html (ceremony, 6th prompt)", rpc: "https://mainnet.base.org" };
+const BASE_ARTIFACT = path.join(__dirname, "..", "artifacts", "contracts", "BaseCommitmentVaultLock.sol", "BaseCommitmentVaultLock.json");
 const DURATIONS = [3600, 604800, 2592000, 5184000, 7776000, 15552000, 31536000, 63072000, 94608000, 126144000,
   157680000, 189216000, 220752000, 252288000, 283824000, 315360000];
 const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
 
-function artifact() {
-  if (!fs.existsSync(ARTIFACT)) throw new Error("CommitmentVaultLock artifact missing: run npx hardhat compile first");
-  const a = JSON.parse(fs.readFileSync(ARTIFACT, "utf8"));
-  if (!a.bytecode || a.bytecode === "0x") throw new Error("CommitmentVaultLock has no bytecode");
+function artifact(file = ARTIFACT) {
+  if (!fs.existsSync(file)) throw new Error(path.basename(file) + " artifact missing: run npx hardhat compile first");
+  const a = JSON.parse(fs.readFileSync(file, "utf8"));
+  if (!a.bytecode || a.bytecode === "0x") throw new Error(path.basename(file) + " has no bytecode");
   return a;
 }
 
@@ -132,14 +138,31 @@ async function prepare({ withRpc = true } = {}) {
 
 // Read-only post-deploy check. provider: an ethers provider for the chain.
 async function check(provider, env, address, { expectedRuntimeHash, devFund = devFundFor(env), probeFrom } = {}) {
-  const a = artifact();
+  const isBase = env === "Base";
+  const a = artifact(isBase ? BASE_ARTIFACT : ARTIFACT);
   const iface = new ethers.Interface(a.abi);
   const results = [];
   const ok = (name, pass, detail) => results.push({ name, pass, detail });
   const code = await provider.getCode(address);
   ok("code present", code !== "0x", ((code.length - 2) / 2) + " bytes");
-  if (expectedRuntimeHash) ok("runtime code hash", ethers.keccak256(code) === expectedRuntimeHash, ethers.keccak256(code));
   const call = async (fn, args = [], extra = {}) => iface.decodeFunctionResult(fn, await provider.call({ to: address, data: iface.encodeFunctionData(fn, args), ...extra }));
+  if (isBase) {
+    // Base lock: code hash with the four immutables masked, then the three
+    // protocol token addresses it refuses (VF-TOK-007).
+    const { LOCK_RUNTIME_HASH, maskedCodeHash } = require("./applyCeremonyAddresses.cjs");
+    const h = code === "0x" ? "none" : maskedCodeHash(code);
+    ok("runtime code hash (immutables masked)", h === LOCK_RUNTIME_HASH, h);
+    const sym = new ethers.Interface(["function symbol() view returns (string)"]);
+    for (const [fn, want] of [["vclmToken", "VCLM"], ["chonxToken", "CHONX"], ["synthToken", "SYNTH"]]) {
+      const t = ethers.getAddress((await call(fn))[0]);
+      let got = "no code";
+      if ((await provider.getCode(t)) !== "0x") {
+        try { got = sym.decodeFunctionResult("symbol", await provider.call({ to: t, data: sym.encodeFunctionData("symbol") }))[0]; } catch { got = "no symbol()"; }
+      }
+      ok(`${fn} is ${want}`, got === want, short(t) + " " + got);
+      ok(`isProtocolToken(${want}) = true`, (await call("isProtocolToken", [t]))[0] === true, short(t));
+    }
+  } else if (expectedRuntimeHash) ok("runtime code hash", ethers.keccak256(code) === expectedRuntimeHash, ethers.keccak256(code));
   ok("environmentId", (await call("environmentId"))[0] === env, env);
   ok("devFund", ethers.getAddress((await call("devFund"))[0]) === ethers.getAddress(devFund), short(devFund));
   ok("STANDARD_FEE_BPS = 500", (await call("STANDARD_FEE_BPS"))[0] === 500n, "500");
@@ -164,7 +187,7 @@ async function check(provider, env, address, { expectedRuntimeHash, devFund = de
   return { pass: results.every((r) => r.pass), results };
 }
 
-module.exports = { CHAINS, DURATIONS, prepare, check, devFundFor, initCode };
+module.exports = { CHAINS, BASE, DURATIONS, prepare, check, devFundFor, initCode };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);
@@ -174,7 +197,7 @@ if (require.main === module) {
     }
     if (argv[0] === "--check") {
       const [, env, address, probeFrom] = argv;
-      const c = CHAINS.find((x) => x.env === env);
+      const c = [...CHAINS, BASE].find((x) => x.env === env);
       if (!c || !ethers.isAddress(address) || (probeFrom && !ethers.isAddress(probeFrom))) throw new Error("usage: --check <Environment> <lockAddress> [probeSender]");
       const prepared = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : null;
       const exp = prepared && prepared.chains.find((x) => x.environmentId === env);
