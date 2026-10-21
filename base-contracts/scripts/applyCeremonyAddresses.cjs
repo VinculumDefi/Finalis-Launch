@@ -38,7 +38,17 @@ const EVM_ENVS = ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chai
 const READER_ENVS = ["Base", ...EVM_ENVS, ...DATA.readers.utxo.map((r) => r.env), DATA.readers.stellar.env, DATA.readers.xrpl.env];
 const BASE_KEYS = ["lock", "vclm", "chonx", "verifier", "forge", "stake"];
 const LOG_LABEL = { lock: "Base lock", vclm: "VCLM", chonx: "CHONX", verifier: "Verifier", forge: "Forge", stake: "Stake" };
-const LOCK_RUNTIME_HASH = "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305";
+// Base lock = BaseCommitmentVaultLock (t262u). Its runtime code holds four
+// immutables (Dev Fund, VCLM, CHONX, SYNTH), so the code hash is taken with the
+// immutable byte ranges zeroed (ranges from the compiler's immutableReferences),
+// and the immutables are checked by their getters.
+const LOCK_RUNTIME_HASH = "0x848f60b29d9f65237fe985b0aab7937a0b6503d7885beac4226b5d469bd35019";
+const LOCK_IMMUTABLE_RANGES = [[1356, 32], [2578, 32], [4336, 32], [5178, 32], [5252, 32], [5406, 32], [5955, 32], [6011, 32], [6051, 32]];
+function maskedCodeHash(codeHex) {
+  const code = Buffer.from(codeHex.replace(/^0x/, ""), "hex");
+  for (const [start, len] of LOCK_IMMUTABLE_RANGES) code.fill(0, start, start + len);
+  return ethers.keccak256(code);
+}
 
 // Old contracts. None may appear as a new address.
 const RETIRED = {
@@ -166,14 +176,21 @@ async function verifyOnChain(provider, rec, art = require("./deploy-pages/ceremo
   eq("Stake.verifier", await c("VinculumFinalisStake", rec.base.stake).verifier(), rec.base.verifier);
   eq("Base reader.vault", await c("BaseLockRecordVerifier", rec.readers.Base).vault(), rec.base.lock);
   for (const r of DATA.readers.evm) eq(r.env + " reader.lock", await c(r.contract, rec.readers[r.env]).lock(), rec.locks[r.env]);
-  const lock = c("CommitmentVaultLock", rec.base.lock);
+  const lock = c("BaseCommitmentVaultLock", rec.base.lock);
   eq("Base lock STANDARD_FEE_BPS", await lock.STANDARD_FEE_BPS(), 500n);
-  eq("Base lock runtime code hash", ethers.keccak256(await provider.getCode(rec.base.lock)), LOCK_RUNTIME_HASH);
+  eq("Base lock runtime code hash (immutables masked)", maskedCodeHash(await provider.getCode(rec.base.lock)), LOCK_RUNTIME_HASH);
+  eq("Base lock devFund", await lock.devFund(), DATA.devFund);
+  eq("Base lock vclmToken", await lock.vclmToken(), rec.base.vclm);
+  eq("Base lock chonxToken", await lock.chonxToken(), rec.base.chonx);
+  eq("Base lock synthToken", await lock.synthToken(), rec.base.forge);
   const launch = await v.protocolLaunchTimestamp();
-  // Stake keeps its own launch time (the VCLM deploy block); the app's emission
-  // decay reads the Verifier's protocolLaunchTimestamp, which is recorded here.
+  // T0: the Verifier's protocolLaunchTimestamp (set at finalize). The Stake
+  // contract reads the same value (t262u), so epochs and emission decay agree.
   if (launch === 0n) problems.push("verifier.protocolLaunchTimestamp is zero");
-  else rec.launchTimestamp = Number(launch);
+  else {
+    eq("Stake.launchTimestamp", await c("VinculumFinalisStake", rec.base.stake).launchTimestamp(), launch);
+    rec.launchTimestamp = Number(launch);
+  }
   return problems;
 }
 
@@ -272,7 +289,7 @@ async function main(argv) {
   }
 }
 
-module.exports = { parseCeremonyLog, parseLocks, buildRecord, verifyOnChain, renderAppFile, base44Values, RETIRED, READER_ENVS, EVM_ENVS, APP_FILE, LOCK_RUNTIME_HASH };
+module.exports = { parseCeremonyLog, parseLocks, buildRecord, verifyOnChain, renderAppFile, base44Values, RETIRED, READER_ENVS, EVM_ENVS, APP_FILE, LOCK_RUNTIME_HASH, LOCK_IMMUTABLE_RANGES, maskedCodeHash };
 
 if (require.main === module) {
   main(process.argv.slice(2)).catch((e) => { console.error("STOPPED: " + (e && e.message ? e.message : e)); process.exitCode = 1; });
