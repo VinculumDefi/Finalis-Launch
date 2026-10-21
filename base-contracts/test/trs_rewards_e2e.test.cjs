@@ -349,23 +349,32 @@ describe("t264u reward VCLM counts toward the 10,000,000 CHONX threshold (real c
     T0 = await h.r.verifier.protocolLaunchTimestamp();
   });
 
-  it("lock VCLM about 1,000 short of 10M; the epoch reward crosses it; anyone records activation once; the refused CHONX lock then mints", async () => {
+  it("lock VCLM about 1,000 short of 10M; the epoch reward crosses it; anyone records activation once; the earlier CHONX lock stays refused (VF-COM-025); a lock created after activation mints", async () => {
     const { cum, reward, p0 } = await crossWithReward(h, staker, T0);
     const b0 = await h.r.vclm.balanceOf(staker.address);
     await (await h.r.stake.connect(staker).claimPosition(0n, 2n)).wait();
     expect((await h.r.vclm.balanceOf(staker.address)) - b0).to.equal(reward); // single staker gets it all (floor of 100%)
     await expect(h.r.verifier.connect(staker).syncChonxActivation()).to.emit(h.r.verifier, "ChonxActivated");
     expect(await h.r.verifier.chonxActivated()).to.equal(true);
+    const actTime = await h.r.verifier.chonxActivationTimestamp();
+    expect(actTime).to.equal(BigInt((await ethers.provider.getBlock("latest")).timestamp));
     await expect(h.r.verifier.syncChonxActivation()).to.not.emit(h.r.verifier, "ChonxActivated");
+    // t271u VF-COM-025: the lock created before activation is refused, now and later.
+    await expect(h.r.verifier.verifyAndMint(p0, 0)).to.be.revertedWith("VF-COM-025: lock created before CHONX activation");
+    await setTime(actTime + 30n * 86400n);
+    await expect(h.r.verifier.verifyAndMint(p0, 0)).to.be.revertedWith("VF-COM-025: lock created before CHONX activation");
+    // A CHONX lock created after the recorded activation mints (empty receipt: the receipt is not read).
+    const c1 = await h.ethLock(1n * SCALE, DAY7, 1);
+    expect(c1.rec.createdAt).to.be.gt(actTime);
     const ch0 = await h.r.chonx.balanceOf(h.recipient.address);
-    await (await h.r.verifier.verifyAndMint(p0, 0)).wait();
+    expect(await h.settle(c1.lockId, c1.rec, ETH_ID, 2, "0x")).to.be.gt(0n);
     expect((await h.r.chonx.balanceOf(h.recipient.address)) - ch0).to.be.gt(0n);
     expect(await h.r.verifier.cumulativeVclmIssued()).to.equal(cum);
-    console.log(`      lock VCLM ${fmt(cum)} (below 10M); reward ${fmt(reward)}; lifetime ${fmt(cum + reward)}; CHONX opened on the reward`);
+    console.log(`      lock VCLM ${fmt(cum)} (below 10M); reward ${fmt(reward)}; lifetime ${fmt(cum + reward)}; CHONX opened on the reward; the earlier lock stays refused`);
   });
 });
 
-describe("t264u a CHONX lock activates CHONX itself once rewards took lifetime VCLM past 10M", function () {
+describe("t271u CHONX activation not yet recorded after rewards crossed 10M (VF-COM-025)", function () {
   this.timeout(900000);
   const h = harness("none");
   let T0, staker;
@@ -375,12 +384,19 @@ describe("t264u a CHONX lock activates CHONX itself once rewards took lifetime V
     T0 = await h.r.verifier.protocolLaunchTimestamp();
   });
 
-  it("no separate call and no further VCLM lock: verifyAndMint for CHONX emits ChonxActivated and mints CHONX", async () => {
-    const { cum, p0 } = await crossWithReward(h, staker, T0);
+  it("a CHONX lock created before activation is recorded is refused (its own mint call cannot activate and cure it); after syncChonxActivation a later lock mints", async () => {
+    const { cum } = await crossWithReward(h, staker, T0);
     expect(await h.r.verifier.chonxActivated()).to.equal(false);
-    const ch0 = await h.r.chonx.balanceOf(h.recipient.address);
-    await expect(h.r.verifier.verifyAndMint(p0, 0)).to.emit(h.r.verifier, "ChonxActivated");
-    expect((await h.r.chonx.balanceOf(h.recipient.address)) - ch0).to.be.gt(0n);
+    // Created while lifetime VCLM is past 10M but activation is not recorded.
+    const c = await h.ethLock(1n * SCALE, DAY7, 1);
+    const pc = h.pkg(c.lockId, c.rec, ETH_ID, 2, "0x01");
+    await (await h.r.verifier.recordFeeAndRac(pc)).wait();
+    await expect(h.r.verifier.verifyAndMint(pc, 0)).to.be.revertedWith("VF-COM-025: lock created before CHONX activation");
+    expect(await h.r.verifier.chonxActivated()).to.equal(false); // the reverted call recorded nothing
+    await expect(h.r.verifier.syncChonxActivation()).to.emit(h.r.verifier, "ChonxActivated");
+    await expect(h.r.verifier.verifyAndMint(pc, 0)).to.be.revertedWith("VF-COM-025: lock created before CHONX activation");
+    const d = await h.ethLock(1n * SCALE, DAY7, 1);
+    expect(await h.settle(d.lockId, d.rec, ETH_ID, 2, "0x")).to.be.gt(0n);
     expect(await h.r.verifier.cumulativeVclmIssued()).to.equal(cum);
   });
 });
