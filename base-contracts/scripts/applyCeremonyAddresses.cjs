@@ -223,7 +223,8 @@ function renderAppFile(rec) {
   for (const k of BASE_KEYS) lines.push(`  ${k}: ${base[k] ? JSON.stringify(base[k]) : P},`);
   lines.push("});");
   lines.push("");
-  lines.push("// The seven new 5% CommitmentVaultLock contracts (5% on every duration).");
+  lines.push("// The seven new 5% locks (5% on every duration): Base is BaseCommitmentVaultLock");
+  lines.push("// (refuses VCLM, CHONX and SYNTH as inputs); the six others are CommitmentVaultLock.");
   lines.push("export const LOCKS_5PCT = Object.freeze({");
   for (const env of ["Base", ...EVM_ENVS]) lines.push(`  ${JSON.stringify(env)}: ${locks[env] ? JSON.stringify(locks[env]) : P},`);
   lines.push("});");
