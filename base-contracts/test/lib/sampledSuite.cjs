@@ -330,14 +330,22 @@ describe(`Sampled CVL x 16 durations + TRS x 4 durations (seed "${SEED}")`, func
         }
         expect(await V.verifier.chonxActivated()).to.equal(true);
         expect(await V.verifier.cumulativeVclmIssued()).to.be.gte(R6.CHONX_ACTIVATION_THRESHOLD);
-        const activationBlock = await V.verifier.chonxActivationBlock();
-        const receipt = coder.encode(["uint256"], [activationBlock]);
-        // A CHONX package without an activation receipt is refused.
-        await lockProveMint(env, user, holder.address, dest.address, nativeAsset, 2592000n,
-          { output: 1, receipt: "0x", destSigner: dest, expectRevert: "VF-COM-025: missing activation receipt" });
-        // The CHONX lock, created after activation, at 30 days.
+        // t271u VF-COM-025: the reader's lock creation time must be after the
+        // recorded activation time (Base: strictly later; other chains: at
+        // least CHONX_SOURCE_CLOCK_MARGIN_SECS later). The receipt is not read.
+        const actTime = await V.verifier.chonxActivationTimestamp();
+        expect(actTime).to.be.gt(0n);
+        if (env !== "Base") {
+          const margin = await V.verifier.CHONX_SOURCE_CLOCK_MARGIN_SECS();
+          // Inside the margin: refused (and stays refused).
+          await lockProveMint(env, user, holder.address, dest.address, nativeAsset, 2592000n,
+            { output: 1, receipt: "0x01", destSigner: dest, expectRevert: "VF-COM-025: lock created before CHONX activation" });
+          const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+          if (now < actTime + margin) await network.provider.send("evm_setNextBlockTimestamp", [Number(actTime + margin)]);
+        }
+        // The CHONX lock, created after activation, at 30 days; an empty receipt is accepted.
         const l = await lockProveMint(env, user, holder.address, dest.address, nativeAsset, 2592000n,
-          { output: 1, receipt, destSigner: dest });
+          { output: 1, receipt: "0x", destSigner: dest });
         expect(BigInt(l.rec.createdAt)).to.be.gt(0n);
         expect(l.minted).to.equal(l.exp.issuance);
         expect(await V.chonx.balanceOf(holder.address)).to.equal(l.minted);
