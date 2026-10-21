@@ -1,13 +1,15 @@
-// t270u: Base44 section 7 (CHONX output) proved against the real Revision B
-// contracts on the in-process test chain, through the real ceremony flow.
+// t270u/t271u: Base44 section 7 (CHONX output) proved against the real
+// Revision B contracts on the in-process test chain, through the real
+// ceremony flow.
 //   - The read-only views section 7 uses exist with the stated selectors.
-//   - Before activation a CHONX-output mint is refused (VF-COM-025).
+//   - Before activation a CHONX-output mint is refused (VF-COM-025), and that
+//     lock stays refused after activation (t271u: the Verifier compares the
+//     lock record's creation time with the recorded activation time).
+//   - Same block: a CHONX lock in the activation block is refused, whichever
+//     order the two transactions have in the block.
 //   - After activation, the app's own proof package (the section 6 tuple,
-//     built exactly like lockMint.js) with selectedOutputToken 1 and the
-//     section 7 receipt abi.encode(uint256 chonxActivationBlock, uint256
-//     lockBlockNumber) mints CHONX to the lock's Base recipient; the same
-//     package with an empty receipt is refused (VF-COM-025: missing
-//     activation receipt).
+//     built exactly like lockMint.js) with selectedOutputToken 1 and receipt
+//     "0x" (not read) mints CHONX to the lock's Base recipient.
 // Nothing is broadcast. The app files are read, not changed.
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
@@ -26,6 +28,7 @@ const APP_VERIFIER_ABI = [
   `function verifyAndMint(${TUPLE} pkg, uint256 daysSinceLaunch) returns (bool)`,
   "function chonxActivated() view returns (bool)",
   "function chonxActivationBlock() view returns (uint256)",
+  "function chonxActivationTimestamp() view returns (uint256)",
   "function lifetimeVclmIssued() view returns (uint256)",
   "function CHONX_ACTIVATION_THRESHOLD() view returns (uint256)",
   "function syncChonxActivation()",
@@ -43,7 +46,7 @@ const coder = ethers.AbiCoder.defaultAbiCoder();
 
 describe("Base44 section 7: CHONX output from the app's own package (test chain)", function () {
   this.timeout(600000);
-  let r, user, recipient, C, verifier, lockRO, ethId, price;
+  let r, user, recipient, C, verifier, lockRO, ethId, price, preLock;
 
   before(async () => {
     const [signer, u, rcp] = await ethers.getSigners();
@@ -87,7 +90,7 @@ describe("Base44 section 7: CHONX output from the app's own package (test chain)
   it("section 7 ABI lines exist on the new Verifier with the stated selectors", () => {
     const app = new ethers.Interface(APP_VERIFIER_ABI);
     const real = new ethers.Interface(art.VinculumFinalisVerifier.abi);
-    const want = { recordFeeAndRac: "0xf0f64b60", verifyAndMint: "0x8c24712a", chonxActivated: "0x8dae0c3c", chonxActivationBlock: "0x702f8530", lifetimeVclmIssued: "0x7a197938", CHONX_ACTIVATION_THRESHOLD: "0xffeae027", syncChonxActivation: "0x609b7566" };
+    const want = { recordFeeAndRac: "0xf0f64b60", verifyAndMint: "0x8c24712a", chonxActivated: "0x8dae0c3c", chonxActivationBlock: "0x702f8530", chonxActivationTimestamp: "0xf6e7ea65", lifetimeVclmIssued: "0x7a197938", CHONX_ACTIVATION_THRESHOLD: "0xffeae027", syncChonxActivation: "0x609b7566" };
     for (const f of app.fragments) {
       if (f.type === "event") { expect(real.getEvent(f.name).topicHash).to.equal(app.getEvent(f.name).topicHash); continue; }
       expect(real.getFunction(f.name).selector, f.name).to.equal(f.selector);
@@ -104,6 +107,50 @@ describe("Base44 section 7: CHONX output from the app's own package (test chain)
     const p = c.pkg(coder.encode(["uint256", "uint256"], [0n, BigInt(c.receipt.blockNumber)]));
     await (await verifier.recordFeeAndRac(p)).wait();
     await expect(verifier.verifyAndMint(p, 0)).to.be.revertedWith("VF-COM-025: CHONX not activated");
+    preLock = p;
+  });
+
+  it("same block: a CHONX lock in the activation block is refused, in either order", async () => {
+    const big = await appLock(45n * SCALE, YEAR10, 0);
+    const pb = big.pkg("0x");
+    await (await verifier.recordFeeAndRac(pb)).wait();
+    const lockW = new ethers.Contract(C.lock, art.BaseCommitmentVaultLock.abi, user);
+    const wei = SCALE / 100n;
+    for (const activationFirst of [true, false]) {
+      const snap = await ethers.provider.send("evm_snapshot", []);
+      const lockId = ethers.hexlify(ethers.randomBytes(32));
+      const sendLock = () => lockW.createNativeLock(lockId, recipient.address, 1, ethId, ethers.ZeroHash, user.address, DAY30, (wei * price) / SCALE, { value: wei, gasLimit: 1_000_000 });
+      const sendAct = () => r.verifier.verifyAndMint(pb, 0, { gasLimit: 8_000_000 });
+      await ethers.provider.send("evm_setAutomine", [false]);
+      const t1 = activationFirst ? await sendAct() : await sendLock();
+      const t2 = activationFirst ? await sendLock() : await sendAct();
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_setAutomine", [true]);
+      const [r1, r2] = [await t1.wait(), await t2.wait()];
+      expect(r1.blockNumber).to.equal(r2.blockNumber);
+      expect(await verifier.chonxActivated()).to.equal(true);
+      const rec = await lockRO.lockRecord(lockId);
+      expect(rec.createdAt).to.equal(await verifier.chonxActivationTimestamp());
+      const lockRc = activationFirst ? r2 : r1;
+      const i = new ethers.Interface(LOCK_RECORD_ABI);
+      const feeLog = lockRc.logs.find((l) => l.topics[0] === i.getEvent("FeeRouted").topicHash && l.topics[1] === lockId);
+      const p = {
+        sourceEnvironmentId: "Base", commitmentVaultLockId: lockId, handshakeAllowanceCount: 3,
+        canonicalAssetId: rec.assetIdentity, assetPrecision: 18, assetCustodyClass: 2,
+        grossAmountSmallestUnits: rec.gross, actualFeeAmountSmallestUnits: rec.fee, principalAmountSmallestUnits: rec.principal, feeAssetId: rec.assetIdentity,
+        devFundDestination: await lockRO.devFund(), feeTransferEvidence: lockRc.hash,
+        valuationTimestamp: rec.createdAt, maturityTimestamp: rec.maturity, durationSecs: rec.duration,
+        selectedOutputToken: 1, baseRecipient: rec.baseRecipient, releaseDestination: rec.releaseDestination, chonxActivationReceipt: "0x",
+        racIdentity: ethers.solidityPackedKeccak256(["string", "bytes32", "bytes32", "uint256", "bytes32", "uint256"], ["Base", lockId, lockRc.hash, feeLog.index, rec.assetIdentity, rec.fee]),
+        priceRecord: "0x",
+        sourceFinalityProof: coder.encode(["bytes32", "uint256", "uint8", "uint256", "bool", "bool"], [lockRc.blockHash, lockRc.blockNumber, 6, 0, false, false]),
+        lockEventProof: coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"], [lockId, rec.gross, rec.fee, rec.principal, rec.duration, rec.createdAt, rec.maturity]),
+      };
+      await (await verifier.recordFeeAndRac(p)).wait();
+      await expect(verifier.verifyAndMint(p, 0)).to.be.revertedWith("VF-COM-025: lock created before CHONX activation");
+      await ethers.provider.send("evm_revert", [snap]);
+    }
+    expect(await verifier.chonxActivated()).to.equal(false);
   });
 
   it("a VCLM lock crosses 10,000,000; chonxActivated and chonxActivationBlock are set", async () => {
@@ -116,19 +163,15 @@ describe("Base44 section 7: CHONX output from the app's own package (test chain)
     expect(await verifier.chonxActivationBlock()).to.be.gt(0n);
   });
 
-  it("after activation: empty receipt refused; the section 7 receipt mints CHONX to the Base recipient", async () => {
+  it("after activation: the pre-activation CHONX lock stays refused; a later lock with receipt 0x mints CHONX to the Base recipient", async () => {
     const actBlock = await verifier.chonxActivationBlock();
-    // Empty receipt (the current app's "0x") on a CHONX lock: refused.
-    const e = await appLock(1n * SCALE / 100n, DAY30, 1);
-    const pe = e.pkg("0x");
-    await (await verifier.recordFeeAndRac(pe)).wait();
-    await expect(verifier.verifyAndMint(pe, 0)).to.be.revertedWith("VF-COM-025: missing activation receipt");
-    // Section 7 receipt.
+    const actTime = await verifier.chonxActivationTimestamp();
+    await expect(verifier.verifyAndMint(preLock, 0)).to.be.revertedWith("VF-COM-025: lock created before CHONX activation");
     const c = await appLock(1n * SCALE / 100n, DAY30, 1);
     expect(BigInt(c.receipt.blockNumber)).to.be.gt(actBlock);
+    expect(c.record.createdAt).to.be.gt(actTime);
     expect(c.record.outputToken).to.equal(1n);
-    const receiptBytes = coder.encode(["uint256", "uint256"], [actBlock, BigInt(c.receipt.blockNumber)]);
-    expect(ethers.dataLength(receiptBytes)).to.equal(64);
+    const receiptBytes = "0x";
     const p = c.pkg(receiptBytes);
     await (await verifier.recordFeeAndRac(p)).wait();
     const mintReceipt = await (await verifier.verifyAndMint(p, 0)).wait();
@@ -143,6 +186,6 @@ describe("Base44 section 7: CHONX output from the app's own package (test chain)
       .map((l) => t.parseLog(l).args).filter((x) => x.from === ethers.ZeroAddress && x.to === recipient.address).reduce((a, x) => a + x.value, 0n);
     expect(got).to.equal(ev.args.amount);
     expect(got).to.be.gt(0n);
-    console.log(`      CHONX lock at block ${c.receipt.blockNumber} (activation block ${actBlock}) minted ${ethers.formatEther(got)} CHONX; receipt ${receiptBytes.slice(0, 18)}…`);
+    console.log(`      CHONX lock at block ${c.receipt.blockNumber} (activation block ${actBlock}) minted ${ethers.formatEther(got)} CHONX; receipt 0x (not read)`);
   });
 });
