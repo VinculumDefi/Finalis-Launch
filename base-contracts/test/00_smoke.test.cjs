@@ -34,8 +34,7 @@ async function deploySystem() {
     await vclm.getAddress(),
     await chonx.getAddress(),
     await synthToken.getAddress(),
-    await verifier.getAddress(),
-    launchTimestamp
+    await verifier.getAddress()
   );
 
   // VF-DEP-004/006: one-shot initialization, then authority is gone.
