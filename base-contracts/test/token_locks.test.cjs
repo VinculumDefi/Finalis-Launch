@@ -32,7 +32,7 @@ async function setup({ polygon = false } = {}) {
   const verifier = await (await ethers.getContractFactory("VinculumFinalisVerifier")).deploy(await vclm.getAddress(), await chonx.getAddress());
   const launch = (await ethers.provider.getBlock("latest")).timestamp;
   const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(
-    await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress(), await verifier.getAddress(), launch);
+    await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress(), await verifier.getAddress());
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
   const lock = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Base", devFund.address);
