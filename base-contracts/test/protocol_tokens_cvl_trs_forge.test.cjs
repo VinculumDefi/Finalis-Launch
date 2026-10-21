@@ -1,15 +1,13 @@
-// PROOF ONLY (operator t259u), in-process Hardhat chain, nothing broadcast.
+// PROOF ONLY (operator t259u/t260u/t262u), in-process Hardhat chain, nothing broadcast.
 // Rev 6 VF-TOK-007 and VF-REG-008: VCLM, CHONX and SYNTH are prohibited Commitment
 // Vault Lock (CVL) inputs. TRS (stake) and the SYNTH Forge are separate mechanisms.
-// The real Base ceremony flow (baseCeremonyFlow.js) runs UNCHANGED.
-//   Path A: 487 rows (tonight's build).
-//   Path B: rows 488-490 (VCLM $0.10, CHONX $0.01, SYNTH $200 via run 2) AND their
-//           token addresses indexed (478).
-//   Path C: rows 488-490 written and priced, token addresses NOT indexed (475).
-// t260u settled rules: CVL takes only external assets; TRS takes VCLM, CHONX and
-// SYNTH; SYNTH forging needs 100,000,000 lifetime CHONX (VF-TOK-003), so the
-// Forge's 100M check is EXPECTED. Findings are pinned as CURRENT CONTRACT
-// BEHAVIOUR. No contract is changed.
+// The real Base ceremony flow (baseCeremonyFlow.js) runs as committed.
+//   Path A: 487 rows (the ceremony as built). The Base lock refuses the three
+//           protocol tokens before any token moves (t262u).
+//   Path B: rows 488-490 with their token addresses: the Verifier refuses the
+//           index write (VF-REG-008), so that ceremony never finalizes.
+// Settled t260u: SYNTH forging needs 100,000,000 lifetime CHONX (VF-TOK-003).
+// TRS reward amounts are proven in test/trs_rewards_e2e.test.cjs.
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
@@ -160,48 +158,30 @@ function protoTokens(h) {
   ];
 }
 
-// CVL attempt that must be refused; returns the lock for the release check.
+// t262u: the Base lock (BaseCommitmentVaultLock) refuses the protocol tokens
+// as its first check, so no token moves, no fee is taken, no lock exists.
 async function cvlRefused(h, sym, token, id, price, amount, label) {
   const { r } = h;
-  const dev0 = await token.balanceOf(DATA.devFund);
-  const lockBal0 = await token.balanceOf(await r.lock.getAddress());
+  const L = await r.lock.getAddress();
+  await (await token.connect(h.recipient).approve(L, amount)).wait();
+  const u0 = await token.balanceOf(h.recipient.address), l0 = await token.balanceOf(L), d0 = await token.balanceOf(DATA.devFund);
   const v0 = await r.vclm.totalSupply(), c0 = await r.chonx.totalSupply();
-  const { lockId, rec } = await h.tokenLock(token, id, price, h.recipient, amount, DAY7, 0);
-  // The Base lock accepts it: the 5% fee goes to the Dev Fund now, the principal is held.
-  expect(rec.exists).to.equal(true);
-  expect(rec.fee).to.equal(amount / 20n);
-  expect((await token.balanceOf(DATA.devFund)) - dev0).to.equal(amount / 20n);
-  expect((await token.balanceOf(await r.lock.getAddress())) - lockBal0).to.equal(amount - amount / 20n);
-  // Verifier, package naming the protocol row id: refused at the asset check
-  await expect(r.verifier.recordFeeAndRac(h.pkg(lockId, rec, id, 3))).to.be.revertedWith("VF-XCH-011: asset mismatch");
-  // Verifier, package naming the reader's own token key: refused at the registry check
-  const proven = await r.readers.Base.extractAssetId(h.pkg(lockId, rec, id, 3).lockEventProof);
-  expect(proven).to.equal(await r.verifier.tokenAddressKey("Base", await token.getAddress()));
-  expect(await r.verifier.tokenAssetIndex(proven)).to.equal(ethers.ZeroHash);
-  await expect(r.verifier.recordFeeAndRac(h.pkg(lockId, rec, proven, 3))).to.be.revertedWith("VF-REG-001: asset not in registry");
-  // Mint without a recorded fee: refused
-  await expect(r.verifier.verifyAndMint(h.pkg(lockId, rec, id, 3), 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
+  const lockId = ethers.hexlify(ethers.randomBytes(32));
+  await expect(r.lock.connect(h.recipient).createErc20Lock(lockId, h.recipient.address, 0, id, ethers.ZeroHash, h.dest.address, DAY7,
+    await token.getAddress(), amount, usdOf(amount, price))).to.be.revertedWith("VF-TOK-007: protocol token is not a lock input");
+  expect(await token.balanceOf(h.recipient.address)).to.equal(u0);
+  expect(await token.balanceOf(L)).to.equal(l0);
+  expect(await token.balanceOf(DATA.devFund)).to.equal(d0);
+  expect((await r.lock.lockRecord(lockId)).exists).to.equal(false);
   expect(await r.vclm.totalSupply()).to.equal(v0);
   expect(await r.chonx.totalSupply()).to.equal(c0);
-  console.log(`      [${label}] ${sym} CVL lock: Base lock accepted, fee ${fmt(amount / 20n)} ${sym} to Dev Fund, verifier refused (VF-XCH-011 asset mismatch / VF-REG-001), nothing minted`);
-  return { lockId, rec, token, amount, sym };
+  await (await token.connect(h.recipient).approve(L, 0)).wait();
+  console.log(`      [${label}] ${sym} lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted`);
 }
 
-async function releaseAfterMaturity(h, locks, label) {
-  for (const l of locks) await expect(h.r.lock.connect(h.dest).release(l.lockId)).to.be.revertedWith("CVL: immature");
-  await advance(DAY7 + 1n);
-  for (const l of locks) {
-    const b0 = await l.token.balanceOf(h.dest.address);
-    await (await h.r.lock.connect(h.dest).release(l.lockId)).wait();
-    expect((await l.token.balanceOf(h.dest.address)) - b0).to.equal(l.amount - l.amount / 20n);
-    console.log(`      [${label}] ${l.sym} principal ${fmt(l.amount - l.amount / 20n)} released to the release destination after maturity; the 5% fee is not returned`);
-  }
-}
-
-describe("t259u Path A (487 rows): protocol tokens refused as CVL inputs; TRS stake; Forge threshold (proof, test chain)", function () {
+describe("t259u/t262u Path A (487 rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
-  const held = [];
   before(async () => { await h.setup(); });
 
   it("A0: 487 rows / 475 token addresses; no protocol-token row or index entry; finalized", async () => {
@@ -216,135 +196,49 @@ describe("t259u Path A (487 rows): protocol tokens refused as CVL inputs; TRS st
   });
 
   for (const sym of ["VCLM", "CHONX", "SYNTH"]) {
-    it(`A1: ${sym} as a CVL input is accepted by the Base lock and refused by the Verifier; nothing minted`, async () => {
+    it(`A1: ${sym} as a lock input is refused by the Base lock before any token moves or fee`, async () => {
       const [, token, id, price, amount] = protoTokens(h).find((t) => t[0] === sym);
-      held.push(await cvlRefused(h, sym, token, id, price, amount, "A"));
+      await cvlRefused(h, sym, token, id, price, amount, "A");
     });
   }
 
-  it("A1 user safety: the principal of each refused lock is released after maturity; the fee stays with the Dev Fund", async () => {
-    await releaseAfterMaturity(h, held, "A");
-  });
-
-  it("A3 TRS (VF-STK-002): stake VCLM, CHONX and SYNTH for 30 days; epochs close and allocate with reward basis 0; nothing to claim; unstake returns each", async () => {
+  it("A3 TRS (VF-STK-002/003): VCLM, CHONX and SYNTH are accepted at 1x/2x/4x; other tokens and durations refused; epoch 1 credits with no eligible weight mint nothing; unstake returns each", async () => {
     const { r, recipient } = h;
     const S = await r.stake.getAddress();
-    // fee RAC exists on the Verifier side
-    const e = await h.ethLock(1n * SCALE, DAY7);
-    await h.settle(e.lockId, e.rec, ETH_ID, 2);
-    const rac = await r.verifier.racCredits(ethers.id("rac:" + e.lockId));
-    expect(rac).to.be.gt(0n);
     await expect(r.stake.connect(recipient).createPosition(0, SCALE, 12345)).to.be.revertedWith("VF-STK-003: duration not permitted");
     await expect(r.stake.connect(recipient).createPosition(3, SCALE, DAY30)).to.be.revertedWith("VF-STK-002: invalid token");
     await expect(r.stake.connect(recipient).createPosition(0, 0, DAY30)).to.be.revertedWith("VF-STK-031: zero amount");
-    const stakes = [[0, "VCLM", r.vclm, 1000n * SCALE, 1n], [1, "CHONX", r.chonx, 10_000n * SCALE, 2n], [2, "SYNTH", r.forge, SCALE, 4n]];
+    const stakes = [[0, r.vclm, 1000n * SCALE, 1n], [1, r.chonx, 10_000n * SCALE, 2n], [2, r.forge, SCALE, 4n]];
     const ids = [], bal0 = [];
-    for (const [t, , token, amount, mult] of stakes) {
+    for (const [t, token, amount, mult] of stakes) {
       bal0.push(await token.balanceOf(recipient.address));
       await (await token.connect(recipient).approve(S, amount)).wait();
       const id = await r.stake.nextPositionId();
       await (await r.stake.connect(recipient).createPosition(t, amount, DAY30)).wait();
-      expect(await r.stake.getPositionWeight(id)).to.equal(amount * mult); // token multiplier x 1.0x for 30 days
-      expect(await token.balanceOf(S)).to.equal(amount);
+      expect(await r.stake.getPositionWeight(id)).to.equal(amount * mult);
       ids.push(id);
     }
     await expect(r.stake.connect(recipient).withdrawPosition(ids[0])).to.be.revertedWith("VFS: not matured");
-    const startEpoch = await r.stake.getCurrentEpoch();
+    expect(await r.verifier.epochRewardBasis(1n)).to.be.gt(0n);
     await advance(DAY30 + EPOCH);
-    const last = await r.stake.getCurrentEpoch() - 1n;
-    let qualifying = 0n, weight = 0n;
-    for (let n = 1n; n <= last; n++) {
-      if (!(await r.stake.epochs(n)).closed) await (await r.stake.closeEpoch(n)).wait();
-    }
-    for (let n = 1n; n + 1n < last; n++) {
-      const ep = await r.stake.epochs(n);
-      if (!ep.allocated) await (await r.stake.allocateEpoch(n)).wait();
-      const after = await r.stake.epochs(n);
-      if (after.totalWeight > 0n) { qualifying++; weight = after.totalWeight; }
-      expect(after.rewardBasis).to.equal(0n); // never written (Stake line 306)
-      expect(after.mintedVclm).to.equal(0n);
-    }
-    expect(qualifying).to.be.gt(0n);
-    expect(await r.stake.getClaimableVclm(recipient.address)).to.equal(0n);
-    await expect(r.stake.connect(recipient).claimVclm()).to.be.revertedWith("VFS: no claimable");
+    const last = (await r.stake.getCurrentEpoch()) - 1n;
+    for (let n = 1n; n <= last; n++) await (await r.stake.closeEpoch(n)).wait();
+    await (await r.stake.allocateEpoch(1n)).wait();
+    const ep1 = await r.stake.epochs(1n);
+    expect(ep1.totalWeight).to.equal(0n); // positions began after T0 (VF-STK-011)
+    expect(ep1.mintedVclm).to.equal(0n);  // VF-STK-015
     for (let i = 0; i < stakes.length; i++) {
       await (await r.stake.connect(recipient).withdrawPosition(ids[i])).wait();
-      expect(await stakes[i][2].balanceOf(recipient.address)).to.equal(bal0[i]);
+      expect(await stakes[i][1].balanceOf(recipient.address)).to.equal(bal0[i]);
     }
-    console.log(`      [A] TRS: staked 1,000 VCLM, 10,000 CHONX, 1 SYNTH in epoch ${startEpoch}; ${qualifying} epoch(s) with total weight ${fmt(weight)}; reward basis 0; VCLM rewarded 0 (RAC on Verifier for one lock: $${fmt(rac)}); unstake returned all three`);
   });
 });
 
-describe("t259u Path B (490 rows, 478 index entries): protocol tokens ACCEPTED as CVL inputs (proof, test chain)", function () {
+describe("t262u Path B (rows 488-490 with token addresses): the ceremony is refused at the token index (VF-REG-008)", function () {
   this.timeout(900000);
-  const h = harness("indexed");
-  before(async () => {
-    await h.setup();
-    await (await h.r.verifier.connect(h.poster).applyScheduledPriceRun(2n, [
-      { environmentId: "Base", canonicalAssetId: VCLM_ID, priceUsd18: FIXED.VCLM, success: true },
-      { environmentId: "Base", canonicalAssetId: CHONX_ID, priceUsd18: FIXED.CHONX, success: true },
-      { environmentId: "Base", canonicalAssetId: SYNTH_ID, priceUsd18: FIXED.SYNTH, success: true },
-    ])).wait();
-    await fundProtocolTokens(h, "B");
-  });
-
-  it("B0: registry 490/490, token addresses 478/478, finalized", async () => {
-    expect(h.logs).to.include("registry 490/490");
-    expect(h.logs).to.include("token addresses 478/478");
-    expect(await h.r.verifier.configurationFinalized()).to.equal(true);
-  });
-
-  for (const sym of ["VCLM", "CHONX", "SYNTH"]) {
-    it(`B CURRENT BEHAVIOUR (conflicts with VF-TOK-007 / VF-REG-008): ${sym} as a CVL input is accepted and mints VCLM`, async () => {
-      const [, token, id, price, amount] = protoTokens(h).find((t) => t[0] === sym);
-      const { lockId, rec } = await h.tokenLock(token, id, price, h.recipient, amount, DAY7, 0);
-      const minted = await h.settle(lockId, rec, id, 3);
-      expect(minted).to.equal((usdOf(amount, price) * 10n * rec.multiplierBps) / 10000n);
-      console.log(`      [B] ${sym} CVL lock of ${fmt(amount)} accepted; VCLM minted ${fmt(minted)}`);
-    });
-  }
-});
-
-describe("t259u Path C (490 rows priced, token addresses NOT indexed, 475): rows exist but are not CVL inputs (proof, test chain)", function () {
-  this.timeout(900000);
-  const h = harness("rowsOnly");
-  const held = [];
-  before(async () => {
-    await h.setup();
-    await (await h.r.verifier.connect(h.poster).applyScheduledPriceRun(2n, [
-      { environmentId: "Base", canonicalAssetId: VCLM_ID, priceUsd18: FIXED.VCLM, success: true },
-      { environmentId: "Base", canonicalAssetId: CHONX_ID, priceUsd18: FIXED.CHONX, success: true },
-      { environmentId: "Base", canonicalAssetId: SYNTH_ID, priceUsd18: FIXED.SYNTH, success: true },
-    ])).wait();
-    await fundProtocolTokens(h, "C");
-  });
-
-  it("C0: registry 490/490, token addresses 475/475, rows priced at the fixed values, finalized", async () => {
-    expect(h.logs).to.include("registry 490/490");
-    expect(h.logs).to.include("token addresses 475/475");
-    for (const [id, p] of [[VCLM_ID, FIXED.VCLM], [CHONX_ID, FIXED.CHONX], [SYNTH_ID, FIXED.SYNTH]]) {
-      expect((await h.r.verifier.assetPrecisionTable(key("Base", id))).canonicalAssetId).to.equal(id);
-      expect((await h.r.verifier.scheduledPrices(key("Base", id))).priceUsd18).to.equal(p);
-    }
-    expect(await h.r.verifier.configurationFinalized()).to.equal(true);
-  });
-
-  for (const sym of ["VCLM", "CHONX", "SYNTH"]) {
-    it(`C1: ${sym} as a CVL input is refused by the Verifier even with its row and price present; nothing minted`, async () => {
-      const [, token, id, price, amount] = protoTokens(h).find((t) => t[0] === sym);
-      held.push(await cvlRefused(h, sym, token, id, price, amount, "C"));
-    });
-  }
-
-  it("C2: a native ETH lock cannot claim a protocol row (the Base reader reports native ETH for every native lock)", async () => {
-    const lockId = ethers.hexlify(ethers.randomBytes(32));
-    await (await h.r.lock.connect(h.user).createNativeLock(lockId, h.recipient.address, 0, VCLM_ID, ethers.ZeroHash, h.dest.address, DAY7,
-      usdOf(SCALE, ETH_PRICE), { value: SCALE })).wait();
-    const rec = await h.r.lock.lockRecord(lockId);
-    await expect(h.r.verifier.recordFeeAndRac(h.pkg(lockId, rec, VCLM_ID, 3))).to.be.revertedWith("VF-XCH-011: asset mismatch");
-  });
-
-  it("C3: principal of each refused lock is released after maturity", async () => {
-    await releaseAfterMaturity(h, held, "C");
+  it("registerTokenAddressBatch refuses the protocol token addresses; no finalize", async () => {
+    const h = harness("indexed");
+    await expect(h.setup()).to.be.revertedWith("VF-REG-008: protocol token is not a lock input");
+    expect(h.logs).to.not.include("Finalized.");
   });
 });
