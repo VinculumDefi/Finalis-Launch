@@ -85,12 +85,19 @@ For each of Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche:
    If any line says FAIL, stop. Do not use that lock.
 
 ### Stage 2: Base lock (inside the Base ceremony)
-The new Base lock is deployed by `scripts/deploy-pages/base.html` as step 1 of
-the Base ceremony (see `LIVE_DEPLOYMENT_ORDER.md`). There is no separate Base
-lock page, because the ceremony must bind its Base reader to the lock it just
-deployed. The page logs the new Base lock address first. Run
+The new Base lock is `BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX,
+Forge)`, deployed by `scripts/deploy-pages/base.html` as the 6th prompt of the
+Base ceremony, right after VCLM, CHONX, the Verifier, Forge and Stake (see
+`LIVE_DEPLOYMENT_ORDER.md`). It holds the three protocol token addresses as
+fixed constructor values (no setter) and refuses them as lock inputs before any
+fee is taken (VF-TOK-007). There is no separate Base lock page, because the
+ceremony must bind its Base reader to the lock it just deployed and the lock
+needs the token addresses. The page logs `Base lock 0x…` after the five token
+and core contract lines. Run
 `node scripts/prepareLockDeploy.cjs --check Base <newBaseLockAddress>` before
-signing the next MetaMask prompt; if it fails, reject the prompt and stop.
+signing the 7th prompt; if it fails, reject the prompt and stop. The six
+non-Base locks stay plain `CommitmentVaultLock` (unchanged code, creation code
+hash `0x2daadaf6…80bd99`): VCLM, CHONX and SYNTH exist only on Base.
 
 ## Later steps (separate, NOT done now)
 These come after all seven locks pass the check. Each needs its own approval.
@@ -112,7 +119,8 @@ These come after all seven locks pass the check. Each needs its own approval.
 - The six non-Base locks must exist before the Base ceremony starts, because
   `base.html` asks for their addresses and binds readers to them before
   `finalize()`.
-- The Base lock is deployed first inside the ceremony, before the verifier.
+- The Base lock is deployed inside the ceremony after VCLM, CHONX, the
+  Verifier, Forge and Stake, and before the readers.
 - After `finalize()` no reader can be added, so a lock missed before finalize
   cannot be added later. Do not start the ceremony until all six checks pass.
 - The live finalized verifier `0xb067…f47D` is not changed by any of this.
@@ -134,6 +142,7 @@ not yet deployed; the live finalized verifier `0xb067…f47D` is unchanged):
 - The fee must still be exactly 5% of the real gross.
 - Every other chain keeps the $0.01 to $0.02 USD Handshake band, unchanged.
 - No lock contract changed. `ceremony.json` carries the new verifier
-  (creation code hash `0x63128c66…572263`). `scripts/broadcast.html` is retired
+  (creation code hash `0x63128c66…572263` at that commit; replaced in t262u,
+  see `DEPLOYMENT_DAY_RUNBOOK.md` 1.5 for the current hash). `scripts/broadcast.html` is retired
   (t251u) and embeds no contract.
 - `utxo-locks/lock.py`, its regtest and the app use the same band (t239u).
