@@ -16,9 +16,11 @@
 //   These rows conflict with Rev 6 VF-TOK-007 (protocol tokens are prohibited
 //   lock inputs) and, for SYNTH as an input, sit next to VF-TOK-006.
 //
-// FINDING pinned as CURRENT CONTRACT BEHAVIOUR: the Forge (VinculumFinalisSynth.sol
-// lines 61, 117 and 142) implements Rev 6 VF-TOK-003: forging is refused until
-// lifetime CHONX issuance reaches 100,000,000. That differs from settled rule (2).
+// Settled t260u: the Forge (VinculumFinalisSynth.sol lines 61, 117 and 142)
+// implements Rev 6 VF-TOK-003: forging is refused until lifetime CHONX issuance
+// reaches 100,000,000. Expected behaviour.
+// t262u: rows 488-490 are not written (they do nothing on chain). Indexing a
+// protocol token address is refused by the Verifier (VF-REG-008).
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
@@ -235,7 +237,7 @@ describe("Path A (487 rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH fo
     console.log("      [A] CHONX minted for 1 ETH, 7 days:", fmt(minted));
   });
 
-  it("A6 CURRENT BEHAVIOUR (mismatch with t257u rule 2): CHONX is available but the Forge still refuses until lifetime CHONX reaches 100,000,000", async () => {
+  it("A6 (Rev 6 VF-TOK-003, settled t260u): CHONX is available but the Forge refuses until lifetime CHONX reaches 100,000,000", async () => {
     expect(await h.r.forge.SYNTH_ACTIVATION_THRESHOLD()).to.equal(100_000_000n * SCALE);
     expect(await h.r.verifier.chonxActivated()).to.equal(true);
     expect(await h.r.verifier.cumulativeChonxIssued()).to.be.lt(100_000_000n * SCALE);
@@ -259,116 +261,13 @@ describe("Path A (487 rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH fo
   });
 });
 
-describe("Path B (490 rows: VCLM $0.10, CHONX $0.01, SYNTH $200 fixed): VCLM -> CHONX, CHONX and SYNTH locks, forge (proof, test chain)", function () {
+describe("Rows 488-490 with their token addresses are refused by the ceremony (t262u, VF-TOK-007 / VF-REG-008, test chain)", function () {
   this.timeout(900000);
-  const h = harness(true);
-  let pre; // VCLM->CHONX lock created before activation
-  before(async () => { await h.setup(); });
-
-  it("B0: the three addresses exist before the registry write; registry 490/490, token addresses 478/478, finalize succeeds", async () => {
-    const order = h.logs.map((s) => s.split(" ")[0]);
-    expect(order.indexOf("Forge")).to.be.lessThan(order.indexOf("registry"));
-    expect(h.addr.VCLM).to.equal(await h.r.vclm.getAddress());
-    expect(h.addr.CHONX).to.equal(await h.r.chonx.getAddress());
-    expect(h.addr.Forge).to.equal(await h.r.forge.getAddress());
+  it("the Verifier refuses to index VCLM, CHONX or SYNTH, so the ceremony stops before finalize", async () => {
+    const h = harness(true);
+    await expect(h.setup()).to.be.revertedWith("VF-REG-008: protocol token is not a lock input");
     expect(h.logs).to.include("registry 490/490");
-    expect(h.logs).to.include("token addresses 478/478");
-    expect(await h.r.verifier.configurationFinalized()).to.equal(true);
-    for (const [sym, id, a] of [["VCLM", VCLM_ID, h.addr.VCLM], ["CHONX", CHONX_ID, h.addr.CHONX], ["SYNTH", SYNTH_ID, h.addr.Forge]]) {
-      const row = await h.r.verifier.assetPrecisionTable(key("Base", id));
-      expect(row.symbol).to.equal(sym);
-      expect(row.decimals).to.equal(18n);
-      expect(row.custodyClass).to.equal(3n);
-      expect(row.custodyPath).to.equal(1n);
-      expect(await h.r.verifier.tokenAssetIndex(await h.r.verifier.tokenAddressKey("Base", a))).to.equal(id);
-    }
-    expect((await h.r.verifier.assetPrecisionTable(key("Base", ETH_ID))).canonicalAssetId).to.equal(ETH_ID);
-  });
-
-  it("B1: poster run 2 posts the three operator-fixed values", async () => {
-    await (await h.r.verifier.connect(h.poster).applyScheduledPriceRun(2n, [
-      { environmentId: "Base", canonicalAssetId: VCLM_ID, priceUsd18: FIXED.VCLM, success: true },
-      { environmentId: "Base", canonicalAssetId: CHONX_ID, priceUsd18: FIXED.CHONX, success: true },
-      { environmentId: "Base", canonicalAssetId: SYNTH_ID, priceUsd18: FIXED.SYNTH, success: true },
-    ])).wait();
-    for (const [id, p] of [[VCLM_ID, FIXED.VCLM], [CHONX_ID, FIXED.CHONX], [SYNTH_ID, FIXED.SYNTH]]) {
-      const sp = await h.r.verifier.scheduledPrices(key("Base", id));
-      expect(sp.usable).to.equal(true);
-      expect(sp.priceUsd18).to.equal(p);
-    }
-  });
-
-  it("B2: an ETH lock mints VCLM; a VCLM lock requesting CHONX before activation is refused at mint (VF-COM-025)", async () => {
-    const e = await h.ethLock(1n * SCALE, DAY7);
-    expect(await h.settle(e.lockId, e.rec, ETH_ID, 2)).to.be.gt(0n);
-    pre = await h.tokenLock(h.r.vclm, VCLM_ID, FIXED.VCLM, h.recipient, 1000n * SCALE, DAY7, 1);
-    const p = h.pkg(pre.lockId, pre.rec, VCLM_ID, 3, "0x01");
-    await (await h.r.verifier.recordFeeAndRac(p)).wait();
-    await expect(h.r.verifier.verifyAndMint(p, 0)).to.be.revertedWith("VF-COM-025: CHONX not activated");
-  });
-
-  it("B3: ordinary ETH lock crosses 10,000,000 lifetime VCLM; CHONX activates", async () => {
-    await h.crossChonxActivation();
-    expect(await h.r.verifier.chonxActivated()).to.equal(true);
-  });
-
-  it("B4: after activation, 10,000 VCLM locked 7 days requesting CHONX mints CHONX at the fixed $0.10", async () => {
-    const amount = 10_000n * SCALE;
-    const dev0 = await h.r.vclm.balanceOf(DATA.devFund);
-    const { lockId, rec } = await h.tokenLock(h.r.vclm, VCLM_ID, FIXED.VCLM, h.recipient, amount, DAY7, 1);
-    const minted = await h.settle(lockId, rec, VCLM_ID, 3, "0x01");
-    expect(minted).to.equal((usdOf(amount, FIXED.VCLM) * 100n * rec.multiplierBps) / 10000n);
-    expect((await h.r.vclm.balanceOf(DATA.devFund)) - dev0).to.equal(amount / 20n);
-    console.log("      [B] CHONX minted for 10,000 VCLM, 7 days:", fmt(minted), "| fee to Dev Fund:", fmt(amount / 20n), "VCLM");
-  });
-
-  it("B5: a CHONX lock (100,000 CHONX at fixed $0.01, 7 days, VCLM out) records the fee and mints VCLM", async () => {
-    const amount = 100_000n * SCALE;
-    const dev0 = await h.r.chonx.balanceOf(DATA.devFund);
-    const { lockId, rec } = await h.tokenLock(h.r.chonx, CHONX_ID, FIXED.CHONX, h.recipient, amount, DAY7, 0);
-    const minted = await h.settle(lockId, rec, CHONX_ID, 3);
-    expect(minted).to.equal((usdOf(amount, FIXED.CHONX) * 10n * rec.multiplierBps) / 10000n);
-    expect((await h.r.chonx.balanceOf(DATA.devFund)) - dev0).to.equal(amount / 20n);
-    expect(await h.r.verifier.isRacRecorded(ethers.id("rac:" + lockId))).to.equal(true);
-    console.log("      [B] VCLM minted for 100,000 CHONX ($1,000), 7 days:", fmt(minted), "| fee:", fmt(amount / 20n), "CHONX");
-  });
-
-  it("B6 CURRENT BEHAVIOUR (mismatch with t257u rule 2): Forge refuses while lifetime CHONX < 100,000,000", async () => {
-    const F = await h.r.forge.getAddress();
-    await (await h.r.vclm.connect(h.recipient).approve(F, 1000n * SCALE)).wait();
-    await (await h.r.chonx.connect(h.recipient).approve(F, 10_000n * SCALE)).wait();
-    await expect(h.r.forge.connect(h.recipient).forge(1)).to.be.revertedWith("VF-TOK-003: SYNTH not activated");
-    await (await h.r.vclm.connect(h.recipient).approve(F, 0)).wait();
-    await (await h.r.chonx.connect(h.recipient).approve(F, 0)).wait();
-  });
-
-  it("B7: after lifetime CHONX passes 100,000,000, forge SYNTH from VCLM + CHONX (exact burn)", async () => {
-    await h.crossSynthThreshold();
-    await forgeChecks(h, "B");
-  });
-
-  it("B8: a SYNTH lock (1 SYNTH at fixed $200, 7 days) records the fee and mints VCLM, and another mints CHONX", async () => {
-    const dev0 = await h.r.forge.balanceOf(DATA.devFund);
-    const a = await h.tokenLock(h.r.forge, SYNTH_ID, FIXED.SYNTH, h.recipient, SCALE, DAY7, 0);
-    const mv = await h.settle(a.lockId, a.rec, SYNTH_ID, 3);
-    expect(mv).to.equal((200n * SCALE * 10n * a.rec.multiplierBps) / 10000n);
-    expect((await h.r.forge.balanceOf(DATA.devFund)) - dev0).to.equal(SCALE / 20n);
-    // the recipient forged only 1; get a second SYNTH from the other holder
-    await (await h.r.forge.connect(h.other).transfer(h.recipient.address, SCALE)).wait();
-    const b = await h.tokenLock(h.r.forge, SYNTH_ID, FIXED.SYNTH, h.recipient, SCALE, DAY7, 1);
-    const mc = await h.settle(b.lockId, b.rec, SYNTH_ID, 3, "0x01");
-    expect(mc).to.equal((200n * SCALE * 100n * b.rec.multiplierBps) / 10000n);
-    console.log("      [B] 1 SYNTH locked 7 days -> VCLM:", fmt(mv), "| -> CHONX:", fmt(mc), "| fee 0.05 SYNTH to Dev Fund each");
-    // Economic comparison (report only): forge cost at fixed values
-    const forgeCostUsd = usdOf(1000n * SCALE, FIXED.VCLM) + usdOf(10_000n * SCALE, FIXED.CHONX);
-    expect(forgeCostUsd).to.equal(200n * SCALE);
-    console.log("      [B] forge cost at fixed values: $" + fmt(forgeCostUsd), "| 10-year multiplier bps:", String((await h.ethLock(SCALE / 100n, YEAR10)).rec.multiplierBps));
-  });
-
-  it("B9 CURRENT BEHAVIOUR (gap, VF-COM-025): the VCLM->CHONX lock made before activation now mints CHONX", async () => {
-    const p = h.pkg(pre.lockId, pre.rec, VCLM_ID, 3, "0x01");
-    const b0 = await h.r.chonx.balanceOf(h.recipient.address);
-    await (await h.r.verifier.verifyAndMint(p, 0)).wait();
-    expect(await h.r.chonx.balanceOf(h.recipient.address)).to.be.gt(b0);
+    expect(h.logs.some((x) => /^token addresses 4(5|7)\d\/478$/.test(x))).to.equal(true);
+    expect(h.logs).to.not.include("Finalized.");
   });
 });
