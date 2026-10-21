@@ -105,6 +105,14 @@ interface IChainVerifier {
 interface IERC20 {
     function mint(address to, uint256 amount) external;
     function totalSupply() external view returns (uint256);
+    function minterStake() external view returns (address);
+}
+
+// Treasury Reward Stake views read by the Verifier (t262u). The Stake contract
+// is VCLM's stake minter, fixed by VCLM.initialize before finalize.
+interface IStakeRewardView {
+    function cumulativeRewardVclmMinted() external view returns (uint256);
+    function synthToken() external view returns (address);
 }
 
 // ---------------------------------------------------------------------------
@@ -279,6 +287,12 @@ contract VinculumFinalisVerifier {
     // BASE-RAC: RAC credits (indexed by racIdentity)
     mapping(bytes32 => uint256) public racCredits;
     mapping(bytes32 => uint256) public racEpoch;
+
+    // VF-RAC-003/004 (t262u): Epoch Reward Basis per epoch, the sum of the
+    // credits recorded in it. Epoch N (1-indexed) is
+    // [T0 + (N-1) x 10 days, T0 + N x 10 days), T0 = protocolLaunchTimestamp
+    // (Section 10.2). The Stake contract reads this at epoch close.
+    mapping(uint256 => uint256) public epochRewardBasis;
 
     // BASE-QNORM: immutable asset-precision table
     // keccak256(environmentId, canonicalAssetId) => AssetPrecisionEntry
@@ -485,6 +499,12 @@ contract VinculumFinalisVerifier {
         assetRowAlias[k] = rowKey;
     }
 
+    function _isProtocolToken(address token) internal view returns (bool) {
+        if (token == address(vclmToken) || token == address(chonxToken)) return true;
+        address stake = vclmToken.minterStake();
+        return stake != address(0) && token == IStakeRewardView(stake).synthToken();
+    }
+
     function tokenAddressKey(string memory environmentId, address token) public pure returns (bytes32) {
         return keccak256(abi.encode(environmentId, token));
     }
@@ -494,6 +514,9 @@ contract VinculumFinalisVerifier {
         for (uint256 i = 0; i < items.length; i++) {
             TokenAddressInput calldata it = items[i];
             require(it.token != address(0), "VF-REG: zero token address");
+            // VF-TOK-007 / VF-REG-008: protocol tokens are never lock inputs,
+            // so their addresses can never be indexed to a registry row.
+            require(!_isProtocolToken(it.token), "VF-REG-008: protocol token is not a lock input");
             require(
                 assetPrecisionTable[keccak256(abi.encodePacked(it.environmentId, it.canonicalAssetId))].canonicalAssetId != bytes32(0),
                 "VF-REG: row not registered in this environment"
@@ -657,12 +680,15 @@ contract VinculumFinalisVerifier {
         // VF-RAC-008: No RAC after VCLM capacity = 0 (fee verification still proceeds).
         // VF-SUP-012: At zero VCLM capacity, fees still reach Dev Fund but no RAC.
         recordedRacs[pkg.racIdentity] = true;
-        if (cumulativeVclmIssued < VCLM_HARD_CAP) {
+        if (lifetimeVclmIssued() < VCLM_HARD_CAP) {
             uint256 feeUsd = (creditUsd * fee) / gross;
             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
-            uint256 epoch = block.timestamp / EPOCH_DURATION_SECS;
+            // VF-RAC-003 / VF-STK-007: the epoch in which the credit is recorded
+            // on Base, on the Section 10.2 launch-based epochs.
+            uint256 epoch = currentEpoch();
             racCredits[pkg.racIdentity] = racCredit;
             racEpoch[pkg.racIdentity] = epoch;
+            epochRewardBasis[epoch] += racCredit; // VF-RAC-004
             emit RacCreditRecorded(pkg.racIdentity, racCredit, epoch);
         }
     }
@@ -764,6 +790,7 @@ contract VinculumFinalisVerifier {
         // Step 7: Output eligibility (VF-COM-020/025, VF-TOK-002)
         require(pkg.selectedOutputToken <= 1, "VF-COM-020: invalid output token");
         if (pkg.selectedOutputToken == 1) { // CHONX
+            _syncChonxActivation(); // VF-TOK-002: stake reward VCLM may have crossed the threshold
             require(chonxActivated, "VF-COM-025: CHONX not activated");
             require(pkg.chonxActivationReceipt.length > 0, "VF-COM-025: missing activation receipt");
         }
@@ -803,7 +830,9 @@ contract VinculumFinalisVerifier {
 
         // Step 13: Hard cap (VF-SUP-015)
         if (pkg.selectedOutputToken == 0) { // VCLM
-            uint256 remaining = VCLM_HARD_CAP - cumulativeVclmIssued;
+            // VF-SUP-002: Commitment Vault and stake rewards share the VCLM cap.
+            uint256 issued = lifetimeVclmIssued();
+            uint256 remaining = issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
             require(issuanceAmount <= remaining, "VF-SUP-015: exceeds VCLM cap");
         } else { // CHONX
             uint256 remaining = CHONX_HARD_CAP - cumulativeChonxIssued;
@@ -818,12 +847,8 @@ contract VinculumFinalisVerifier {
             cumulativeVclmIssued += issuanceAmount;
             vclmToken.mint(pkg.baseRecipient, issuanceAmount);
 
-            // Check CHONX activation (BASE-ACT)
-            if (!chonxActivated && cumulativeVclmIssued >= CHONX_ACTIVATION_THRESHOLD) {
-                chonxActivated = true;
-                chonxActivationBlock = block.number;
-                emit ChonxActivated(block.number);
-            }
+            // Check CHONX activation (BASE-ACT, VF-TOK-002)
+            _syncChonxActivation();
         } else { // CHONX
             cumulativeChonxIssued += issuanceAmount;
             chonxToken.mint(pkg.baseRecipient, issuanceAmount);
@@ -1045,7 +1070,47 @@ contract VinculumFinalisVerifier {
     }
 
     function getRemainingVclmCap() external view returns (uint256) {
-        return VCLM_HARD_CAP - cumulativeVclmIssued;
+        uint256 issued = lifetimeVclmIssued();
+        return issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+    }
+
+    /// @notice VCLM minted as Treasury Reward Stake rewards (0 before VCLM
+    ///         has a stake minter).
+    function stakeRewardVclmIssued() public view returns (uint256) {
+        address stake = vclmToken.minterStake();
+        if (stake == address(0)) return 0;
+        return IStakeRewardView(stake).cumulativeRewardVclmMinted();
+    }
+
+    /// @notice VF-SUP-001/002, VF-TOK-002: lifetime VCLM = Commitment Vault
+    ///         issuance + Treasury Reward Stake rewards. It is used for the
+    ///         hard cap and for CHONX activation: every legitimate protocol
+    ///         mint counts (operator t264u).
+    function lifetimeVclmIssued() public view returns (uint256) {
+        return cumulativeVclmIssued + stakeRewardVclmIssued();
+    }
+
+    /// @notice VF-TOK-002: permanent CHONX activation once lifetime VCLM
+    ///         (locks and stake rewards) reaches 10,000,000. Anyone may call
+    ///         it, so activation does not wait for the next lock when stake
+    ///         rewards crossed the threshold. It only ever sets the flag once.
+    function syncChonxActivation() external {
+        _syncChonxActivation();
+    }
+
+    function _syncChonxActivation() internal {
+        if (!chonxActivated && lifetimeVclmIssued() >= CHONX_ACTIVATION_THRESHOLD) {
+            chonxActivated = true;
+            chonxActivationBlock = block.number;
+            emit ChonxActivated(block.number);
+        }
+    }
+
+    /// @notice Section 10.2 epoch number now (1-indexed); 0 before launch.
+    function currentEpoch() public view returns (uint256) {
+        uint256 t0 = protocolLaunchTimestamp;
+        if (t0 == 0 || block.timestamp < t0) return 0;
+        return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
     }
 
     function getRemainingChonxCap() external view returns (uint256) {
