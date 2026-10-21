@@ -28,9 +28,9 @@
         "rpc": "https://ethereum-rpc.publicnode.com",
         "chainIdChecked": 1,
         "gasEstimate": 1596454,
-        "gasPriceWei": "254510216",
-        "estimatedCostNative": "0.000406313852374064",
-        "readAt": "2026-10-21T16:30:11.849Z"
+        "gasPriceWei": "102000740",
+        "estimatedCostNative": "0.00016283948937596",
+        "readAt": "2026-10-21T19:52:28.339Z"
       }
     },
     {
@@ -51,10 +51,10 @@
       "publicRpcRead": {
         "rpc": "https://arb1.arbitrum.io/rpc",
         "chainIdChecked": 42161,
-        "gasEstimate": 1641130,
-        "gasPriceWei": "20000000",
-        "estimatedCostNative": "0.0000328226",
-        "readAt": "2026-10-21T16:30:12.203Z"
+        "gasEstimate": 1609489,
+        "gasPriceWei": "20002000",
+        "estimatedCostNative": "0.000032192998978",
+        "readAt": "2026-10-21T19:52:28.654Z"
       }
     },
     {
@@ -76,9 +76,9 @@
         "rpc": "https://mainnet.optimism.io",
         "chainIdChecked": 10,
         "gasEstimate": 1596454,
-        "gasPriceWei": "1001721",
-        "estimatedCostNative": "0.000001599201497334",
-        "readAt": "2026-10-21T16:30:12.965Z"
+        "gasPriceWei": "1001548",
+        "estimatedCostNative": "0.000001598925310792",
+        "readAt": "2026-10-21T19:52:29.354Z"
       }
     },
     {
@@ -100,9 +100,9 @@
         "rpc": "https://polygon-bor-rpc.publicnode.com",
         "chainIdChecked": 137,
         "gasEstimate": 1599828,
-        "gasPriceWei": "278013320316",
-        "estimatedCostNative": "0.444773494214505648",
-        "readAt": "2026-10-21T16:30:13.750Z"
+        "gasPriceWei": "278636084078",
+        "estimatedCostNative": "0.445769809118338584",
+        "readAt": "2026-10-21T19:52:29.723Z"
       }
     },
     {
@@ -126,7 +126,7 @@
         "gasEstimate": 1596538,
         "gasPriceWei": "50000000",
         "estimatedCostNative": "0.0000798269",
-        "readAt": "2026-10-21T16:30:14.247Z"
+        "readAt": "2026-10-21T19:52:30.219Z"
       }
     },
     {
@@ -148,33 +148,9 @@
         "rpc": "https://api.avax.network/ext/bc/C/rpc",
         "chainIdChecked": 43114,
         "gasEstimate": 1596466,
-        "gasPriceWei": "2554808795",
-        "estimatedCostNative": "0.00407866537771847",
-        "readAt": "2026-10-21T16:30:14.561Z"
-      }
-    },
-    {
-      "environmentId": "Base",
-      "chainId": 8453,
-      "nativeSymbol": "ETH",
-      "deployWith": "scripts/deploy-pages/base.html (ceremony step 1)",
-      "constructorArgs": {
-        "environmentId": "Base",
-        "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
-      },
-      "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a00000000000000000000000000000000000000000000000000000000000000044261736500000000000000000000000000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0xdd44a7c23578438b112c521a081cae6670b1bf9b0ba8676eccfca68d1489bc0e",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
-      "publicRpcRead": {
-        "rpc": "https://mainnet.base.org",
-        "chainIdChecked": 8453,
-        "gasEstimate": 1596405,
-        "gasPriceWei": "6000000",
-        "estimatedCostNative": "0.00000957843",
-        "readAt": "2026-10-21T16:30:14.881Z"
+        "gasPriceWei": "2500000150",
+        "estimatedCostNative": "0.0039911652394699",
+        "readAt": "2026-10-21T19:52:30.478Z"
       }
     }
   ]
