@@ -1,6 +1,7 @@
 # Deployment day runbook (planned for 2026-10-21)
 
-One document for the day. Plain steps, in order. Nothing in this repository
+One document for the day. Plain steps, in order. The short tick list for
+tonight is `CEREMONY_CHECKLIST_2026-10-21.md`. Nothing in this repository
 sends a transaction for you: every transaction is a MetaMask prompt you sign
 yourself. No key is ever typed, pasted or stored anywhere in this repository.
 Addresses are shortened on purpose.
@@ -14,7 +15,17 @@ Rules that govern the day:
 - A lock's price is fixed at its first fee recording. With no usable price the
   Verifier refuses (fails closed).
 - `CHONX.initialize(Verifier, 0)` is the start state. CHONX output activates at
-  10,000,000 lifetime VCLM.
+  10,000,000 lifetime VCLM: VCLM minted for locks plus VCLM minted as
+  Treasury Reward Stake rewards (operator t264u). If rewards cross the line,
+  anyone may call `syncChonxActivation()` on the Verifier, or the next CHONX
+  lock records it. SYNTH forging opens at 100,000,000 cumulative CHONX.
+- Locks refuse VCLM, CHONX and SYNTH as lock inputs before any fee is taken
+  (the Base lock by its own check, the Verifier by refusing to index them).
+  Stake (TRS) accepts all three at 1x / 2x / 4x weight for 30, 60, 90 or 120
+  days.
+- Stake rewards per 10-day epoch are the Verifier's Epoch Reward Basis for that
+  epoch (60% of the USD fees recorded) divided by $0.10, in VCLM, shared by
+  weight and duration. Epochs start at the Verifier's launch time (finalize).
 - Live price poster: `0x6001…0DB4`.
 - Registry: Revision B, 487 rows (486 plus Base ETH), 475 token addresses.
   Cosmos is dropped. Solana is not registered.
@@ -24,36 +35,34 @@ Rules that govern the day:
 ## 1. Before you start
 
 ### 1.1 Wallet funding (one deployer wallet, seven chains)
-Figures read from public RPCs on 2026-10-21 at 12:30 PM ET (Base at
-12:53 PM ET). Gas prices move. Re-run `node scripts/prepareLockDeploy.cjs`
-right before you start (read only; it rewrites
-`deployment/lockDeploy.prepared.json`, which you do not need to commit) and
-fund at least 3 times the figure it prints.
+Figures read from public RPCs on 2026-10-21 at 3:52 PM ET. Gas prices move.
+Re-run `node scripts/prepareLockDeploy.cjs` right before you start (read only;
+it rewrites `deployment/lockDeploy.prepared.json`, which you do not need to
+commit) and fund at least 3 times the figure it prints.
 
-| Chain | What is sent | Gas | Cost at 12:30 PM ET | Fund at least (3x) |
+| Chain | What is sent | Gas | Cost at 3:52 PM ET | Fund at least |
 |---|---|---|---|---|
-| Ethereum | 1 lock deploy | 1,596,454 | 0.000406 ETH at 0.255 gwei | 0.0013 ETH |
-| Arbitrum | 1 lock deploy | 1,641,130 | 0.0000328 ETH at 0.020 gwei | 0.0001 ETH |
-| Optimism | 1 lock deploy | 1,596,454 | 0.0000016 ETH at 0.001 gwei, plus at most 0.00000025 ETH L1 data fee | 0.000006 ETH |
-| Polygon | 1 lock deploy | 1,599,828 | 0.445 POL at 278 gwei | 1.35 POL |
+| Ethereum | 1 lock deploy | 1,596,454 | 0.000163 ETH at 0.102 gwei | 0.0013 ETH (covers up to about 0.27 gwei) |
+| Arbitrum | 1 lock deploy | 1,609,489 | 0.0000322 ETH at 0.020 gwei | 0.0001 ETH |
+| Optimism | 1 lock deploy | 1,596,454 | 0.0000016 ETH at 0.001 gwei, plus at most about 0.00000025 ETH L1 data fee | 0.000006 ETH |
+| Polygon | 1 lock deploy | 1,599,828 | 0.446 POL at 279 gwei | 1.35 POL |
 | BNB Smart Chain | 1 lock deploy | 1,596,538 | 0.0000798 BNB at 0.05 gwei | 0.00024 BNB |
-| Avalanche | 1 lock deploy | 1,596,466 | 0.00408 AVAX at 2.55 gwei | 0.013 AVAX |
-| Base | the whole Base ceremony, 72 transactions | 106,837,795 | 0.000641 ETH at 0.006 gwei, plus at most 0.000018 ETH L1 data fee = 0.000659 ETH | 0.002 ETH |
+| Avalanche | 1 lock deploy | 1,596,466 | 0.00399 AVAX at 2.50 gwei | 0.013 AVAX |
+| Base | the whole Base ceremony, 72 transactions | 108,965,768 | 0.000654 ETH at 0.006 gwei, plus at most 0.0000047 ETH L1 data fee = 0.000658 ETH | 0.002 ETH |
 
-Ethereum gas moves the most (0.077 gwei the evening before, 0.255 gwei at
-midday). If Ethereum is above 0.8 gwei when you start, fund 3 times the new
-figure instead of 0.0013 ETH.
+Ethereum gas moves the most. If Ethereum is above 0.27 gwei when you start,
+fund 3 times the new figure instead of 0.0013 ETH.
 
 How the Base figure was made: `baseCeremonyFlow.js` (the code `base.html`
 runs) was run on the in-process test chain with the committed `ceremony.json`
 and `ceremony-data.json`, and the gas used by every transaction the deployer
 sent was added up: 72 transactions (21 contract deploys and 51 calls),
-106,837,795 gas, 543,280 bytes of transaction data. The largest single
-transaction used 3,914,203 gas. The Base gas price (0.006 gwei) was read with
+108,965,768 gas, 547,625 bytes of transaction data. The largest single
+transaction used 4,132,368 gas. The Base gas price (0.006 gwei) was read with
 `eth_gasPrice` from `https://mainnet.base.org`, and the L1 data fee upper bound
 for each transaction was read from the Base gas price oracle
 (`getL1FeeUpperBound`). At the CoinGecko ETH price read at the same time
-($2,507.76) the Base total is about $1.65. Base's block gas limit was
+($2,490.14, read at 4:22 PM ET) the Base total is about $1.64. Base's block gas limit was
 400,000,000, so every transaction fits.
 
 MetaMask may reserve more than the final fee for each transaction while it is
@@ -82,7 +91,8 @@ The last command takes a fresh first Base ETH price into
 If it reports no price, stop: the page will not send without one.
 
 Then `git status` should show only `ceremony-data.json` and the fifteen chain
-pages (their commit stamp) as changed. `ceremony.json` must be unchanged. If
+pages (their commit stamp) as changed (and `deployment/lockDeploy.prepared.json`
+if you ran `prepareLockDeploy.cjs`). `ceremony.json` must be unchanged. If
 anything else changed, stop. Do not run the registry rebuild scripts on this
 day (`scripts/deploy-pages/README.md`, "Registry rebuild").
 
@@ -94,10 +104,15 @@ Run it alone. It must pass with no failures (about 20 minutes).
 
 ### 1.5 Hash checks
 ```
-node -e "const {ethers}=require('ethers');const a=require('./scripts/deploy-pages/ceremony.json');console.log('verifier',ethers.keccak256(a.VinculumFinalisVerifier.bytecode));console.log('lock',ethers.keccak256(a.CommitmentVaultLock.bytecode))"
+node -e "const {ethers}=require('ethers');const a=require('./scripts/deploy-pages/ceremony.json');for(const k of ['VinculumFinalisVerifier','VinculumFinalisStake','BaseCommitmentVaultLock','CommitmentVaultLock'])console.log(k,ethers.keccak256(a[k].bytecode))"
 ```
-Expected: verifier `0x63128c66…572263`, lock `0x2daadaf6…80bd99`. If either
-differs, stop.
+Expected:
+- VinculumFinalisVerifier `0x4ad594b4…423fe3`
+- VinculumFinalisStake `0x50e8061e…466a76`
+- BaseCommitmentVaultLock `0x7954931f…789df9` (the Base lock, deployed by `base.html`)
+- CommitmentVaultLock `0x2daadaf6…80bd99` (the six other chains, unchanged)
+
+If any differs, stop.
 
 ### 1.6 Open the pages from a local web server
 MetaMask does not work on pages opened as files, and `base.html` must load
@@ -147,15 +162,18 @@ The same address on two chains is normal when the same wallet deployed both.
 1. Paste the six addresses into the six boxes. Click "Connect wallet". The page checks
    every input before anything is signed and prints the Base ETH price it will
    write as run 1. If it prints "Stopped before any signature", fix the input.
-2. Click "Run ceremony". There are 72 MetaMask prompts in this order: the Base lock,
-   VCLM, CHONX, Verifier, Forge, Stake, two initialize calls, 15 reader deploys
-   and 15 registrations, 10 registry batches, 10 token address batches, 3
-   aliases, 7 Dev Fund settings, the poster set to your wallet, price run 1,
-   the poster handed to `0x6001…0DB4`, and `finalize`.
-3. Stop point A: after the first prompt the page logs `Base lock 0x…`. Before
-   signing the next prompt run
-   `node scripts/prepareLockDeploy.cjs --check Base <address>`. If it does not
-   print `ALL CHECKS PASSED`, reject the next prompt and stop.
+2. Click "Run ceremony". There are 72 MetaMask prompts in this order: VCLM,
+   CHONX, Verifier, Forge, Stake, the Base lock, two initialize calls, 15
+   reader deploys and 15 registrations, 10 registry batches, 10 token address
+   batches, 3 aliases, 7 Dev Fund settings, the poster set to your wallet,
+   price run 1, the poster handed to `0x6001…0DB4`, and `finalize`.
+3. Stop point A: after the 6th prompt the page logs five lines (`VCLM 0x…`,
+   `CHONX 0x…`, `Verifier 0x…`, `Forge 0x…`, `Stake 0x…`) and then
+   `Base lock 0x…`. Before signing the 7th prompt run
+   `node scripts/prepareLockDeploy.cjs --check Base <Base lock address>`.
+   It checks the lock code, the 5% fee, the Dev Fund, and that the lock holds
+   the VCLM, CHONX and Forge (SYNTH) addresses just logged and refuses them.
+   If it does not print `ALL CHECKS PASSED`, reject the next prompt and stop.
 4. Stop point B: the last prompt is `finalize`. MetaMask shows the function
    name. Before signing it, read the log: 15 `reader` lines (no Solana),
    `registry 487/487`, `token addresses 475/475`. If any is missing, reject.
@@ -213,7 +231,8 @@ readers are not the expected 15, or if any read-only check on Base fails:
 Verifier finalized, poster `0x6001…0DB4`, each reader registered, VCLM and
 CHONX minters, Forge and Stake bound to the Verifier, each EVM reader bound to
 its new lock, the Base reader bound to the Base lock, and the Base lock's code.
-It also reads the Verifier's launch time. It writes
+It also reads the Verifier's launch time and checks that Stake reads the same
+launch time (Stake epochs start there). It writes
 `src/lib/vfDeployedAddresses.js` and `~/vf-ceremony/base44-values.json` (for
 Base44 section 6).
 
@@ -248,7 +267,17 @@ several runs, they are signed in order (2, 3, …). Assets with no fresh price g
 a failure line and stay unavailable until a later successful run. The price
 poster service must be pointed at the new Verifier address.
 
-### 4.5 Retire the old locks
+### 4.5 Stake epochs (from 10 days after finalize)
+Epoch N runs from launch + (N-1) x 10 days to launch + N x 10 days, where
+launch is the Verifier's launch time (finalize). Anyone may call these on
+Stake; they move no user funds:
+- `closeEpoch(N)` once epoch N has ended (epochs close in order, 1, 2, 3, …).
+  It records the Verifier's Epoch Reward Basis for N.
+- `allocateEpoch(N)` once epoch N+1 has ended. It mints Basis / $0.10 VCLM to
+  Stake and shares it by weight and duration. An epoch with no fees pays 0.
+- Stakers call `claimVclm()`. A second claim of the same amount is refused.
+
+### 4.6 Retire the old locks
 - The app (repository config and Base44 section 6) no longer offers
   `0x968B…C946` or `0x4eDE…3b1a` for a new lock.
 - Release of locks already on them still works: the recorded release
@@ -257,6 +286,8 @@ poster service must be pointed at the new Verifier address.
 
 ## 5. Final verification checklist
 - [ ] Six `--check` runs and the Base lock `--check` printed `ALL CHECKS PASSED`.
+- [ ] Stop point A passed after the 6th prompt; stop point B passed before
+      `finalize` (72 prompts in all).
 - [ ] `ceremony-log.txt` has `Finalized.`, 15 reader lines, `registry 487/487`,
       `token addresses 475/475`.
 - [ ] `applyCeremonyAddresses.cjs --rpc … --write` printed "On-chain read-only
