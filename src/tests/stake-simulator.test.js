@@ -48,3 +48,28 @@ test('refusals carry the contract revert text', () => {
   assert.equal(e.closeEpoch(1).reason, 'VF-STK-008: epoch not ended');
   assert.equal(e.closeEpoch(0).reason, 'VF-STK-010: epoch numbering begins at 1');
 });
+
+test('t270u(g): allocation in strict epoch order; zero-RAC, zero-weight and cap-skipped epochs count, no deadlock', () => {
+  let now = 1000;
+  const e = new StakingEngine({ launchTimestamp: 1000, clock: () => now });
+  now = 1000 + 15 * 86400;
+  e.createStakePosition('A', 'VCLM', 100n * S, D120);
+  e.recordRacCredit('r', 'x', 5n * S, 1); // epoch 1: no eligible weight
+  e.recordRacCredit('r', 'x', 7n * S, 3); // epoch 3: paid; epoch 2: no RAC
+  now = 1000 + 6 * EPOCH_SECS;
+  for (let n = 1; n <= 5; n++) assert.ok(e.closeEpoch(n).ok);
+  assert.deepEqual(e.nextAllocatableEpoch(), { epoch: 1, ready: true });
+  assert.equal(e.allocateEpoch(2).reason, 'VF-STK-010: allocate in epoch order (t270u)');
+  assert.equal(e.allocateEpoch(1).minted, 0n);
+  assert.equal(e.allocateEpoch(3).reason, 'VF-STK-010: allocate in epoch order (t270u)');
+  assert.equal(e.allocateEpoch(2).minted, 0n);
+  assert.equal(e.allocateEpoch(3).minted, 70n * S);
+  assert.equal(e.latestClaimableEpoch(), 3);
+  assert.equal(e.claimPosition('A', 0, 3).amount, 70n * S);
+  e.cumulativeVclmIssued = 10_000_000_000n * S - 1n; // reward no longer fits
+  e.recordRacCredit('r', 'x', 9n * S, 4);
+  e.epochs.get(4).rewardBasis = 9n * S;
+  assert.equal(e.allocateEpoch(4).minted, 0n);
+  assert.equal(e.lastAllocatedEpoch, 4);
+  assert.deepEqual(e.nextAllocatableEpoch(), { epoch: 5, ready: true });
+});

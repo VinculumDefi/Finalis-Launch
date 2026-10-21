@@ -42,7 +42,10 @@ export default function StakingPanel({ engine, account }) {
   };
 
   const toClose = stats.lastClosedEpoch + 1;
-  const toAllocate = stats.epochs.filter((e) => e.closed && !e.allocated).map((e) => e.epoch).sort((a, b) => a - b)[0];
+  // t270u(g): allocation is in strict epoch order. Only the next epoch after the
+  // last allocated one is offered, and only once it is closed and N+1 has ended.
+  const toAllocate = stats.nextAllocatable.epoch;
+  const canAllocate = stats.nextAllocatable.ready;
 
   const handleClose = () => show(engine.closeEpoch(toClose));
   const handleAllocate = () => {
@@ -140,8 +143,8 @@ export default function StakingPanel({ engine, account }) {
           <Button onClick={handleClose} variant="outline" size="sm" className="border-slate-600 text-slate-300">
             Close Epoch {toClose} (Phase 1)
           </Button>
-          <Button onClick={handleAllocate} disabled={!toAllocate} variant="outline" size="sm" className="border-slate-600 text-slate-300">
-            Allocate Epoch {toAllocate || '-'} (Phase 2)
+          <Button onClick={handleAllocate} disabled={!canAllocate} variant="outline" size="sm" className="border-slate-600 text-slate-300">
+            Allocate Epoch {toAllocate} (Phase 2)
           </Button>
           <Button onClick={handleClaimAll} disabled={claimIds.length === 0} variant="outline" size="sm" className="border-green-700 text-green-400">
             <Coins className="w-4 h-4 mr-1" /> Claim all positions to epoch {latest}
@@ -151,7 +154,7 @@ export default function StakingPanel({ engine, account }) {
           </Button>
         </div>
         <p className="text-xs text-slate-500 mt-2">
-          Epoch {currentEpoch} is running. VF-STK-013: allocation of N needs the end of N+1. Claims are per position up to epoch current - 2, once allocated. VF-RAC-005: permanent $0.10 Reward Reference Value.
+          Epoch {currentEpoch} is running. VF-STK-013: allocation of N needs the end of N+1. VF-STK-010 (t270u): epochs are allocated in order, one at a time, by anyone. Claims are per position up to the last allocated epoch (at most current - 2). VF-RAC-005: permanent $0.10 Reward Reference Value.
         </p>
       </Card>
 

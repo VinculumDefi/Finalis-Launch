@@ -21,7 +21,10 @@
 //     and its scheduled end (including a queued term) is at or after the end
 //     of N+1, and it was not withdrawn before the end of N+1. The duration
 //     multiplier is the one in force at the start of N (operator approved).
-//   - closeEpoch(N) after N ends, in order; allocateEpoch(N) after N+1 ends.
+//   - closeEpoch(N) after N ends, in order; allocateEpoch(N) after N+1 ends,
+//     in strict epoch order (N only after N-1, epoch 1 first; operator rule
+//     t270u(g), VF-STK-010). Zero-RAC, zero-weight and cap-skipped epochs
+//     count as allocated, so the order never deadlocks.
 //     The complete Epoch Reward VCLM (basis / $0.10) is minted once if it
 //     fits the remaining cap, else nothing (VF-STK-028).
 //   - Claims are per position over a caller-chosen range up to toEpoch: each
@@ -84,6 +87,7 @@ export class StakePosition {
     this.withdrawnAt = 0n;
     this.terms = [{ start: startTimestamp, multiplierBps }];
     this.nextClaimEpoch = 0n;
+    this.claimTermIdx = 0; // t270u: term checkpoint, as the contract's _claimTermIdx
   }
 
   get queuedExtension() {
@@ -173,6 +177,7 @@ export class StakingEngine {
     this.cumulativeVclmIssued = 0n; // Commitment Vault VCLM, from the Verifier
     this.cumulativeRewardVclmMinted = 0n;
     this.nextPositionId = 0;
+    this.lastAllocatedEpoch = 0; // t270u(g): allocation in strict epoch order
   }
 
   now() {
@@ -339,6 +344,8 @@ export class StakingEngine {
     if (!ep.closed) return fail('VFS: not closed');
     if (ep.allocated) return fail('VFS: already allocated');
     if (this.now() < t0 + BigInt(n + 1) * E) return fail('VF-STK-013: wait for N+1 end');
+    if (n !== this.lastAllocatedEpoch + 1) return fail('VF-STK-010: allocate in epoch order (t270u)');
+    this.lastAllocatedEpoch = n;
     const totalWeight = this.epochTotalWeight(n);
     ep.totalWeight = totalWeight;
     ep.allocated = true;
@@ -369,7 +376,7 @@ export class StakingEngine {
     }
     if (to < last) last = to;
     const nTerms = pos.termCountWithQueued();
-    let k = 0;
+    let k = pos.claimTermIdx;
     const base = pos.amount * TOKEN_BPS_BY_ID[pos.tokenId];
     let amount = 0n;
     for (let n = from; n <= last; n++) {
@@ -384,7 +391,7 @@ export class StakingEngine {
       const weight = (base * BigInt(pos.termMult(k))) / 100000000n;
       amount += (ep.mintedVclm * weight) / ep.totalWeight;
     }
-    return { ok: true, amount };
+    return { ok: true, amount, termIdx: k };
   }
 
   claimPosition(owner, positionId, toEpoch) {
@@ -397,19 +404,20 @@ export class StakingEngine {
     const r = this.claimable(pos, from, toEpoch, t0, true);
     if (!r.ok) return r;
     pos.nextClaimEpoch = BigInt(toEpoch) + 1n;
+    pos.claimTermIdx = r.termIdx;
     return { ok: true, amount: r.amount, fromEpoch: Number(from), toEpoch: Number(toEpoch) };
   }
 
   /** All-or-nothing, as one transaction. Skips positions already claimed up to toEpoch. */
   claimPositions(owner, positionIds, toEpoch) {
-    const saved = positionIds.map((id) => [id, this.positions.get(Number(id))?.nextClaimEpoch]);
+    const saved = positionIds.map((id) => { const p = this.positions.get(Number(id)); return [id, p?.nextClaimEpoch, p?.claimTermIdx]; });
     let total = 0n;
     for (const id of positionIds) {
       const pos = this.positions.get(Number(id));
       if ((pos ? pos.nextClaimEpoch : 0n) > BigInt(toEpoch)) continue;
       const r = this.claimPosition(owner, id, toEpoch);
       if (!r.ok) {
-        for (const [sid, v] of saved) { const p = this.positions.get(Number(sid)); if (p) p.nextClaimEpoch = v; }
+        for (const [sid, v, k] of saved) { const p = this.positions.get(Number(sid)); if (p) { p.nextClaimEpoch = v; p.claimTermIdx = k; } }
         return r;
       }
       total += r.amount;
@@ -425,10 +433,20 @@ export class StakingEngine {
     return this.claimable(pos, pos.nextClaimEpoch, toEpoch, t0, false).amount;
   }
 
-  /** Latest epoch a claim can end at now: current epoch - 2, capped at the last allocated epoch. */
+  /** Latest epoch a claim can end at now. Allocation is in strict order (t270u(g)),
+   *  so every epoch up to lastAllocatedEpoch is allocated and final: a claim up to
+   *  it never fails with 'VFS: epoch not allocated'. */
   latestClaimableEpoch() {
-    for (let n = this.getCurrentEpoch() - 2; n >= 1; n--) if (this.epochs.get(n)?.allocated) return n;
-    return 0;
+    const cap = this.getCurrentEpoch() - 2;
+    return Math.max(0, Math.min(cap, this.lastAllocatedEpoch));
+  }
+
+  /** The only epoch allocateEpoch accepts next, and whether it can be allocated now. */
+  nextAllocatableEpoch() {
+    const n = this.lastAllocatedEpoch + 1;
+    const ep = this.epochs.get(n);
+    const ready = !!(ep && ep.closed) && this.getCurrentEpoch() >= n + 2;
+    return { epoch: n, ready };
   }
 
   /** Display total: the owner's positions' claimable VCLM up to latestClaimableEpoch(). */
@@ -473,6 +491,8 @@ export class StakingEngine {
       staked: { VCLM: staked.VCLM.toString(), CHONX: staked.CHONX.toString(), SYNTH: staked.SYNTH.toString() },
       currentEpoch,
       lastClosedEpoch,
+      lastAllocatedEpoch: this.lastAllocatedEpoch,
+      nextAllocatable: this.nextAllocatableEpoch(),
       epochs: epochStats,
     };
   }
