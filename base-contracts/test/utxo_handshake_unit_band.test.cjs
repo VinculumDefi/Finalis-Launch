@@ -69,7 +69,7 @@ async function fixture() {
   const mock = await (await ethers.getContractFactory("MockAlwaysFinalizedVerifier")).deploy();
   const t0 = (await ethers.provider.getBlock("latest")).timestamp;
   const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(
-    await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress(), await verifier.getAddress(), t0);
+    await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress(), await verifier.getAddress());
   await vclm.initialize(await verifier.getAddress(), await stake.getAddress());
   await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
   for (const [env, c] of Object.entries(CHAINS)) {
@@ -236,7 +236,7 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
     const v = await (await ethers.getContractFactory("VinculumFinalisVerifier")).deploy(await vclm.getAddress(), await chonx.getAddress());
     const mock = await (await ethers.getContractFactory("MockAlwaysFinalizedVerifier")).deploy();
     const t0 = (await ethers.provider.getBlock("latest")).timestamp;
-    const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress(), await v.getAddress(), t0);
+    const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress(), await v.getAddress());
     await vclm.initialize(await v.getAddress(), await stake.getAddress());
     await chonx.initialize(await v.getAddress(), ethers.ZeroAddress);
     const otherId = ethers.id("BCH"); // not keccak("Bitcoin Cash","native-BCH")
