@@ -17,8 +17,9 @@ None of these steps sends anything.
    commands are in `scripts/deploy-pages/README.md`, under "Build on the day";
    the full day is in `deployment/DEPLOYMENT_DAY_RUNBOOK.md`). This also
    takes a fresh first Base ETH price into `ceremony-data.json`. Check that
-   the verifier creation code hash is `0x63128c66…572263` and the
-   CommitmentVaultLock creation code hash is `0x2daadaf6…80bd99`; if either
+   the verifier creation code hash is `0x4ad594b4…423fe3`, the
+   BaseCommitmentVaultLock creation code hash is `0x7954931f…789df9` and the
+   CommitmentVaultLock creation code hash is `0x2daadaf6…80bd99`; if any
    differs, stop.
 2. Run the full test suite alone:
    `NODE_OPTIONS=--max-old-space-size=12288 npx hardhat test`. It must pass.
@@ -57,8 +58,8 @@ positive, incomplete reader wiring, and a poster that is zero or equal to the
 wallet or the Dev Fund. It then runs `scripts/deploy-pages/baseCeremonyFlow.js`,
 which is the same code that `test/base_ceremony_flow.test.cjs` runs on the
 test chain. In order:
-1. Deploy the new 5% Base lock `CommitmentVaultLock("Base", 0xFD21…3e9a)` and read back a 5% fee. The old Base lock is left as it is.
-2. Deploy VCLM, CHONX, the Verifier, **Forge** (VinculumFinalisSynth) and **Stake**.
+1. Deploy VCLM, CHONX, the Verifier, **Forge** (VinculumFinalisSynth, the SYNTH token) and **Stake** (`Stake(VCLM, CHONX, Forge, Verifier)`; Stake epochs start at the Verifier's launch time).
+2. Deploy the new 5% Base lock `BaseCommitmentVaultLock("Base", 0xFD21…3e9a, VCLM, CHONX, Forge)`, read back a 5% fee, and read back that it refuses VCLM, CHONX and SYNTH as lock inputs (VF-TOK-007). The old Base lock is left as it is.
 3. `VCLM.initialize(Verifier, Stake)`, so Stake is on from the start. Then `CHONX.initialize(Verifier, 0)`.
 4. Deploy and register **15 readers**, reading each one back:
    - Base, bound to the new Base lock.
@@ -73,7 +74,7 @@ test chain. In order:
 8. Hand the price poster to `0x6001…0DB4` and read it back.
 9. `finalize()`. This is permanent: after it, nothing can be registered.
 
-The page logs the new Base lock address first. Run the `--check` on it before signing the next MetaMask prompt; if it fails, reject the prompt and stop.
+After the 6th prompt the page logs the five token and core contract lines and then `Base lock 0x…`. Run `node scripts/prepareLockDeploy.cjs --check Base <address>` before signing the 7th prompt; if it fails, reject the prompt and stop. 72 prompts in all.
 
 ## Step 3 - Price runs (after finalize)
 `scripts/priceRun.cjs` turns fetched prices into the poster's lines: a success
