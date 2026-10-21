@@ -173,15 +173,16 @@ async function runCeremony(hre) {
 
   const T = await F("VinculumFinalisToken");
   const vclm = await T.deploy("Vinculum", "VCLM", 10_000_000_000n * 10n ** 18n);
-  const launch = (await ethers.provider.getBlock((await vclm.deploymentTransaction().wait()).blockNumber)).timestamp;
   const chonx = await T.deploy("Chonx", "CHONX", 100_000_000_000n * 10n ** 18n);
   const verifier = await (await F("VinculumFinalisVerifier")).deploy(await at(vclm), await at(chonx));
   const forge = await (await F("VinculumFinalisSynth")).deploy(await at(verifier), await at(vclm), await at(chonx));
-  const stake = await (await F("VinculumFinalisStake")).deploy(await at(vclm), await at(chonx), await at(forge), await at(verifier), launch);
+  const stake = await (await F("VinculumFinalisStake")).deploy(await at(vclm), await at(chonx), await at(forge), await at(verifier));
 
   const CVL = await F("CommitmentVaultLock");
   const locks = {};
-  for (const env of ["Base", ...READY_EVM.map((x) => x[0])]) locks[env] = await CVL.deploy(env, EVM_DEV_FUND);
+  // Base: BaseCommitmentVaultLock refuses VCLM, CHONX and SYNTH (VF-TOK-007).
+  locks.Base = await (await F("BaseCommitmentVaultLock")).deploy("Base", EVM_DEV_FUND, await at(vclm), await at(chonx), await at(forge));
+  for (const env of READY_EVM.map((x) => x[0])) locks[env] = await CVL.deploy(env, EVM_DEV_FUND);
 
   const readers = {};
   readers.Base = await (await F("BaseLockRecordVerifier")).deploy(await at(locks.Base));
@@ -222,7 +223,7 @@ async function runCeremony(hre) {
     { environmentId: "Base", canonicalAssetId: baseEth.canonicalAssetId, priceUsd18: TEST_ETH_PRICE_USD18, success: true },
   ])).wait();
 
-  return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, ledgerDevFunds, tokenAddresses, written, baseEth, all, registryGas, launch };
+  return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, ledgerDevFunds, tokenAddresses, written, baseEth, all, registryGas };
 }
 
 module.exports = { ASSET_ROW_ALIASES, runCeremony, registryRows, devFundScript, stellarKey, xrplAccount, READY_EVM, READY_UTXO, READY_LEDGER, BLOCKED, STELLAR_PUBLIC_NETWORK, TEST_ETH_PRICE_USD18 };
