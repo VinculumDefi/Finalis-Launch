@@ -24,20 +24,25 @@ Rules that govern the day:
 ## 1. Before you start
 
 ### 1.1 Wallet funding (one deployer wallet, seven chains)
-Figures read from public RPCs on 2026-10-20 at 6:39 PM ET. Gas prices move.
-Re-run `node scripts/prepareLockDeploy.cjs` on the day (read only; it rewrites
+Figures read from public RPCs on 2026-10-21 at 12:30 PM ET (Base at
+12:53 PM ET). Gas prices move. Re-run `node scripts/prepareLockDeploy.cjs`
+right before you start (read only; it rewrites
 `deployment/lockDeploy.prepared.json`, which you do not need to commit) and
-fund at least 3 times the day's figure.
+fund at least 3 times the figure it prints.
 
-| Chain | What is sent | Gas | Cost at 6:39 PM ET | Fund at least (3x) |
+| Chain | What is sent | Gas | Cost at 12:30 PM ET | Fund at least (3x) |
 |---|---|---|---|---|
-| Ethereum | 1 lock deploy | 1,596,454 | 0.000122 ETH at 0.077 gwei | 0.00037 ETH |
-| Arbitrum | 1 lock deploy | 1,603,791 | 0.0000321 ETH at 0.020 gwei | 0.0001 ETH |
-| Optimism | 1 lock deploy | 1,596,454 | 0.0000016 ETH at 0.001 gwei, plus at most 0.00000008 ETH L1 data fee | 0.000006 ETH |
-| Polygon | 1 lock deploy | 1,599,828 | 0.447 POL at 279 gwei | 1.35 POL |
+| Ethereum | 1 lock deploy | 1,596,454 | 0.000406 ETH at 0.255 gwei | 0.0013 ETH |
+| Arbitrum | 1 lock deploy | 1,641,130 | 0.0000328 ETH at 0.020 gwei | 0.0001 ETH |
+| Optimism | 1 lock deploy | 1,596,454 | 0.0000016 ETH at 0.001 gwei, plus at most 0.00000025 ETH L1 data fee | 0.000006 ETH |
+| Polygon | 1 lock deploy | 1,599,828 | 0.445 POL at 278 gwei | 1.35 POL |
 | BNB Smart Chain | 1 lock deploy | 1,596,538 | 0.0000798 BNB at 0.05 gwei | 0.00024 BNB |
-| Avalanche | 1 lock deploy | 1,596,466 | 0.00399 AVAX at 2.5 gwei | 0.012 AVAX |
-| Base | the whole Base ceremony, 72 transactions | 106,837,795 | 0.000641 ETH at 0.006 gwei, plus at most 0.0000037 ETH L1 data fee = 0.000645 ETH | 0.002 ETH |
+| Avalanche | 1 lock deploy | 1,596,466 | 0.00408 AVAX at 2.55 gwei | 0.013 AVAX |
+| Base | the whole Base ceremony, 72 transactions | 106,837,795 | 0.000641 ETH at 0.006 gwei, plus at most 0.000018 ETH L1 data fee = 0.000659 ETH | 0.002 ETH |
+
+Ethereum gas moves the most (0.077 gwei the evening before, 0.255 gwei at
+midday). If Ethereum is above 0.8 gwei when you start, fund 3 times the new
+figure instead of 0.0013 ETH.
 
 How the Base figure was made: `baseCeremonyFlow.js` (the code `base.html`
 runs) was run on the in-process test chain with the committed `ceremony.json`
@@ -48,7 +53,7 @@ transaction used 3,914,203 gas. The Base gas price (0.006 gwei) was read with
 `eth_gasPrice` from `https://mainnet.base.org`, and the L1 data fee upper bound
 for each transaction was read from the Base gas price oracle
 (`getL1FeeUpperBound`). At the CoinGecko ETH price read at the same time
-($2,454.85) the Base total is about $1.58. Base's block gas limit was
+($2,507.76) the Base total is about $1.65. Base's block gas limit was
 400,000,000, so every transaction fits.
 
 MetaMask may reserve more than the final fee for each transaction while it is
