@@ -50,6 +50,16 @@
 //               lifetime VCLM (cumulativeRewardVclmMinted, read by the
 //               Verifier), which is used for the cap and for the 10,000,000
 //               CHONX activation threshold (operator t264u).
+//   t269u: bounded gas. closeEpoch and allocateEpoch are O(1): each epoch's
+//               total weight is kept incrementally (a running sum with
+//               scheduled additions and removals at the epochs where a
+//               position's eligibility or duration multiplier changes).
+//               Rewards are claimed per position over a caller-chosen epoch
+//               range. The reward of every position in every epoch is exactly
+//               the earlier design's floor(epoch reward x weight / total
+//               weight), with the same weight rule (_epochWeight, unchanged)
+//               and the same term rule (multiplier in force at the start of
+//               epoch N, operator approved t269u).
 //
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 // Solidity 0.8.19+
@@ -164,8 +174,18 @@ contract VinculumFinalisStake {
 
     mapping(uint256 => Epoch) public epochs;
 
-    // VF-STK-016: Claimable VCLM accumulates and never expires
-    mapping(address => uint256) public claimableVclm;
+    // t269u: incremental epoch total weight. runningWeight[N] is final for
+    // every closed epoch except while N+1 has not ended (a change that can
+    // still reach N is applied to runningWeight[N] directly). For unclosed
+    // epochs, weightAddAt / weightSubAt hold the scheduled changes.
+    mapping(uint256 => uint256) private _runningWeight;
+    mapping(uint256 => uint256) private _weightAddAt;
+    mapping(uint256 => uint256) private _weightSubAt;
+    uint256 public lastClosedEpoch;
+
+    // VF-STK-016: Claimable VCLM accumulates and never expires: a position's
+    // unclaimed epochs stay claimable from nextClaimEpoch onwards.
+    mapping(uint256 => uint256) public nextClaimEpoch;
 
     // ===== Events =====
 
@@ -174,8 +194,8 @@ contract VinculumFinalisStake {
     event PositionExtended(uint256 indexed positionId, uint256 newEndTimestamp);
     event PositionWithdrawn(uint256 indexed positionId);
     event EpochClosed(uint256 indexed epoch, uint256 rewardBasis, uint256 totalWeight);
-    event EpochAllocated(uint256 indexed epoch, uint256 mintedVclm, uint256 distributions);
-    event VclmClaimed(address indexed owner, uint256 amount);
+    event EpochAllocated(uint256 indexed epoch, uint256 mintedVclm, uint256 totalWeight);
+    event VclmClaimed(uint256 indexed positionId, address indexed owner, uint256 fromEpoch, uint256 toEpoch, uint256 amount);
     event TerminalStateEntered();
 
     constructor(
@@ -223,7 +243,7 @@ contract VinculumFinalisStake {
     // ===== VF-STK-001/002/031: Create stake position =====
 
     function createPosition(uint8 token, uint256 amount, uint256 durationSecs) external returns (uint256) {
-        _launched();
+        uint256 t0 = _launched();
         // VF-STK-029: Terminal state, no new positions
         require(!_enterTerminalIfCapReached(), "VF-STK-029: terminal state");
 
@@ -260,6 +280,13 @@ contract VinculumFinalisStake {
         });
         _terms[id].push(Term({start: start, multiplierBps: multBps}));
 
+        // t269u: schedule this position's weight for every epoch it qualifies
+        // for (VF-STK-011/012): starts at or after activeSince, N+1 ends by
+        // the scheduled end.
+        uint256 first = _firstEpochAtOrAfter(start, t0);
+        nextClaimEpoch[id] = first;
+        _applyWeight(id, first, _lastEligibleBy(start + durationSecs, t0), true, t0);
+
         emit PositionCreated(id, msg.sender, token, amount, durationSecs);
         return id;
     }
@@ -285,8 +312,17 @@ contract VinculumFinalisStake {
         require(multBps > 0, "VF-STK-003: duration not permitted");
 
         // VF-STK-024: Extension adds/removes no tokens, charges no fee
+        uint256 t0 = _launched();
+        uint256 oldLast = _lastEligibleBy(pos.endTimestamp, t0);
         pos.queuedExtensionBps = multBps;
         pos.queuedExtensionSecs = durationSecs;
+
+        // t269u: the epochs the queued term adds (VF-STK-022). Each gets the
+        // multiplier in force at its start, so the queued term applies only
+        // from the first epoch starting at or after the current term's end.
+        uint256 from = _firstEpochAtOrAfter(pos.activeSince, t0);
+        if (oldLast + 1 > from) from = oldLast + 1;
+        _applyWeight(positionId, from, _lastEligibleBy(pos.endTimestamp + durationSecs, t0), true, t0);
         emit ExtensionQueued(positionId, durationSecs);
     }
 
@@ -325,6 +361,17 @@ contract VinculumFinalisStake {
             require(block.timestamp >= _scheduledEnd(pos), "VFS: not matured");
         }
 
+        // t269u: an early withdrawal (terminal state only) removes the weight
+        // of every epoch whose N+1 has not ended (VF-STK-012). A withdrawal at
+        // or after the scheduled end removes nothing.
+        {
+            uint256 t0 = _launched();
+            uint256 from = _firstEpochAtOrAfter(pos.activeSince, t0);
+            uint256 keptLast = _lastEligibleBy(block.timestamp, t0);
+            if (keptLast + 1 > from) from = keptLast + 1;
+            _applyWeight(positionId, from, _lastEligibleBy(_scheduledEnd(pos), t0), false, t0);
+        }
+
         pos.withdrawn = true;
         pos.withdrawnAt = block.timestamp;
 
@@ -360,7 +407,12 @@ contract VinculumFinalisStake {
         ep.rewardBasis = verifier.epochRewardBasis(epochN);
         ep.closed = true;
         ep.closeTimestamp = block.timestamp;
-        emit EpochClosed(epochN, ep.rewardBasis, 0);
+
+        // t269u: O(1). Materialize the running total weight for N.
+        uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+        _runningWeight[epochN] = w;
+        lastClosedEpoch = epochN;
+        emit EpochClosed(epochN, ep.rewardBasis, w);
     }
 
     // ===== BASE-EPOCH Phase 2: Allocate (VF-STK-013-015/026-028, VF-RAC-005/006, VF-SUP-009) =====
@@ -376,11 +428,9 @@ contract VinculumFinalisStake {
         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
         require(block.timestamp >= nPlus1End, "VF-STK-013: wait for N+1 end");
 
-        // Weight is fixed now (VF-STK-013); eligibility uses scheduled times only.
-        uint256 totalWeight = 0;
-        for (uint256 i = 0; i < nextPositionId; i++) {
-            totalWeight += _epochWeight(i, epochN, t0);
-        }
+        // Weight is fixed now (VF-STK-013): no change can reach N once N+1
+        // has ended. t269u: O(1), the incrementally kept total.
+        uint256 totalWeight = _runningWeight[epochN];
         ep.totalWeight = totalWeight;
 
         // VF-RAC-006 / VF-STK-015: from here the epoch's credits are used.
@@ -413,41 +463,156 @@ contract VinculumFinalisStake {
         ep.mintedVclm = totalReward;
         vclmToken.mint(address(this), totalReward);
 
-        // VF-STK-014/026: proportional entitlements, each rounded down.
-        uint256 distributions = 0;
-        for (uint256 i = 0; i < nextPositionId; i++) {
-            uint256 weight = _epochWeight(i, epochN, t0);
-            if (weight == 0) continue;
-            uint256 share = (totalReward * weight) / totalWeight;
-            if (share > 0) {
-                // VF-STK-016: Claimable accumulates
-                claimableVclm[positions[i].owner] += share;
-                distributions++;
-            }
-        }
+        // VF-STK-014/026: proportional entitlements, each rounded down, are
+        // taken per position at claim (claimPosition).
         // VF-STK-027: the remainder stays in this contract, never reused.
 
-        emit EpochAllocated(epochN, totalReward, distributions);
+        emit EpochAllocated(epochN, totalReward, totalWeight);
         _enterTerminalIfCapReached(); // VF-SUP-011 if this reward used the last capacity
     }
 
-    // ===== VF-STK-016/017/018/019: Claim =====
+    // ===== VF-STK-016/017/018/019/026: Claim =====
 
-    function claimVclm() external returns (uint256) {
-        uint256 amount = claimableVclm[msg.sender];
-        require(amount > 0, "VFS: no claimable");
-        claimableVclm[msg.sender] = 0;
-        // VF-STK-018: Transfer minted VCLM; no re-mint
+    /// @notice Claims a position's VCLM for its unclaimed epochs up to toEpoch.
+    ///         Each epoch pays floor(epoch reward x weight / total weight)
+    ///         (VF-STK-026). toEpoch must be final (its N+1 has ended) and
+    ///         every epoch the position qualifies for in the range must be
+    ///         allocated. The caller chooses the range, so gas is bounded.
+    function claimPosition(uint256 positionId, uint256 toEpoch) public returns (uint256 amount) {
+        Position storage pos = positions[positionId];
         // VF-STK-019: Only to owner
-        require(vclmToken.transfer(msg.sender, amount), "VFS: transfer failed");
-        emit VclmClaimed(msg.sender, amount);
-        return amount;
+        require(pos.owner == msg.sender, "VFS: not owner");
+        uint256 t0 = _launched();
+        uint256 from = nextClaimEpoch[positionId];
+        require(toEpoch >= from, "VFS: nothing to claim");
+        amount = _claimable(positionId, from, toEpoch, t0, true);
+        nextClaimEpoch[positionId] = toEpoch + 1;
+        if (amount > 0) {
+            // VF-STK-018: Transfer minted VCLM; no re-mint
+            require(vclmToken.transfer(msg.sender, amount), "VFS: transfer failed");
+        }
+        emit VclmClaimed(positionId, msg.sender, from, toEpoch, amount);
+    }
+
+    /// @notice VF-STK-017: claim several positions in one transaction.
+    function claimPositions(uint256[] calldata positionIds, uint256 toEpoch) external returns (uint256 total) {
+        for (uint256 i = 0; i < positionIds.length; i++) {
+            if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+        }
+    }
+
+    /// @notice VCLM a position could claim now for epochs up to toEpoch.
+    function claimableVclm(uint256 positionId, uint256 toEpoch) external view returns (uint256) {
+        uint256 t0 = verifier.protocolLaunchTimestamp();
+        uint256 from = nextClaimEpoch[positionId];
+        if (t0 == 0 || toEpoch < from || positions[positionId].owner == address(0)) return 0;
+        return _claimable(positionId, from, toEpoch, t0, false);
+    }
+
+    // Sum over epochs from..toEpoch of floor(mintedVclm x weight / totalWeight).
+    // Weight is the earlier design's _epochWeight, evaluated with a forward
+    // term pointer so a long term history is read once per call.
+    function _claimable(uint256 positionId, uint256 from, uint256 toEpoch, uint256 t0, bool strict)
+        internal view returns (uint256 amount)
+    {
+        // VF-STK-013: only epochs whose N+1 has ended are final.
+        if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+        Position storage pos = positions[positionId];
+        uint256 last = _lastEligibleBy(_scheduledEnd(pos), t0);
+        if (pos.withdrawn) {
+            uint256 wLast = _lastEligibleBy(pos.withdrawnAt, t0);
+            if (wLast < last) last = wLast;
+        }
+        if (toEpoch < last) last = toEpoch;
+        Term[] storage ts = _terms[positionId];
+        uint256 nTerms = ts.length + (pos.queuedExtensionBps > 0 ? 1 : 0);
+        uint256 k = 0;
+        uint256 base = pos.amount * _getTokenMultiplier(pos.token);
+        for (uint256 n = from; n <= last; n++) {
+            Epoch storage ep = epochs[n];
+            if (!ep.allocated) {
+                if (strict) revert("VFS: epoch not allocated");
+                continue;
+            }
+            if (ep.mintedVclm == 0) continue;
+            uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+            while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+            uint256 weight = (base * _termMult(positionId, k)) / 1e8;
+            amount += (ep.mintedVclm * weight) / ep.totalWeight;
+        }
+    }
+
+    function _termStart(uint256 positionId, uint256 k) internal view returns (uint256) {
+        Term[] storage ts = _terms[positionId];
+        return k < ts.length ? ts[k].start : positions[positionId].endTimestamp;
+    }
+
+    function _termMult(uint256 positionId, uint256 k) internal view returns (uint256) {
+        Term[] storage ts = _terms[positionId];
+        return k < ts.length ? ts[k].multiplierBps : positions[positionId].queuedExtensionBps;
+    }
+
+    // t269u: first epoch whose start is at or after t (Section 10.2).
+    function _firstEpochAtOrAfter(uint256 t, uint256 t0) internal pure returns (uint256) {
+        if (t <= t0) return 1;
+        return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    }
+
+    // t269u: last epoch N whose N+1 ends at or before T (0 if none).
+    function _lastEligibleBy(uint256 T, uint256 t0) internal pure returns (uint256) {
+        if (T < t0 + 2 * EPOCH_DURATION_SECS) return 0;
+        return (T - t0) / EPOCH_DURATION_SECS - 1;
+    }
+
+    // t269u: add (or remove) the position's weight for epochs a..b, each with
+    // the duration multiplier in force at the epoch's start: terms (and a
+    // queued term starting at the current term's end) are walked from the
+    // last back, stopping once the range is covered.
+    function _applyWeight(uint256 positionId, uint256 a, uint256 b, bool add, uint256 t0) internal {
+        if (a == 0 || a > b) return;
+        Position storage pos = positions[positionId];
+        uint256 base = pos.amount * _getTokenMultiplier(pos.token);
+        uint256 k = _terms[positionId].length + (pos.queuedExtensionBps > 0 ? 1 : 0);
+        uint256 hi = b;
+        while (k > 0) {
+            k--;
+            uint256 lo = _firstEpochAtOrAfter(_termStart(positionId, k), t0);
+            if (lo <= hi) {
+                uint256 segFrom = lo > a ? lo : a;
+                _rangeWeight(segFrom, hi, (base * _termMult(positionId, k)) / 1e8, add);
+            }
+            if (lo <= a) break;
+            hi = lo - 1;
+        }
+    }
+
+    // Apply w to epochs from..to. Closed epochs (at most the one whose N+1 is
+    // still running) are changed directly; the last closed total carries
+    // forward to later epochs through the running sum, so only the end of the
+    // range needs a scheduled reverse change. Unclosed ranges are scheduled.
+    function _rangeWeight(uint256 from, uint256 to, uint256 w, bool add) internal {
+        if (w == 0 || from > to) return;
+        uint256 closedTo = lastClosedEpoch;
+        if (from <= closedTo) {
+            uint256 upTo = to < closedTo ? to : closedTo;
+            for (uint256 i = from; i <= upTo; i++) {
+                _runningWeight[i] = add ? _runningWeight[i] + w : _runningWeight[i] - w;
+            }
+            if (to < closedTo) return;
+        } else {
+            if (add) _weightAddAt[from] += w; else _weightSubAt[from] += w;
+        }
+        if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
     }
 
     // ===== Views =====
 
-    function getClaimableVclm(address owner) external view returns (uint256) {
-        return claimableVclm[owner];
+    /// @notice Current total weight kept for epoch N (final once N+1 has ended).
+    function epochTotalWeight(uint256 epochN) external view returns (uint256) {
+        if (epochN <= lastClosedEpoch) return _runningWeight[epochN];
+        uint256 w = _runningWeight[lastClosedEpoch];
+        for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+        return w;
     }
 
     // CL-23: returns 0 before launch rather than underflowing.
