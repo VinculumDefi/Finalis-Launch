@@ -28,9 +28,9 @@
         "rpc": "https://ethereum-rpc.publicnode.com",
         "chainIdChecked": 1,
         "gasEstimate": 1596454,
-        "gasPriceWei": "102000740",
-        "estimatedCostNative": "0.00016283948937596",
-        "readAt": "2026-10-21T19:52:28.339Z"
+        "gasPriceWei": "49375057",
+        "estimatedCostNative": "0.000078825007247878",
+        "readAt": "2026-10-21T22:59:16.008Z"
       }
     },
     {
@@ -51,10 +51,10 @@
       "publicRpcRead": {
         "rpc": "https://arb1.arbitrum.io/rpc",
         "chainIdChecked": 42161,
-        "gasEstimate": 1609489,
-        "gasPriceWei": "20002000",
-        "estimatedCostNative": "0.000032192998978",
-        "readAt": "2026-10-21T19:52:28.654Z"
+        "gasEstimate": 1611751,
+        "gasPriceWei": "20208000",
+        "estimatedCostNative": "0.000032570264208",
+        "readAt": "2026-10-21T22:59:16.345Z"
       }
     },
     {
@@ -76,9 +76,9 @@
         "rpc": "https://mainnet.optimism.io",
         "chainIdChecked": 10,
         "gasEstimate": 1596454,
-        "gasPriceWei": "1001548",
-        "estimatedCostNative": "0.000001598925310792",
-        "readAt": "2026-10-21T19:52:29.354Z"
+        "gasPriceWei": "1004809",
+        "estimatedCostNative": "0.000001604131347286",
+        "readAt": "2026-10-21T22:59:17.031Z"
       }
     },
     {
@@ -100,9 +100,9 @@
         "rpc": "https://polygon-bor-rpc.publicnode.com",
         "chainIdChecked": 137,
         "gasEstimate": 1599828,
-        "gasPriceWei": "278636084078",
-        "estimatedCostNative": "0.445769809118338584",
-        "readAt": "2026-10-21T19:52:29.723Z"
+        "gasPriceWei": "261490880955",
+        "estimatedCostNative": "0.41834043309647574",
+        "readAt": "2026-10-21T22:59:17.468Z"
       }
     },
     {
@@ -126,7 +126,7 @@
         "gasEstimate": 1596538,
         "gasPriceWei": "50000000",
         "estimatedCostNative": "0.0000798269",
-        "readAt": "2026-10-21T19:52:30.219Z"
+        "readAt": "2026-10-21T22:59:17.930Z"
       }
     },
     {
@@ -150,7 +150,7 @@
         "gasEstimate": 1596466,
         "gasPriceWei": "2500000150",
         "estimatedCostNative": "0.0039911652394699",
-        "readAt": "2026-10-21T19:52:30.478Z"
+        "readAt": "2026-10-21T22:59:18.179Z"
       }
     }
   ]
