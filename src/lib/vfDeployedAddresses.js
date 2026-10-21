@@ -23,7 +23,8 @@ export const BASE_CONTRACTS = Object.freeze({
   stake: PENDING,
 });
 
-// The seven new 5% CommitmentVaultLock contracts (5% on every duration).
+// The seven new 5% locks (5% on every duration): Base is BaseCommitmentVaultLock
+// (refuses VCLM, CHONX and SYNTH as inputs); the six others are CommitmentVaultLock.
 export const LOCKS_5PCT = Object.freeze({
   "Base": PENDING,
   "Ethereum": PENDING,
