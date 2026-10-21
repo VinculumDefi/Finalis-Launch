@@ -263,11 +263,13 @@ describe("t262u TRS rewards on the real ceremony flow (487 rows, test chain)", f
     let paid = 0n;
     for (const [k, p] of Object.entries(pos)) {
       const exp = (total * p.w) / Wt;
-      expect(await h.r.stake.claimableVclm(p.who.address)).to.equal(exp);
+      expect(await h.r.stake.claimableVclm(p.id, 2n)).to.equal(exp);
       const b0 = await h.r.vclm.balanceOf(p.who.address);
-      await (await h.r.stake.connect(p.who).claimVclm()).wait();
+      await (await h.r.stake.connect(p.who).claimPosition(p.id, 2n)).wait();
       expect((await h.r.vclm.balanceOf(p.who.address)) - b0).to.equal(exp);
-      await expect(h.r.stake.connect(p.who).claimVclm()).to.be.revertedWith("VFS: no claimable");
+      expect(await h.r.stake.claimableVclm(p.id, 2n)).to.equal(0n);
+      await expect(h.r.stake.connect(p.who).claimPosition(p.id, 2n)).to.be.revertedWith("VFS: nothing to claim");
+      await expect(h.r.stake.connect(h.other).claimPosition(p.id, 2n)).to.be.revertedWith("VFS: not owner");
       paid += exp;
       console.log(`      position ${k}: weight ${fmt(p.w)} claimed ${fmt(exp)} VCLM`);
     }
@@ -284,7 +286,7 @@ describe("t262u TRS rewards on the real ceremony flow (487 rows, test chain)", f
     expect(ep.rewardBasis).to.equal(0n);
     expect(ep.mintedVclm).to.equal(0n);
     expect(await h.r.vclm.totalSupply()).to.equal(sup0);
-    for (const p of Object.values(pos)) expect(await h.r.stake.claimableVclm(p.who.address)).to.equal(0n);
+    for (const p of Object.values(pos)) expect(await h.r.stake.claimableVclm(p.id, 3n)).to.equal(0n);
   });
 
   it("unstake returns each token after its term; early withdraw refused", async () => {
@@ -350,7 +352,7 @@ describe("t264u reward VCLM counts toward the 10,000,000 CHONX threshold (real c
   it("lock VCLM about 1,000 short of 10M; the epoch reward crosses it; anyone records activation once; the refused CHONX lock then mints", async () => {
     const { cum, reward, p0 } = await crossWithReward(h, staker, T0);
     const b0 = await h.r.vclm.balanceOf(staker.address);
-    await (await h.r.stake.connect(staker).claimVclm()).wait();
+    await (await h.r.stake.connect(staker).claimPosition(0n, 2n)).wait();
     expect((await h.r.vclm.balanceOf(staker.address)) - b0).to.equal(reward); // single staker gets it all (floor of 100%)
     await expect(h.r.verifier.connect(staker).syncChonxActivation()).to.emit(h.r.verifier, "ChonxActivated");
     expect(await h.r.verifier.chonxActivated()).to.equal(true);
