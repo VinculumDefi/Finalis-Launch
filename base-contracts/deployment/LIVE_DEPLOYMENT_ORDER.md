@@ -13,11 +13,12 @@ Per-chain values, gas and the post-deploy check are in
 
 ## On the day: checklist before anything is signed
 None of these steps sends anything.
-1. Build all deploy files from main once, right before the ceremony (the three
+1. Build all deploy files once from branch `release/2026-10-21` (main once it is merged), right before the ceremony (the three
    commands are in `scripts/deploy-pages/README.md`, under "Build on the day";
    the full day is in `deployment/DEPLOYMENT_DAY_RUNBOOK.md`). This also
    takes a fresh first Base ETH price into `ceremony-data.json`. Check that
-   the verifier creation code hash is `0x4ad594b4…423fe3`, the
+   the verifier creation code hash is `0x3c11faa9…1dcc66`, the Stake
+   creation code hash is `0xd2221a1a…b3d07e`, the
    BaseCommitmentVaultLock creation code hash is `0x7954931f…789df9` and the
    CommitmentVaultLock creation code hash is `0x2daadaf6…80bd99`; if any
    differs, stop.
@@ -107,3 +108,17 @@ sign, and never sends to a live chain. It was tested on the test chain in
 - **Standard minimum.** The contract minimum is $0.01. The $10 figure exists
   only in the app simulator.
 - Revision 12 governs the Handshake; Revision 6 governs everything else.
+
+## CHONX activation margin (VF-COM-025, t271u)
+The Verifier mints CHONX for a lock only if the lock was created after CHONX
+activation was recorded (`chonxActivationTimestamp()`). A Base lock must be
+created strictly later (a lock in the activation block is refused). A lock on
+any other chain must be created at least 1 day
+(`CHONX_SOURCE_CLOCK_MARGIN_SECS` = 86,400 seconds) after activation, because
+other chains' clocks are not Base's. Earlier CHONX locks are refused forever;
+their principal is still released at maturity.
+
+## Stake allocation order (t270u(g))
+`allocateEpoch(N)` accepts only N = `lastAllocatedEpoch()` + 1 (epoch 1 first),
+permissionless. Epochs with no fees, no eligible stake or no cap room still
+count as allocated, so the order never blocks.
