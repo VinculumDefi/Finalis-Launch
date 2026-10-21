@@ -8,6 +8,7 @@ const targets = {
   TokenVCLM: "VinculumFinalisToken.sol/VinculumFinalisToken.json",
   TokenCHONX: "VinculumFinalisToken.sol/VinculumFinalisToken.json",
   CommitmentVaultLock: "CommitmentVaultLock.sol/CommitmentVaultLock.json",
+  BaseCommitmentVaultLock: "BaseCommitmentVaultLock.sol/BaseCommitmentVaultLock.json",
   BaseLockRecordVerifier: "chain-verifiers/BaseLockRecordVerifier.sol/BaseLockRecordVerifier.json",
   VinculumFinalisSynth: "VinculumFinalisSynth.sol/VinculumFinalisSynth.json",
   VinculumFinalisStake: "VinculumFinalisStake.sol/VinculumFinalisStake.json",
