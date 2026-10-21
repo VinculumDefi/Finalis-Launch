@@ -165,8 +165,10 @@ struct ProofPackage {
     address baseRecipient;             // EVM address (nonzero)
     string releaseDestination;         // source-chain address
 
-    // CHONX activation receipt (if selectedOutputToken == CHONX)
-    bytes chonxActivationReceipt;      // causal ordering proof
+    // CHONX activation receipt. Kept only for ABI stability (the tuple and
+    // the recordFeeAndRac / verifyAndMint selectors). Not read: VF-COM-025 is
+    // enforced from the chain reader's lock creation time (t271u).
+    bytes chonxActivationReceipt;
 
     // RAC identity (pre-computed by SRC-EVID from immutable facts)
     bytes32 racIdentity;
@@ -283,6 +285,13 @@ contract VinculumFinalisVerifier {
     // BASE-ACT: CHONX activation
     bool public chonxActivated;
     uint256 public chonxActivationBlock;
+    // t271u VF-COM-025: Base block timestamp of activation. A CHONX lock mints
+    // only if its creation time (from the chain reader) is after it: Base
+    // locks strictly later (Base block timestamps strictly increase, so an
+    // equal time is the same block and is refused), other chains at least
+    // CHONX_SOURCE_CLOCK_MARGIN_SECS later (their clocks are not Base's).
+    uint256 public chonxActivationTimestamp;
+    uint256 public constant CHONX_SOURCE_CLOCK_MARGIN_SECS = 1 days;
 
     // BASE-RAC: RAC credits (indexed by racIdentity)
     mapping(bytes32 => uint256) public racCredits;
@@ -700,7 +709,7 @@ contract VinculumFinalisVerifier {
     ///      Called by recordFeeAndRac (before any write, so no fee or RAC is
     ///      recorded for a lock that does not exist) and by verifyAndMint.
     ///      The asset the lock actually holds must equal the package asset.
-    function _verifySource(ProofPackage calldata pkg) internal view {
+    function _verifySource(ProofPackage calldata pkg) internal view returns (uint256 extCreated) {
         IChainVerifier verifier = chainVerifiers[pkg.sourceEnvironmentId];
         require(address(verifier) != address(0), "VF-XCH-006: no verifier registered for environment");
         (bool finalized, , ) = verifier.verifyFinality(pkg.lockEventProof, pkg.sourceFinalityProof);
@@ -716,7 +725,7 @@ contract VinculumFinalisVerifier {
             uint256 extFee,
             uint256 extPrincipal,
             uint256 extDuration,
-            ,
+            uint256 extCreation,
             ,
             address extRecipient,
             uint8 extOutputToken
@@ -731,6 +740,7 @@ contract VinculumFinalisVerifier {
         require(extDuration == pkg.durationSecs, "VF-XCH-011: duration mismatch");
         require(extRecipient == pkg.baseRecipient, "VF-XCH-011: recipient mismatch");
         require(extOutputToken == pkg.selectedOutputToken, "VF-XCH-011: output token mismatch");
+        extCreated = extCreation;
         // Native locks: the reader reports the native canonical id. Token locks:
         // the reader reports tokenAddressKey(env, token), resolved here through
         // the ceremony-written index to the registry row for that address.
@@ -792,7 +802,6 @@ contract VinculumFinalisVerifier {
         if (pkg.selectedOutputToken == 1) { // CHONX
             _syncChonxActivation(); // VF-TOK-002: stake reward VCLM may have crossed the threshold
             require(chonxActivated, "VF-COM-025: CHONX not activated");
-            require(pkg.chonxActivationReceipt.length > 0, "VF-COM-025: missing activation receipt");
         }
 
         // Step 8: Handshake allowance lookup (VF-COM-006 / CL-11)
@@ -813,7 +822,21 @@ contract VinculumFinalisVerifier {
         // In simulation: skip (deployment pending)
 
         // Step 11: Source finality + fact cross-check (VF-XCH-006/010/011)
-        _verifySource(pkg);
+        uint256 createdAt = _verifySource(pkg);
+
+        // Step 11b (t271u): VF-COM-025 causal order from trusted data. CHONX
+        // must already be active when the lock is created; a later activation
+        // never cures an earlier lock. createdAt is the reader's creation time
+        // (Base: the lock record's block.timestamp; other chains: the proven
+        // source block or ledger time). Fixed once set, so a refused lock is
+        // refused forever.
+        if (pkg.selectedOutputToken == 1) {
+            uint256 eligibleAfter = chonxActivationTimestamp;
+            if (keccak256(bytes(pkg.sourceEnvironmentId)) != keccak256("Base")) {
+                eligibleAfter += CHONX_SOURCE_CLOCK_MARGIN_SECS - 1;
+            }
+            require(createdAt > eligibleAfter, "VF-COM-025: lock created before CHONX activation");
+        }
 
         // Step 12: Issuance calculation (VF-COM-018/019)
         // VF-ORC-011/013: emission rate from Valuation Timestamp, not caller-supplied age.
@@ -1102,6 +1125,7 @@ contract VinculumFinalisVerifier {
         if (!chonxActivated && lifetimeVclmIssued() >= CHONX_ACTIVATION_THRESHOLD) {
             chonxActivated = true;
             chonxActivationBlock = block.number;
+            chonxActivationTimestamp = block.timestamp;
             emit ChonxActivated(block.number);
         }
     }
