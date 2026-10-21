@@ -1,7 +1,9 @@
 // Base ceremony flow. base.html runs it in the browser (MetaMask signer); the
 // Hardhat test runs the SAME code on the in-process test chain. Nothing here
 // holds a key. Order (all before finalize, which is final):
-//   lock -> VCLM -> CHONX -> Verifier -> Forge -> Stake
+//   VCLM -> CHONX -> Verifier -> Forge (SYNTH) -> Stake(VCLM, CHONX, Forge, Verifier)
+//   -> Base lock = BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge)
+//      (refuses the three protocol tokens as inputs, VF-TOK-007; t262u)
 //   -> VCLM.initialize(Verifier, Stake)  (Stake on from the start)
 //   -> CHONX.initialize(Verifier, 0)
 //   -> 15 readers deployed and registered: Base, 6 EVM (bound to the NEW
@@ -54,19 +56,18 @@
     const at = (c) => c.getAddress();
     const old = (data.oldLocks || []).map((a) => a.toLowerCase());
 
-    const lock = await dep("CommitmentVaultLock", ["Base", data.devFund]);
-    if ((await lock.STANDARD_FEE_BPS()) !== 500n) throw new Error("lock fee is not 5%");
-    log("Base lock " + await at(lock));
     const vclm = await dep("TokenVCLM", ["Vinculum Finalis VCLM", "VCLM", 10000000000n * 10n ** 18n]);
-    const rc = await vclm.deploymentTransaction().wait();
-    const launch = BigInt((await signer.provider.getBlock(rc.blockNumber)).timestamp);
     const chonx = await dep("TokenCHONX", ["Vinculum Finalis CHONX", "CHONX", 100000000000n * 10n ** 18n]);
     const verifier = await dep("VinculumFinalisVerifier", [await at(vclm), await at(chonx)]);
     if (old.includes((await at(verifier)).toLowerCase())) throw new Error("verifier address is an old contract");
     if ((await verifier.BASE_NATIVE_ETH_ASSET_ID()).toLowerCase() !== data.row2.canonicalAssetId.toLowerCase()) throw new Error("Verifier BASE_NATIVE_ETH_ASSET_ID differs from registry row 2");
     const forge = await dep("VinculumFinalisSynth", [await at(verifier), await at(vclm), await at(chonx)]);
-    const stake = await dep("VinculumFinalisStake", [await at(vclm), await at(chonx), await at(forge), await at(verifier), launch]);
+    const stake = await dep("VinculumFinalisStake", [await at(vclm), await at(chonx), await at(forge), await at(verifier)]);
     log("VCLM " + await at(vclm) + "\nCHONX " + await at(chonx) + "\nVerifier " + await at(verifier) + "\nForge " + await at(forge) + "\nStake " + await at(stake));
+    const lock = await dep("BaseCommitmentVaultLock", ["Base", data.devFund, await at(vclm), await at(chonx), await at(forge)]);
+    if ((await lock.STANDARD_FEE_BPS()) !== 500n) throw new Error("lock fee is not 5%");
+    for (const t of [vclm, chonx, forge]) if (!(await lock.isProtocolToken(await at(t)))) throw new Error("Base lock does not refuse a protocol token");
+    log("Base lock " + await at(lock));
     await (await vclm.initialize(await at(verifier), await at(stake))).wait(); // Stake on from the start
     await (await chonx.initialize(await at(verifier), ethers.ZeroAddress)).wait();
 
@@ -114,6 +115,8 @@
 
     await (await verifier.finalize()).wait();
     if (!(await verifier.configurationFinalized())) throw new Error("finalize read failed");
+    const launch = await verifier.protocolLaunchTimestamp();
+    if (launch === 0n || (await stake.launchTimestamp()) !== launch) throw new Error("launch time read failed");
     log("Finalized.");
     return { lock, vclm, chonx, verifier, forge, stake, readers, launch };
   }
