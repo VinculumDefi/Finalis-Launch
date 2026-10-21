@@ -182,10 +182,18 @@ contract VinculumFinalisStake {
     mapping(uint256 => uint256) private _weightAddAt;
     mapping(uint256 => uint256) private _weightSubAt;
     uint256 public lastClosedEpoch;
+    // t270u(g): last allocated epoch; allocation is in strict epoch order.
+    uint256 public lastAllocatedEpoch;
 
     // VF-STK-016: Claimable VCLM accumulates and never expires: a position's
     // unclaimed epochs stay claimable from nextClaimEpoch onwards.
     mapping(uint256 => uint256) public nextClaimEpoch;
+
+    // t270u: per-position term checkpoint. The term in force at the start of
+    // nextClaimEpoch (or an earlier one). Terms are only appended, so a claim
+    // resumes the term walk here instead of at the first term: claim work
+    // depends only on the epochs and terms in the claimed range.
+    mapping(uint256 => uint256) private _claimTermIdx;
 
     // ===== Events =====
 
@@ -428,6 +436,13 @@ contract VinculumFinalisStake {
         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
         require(block.timestamp >= nPlus1End, "VF-STK-013: wait for N+1 end");
 
+        // VF-STK-010 + operator rule t270u(g): permissionless chronological
+        // allocation. Epoch N is allocated only after N-1 (epoch 1 first).
+        // Every outcome below (zero RAC, zero weight, cap skip, paid) marks the
+        // epoch allocated, so the next epoch can always follow: no deadlock.
+        require(epochN == lastAllocatedEpoch + 1, "VF-STK-010: allocate in epoch order (t270u)");
+        lastAllocatedEpoch = epochN;
+
         // Weight is fixed now (VF-STK-013): no change can reach N once N+1
         // has ended. t269u: O(1), the incrementally kept total.
         uint256 totalWeight = _runningWeight[epochN];
@@ -485,8 +500,10 @@ contract VinculumFinalisStake {
         uint256 t0 = _launched();
         uint256 from = nextClaimEpoch[positionId];
         require(toEpoch >= from, "VFS: nothing to claim");
-        amount = _claimable(positionId, from, toEpoch, t0, true);
+        uint256 k;
+        (amount, k) = _claimable(positionId, from, toEpoch, t0, true, _claimTermIdx[positionId]);
         nextClaimEpoch[positionId] = toEpoch + 1;
+        if (k != _claimTermIdx[positionId]) _claimTermIdx[positionId] = k;
         if (amount > 0) {
             // VF-STK-018: Transfer minted VCLM; no re-mint
             require(vclmToken.transfer(msg.sender, amount), "VFS: transfer failed");
@@ -506,14 +523,15 @@ contract VinculumFinalisStake {
         uint256 t0 = verifier.protocolLaunchTimestamp();
         uint256 from = nextClaimEpoch[positionId];
         if (t0 == 0 || toEpoch < from || positions[positionId].owner == address(0)) return 0;
-        return _claimable(positionId, from, toEpoch, t0, false);
+        (uint256 amount, ) = _claimable(positionId, from, toEpoch, t0, false, _claimTermIdx[positionId]);
+        return amount;
     }
 
     // Sum over epochs from..toEpoch of floor(mintedVclm x weight / totalWeight).
     // Weight is the earlier design's _epochWeight, evaluated with a forward
-    // term pointer so a long term history is read once per call.
-    function _claimable(uint256 positionId, uint256 from, uint256 toEpoch, uint256 t0, bool strict)
-        internal view returns (uint256 amount)
+    // term pointer that starts at the position's checkpoint k0 (t270u).
+    function _claimable(uint256 positionId, uint256 from, uint256 toEpoch, uint256 t0, bool strict, uint256 k0)
+        internal view returns (uint256 amount, uint256 k)
     {
         // VF-STK-013: only epochs whose N+1 has ended are final.
         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
@@ -526,7 +544,7 @@ contract VinculumFinalisStake {
         if (toEpoch < last) last = toEpoch;
         Term[] storage ts = _terms[positionId];
         uint256 nTerms = ts.length + (pos.queuedExtensionBps > 0 ? 1 : 0);
-        uint256 k = 0;
+        k = k0;
         uint256 base = pos.amount * _getTokenMultiplier(pos.token);
         for (uint256 n = from; n <= last; n++) {
             Epoch storage ep = epochs[n];
