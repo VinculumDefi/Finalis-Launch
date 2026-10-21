@@ -92,7 +92,31 @@ pending transaction.
        `node scripts/priceRun.cjs fetched.json --run 2 --out run2.json`; the
        poster `0x6001…0DB4` signs it. Point the poster service at the new
        Verifier.
-5. [ ] Stake epochs: epoch 1 ends 10 days after finalize. Anyone calls
-       `closeEpoch(N)` after epoch N ends (in order), `allocateEpoch(N)` after
-       epoch N+1 ends; stakers call `claimVclm()`.
+5. [ ] Stake epochs (from day 10 after finalize, then every 10 days). See
+       below.
 6. [ ] Final checklist in runbook section 5.
+
+## F. Stake epoch calls after the ceremony
+Epoch N runs from launch + (N-1) x 10 days to launch + N x 10 days. Launch
+is the Verifier's `protocolLaunchTimestamp` (the `finalize` block time, also
+`launch_timestamp` in `src/lib/vfDeployedAddresses.js`). Stake reads the same
+value (`Stake.launchTimestamp()`).
+
+Who: anyone. The calls are permissionless and move no user funds. Nobody
+else is obliged to call them, so the operator's wallet should (the deployer
+wallet or any funded Base wallet; no role is needed). The Base44 app does not
+make these calls.
+
+| Call (on Stake) | When | What it does | Gas (test chain) | Cost at 0.006 gwei |
+|---|---|---|---|---|
+| `closeEpoch(N)` | at or after launch + N x 10 days; epochs strictly in order 1, 2, 3, … (an epoch with no fees must still be closed) | records the Verifier's `epochRewardBasis(N)` | about 80,000 to 102,000 | under 0.000001 ETH |
+| `allocateEpoch(N)` | at or after launch + (N+1) x 10 days, once N is closed | mints Basis / $0.10 VCLM to Stake once and sets each staker's share; 0 if no fees or no eligible stake | about 350,000 with 4 positions (155,000 for a zero epoch); grows with the number of positions ever opened | about 0.000002 ETH |
+| `claimVclm()` | any time after allocation, by each staker | sends that staker's claimable VCLM; nothing to claim reverts | about 56,000 | under 0.000001 ETH |
+| `syncChonxActivation()` (on the Verifier) | after an allocation that takes lifetime VCLM to 10,000,000 or more | records CHONX activation (the next CHONX lock would also do it) | small | under 0.000001 ETH |
+
+Schedule: day 10 close 1; day 20 close 2 and allocate 1; day 30 close 3 and
+allocate 2; and so on, every 10 days. Late calls lose nothing (boundaries
+never move and claims never expire), except that an allocation is refused in
+full if the VCLM cap cannot hold the whole epoch reward at that time.
+Read state with `epochs(N)`, `getCurrentEpoch()`, `claimableVclm(address)`.
+Each call is a normal transaction to the Stake address in `base44-values.json` (STAKE), sent from MetaMask or any wallet that can call a contract function; none needs arguments other than N.
