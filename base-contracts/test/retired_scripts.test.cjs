@@ -74,7 +74,7 @@ describe("retired broadcast scripts and pages", function () {
     const DAY = 86400;
     expect(rows).to.deep.equal([[30 * DAY, 10000], [60 * DAY, 14000], [90 * DAY, 17500], [120 * DAY, 21000]]);
     const [s] = await ethers.getSigners();
-    const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(s.address, s.address, s.address, s.address, 1);
+    const stake = await (await ethers.getContractFactory("VinculumFinalisStake")).deploy(s.address, s.address, s.address, s.address);
     for (const [secs, bps] of rows) expect(await stake.stakeMultiplierBps(secs)).to.equal(BigInt(bps));
     expect(await stake.STAKE_120D_BPS()).to.equal(21000n);
     for (const bad of [7 * DAY, 180 * DAY, 365 * DAY, 120 * DAY + 1]) await expect(stake.stakeMultiplierBps(bad)).to.be.reverted;
