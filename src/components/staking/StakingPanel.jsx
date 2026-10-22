@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { STAKE_DURATIONS } from '@/lib/vfRevision6Authority';
 import { formatTokenAmount } from '@/lib/vfTokenEngine';
 import { TOKEN_MULTIPLIER_BPS, EPOCH_SECS } from '@/lib/vfStakingEngine';
-import { makeSimulatorStakeChain, previewClaimAll, runClaimAll, MAX_CLAIM_GAS } from '@/lib/vfClaimPlanner';
+import { makeSimulatorStakeChain, previewClaimAll, runClaimAll, stoppedMessage, MAX_CLAIM_GAS } from '@/lib/vfClaimPlanner';
 import { Lock, Unlock, Coins, Clock, AlertCircle, FastForward } from 'lucide-react';
 
 // Simulator panel. Mirrors VinculumFinalisStake: per-position claims up to a
@@ -81,7 +81,7 @@ export default function StakingPanel({ engine, account }) {
     if (r.status === 'complete') {
       show({ ok: true, reason: `Claimed ${formatTokenAmount(paid.toString())} VCLM up to epoch ${latest} in ${r.done.length} transaction${r.done.length === 1 ? '' : 's'} (largest about ${maxGas.toString()} gas)` });
     } else {
-      show({ ok: false, reason: `${r.error?.message || 'Stopped'}. The remaining ${formatTokenAmount(r.remaining.toString())} VCLM stays available. You can claim it any time.` });
+      show({ ok: false, reason: `${r.error?.message || 'Stopped'}. ${stoppedMessage(r.remaining === null ? null : formatTokenAmount(r.remaining.toString()))}` });
     }
   };
 
