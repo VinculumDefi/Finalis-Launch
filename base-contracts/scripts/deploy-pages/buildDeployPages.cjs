@@ -59,8 +59,24 @@ const ARTS = {
   stake: artifact("VinculumFinalisStake.sol", "VinculumFinalisStake"),
 };
 
-const { REGISTRY_NAME, loadRegistry } = require("../registryFile.cjs");
-const registry = loadRegistry().reg; // Revision B: every entry is written (Base ETH is row 2 under Base)
+const { resolveCeremonyRegistry } = require("./resolveAssetRegistry.cjs");
+const { registryGateHtml, connectGateInitScript, renderConnectGatePage, EXPECTED_REGISTRY_ROWS } = require("./registryGate.cjs");
+const EXPECTED_REGISTRY_SHA256 = "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9";
+const ceremonyRegistry = resolveCeremonyRegistry();
+if (ceremonyRegistry.rowCount !== EXPECTED_REGISTRY_ROWS || ceremonyRegistry.sha256 !== EXPECTED_REGISTRY_SHA256) {
+  throw new Error(
+    "REGISTRY GUARD REFUSAL: expectedSha=" + EXPECTED_REGISTRY_SHA256 +
+    " expectedRows=" + EXPECTED_REGISTRY_ROWS +
+    " actualSha=" + ceremonyRegistry.sha256 +
+    " rowCount=" + ceremonyRegistry.rowCount +
+    " source=" + ceremonyRegistry.filename
+  );
+}
+const registry = ceremonyRegistry.reg; // Revision B: every entry is written (Base ETH is row 2 under Base)
+const REGISTRY_NAME = ceremonyRegistry.name;
+const REGISTRY_FILENAME = ceremonyRegistry.filename;
+const REGISTRY_ROWS = ceremonyRegistry.rowCount;
+const REGISTRY_SHA256 = ceremonyRegistry.sha256;
 
 const utxo = JSON.parse(
   execFileSync("python3", ["-B", "-c",
@@ -245,6 +261,7 @@ function basePage() {
 <label for="resumeVerifier">Optional: resume on a Verifier this page already deployed (otherwise the saved addresses in this browser are used)</label><br>
 <input id="resumeVerifier" type="text" size="46" placeholder="0x..." autocomplete="off">
 </p>
+${registryGateHtml()}
 <button id="go" type="button">Connect, deploy, and configure (stops before finalize)</button>
 <button id="show" type="button">Print addresses</button>
 <button id="clear" type="button">Forget saved addresses</button>
@@ -468,6 +485,7 @@ goBtn.onclick = async () => {
   }
 };
 printAddresses(loadSaved(), "");
+${connectGateInitScript("go")}
 </script>
 </body>
 </html>
@@ -488,11 +506,13 @@ function evmLockPage(env) {
 <li>Fee: 5.00% of gross to the Dev Fund for every duration, including the 1-hour Handshake</li>
 <li>Floors: Handshake $0.01 to $0.02; every other duration at least $0.01</li>
 </ul>
+${registryGateHtml()}
 <button id="go" type="button">Connect and deploy on ${esc(net.name)}</button>
 <button id="clear" type="button">Forget saved address</button>
 <pre id="log"></pre>
 <h2>Approved Asset Registry rows for ${esc(env)}</h2>
 <p>These are written to the Base Verifier by base.html, not on this network.</p>
+${registryGateHtml()}
 ${registryTable(env)}
 ${CDN}
 <script>
@@ -545,6 +565,7 @@ goBtn.onclick = async () => {
   }
 };
 printAddresses(loadSaved());
+${connectGateInitScript("go")}
 </script>
 </body>
 </html>
@@ -581,6 +602,7 @@ function utxoPage(env) {
 <pre id="log">${esc(lines.join("\n"))}</pre>
 <h2>Approved Asset Registry rows for ${esc(env)}</h2>
 <p>Written to the Base Verifier by base.html, not on ${esc(net.name)}.</p>
+${registryGateHtml()}
 ${registryTable(env)}
 </body>
 </html>
@@ -617,6 +639,7 @@ function solanaPage() {
 <button id="check" type="button">Read program status on mainnet-beta (read-only)</button>
 <h2>Approved Asset Registry rows for Solana</h2>
 <p>Written to the Base Verifier by base.html, not on Solana.</p>
+${registryGateHtml()}
 ${registryTable(env)}
 <script>
 const RPC = "https://api.mainnet-beta.solana.com";
@@ -676,6 +699,7 @@ function stellarPage() {
 <pre id="log">${esc(lines.join("\n"))}</pre>
 <h2>Approved Asset Registry rows for Stellar</h2>
 <p>Written to the Base Verifier by base.html, not on Stellar.</p>
+${registryGateHtml()}
 ${registryTable(env)}
 </body>
 </html>
@@ -708,6 +732,7 @@ function xrplPage() {
 <pre id="log">${esc(lines.join("\n"))}</pre>
 <h2>Approved Asset Registry rows for XRP Ledger</h2>
 <p>Written to the Base Verifier by base.html, not on the XRP Ledger.</p>
+${registryGateHtml()}
 ${registryTable(env)}
 </body>
 </html>
@@ -715,23 +740,51 @@ ${registryTable(env)}
 }
 
 // ---------------------------------------------------------------- write
-const pages = [];
-pages.push(["Base", EVM_NETWORKS.Base.file, basePage()]);
-for (const env of ["Ethereum", "Polygon", "Optimism", "Arbitrum", "BNB Smart Chain", "Avalanche"]) pages.push([env, EVM_NETWORKS[env].file, evmLockPage(env)]);
-for (const env of Object.keys(UTXO_NETWORKS)) pages.push([env, UTXO_NETWORKS[env].file, utxoPage(env)]);
-pages.push(["Solana", OTHER_NETWORKS.Solana.file, solanaPage()]);
-pages.push(["Stellar", OTHER_NETWORKS.Stellar.file, stellarPage()]);
-pages.push(["XRP Ledger", OTHER_NETWORKS["XRP Ledger"].file, xrplPage()]);
+function buildAllPages() {
+  if (REGISTRY_ROWS !== EXPECTED_REGISTRY_ROWS || REGISTRY_SHA256 !== EXPECTED_REGISTRY_SHA256) {
+    throw new Error(
+      "REGISTRY GUARD REFUSAL: refusing to write deploy pages. expectedSha=" + EXPECTED_REGISTRY_SHA256 +
+      " expectedRows=" + EXPECTED_REGISTRY_ROWS +
+      " actualSha=" + REGISTRY_SHA256 +
+      " rowCount=" + REGISTRY_ROWS +
+      " source=" + REGISTRY_FILENAME
+    );
+  }
+  const pages = [];
+  pages.push(["Base", EVM_NETWORKS.Base.file, basePage()]);
+  for (const env of ["Ethereum", "Polygon", "Optimism", "Arbitrum", "BNB Smart Chain", "Avalanche"]) pages.push([env, EVM_NETWORKS[env].file, evmLockPage(env)]);
+  for (const env of Object.keys(UTXO_NETWORKS)) pages.push([env, UTXO_NETWORKS[env].file, utxoPage(env)]);
+  pages.push(["Solana", OTHER_NETWORKS.Solana.file, solanaPage()]);
+  pages.push(["Stellar", OTHER_NETWORKS.Stellar.file, stellarPage()]);
+  pages.push(["XRP Ledger", OTHER_NETWORKS["XRP Ledger"].file, xrplPage()]);
 
-const order = rows.map((r) => r.environment);
-pages.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-if (pages.length !== 16 || new Set(pages.map((p) => p[0])).size !== 16) throw new Error("expected sixteen distinct pages");
-for (const [env, file, html] of pages) {
-  // base.html is the full Base ceremony page (reader, registry, Dev Fund,
-  // poster, price, finalize), maintained by hand with ceremony.json from
-  // build_ceremony_artifacts.cjs. Do not overwrite it with the stop-before-
-  // finalize page generated here.
-  if (file === "base.html") { console.log(env.padEnd(16) + " scripts/deploy-pages/base.html (kept; not overwritten)"); continue; }
-  fs.writeFileSync(path.join(OUT_DIR, file), html);
-  console.log(env.padEnd(16) + " scripts/deploy-pages/" + file + " (" + html.length + " bytes)");
+  const order = rows.map((r) => r.environment);
+  pages.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+  if (pages.length !== 16 || new Set(pages.map((p) => p[0])).size !== 16) throw new Error("expected sixteen distinct pages");
+  for (const [env, file, html] of pages) {
+    // base.html is the full Base ceremony page (reader, registry, Dev Fund,
+    // poster, price, finalize), maintained by hand with ceremony.json from
+    // build_ceremony_artifacts.cjs. Do not overwrite it with the stop-before-
+    // finalize page generated here.
+    if (file === "base.html") { console.log(env.padEnd(16) + " scripts/deploy-pages/base.html (kept; not overwritten)"); continue; }
+    fs.writeFileSync(path.join(OUT_DIR, file), html);
+    console.log(env.padEnd(16) + " scripts/deploy-pages/" + file + " (" + html.length + " bytes)");
+  }
+  return pages;
+}
+
+module.exports = {
+  registryGateHtml,
+  connectGateInitScript,
+  renderConnectGatePage,
+  buildAllPages,
+  REGISTRY_FILENAME,
+  REGISTRY_ROWS,
+  REGISTRY_SHA256,
+  EXPECTED_REGISTRY_ROWS,
+  EXPECTED_REGISTRY_SHA256,
+};
+
+if (require.main === module) {
+  buildAllPages();
 }
