@@ -17,6 +17,137 @@
   const BATCH = 50;
   const EVM_ENVS = ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"];
 
+
+  // Main CommitmentVaultLock runtime (immutables masked). Used to refuse the
+  // retired f9e4d8c 2.5% HANDSHAKE_FEE_BPS=250 locks at 0x5AB4… on the six
+  // non-Base chains, and any other bytecode that is not main.
+  const CVL_RUNTIME_HASH = "0x70d73acf928a2f37ddebf165ca68e448eaa4ca76b73941d71f8b3569eeee1a79";
+  const CVL_IMMUTABLE_RANGES = [[2450, 32], [4116, 32], [4963, 32]];
+  const HANDSHAKE_FEE_BPS_SELECTOR = "0xee8a0fb0";
+  const EVM_RPC = {
+    Ethereum: { url: "https://ethereum-rpc.publicnode.com", chainId: 1 },
+    Arbitrum: { url: "https://arbitrum-one-rpc.publicnode.com", chainId: 42161 },
+    Optimism: { url: "https://optimism-rpc.publicnode.com", chainId: 10 },
+    Polygon: { url: "https://polygon-bor-rpc.publicnode.com", chainId: 137 },
+    "BNB Smart Chain": { url: "https://bsc-rpc.publicnode.com", chainId: 56 },
+    Avalanche: { url: "https://avalanche-c-chain-rpc.publicnode.com", chainId: 43114 },
+  };
+
+  function maskedCodeHash(ethers, codeHex) {
+    const raw = (codeHex || "0x").replace(/^0x/, "");
+    if (!raw || raw === "0") return ethers.ZeroHash;
+    const code = new Uint8Array(raw.match(/.{1,2}/g).map((b) => parseInt(b, 16)));
+    for (const [start, len] of CVL_IMMUTABLE_RANGES) {
+      if (start + len <= code.length) code.fill(0, start, start + len);
+    }
+    return ethers.keccak256(code);
+  }
+
+  function decodeSlot0String(word) {
+    const hex = (word || "0x").replace(/^0x/, "").padStart(64, "0");
+    const bytes = [];
+    for (let i = 0; i < 64; i += 2) bytes.push(parseInt(hex.slice(i, i + 2), 16));
+    const lenFlag = bytes[31];
+    if (lenFlag % 2 !== 0) return null;
+    const len = lenFlag / 2;
+    if (len > 31) return null;
+    return String.fromCharCode.apply(null, bytes.slice(0, len));
+  }
+
+  function refuseLock(env, reason) {
+    const err = new Error("REFUSED non-Base lock on " + env + ": " + reason + ". Connect wallet / Run ceremony stays disabled.");
+    err.env = env;
+    err.reason = reason;
+    err.refusedLock = true;
+    return err;
+  }
+
+  async function verifyNonBaseLock(ethers, provider, env, address, opts) {
+    const expectedHash = (opts && opts.expectedRuntimeHash) || CVL_RUNTIME_HASH;
+    const expectedDev = ethers.getAddress(opts.expectedDevFund);
+    let g;
+    try { g = ethers.getAddress(address); } catch {
+      throw refuseLock(env, "address is not a valid checksummed address");
+    }
+    if (g === ethers.ZeroAddress) throw refuseLock(env, "address is zero");
+    const old = ((opts && opts.oldLocks) || []).map((a) => a.toLowerCase());
+    if (old.includes(g.toLowerCase())) {
+      throw refuseLock(env, g + " is a retired 2.5% Handshake lock");
+    }
+
+    const code = await provider.getCode(g);
+    if (!code || code === "0x") throw refuseLock(env, "eth_getCode returned empty (no contract)");
+
+    try {
+      const feeProbe = await provider.call({ to: g, data: HANDSHAKE_FEE_BPS_SELECTOR });
+      if (feeProbe && feeProbe !== "0x" && feeProbe.length >= 66) {
+        const v = BigInt(feeProbe);
+        if (v === 250n) throw refuseLock(env, "bytecode exposes HANDSHAKE_FEE_BPS()=250 (old 2.5% lock)");
+        throw refuseLock(env, "bytecode exposes HANDSHAKE_FEE_BPS() (not main CommitmentVaultLock)");
+      }
+    } catch (e) {
+      if (e && e.refusedLock) throw e;
+    }
+
+    const actualHash = maskedCodeHash(ethers, code);
+    if (actualHash.toLowerCase() !== expectedHash.toLowerCase()) {
+      throw refuseLock(
+        env,
+        "eth_getCode masked runtime hash " + actualHash + " != main CommitmentVaultLock " + expectedHash
+      );
+    }
+
+    const slot0 = await provider.getStorage(g, 0);
+    const label = decodeSlot0String(slot0);
+    if (label !== env) {
+      throw refuseLock(env, "slot 0 environmentId is " + JSON.stringify(label) + ", expected " + JSON.stringify(env));
+    }
+
+    const c = new ethers.Contract(g, [
+      "function devFund() view returns (address)",
+      "function STANDARD_FEE_BPS() view returns (uint256)",
+    ], provider);
+    const df = ethers.getAddress(await c.devFund());
+    if (df !== expectedDev) {
+      throw refuseLock(env, "devFund() is " + df + ", expected " + expectedDev);
+    }
+    const fee = await c.STANDARD_FEE_BPS();
+    if (fee !== 500n) {
+      throw refuseLock(env, "STANDARD_FEE_BPS() is " + fee + ", expected 500 (5%)");
+    }
+    return { env, address: g, runtimeHash: actualHash, environmentId: label, devFund: df };
+  }
+
+  /**
+   * providersByEnv[env] = ethers Provider for that chain.
+   * Tests pass the same Hardhat provider for every env. The ceremony page
+   * passes publicProviders(ethers).
+   */
+  async function verifyAllNonBaseLocks(ethers, providersByEnv, newLocks, data) {
+    const expectedHash = (data.nonBaseLock && data.nonBaseLock.expectedRuntimeHash) || CVL_RUNTIME_HASH;
+    const results = [];
+    for (const env of EVM_ENVS) {
+      const provider = providersByEnv[env];
+      if (!provider) throw refuseLock(env, "no provider for eth_getCode");
+      const expectedDev = (data.evmDevFunds && data.evmDevFunds[env]) || data.devFund;
+      results.push(await verifyNonBaseLock(ethers, provider, env, newLocks[env], {
+        expectedDevFund: expectedDev,
+        expectedRuntimeHash: expectedHash,
+        oldLocks: data.oldLocks || [],
+      }));
+    }
+    return results;
+  }
+
+  function publicProviders(ethers) {
+    const out = {};
+    for (const env of EVM_ENVS) {
+      const cfg = EVM_RPC[env];
+      out[env] = new ethers.JsonRpcProvider(cfg.url, cfg.chainId, { staticNetwork: true });
+    }
+    return out;
+  }
+
   function checkInputs(ethers, data, newLocks, me) {
     if (!data.devFund || !data.row2 || !Array.isArray(data.entries) || !data.priceUsd18) throw new Error("ceremony data incomplete. Nothing was sent.");
     if (BigInt(data.priceUsd18) <= 0n) throw new Error("scheduled ETH price is not positive. Nothing was sent.");
@@ -44,9 +175,12 @@
     return { livePoster, locks };
   }
 
-  async function runBaseCeremony({ ethers, signer, art, data, newLocks, log = () => {} }) {
+  async function runBaseCeremony({ ethers, signer, art, data, newLocks, log = () => {}, providersByEnv = null }) {
     const me = await signer.getAddress();
     const { livePoster, locks } = checkInputs(ethers, data, newLocks, me);
+    // Refuse retired / wrong-bytecode / wrong-label / wrong-Dev-Fund locks on the six chains.
+    const providers = providersByEnv || Object.fromEntries(EVM_ENVS.map((e) => [e, signer.provider]));
+    await verifyAllNonBaseLocks(ethers, providers, locks, data);
     const priceUsd18 = BigInt(data.priceUsd18);
     const dep = async (name, args) => {
       const c = await new ethers.ContractFactory(art[name].abi, art[name].bytecode, signer).deploy(...args);
@@ -121,7 +255,7 @@
     return { lock, vclm, chonx, verifier, forge, stake, readers, launch };
   }
 
-  const api = { runBaseCeremony, checkInputs, EVM_ENVS };
+  const api = { runBaseCeremony, checkInputs, verifyNonBaseLock, verifyAllNonBaseLocks, publicProviders, maskedCodeHash, decodeSlot0String, CVL_RUNTIME_HASH, CVL_IMMUTABLE_RANGES, HANDSHAKE_FEE_BPS_SELECTOR, EVM_ENVS, EVM_RPC };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BaseCeremonyFlow = api;
 })(typeof window !== "undefined" ? window : globalThis);
