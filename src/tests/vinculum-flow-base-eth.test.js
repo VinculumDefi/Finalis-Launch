@@ -143,7 +143,7 @@ test('addresses come from one generated file; retired 2.5% locks are never offer
   assert.equal(Object.keys(cfg.READERS).length, 15);
   assert.equal('Solana' in cfg.READERS, false);
   const retired = cfg.RETIRED_LOCKS.map((r) => r.address.toLowerCase());
-  assert.deepEqual(retired.sort(), ['0x4ede54e1cb6e337923f8d63fa0799ae778263b1a', '0x968bfd5b580144b4398c10bb1e61bd8a6b1ac946']);
+  assert.deepEqual(retired.sort(), ['0x4ede54e1cb6e337923f8d63fa0799ae778263b1a', '0x5ab40cdd51036ea88889c26e182b2936ddf76a8a', '0x968bfd5b580144b4398c10bb1e61bd8a6b1ac946']);
   for (const r of cfg.RETIRED_LOCKS) {
     assert.equal(r.new_locks, false); assert.equal(r.release_allowed, true);
     assert.equal(cfg.isRetiredLock(r.address), true);
