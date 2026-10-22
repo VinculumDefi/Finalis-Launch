@@ -14,6 +14,7 @@
   button:disabled { background:#3a4254; }
   #log { white-space:pre-wrap; font-family:ui-monospace, monospace; font-size:13px; background:#151c2b; padding:14px; border-radius:8px; min-height:140px; }
   .seal { display:none; border:1px solid #3dd68c; padding:14px; border-radius:8px; white-space:pre-wrap; }
+  #registry-wrong { color:#ff6b6b; font-weight:600; }
 </style>
 </head>
 <body>
@@ -22,8 +23,12 @@
   <p>Deploys VCLM, CHONX, the Verifier, Forge (VinculumFinalisSynth, the SYNTH token) and Stake, then the new 5% Base lock BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge), which refuses VCLM, CHONX and SYNTH as lock inputs before any token moves. Stake is on from the start: VCLM is initialised with the Verifier and Stake as its minters. Every lock duration, including the 1-hour Handshake, charges 5.00% of gross.</p>
   <p>Before finalize it deploys and registers 15 readers: Base; Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche (bound to the NEW 5% locks entered below); Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash (live Dev Fund scripts); Stellar and XRP Ledger (live Dev Fund key and account). Solana is not registered. Then: registry in batches of 50 (Revision B: 486 rows plus Base ETH = 487), Dev Fund for the seven EVM chains, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
   <p>Run the six non-Base lock pages first and paste the new lock addresses here. The page refuses the old 2.5% locks.</p>
+  <div id="registry-gate">
+    <p>Registry source: <code id="registry-filename">(loading)</code>. Rows: <b id="registry-rows">?</b>. SHA-256: <code id="registry-sha256">(loading)</code>.</p>
+    <p id="registry-wrong" style="display:none">WRONG REGISTRY: expected 487 rows, found <span id="registry-wrong-n"></span></p>
+  </div>
   <div id="locks"></div>
-  <p><button id="connect">Connect wallet</button> <span id="who"></span></p>
+  <p><button id="connect" disabled>Connect wallet</button> <span id="who"></span></p>
   <p><button id="run" disabled>Run ceremony</button></p>
   <div id="log"></div>
   <div class="seal" id="seal"></div>
@@ -31,6 +36,7 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
 <script src="baseCeremonyFlow.js"></script>
 <script>
+const EXPECTED_REGISTRY_ROWS = 487;
 const logEl = document.getElementById("log");
 const sealEl = document.getElementById("seal");
 function log(s) { logEl.textContent += s + "\n"; }
@@ -43,7 +49,38 @@ for (const env of BaseCeremonyFlow.EVM_ENVS) {
   l.appendChild(i); locksEl.appendChild(l);
 }
 let signer, data;
-document.getElementById("connect").onclick = async () => {
+const connectBtn = document.getElementById("connect");
+
+async function loadRegistryGate() {
+  try {
+    data = await (await fetch("ceremony-data.json")).json();
+  } catch (e) {
+    document.getElementById("registry-filename").textContent = "(ceremony-data.json unreadable)";
+    document.getElementById("registry-rows").textContent = "0";
+    document.getElementById("registry-wrong").style.display = "block";
+    document.getElementById("registry-wrong-n").textContent = "0";
+    connectBtn.disabled = true;
+    log("Stopped: ceremony-data.json could not be loaded. Connect wallet stays disabled.");
+    return;
+  }
+  const rows = Number(data.registryRows != null ? data.registryRows : (data.entries && data.entries.length));
+  const filename = data.registrySource || "(missing registrySource)";
+  const sha = data.registrySha256 || "(missing registrySha256)";
+  document.getElementById("registry-filename").textContent = filename;
+  document.getElementById("registry-rows").textContent = String(rows);
+  document.getElementById("registry-sha256").textContent = sha;
+  if (rows !== EXPECTED_REGISTRY_ROWS) {
+    document.getElementById("registry-wrong").style.display = "block";
+    document.getElementById("registry-wrong-n").textContent = String(rows);
+    connectBtn.disabled = true;
+    log("WRONG REGISTRY: expected 487 rows, found " + rows + ". Connect wallet disabled.");
+    return;
+  }
+  connectBtn.disabled = false;
+}
+
+connectBtn.onclick = async () => {
+  if (connectBtn.disabled) return;
   if (!window.ethereum) { log("No wallet."); return; }
   const provider = new ethers.BrowserProvider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
@@ -51,7 +88,15 @@ document.getElementById("connect").onclick = async () => {
   if (net.chainId !== 8453n) { log("Wrong network. Switch to Base."); return; }
   signer = await provider.getSigner();
   document.getElementById("who").textContent = await signer.getAddress();
-  data = await (await fetch("ceremony-data.json")).json();
+  if (!data) data = await (await fetch("ceremony-data.json")).json();
+  const rows = Number(data.registryRows != null ? data.registryRows : (data.entries && data.entries.length));
+  if (rows !== EXPECTED_REGISTRY_ROWS) {
+    document.getElementById("registry-wrong").style.display = "block";
+    document.getElementById("registry-wrong-n").textContent = String(rows);
+    connectBtn.disabled = true;
+    log("WRONG REGISTRY: expected 487 rows, found " + rows + ". Connect wallet disabled.");
+    return;
+  }
   try { BaseCeremonyFlow.checkInputs(ethers, data, collectLocks(), await signer.getAddress()); }
   catch (e) { log("Stopped before any signature: " + e.message); return; }
   document.getElementById("run").disabled = false;
@@ -73,6 +118,7 @@ document.getElementById("run").onclick = async () => {
     log("Stopped: " + (e && e.message ? e.message : e));
   }
 };
+loadRegistryGate();
 </script>
 </body>
 </html>
