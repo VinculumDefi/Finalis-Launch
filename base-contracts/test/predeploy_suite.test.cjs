@@ -321,7 +321,6 @@ describe("predeploy 5: $0.01 floors", function () {
     const files = [
       "base-contracts/contracts/CommitmentVaultLock.sol",
       "base-contracts/contracts/VinculumFinalisVerifier.sol",
-      "src/base-verifier/contracts/VinculumFinalisVerifier.sol",
     ];
     for (const f of files) {
       const src = fs.readFileSync(path.join(root, f), "utf8");
