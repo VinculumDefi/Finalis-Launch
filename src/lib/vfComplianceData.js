@@ -233,10 +233,10 @@ export const REQUIREMENTS = [
   { id: 'VF-XCH-015', category: 'Cross-Chain', title: 'Post-issuance replay rejected', status: STATUS.IMPLEMENTED, trace: 'checkReplay() — first check' },
   { id: 'VF-XCH-016', category: 'Cross-Chain', title: 'Proof failure never blocks principal', status: STATUS.IMPLEMENTED, trace: 'release_principal.rs — no verification dependency' },
   { id: 'VF-XCH-017', category: 'Cross-Chain', title: 'No discretionary approver; per-env proof paths', status: STATUS.PARTIAL, trace: 'No signer set; deployable proof paths DESIGN DEFINED for 15 envs' },
-  { id: 'VF-XCH-018', category: 'Cross-Chain', title: 'Axelar ITS mandatory', status: STATUS.IMPLEMENTED, trace: 'Architecture-defined; no alternative bridge in code' },
-  { id: 'VF-XCH-019', category: 'Cross-Chain', title: 'No independent per-chain supply', status: STATUS.IMPLEMENTED, trace: 'Single canonical issuance on Base' },
-  { id: 'VF-XCH-020', category: 'Cross-Chain', title: 'Globally reconciled supply', status: STATUS.IMPLEMENTED, trace: 'All issuance through verifyAndMint' },
-  { id: 'VF-XCH-021', category: 'Cross-Chain', title: 'Transport not issuance', status: STATUS.IMPLEMENTED, trace: 'cumulativeVclmIssued only by verifyAndMint, not Axelar' },
+  { id: 'VF-XCH-018', category: 'Cross-Chain', title: 'Axelar ITS mandatory', status: STATUS.DEPLOYMENT, trace: 'Revision 13: connect after launch; no ITS integration in code' },
+  { id: 'VF-XCH-019', category: 'Cross-Chain', title: 'No independent per-chain supply', status: STATUS.DEPLOYMENT, trace: 'Revision 13: connect after launch; no ITS integration in code' },
+  { id: 'VF-XCH-020', category: 'Cross-Chain', title: 'Globally reconciled supply', status: STATUS.DEPLOYMENT, trace: 'Revision 13: connect after launch; no ITS integration in code' },
+  { id: 'VF-XCH-021', category: 'Cross-Chain', title: 'Transport not issuance', status: STATUS.DEPLOYMENT, trace: 'Revision 13: connect after launch; no ITS integration in code' },
 
   // VF-PRI (6)
   { id: 'VF-PRI-001', category: 'Principal', title: 'Fee designated at creation, remaining = principal', status: STATUS.IMPLEMENTED, trace: 'computeFee() — principal = gross - fee' },
@@ -260,7 +260,7 @@ export const REQUIREMENTS = [
   { id: 'VF-SUP-011', category: 'Supply', title: 'Zero capacity -> terminal state', status: STATUS.IMPLEMENTED, trace: 'syncFromVerifier() — if cumulativeVclmIssued >= cap, terminal' },
   { id: 'VF-SUP-012', category: 'Supply', title: 'Zero capacity: fees still reach Dev Fund, no RAC', status: STATUS.IMPLEMENTED, trace: 'if (cumulativeVclmIssued < VCLM_HARD_CAP) gates RAC only' },
   { id: 'VF-SUP-013', category: 'Supply', title: 'Only protocol-authorized issuance increases lifetime', status: STATUS.IMPLEMENTED, trace: 'Only verifyAndMint() increments counters' },
-  { id: 'VF-SUP-014', category: 'Supply', title: 'Axelar transport not counted', status: STATUS.IMPLEMENTED, trace: 'No increment in transport path' },
+  { id: 'VF-SUP-014', category: 'Supply', title: 'Axelar transport not counted', status: STATUS.DEPLOYMENT, trace: 'Revision 13: connect after launch; no ITS integration in code' },
   { id: 'VF-SUP-015', category: 'Supply', title: 'Preflight reserves no capacity', status: STATUS.IMPLEMENTED, trace: 'No reservation in validateLockRequest()' },
 
   // VF-SEC (6)
