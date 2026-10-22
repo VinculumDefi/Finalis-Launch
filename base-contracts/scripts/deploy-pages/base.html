@@ -15,6 +15,7 @@
   #log { white-space:pre-wrap; font-family:ui-monospace, monospace; font-size:13px; background:#151c2b; padding:14px; border-radius:8px; min-height:140px; }
   .seal { display:none; border:1px solid #3dd68c; padding:14px; border-radius:8px; white-space:pre-wrap; }
   #registry-wrong { color:#ff6b6b; font-weight:600; }
+  #lock-refuse { display:none; color:#ff6b6b; font-weight:700; font-size:16px; border:2px solid #ff6b6b; padding:12px; border-radius:8px; margin:12px 0; background:#2a1218; }
 </style>
 </head>
 <body>
@@ -22,12 +23,13 @@
   <h1>Base ceremony</h1>
   <p>Deploys VCLM, CHONX, the Verifier, Forge (VinculumFinalisSynth, the SYNTH token) and Stake, then the new 5% Base lock BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge), which refuses VCLM, CHONX and SYNTH as lock inputs before any token moves. Stake is on from the start: VCLM is initialised with the Verifier and Stake as its minters. Every lock duration, including the 1-hour Handshake, charges 5.00% of gross.</p>
   <p>Before finalize it deploys and registers 15 readers: Base; Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche (bound to the NEW 5% locks entered below); Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash (live Dev Fund scripts); Stellar and XRP Ledger (live Dev Fund key and account). Solana is not registered. Then: registry in batches of 50 (Revision B: 486 rows plus Base ETH = 487), Dev Fund for the seven EVM chains, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
-  <p>Run the six non-Base lock pages first and paste the new lock addresses here. The page refuses the old 2.5% locks.</p>
+  <p>Run the six non-Base lock pages first and paste the new lock addresses here. The page refuses the old 2.5% locks (including 0x5AB4… on the six non-Base chains) and any address whose eth_getCode / slot 0 environmentId / devFund() does not match main CommitmentVaultLock.</p>
   <div id="registry-gate">
     <p>Registry source: <code id="registry-filename">(loading)</code>. Rows: <b id="registry-rows">?</b>. SHA-256: <code id="registry-sha256">(loading)</code>.</p>
     <p id="registry-wrong" style="display:none">WRONG REGISTRY: expected 487 rows, found <span id="registry-wrong-n"></span></p>
   </div>
   <div id="locks"></div>
+  <div id="lock-refuse" role="alert"></div>
   <p><button id="connect" disabled>Connect wallet</button> <span id="who"></span></p>
   <p><button id="run" disabled>Run ceremony</button></p>
   <div id="log"></div>
@@ -46,6 +48,7 @@ for (const env of BaseCeremonyFlow.EVM_ENVS) {
   l.textContent = "New " + env + " lock: ";
   const i = document.createElement("input");
   i.id = "lock-" + env; i.placeholder = "0x… (from the " + env + " page)";
+  i.addEventListener("input", () => { document.getElementById("run").disabled = true; clearLockRefuse(); if (data && Number(data.registryRows) === EXPECTED_REGISTRY_ROWS) connectBtn.disabled = false; });
   l.appendChild(i); locksEl.appendChild(l);
 }
 let signer, data;
@@ -79,9 +82,24 @@ async function loadRegistryGate() {
   connectBtn.disabled = false;
 }
 
+function showLockRefuse(msg) {
+  const el = document.getElementById("lock-refuse");
+  el.style.display = "block";
+  el.textContent = msg;
+  connectBtn.disabled = true;
+  document.getElementById("run").disabled = true;
+  log(msg);
+}
+function clearLockRefuse() {
+  const el = document.getElementById("lock-refuse");
+  el.style.display = "none";
+  el.textContent = "";
+}
 connectBtn.onclick = async () => {
   if (connectBtn.disabled) return;
   if (!window.ethereum) { log("No wallet."); return; }
+  clearLockRefuse();
+  document.getElementById("run").disabled = true;
   const provider = new ethers.BrowserProvider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
   const net = await provider.getNetwork();
@@ -97,25 +115,48 @@ connectBtn.onclick = async () => {
     log("WRONG REGISTRY: expected 487 rows, found " + rows + ". Connect wallet disabled.");
     return;
   }
-  try { BaseCeremonyFlow.checkInputs(ethers, data, collectLocks(), await signer.getAddress()); }
-  catch (e) { log("Stopped before any signature: " + e.message); return; }
+  let locks;
+  try {
+    locks = BaseCeremonyFlow.checkInputs(ethers, data, collectLocks(), await signer.getAddress()).locks;
+  } catch (e) {
+    showLockRefuse("Stopped before any signature: " + e.message);
+    return;
+  }
+  try {
+    const providers = BaseCeremonyFlow.publicProviders(ethers);
+    await BaseCeremonyFlow.verifyAllNonBaseLocks(ethers, providers, locks, data);
+  } catch (e) {
+    const env = (e && e.env) ? e.env : "(unknown chain)";
+    const reason = (e && e.reason) ? e.reason : (e && e.message ? e.message : String(e));
+    showLockRefuse("REFUSED non-Base lock on " + env + ": " + reason + ". Connect wallet / Run ceremony stays disabled.");
+    return;
+  }
   document.getElementById("run").disabled = false;
-  log("Inputs checked. Base ETH price " + ethers.formatUnits(BigInt(data.priceUsd18), 18) + " USD (" + data.priceSource + "). Ceremony can be signed.");
+  log("Inputs checked. Non-Base locks match main CommitmentVaultLock. Base ETH price " + ethers.formatUnits(BigInt(data.priceUsd18), 18) + " USD (" + data.priceSource + "). Ceremony can be signed.");
 };
 function collectLocks() {
   return Object.fromEntries(BaseCeremonyFlow.EVM_ENVS.map((env) => [env, document.getElementById("lock-" + env).value.trim()]));
 }
 document.getElementById("run").onclick = async () => {
   document.getElementById("run").disabled = true;
+  clearLockRefuse();
   try {
+    const locks = BaseCeremonyFlow.checkInputs(ethers, data, collectLocks(), await signer.getAddress()).locks;
+    const providers = BaseCeremonyFlow.publicProviders(ethers);
+    await BaseCeremonyFlow.verifyAllNonBaseLocks(ethers, providers, locks, data);
     const art = await (await fetch("ceremony.json")).json();
-    const r = await BaseCeremonyFlow.runBaseCeremony({ ethers, signer, art, data, newLocks: collectLocks(), log });
+    const r = await BaseCeremonyFlow.runBaseCeremony({ ethers, signer, art, data, newLocks: locks, log, providersByEnv: providers });
     const lines = ["Finalized."];
     for (const k of ["lock", "vclm", "chonx", "verifier", "forge", "stake"]) lines.push(k + " " + await r[k].getAddress());
     for (const [env, c] of Object.entries(r.readers)) lines.push("reader " + env + " " + await c.getAddress());
     sealEl.style.display = "block"; sealEl.textContent = lines.join("\n");
   } catch (e) {
-    log("Stopped: " + (e && e.message ? e.message : e));
+    if (e && e.refusedLock) {
+      showLockRefuse(e.message);
+    } else {
+      log("Stopped: " + (e && e.message ? e.message : e));
+      document.getElementById("run").disabled = false;
+    }
   }
 };
 loadRegistryGate();
