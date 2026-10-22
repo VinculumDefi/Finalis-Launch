@@ -24,10 +24,27 @@
 // estimated again. The cost formula below is only used to size the first
 // guess and for the "about N transactions" preview.
 //
+// Displayed amounts (t277u). claimableVclm(id, toEpoch) always starts at
+// nextClaimEpoch(id) and its cost grows with the whole range, so it is NOT used
+// for the total or the remaining amount. exactClaimable() computes the amount
+// in the app, per epoch, from small public views, each epoch counted once:
+//   sum over n = nextClaimEpoch(id) .. min(L, last eligible epoch) of
+//   floor(epochs(n).mintedVclm x epochWeight(id, n) / epochs(n).totalWeight),
+//   skipping epochs that minted nothing.
+// This is the contract's _claimable sum: epochWeight(id, n) applies the same
+// eligibility (activeSince, scheduled end incl. a queued term, withdrawal
+// cutoff) and the multiplier in force at the epoch's start (incl. a queued
+// term), with the same integer arithmetic. Reads go in groups of READ_GROUP
+// epochs; each eth_call reads one epoch. claimableVclm(id, L) is read only as a
+// cross-check when the range is at most CROSS_CHECK_MAX_EPOCHS; if it differs,
+// the planner throws and no claim is offered.
+//
 // The planner talks to the chain through an adapter (see makeEthersStakeChain):
 //   getCurrentEpoch(), lastAllocatedEpoch(), launchTimestamp(),
 //   nextClaimEpoch(id), claimableVclm(id, toEpoch), position(id),
 //   estimateClaim(tx) -> bigint gas (throws with the revert reason if it fails)
+//   epochInfos(ns) -> [{ allocated, mintedVclm, totalWeight }] for epochs ns
+//   epochWeights(id, ns) -> [bigint] epochWeight(id, n) for epochs ns
 // A tx is { kind: 'one', ids: [id], toEpoch } for claimPosition(id, toEpoch)
 // or { kind: 'many', ids, toEpoch } for claimPositions(ids, toEpoch).
 
@@ -39,6 +56,8 @@ export const GAS_TX = 30_000n;
 export const GAS_PER_POSITION = 60_000n;
 export const GAS_PER_EPOCH = 11_000n;
 const FORMULA_SHARE = 90n; // size the first guess at 90% of the limit
+export const READ_GROUP = 500n; // epochs per group of reads
+export const CROSS_CHECK_MAX_EPOCHS = 200n;
 
 const big = (v) => (typeof v === 'bigint' ? v : BigInt(v));
 
@@ -80,13 +99,61 @@ export function isUserRejection(e) {
   return /user (rejected|denied)/i.test(String(e.message || ''));
 }
 
+// Exact VCLM a position can claim for epochs from..toEpoch (from defaults to
+// nextClaimEpoch(id)). toEpoch must be at most L. epochCache (a Map) shares
+// epochs(n) reads between positions. Returns { amount, from, last, reads }.
+export async function exactClaimable(chain, id, toEpoch, { t0, pos, from, epochCache = new Map(), group = READ_GROUP, crossCheck = true } = {}) {
+  id = big(id);
+  toEpoch = big(toEpoch);
+  if (t0 === undefined) t0 = big(await chain.launchTimestamp());
+  if (pos === undefined) pos = await chain.position(id);
+  const start = from === undefined ? big(await chain.nextClaimEpoch(id)) : big(from);
+  let last = lastEligibleEpoch(pos, t0);
+  if (last > toEpoch) last = toEpoch;
+  let amount = 0n;
+  let reads = 0;
+  for (let a = start; a <= last; a += big(group)) {
+    const b = a + big(group) - 1n < last ? a + big(group) - 1n : last;
+    const ns = [];
+    for (let n = a; n <= b; n++) ns.push(n);
+    const missing = ns.filter((n) => !epochCache.has(n));
+    if (missing.length > 0) {
+      const infos = await chain.epochInfos(missing);
+      reads += missing.length;
+      missing.forEach((n, i) => epochCache.set(n, infos[i]));
+    }
+    const paid = [];
+    for (const n of ns) {
+      const ep = epochCache.get(n);
+      if (!ep.allocated) throw new Error(`Epoch ${n} is not allocated yet; claims stop at the last allocated epoch.`);
+      if (big(ep.mintedVclm) > 0n) paid.push(n);
+    }
+    if (paid.length === 0) continue;
+    const ws = await chain.epochWeights(id, paid);
+    reads += paid.length;
+    paid.forEach((n, i) => {
+      const w = big(ws[i]);
+      const ep = epochCache.get(n);
+      if (w > 0n) amount += (big(ep.mintedVclm) * w) / big(ep.totalWeight);
+    });
+  }
+  if (crossCheck && last >= start && last - start + 1n <= CROSS_CHECK_MAX_EPOCHS) {
+    const v = big(await chain.claimableVclm(id, toEpoch));
+    reads += 1;
+    if (v !== amount) throw new Error(`Claim display check failed for position ${id}: app ${amount}, contract ${v}. No claim is offered.`);
+  }
+  return { amount, from: start, last, reads };
+}
+
 // Reads what the wallet can claim now. Positions with nothing to claim are left out.
 export async function readClaimState(chain, ids) {
   const [cur, alloc, t0] = await Promise.all([chain.getCurrentEpoch(), chain.lastAllocatedEpoch(), chain.launchTimestamp()]);
   const L = latestClaimableEpoch(cur, alloc);
   const items = [];
   let total = 0n;
-  if (L === 0n) return { L, items, total };
+  let reads = 0;
+  if (L === 0n) return { L, items, total, reads };
+  const epochCache = new Map();
   for (const id of ids) {
     const from = big(await chain.nextClaimEpoch(id));
     if (from > L) continue; // claimed up to L already
@@ -94,12 +161,13 @@ export async function readClaimState(chain, ids) {
     let last = lastEligibleEpoch(pos, t0);
     if (last > L) last = L;
     if (last < from) continue; // no earning epoch left in range
-    const amount = big(await chain.claimableVclm(id, L));
-    if (amount === 0n) continue; // nothing to pay: leave it out
-    items.push({ id: big(id), from, last, amount });
-    total += amount;
+    const r = await exactClaimable(chain, id, L, { t0: big(t0), pos, from, epochCache });
+    reads += r.reads;
+    if (r.amount === 0n) continue; // nothing to pay: leave it out
+    items.push({ id: big(id), from, last, amount: r.amount });
+    total += r.amount;
   }
-  return { L, items, total };
+  return { L, items, total, reads };
 }
 
 // First guess from the formula: as many whole positions as fit (one claimPositions
@@ -124,7 +192,7 @@ function firstGuess(state, budget) {
 }
 
 async function amountOf(chain, tx, items) {
-  if (tx.kind === 'one') return big(await chain.claimableVclm(tx.ids[0], tx.toEpoch));
+  if (tx.kind === 'one') return (await exactClaimable(chain, tx.ids[0], tx.toEpoch)).amount;
   let s = 0n;
   for (const it of items) if (tx.ids.includes(it.id)) s += it.amount;
   return s;
@@ -181,6 +249,12 @@ export async function previewClaimAll(chain, ids, { maxGas = MAX_CLAIM_GAS } = {
   return { L: state.L, total: state.total, positions: state.items.length, txCount: txs.length, txs };
 }
 
+// Remaining claimable for display, or null if it cannot be computed (for
+// example a failed cross-check); null means "do not show an amount".
+async function safeRemaining(chain, ids) {
+  try { return (await readClaimState(chain, ids)).total; } catch { return null; }
+}
+
 // Runs the plan. send({ tx, gas, amount, index, total }) must run the section 10
 // fee check, open the wallet and resolve with the receipt after it is mined
 // (throw on rejection or failure). After each mined transaction the state is
@@ -192,8 +266,7 @@ export async function runClaimAll(chain, ids, { maxGas = MAX_CLAIM_GAS, send, on
     try {
       next = await planNextClaim(chain, ids, { maxGas });
     } catch (error) {
-      const { total } = await readClaimState(chain, ids);
-      return { status: 'error', error, done, remaining: total };
+      return { status: 'error', error, done, remaining: await safeRemaining(chain, ids) };
     }
     if (!next) return { status: 'complete', done, remaining: 0n };
     const preview = await previewClaimAll(chain, ids, { maxGas });
@@ -203,18 +276,20 @@ export async function runClaimAll(chain, ids, { maxGas = MAX_CLAIM_GAS, send, on
     try {
       receipt = await send(info);
     } catch (error) {
-      const { total } = await readClaimState(chain, ids);
+      const total = await safeRemaining(chain, ids);
       const status = isUserRejection(error) ? 'stopped' : 'error';
       if (onProgress) await onProgress({ stage: status, ...info, remaining: total });
       return { status, error, done, remaining: total };
     }
     done.push({ ...info, receipt });
-    const { total } = await readClaimState(chain, ids);
+    const total = await safeRemaining(chain, ids);
     if (onProgress) await onProgress({ stage: 'after', ...info, receipt, remaining: total });
   }
 }
 
+// remaining null (could not be computed): say so without an amount.
 export function stoppedMessage(remainingText) {
+  if (remainingText === null || remainingText === undefined) return 'The remaining VCLM stays available. You can claim it any time.';
   return `The remaining ${remainingText} VCLM stays available. You can claim it any time.`;
 }
 
@@ -227,6 +302,9 @@ export function makeEthersStakeChain(stake, account) {
     nextClaimEpoch: (id) => stake.nextClaimEpoch(id),
     claimableVclm: (id, to) => stake.claimableVclm(id, to),
     position: (id) => stake.positions(id),
+    // one small eth_call per epoch, sent together (a JsonRpcProvider batches them)
+    epochInfos: (ns) => Promise.all(ns.map(async (n) => { const e = await stake.epochs(n); return { allocated: e.allocated, mintedVclm: e.mintedVclm, totalWeight: e.totalWeight }; })),
+    epochWeights: (id, ns) => Promise.all(ns.map((n) => stake.epochWeight(id, n))),
     estimateClaim: (tx) => (tx.kind === 'one'
       ? stake.claimPosition.estimateGas(tx.ids[0], tx.toEpoch, { from: account })
       : stake.claimPositions.estimateGas(tx.ids, tx.toEpoch, { from: account })),
@@ -252,6 +330,8 @@ export function makeSimulatorStakeChain(engine, account) {
     launchTimestamp: async () => BigInt(engine.launchTimestamp || 0n),
     nextClaimEpoch: async (id) => BigInt(engine.positions.get(Number(id)).nextClaimEpoch),
     claimableVclm: async (id, to) => engine.claimableVclm(Number(id), Number(to)),
+    epochInfos: async (ns) => ns.map((n) => { const e = engine.epochs.get(Number(n)); return e ? { allocated: e.allocated, mintedVclm: e.mintedVclm, totalWeight: e.totalWeight } : { allocated: false, mintedVclm: 0n, totalWeight: 0n }; }),
+    epochWeights: async (id, ns) => { const p = engine.positions.get(Number(id)); return ns.map((n) => p.epochWeight(n, engine.launchTimestamp)); },
     position: async (id) => { const p = engine.positions.get(Number(id)); return { endTimestamp: p.endTimestamp, queuedExtensionBps: p.queuedExtensionBps, queuedExtensionSecs: p.queuedExtensionSecs, withdrawn: p.withdrawn, withdrawnAt: p.withdrawnAt }; },
     estimateClaim: async (tx) => {
       let g = SIM_GAS_FIRST - SIM_GAS_PER_EPOCH;
