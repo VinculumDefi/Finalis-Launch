@@ -37,7 +37,7 @@ describe("Live configuration: price poster", function () {
     expect(named.has(lc(EXPECTED_POSTER))).to.equal(false);
     // Repo-wide: the address appears only where it is configured or asserted.
     const hits = execFileSync("git", ["grep", "--untracked", "-il", EXPECTED_POSTER.slice(2)], { cwd: ROOT, encoding: "utf8" }).trim().split("\n").sort();
-    const allowed = ["base-contracts/deployment/liveConfig.json", "base-contracts/scripts/deploy-pages/ceremony-data.json", "base-contracts/test/live_config.test.cjs"];
+    const allowed = ["base-contracts/deployment/liveConfig.json", "base-contracts/deployment/ceremony-manifest.json", "base-contracts/scripts/deploy-pages/ceremony-data.json", "base-contracts/test/live_config.test.cjs"];
     for (const h of hits) expect(allowed).to.include(h);
     expect(hits).to.include("base-contracts/deployment/liveConfig.json");
   });
