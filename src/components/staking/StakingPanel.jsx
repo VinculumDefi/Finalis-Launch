@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { STAKE_DURATIONS } from '@/lib/vfRevision6Authority';
 import { formatTokenAmount } from '@/lib/vfTokenEngine';
 import { TOKEN_MULTIPLIER_BPS, EPOCH_SECS } from '@/lib/vfStakingEngine';
+import { makeSimulatorStakeChain, previewClaimAll, runClaimAll, MAX_CLAIM_GAS } from '@/lib/vfClaimPlanner';
 import { Lock, Unlock, Coins, Clock, AlertCircle, FastForward } from 'lucide-react';
 
 // Simulator panel. Mirrors VinculumFinalisStake: per-position claims up to a
@@ -14,7 +15,7 @@ import { Lock, Unlock, Coins, Clock, AlertCircle, FastForward } from 'lucide-rea
 const multLabel = (bps) => `${(bps / 10000).toFixed(2)}x`;
 
 export default function StakingPanel({ engine, account }) {
-  const [, forceUpdate] = useState(0);
+  const [tick, forceUpdate] = useState(0);
   const refresh = () => forceUpdate((v) => v + 1);
 
   const [token, setToken] = useState('VCLM');
@@ -57,9 +58,31 @@ export default function StakingPanel({ engine, account }) {
   const positions = Array.from(engine.positions.values()).filter((p) => p.owner === account);
   const claimIds = positions.filter((p) => latest > 0 && engine.claimableVclm(p.id, latest) > 0n).map((p) => p.id);
 
-  const handleClaimAll = () => {
-    const r = engine.claimPositions(account, claimIds, latest);
-    show(r.ok ? { ok: true, reason: `Claimed ${formatTokenAmount(r.amount.toString())} VCLM up to epoch ${latest}` } : r);
+  // t276u: "Claim all" runs the claim planner (src/lib/vfClaimPlanner.js), the
+  // same code the live app uses: batches of at most 8,000,000 gas, each confirmed
+  // by a gas estimate (here the simulator's gas model), state re-read after each.
+  const ownIds = positions.map((p) => p.id);
+  const [claimPreview, setClaimPreview] = useState(null);
+  useEffect(() => {
+    let live = true;
+    previewClaimAll(makeSimulatorStakeChain(engine, account), ownIds).then((p) => { if (live) setClaimPreview(p); }).catch(() => { if (live) setClaimPreview(null); });
+    return () => { live = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine, account, tick, ownIds.length]);
+
+  const handleClaimAll = async () => {
+    const chain = makeSimulatorStakeChain(engine, account);
+    let paid = 0n;
+    let maxGas = 0n;
+    const r = await runClaimAll(chain, ownIds, {
+      maxGas: MAX_CLAIM_GAS,
+      send: async (info) => { const rc = await chain.send(info.tx); paid += rc.amount; if (info.gas > maxGas) maxGas = info.gas; return rc; },
+    });
+    if (r.status === 'complete') {
+      show({ ok: true, reason: `Claimed ${formatTokenAmount(paid.toString())} VCLM up to epoch ${latest} in ${r.done.length} transaction${r.done.length === 1 ? '' : 's'} (largest about ${maxGas.toString()} gas)` });
+    } else {
+      show({ ok: false, reason: `${r.error?.message || 'Stopped'}. The remaining ${formatTokenAmount(r.remaining.toString())} VCLM stays available. You can claim it any time.` });
+    }
   };
 
   return (
@@ -148,6 +171,7 @@ export default function StakingPanel({ engine, account }) {
           </Button>
           <Button onClick={handleClaimAll} disabled={claimIds.length === 0} variant="outline" size="sm" className="border-green-700 text-green-400">
             <Coins className="w-4 h-4 mr-1" /> Claim all positions to epoch {latest}
+            {claimPreview && claimPreview.txCount > 0 ? ` (${formatTokenAmount(claimPreview.total.toString())} VCLM, ${claimPreview.txCount} transaction${claimPreview.txCount === 1 ? '' : 's'})` : ''}
           </Button>
           <Button onClick={handleAdvance} variant="ghost" size="sm" className="text-slate-400">
             <FastForward className="w-4 h-4 mr-1" /> Simulate +10 days
