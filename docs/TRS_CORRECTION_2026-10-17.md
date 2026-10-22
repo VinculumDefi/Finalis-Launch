@@ -32,7 +32,7 @@ authorized 21000 bps (2.10×) on 2026-10-17.
 - `src/lib/vfRevision6Authority.js`: `STAKE_DURATIONS` is a distinct four-row
   array (`label`, `secs`, `multiplier_bps`) with the values above.
 - `base-contracts/test/01_findings.test.cjs` and
-  `src/base-verifier/tests/representative-rules.test.js`: expect the four-row
+  `base-contracts/test/representativeRules.test.cjs`: expect the four-row
   table and reject unsupported durations.
 
 Not changed: `CommitmentVaultLock.sol`, `CommitmentDurations.sol`, the verifier
