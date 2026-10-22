@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { StakingEngine, EPOCH_SECS } from '../lib/vfStakingEngine.js';
-import { makeSimulatorStakeChain, previewClaimAll, planNextClaim, runClaimAll, readClaimState, latestClaimableEpoch, lastEligibleBy, isUserRejection, stoppedMessage } from '../lib/vfClaimPlanner.js';
+import { makeSimulatorStakeChain, previewClaimAll, planNextClaim, runClaimAll, readClaimState, exactClaimable, latestClaimableEpoch, lastEligibleBy, isUserRejection, stoppedMessage } from '../lib/vfClaimPlanner.js';
 
 const S = 10n ** 18n;
 const D30 = 2592000, D120 = 10368000;
@@ -84,4 +84,31 @@ test('a non-rejection failure stops with status error and leaves everything clai
   const r = await runClaimAll(chain, ids, { maxGas: LIMIT, send: async () => { throw new Error('nonce too low'); } });
   assert.equal(r.status, 'error');
   assert.equal(r.remaining, before);
+});
+
+test('t277u: displayed amount is computed per epoch, equals the view at every read group, and a mismatch blocks the claim', async () => {
+  const { e, ids } = build();
+  const chain = makeSimulatorStakeChain(e, 'A');
+  const L = BigInt(e.latestClaimableEpoch());
+  for (const id of ids) {
+    for (const to of [1n, 2n, 50n, 150n, L]) {
+      if (to > L) continue;
+      for (const group of [1n, 7n, 100n, 500n]) {
+        const r = await exactClaimable(chain, id, to, { group, crossCheck: false });
+        assert.equal(r.amount, e.claimableVclm(id, Number(to)));
+      }
+    }
+  }
+  // the view is read only as a cross-check for short ranges; a different value blocks the claim
+  let views = 0;
+  const counting = { ...chain, claimableVclm: async (id, to) => { views++; return chain.claimableVclm(id, to); } };
+  await readClaimState(counting, ids);
+  assert.equal(views, 1); // only the short history (the 120-day position) is cross-checked; the 300-epoch one is above 200
+  const wrong = { ...chain, claimableVclm: async (id, to) => (await chain.claimableVclm(id, to)) + 1n };
+  await assert.rejects(exactClaimable(wrong, ids[1], 5n), /Claim display check failed/);
+  const r = await runClaimAll({ ...wrong, nextClaimEpoch: chain.nextClaimEpoch }, [ids[1]], { maxGas: LIMIT, send: async () => { throw new Error('must not send'); } });
+  assert.equal(r.status, 'error');
+  assert.match(r.error.message, /Claim display check failed/);
+  assert.equal(r.remaining, null);
+  assert.equal(stoppedMessage(null), 'The remaining VCLM stays available. You can claim it any time.');
 });
