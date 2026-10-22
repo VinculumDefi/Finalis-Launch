@@ -15,14 +15,14 @@
       "filename": "baseCeremonyFlow.js",
       "path": "scripts/deploy-pages/baseCeremonyFlow.js",
       "revisionLabel": "Revision B ceremony flow",
-      "sha256": "99cd17fdead69693274b17ede465b2001d7b10603627f2de271b2b50777e525e",
+      "sha256": "e030b6d5d8b8fe0e86b055342e082f6dd26bc95dd0fa99d06757ac8e6bd3aa04",
       "rowCount": null
     },
     {
       "filename": "base.html",
       "path": "scripts/deploy-pages/base.html",
       "revisionLabel": "Revision B ceremony page",
-      "sha256": "c7b052c8dc91fee9e1f9f36433b882a0ba0fc1e2625b5a015d634ec727d91b99",
+      "sha256": "96898bfad07d20a051dd138fbd101c3d193da61d0eef36a4f13570811c0becaf",
       "rowCount": null
     },
     {
@@ -72,5 +72,41 @@
     "$0.02"
   ],
   "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a",
-  "pricePosterHandoff": "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4"
+  "pricePosterHandoff": "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4",
+  "nonBaseLock": {
+    "contract": "CommitmentVaultLock",
+    "note": "Main 5% lock expected on the six non-Base EVM chains. The retired f9e4d8c bytecode at 0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A (HANDSHAKE_FEE_BPS=250) and 0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a must be refused.",
+    "expectedRuntimeHash": "0x70d73acf928a2f37ddebf165ca68e448eaa4ca76b73941d71f8b3569eeee1a79",
+    "immutableRanges": [
+      [
+        2450,
+        32
+      ],
+      [
+        4116,
+        32
+      ],
+      [
+        4963,
+        32
+      ]
+    ],
+    "feeBps": 500,
+    "feeLanguage": "5.00% of gross on every duration",
+    "noHandshakeFeeBpsSelector": true,
+    "handshakeFeeBpsSelector": "0xee8a0fb0",
+    "environments": [
+      "Ethereum",
+      "Arbitrum",
+      "Optimism",
+      "Polygon",
+      "BNB Smart Chain",
+      "Avalanche"
+    ],
+    "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a",
+    "retiredAddresses": [
+      "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a",
+      "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A"
+    ]
+  }
 }
