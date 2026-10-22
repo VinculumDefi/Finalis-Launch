@@ -11,7 +11,7 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // unless these constants are changed in this file (reviewed commit).
 const EXPECTED_REGISTRY_SHA256 = "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9";
 const EXPECTED_REGISTRY_ROWS = 487;
-const EXPECTED_MANIFEST_SHA256 = "eb7c7ac8a644d2340cffa30df923d95807993a5597fca66a0556307671b5b5ba";
+const EXPECTED_MANIFEST_SHA256 = "e1a5377b1b794ee3ea92d8a8b7a6a4e6f8b020e4afbbfe5df9f440d2ec497697";
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
 
