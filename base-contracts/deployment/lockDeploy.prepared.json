@@ -7,7 +7,7 @@
     "viaIR": true
   },
   "devFundSource": "deployment/representativeBase.cjs (EVM_DEV_FUND)",
-  "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
+  "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
   "chains": [
     {
       "environmentId": "Ethereum",
@@ -19,18 +19,18 @@
         "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
       },
       "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a0000000000000000000000000000000000000000000000000000000000000008457468657265756d000000000000000000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0x8bfa556b35782471507a81db9f68028abe93ab0ecc303f5e0881d167bbb724dc",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
+      "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
+      "initCodeHash": "0x7bd2ec98d55f3947057fafb8c63ba18ff296d5f01e185e099360345d83b2c6f2",
+      "initCodeBytes": 8813,
+      "runtimeCodeHash": "0x48bf95d0c7e94bd2279d7fa5c87a0cdb62ed6156d6923a0e7cdc3d72d716e700",
+      "runtimeCodeBytes": 7932,
       "publicRpcRead": {
         "rpc": "https://ethereum-rpc.publicnode.com",
         "chainIdChecked": 1,
-        "gasEstimate": 1596454,
-        "gasPriceWei": "49375057",
-        "estimatedCostNative": "0.000078825007247878",
-        "readAt": "2026-10-21T22:59:16.008Z"
+        "gasEstimate": 1816385,
+        "gasPriceWei": "95838501",
+        "estimatedCostNative": "0.000174079615638885",
+        "readAt": "2026-10-22T21:35:03.072Z"
       }
     },
     {
@@ -43,18 +43,18 @@
         "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
       },
       "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a0000000000000000000000000000000000000000000000000000000000000008417262697472756d000000000000000000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0x94931b17f2a2885ddf56b0dbb7df1e8e59ba2f0c80b719cda6f338e679bc5834",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
+      "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
+      "initCodeHash": "0x2af66c7d549e379f402ba5fb08a50f4ab298fb4bdf189be16d1043e051191011",
+      "initCodeBytes": 8813,
+      "runtimeCodeHash": "0x48bf95d0c7e94bd2279d7fa5c87a0cdb62ed6156d6923a0e7cdc3d72d716e700",
+      "runtimeCodeBytes": 7932,
       "publicRpcRead": {
         "rpc": "https://arb1.arbitrum.io/rpc",
         "chainIdChecked": 42161,
-        "gasEstimate": 1611751,
-        "gasPriceWei": "20208000",
-        "estimatedCostNative": "0.000032570264208",
-        "readAt": "2026-10-21T22:59:16.345Z"
+        "gasEstimate": 1826234,
+        "gasPriceWei": "20298000",
+        "estimatedCostNative": "0.000037068897732",
+        "readAt": "2026-10-22T21:35:03.465Z"
       }
     },
     {
@@ -67,18 +67,18 @@
         "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
       },
       "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a00000000000000000000000000000000000000000000000000000000000000084f7074696d69736d000000000000000000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0x9ab278d9f67759a6c7a0f142a01693ec442ecf654edc6df2507542c838b1bad3",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
+      "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
+      "initCodeHash": "0xb4824b6f3a70822fdb6f5a8bd928e2adf35afdcc51669aca7fbfee0afe1f2317",
+      "initCodeBytes": 8813,
+      "runtimeCodeHash": "0x48bf95d0c7e94bd2279d7fa5c87a0cdb62ed6156d6923a0e7cdc3d72d716e700",
+      "runtimeCodeBytes": 7932,
       "publicRpcRead": {
         "rpc": "https://mainnet.optimism.io",
         "chainIdChecked": 10,
-        "gasEstimate": 1596454,
-        "gasPriceWei": "1004809",
-        "estimatedCostNative": "0.000001604131347286",
-        "readAt": "2026-10-21T22:59:17.031Z"
+        "gasEstimate": 1816385,
+        "gasPriceWei": "1000273",
+        "estimatedCostNative": "0.000001816880873105",
+        "readAt": "2026-10-22T21:35:04.175Z"
       }
     },
     {
@@ -91,18 +91,18 @@
         "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
       },
       "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a0000000000000000000000000000000000000000000000000000000000000007506f6c79676f6e00000000000000000000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0xbe8dc86ee0a3a0180d0ac9d3d6a82ece747f7865f45e003ae1b66d2ec1f86628",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
+      "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
+      "initCodeHash": "0x59f0adee7402d31b87839649c7daba49faa9e46cb00a291ef02e9c491ec6d1ff",
+      "initCodeBytes": 8813,
+      "runtimeCodeHash": "0x48bf95d0c7e94bd2279d7fa5c87a0cdb62ed6156d6923a0e7cdc3d72d716e700",
+      "runtimeCodeBytes": 7932,
       "publicRpcRead": {
         "rpc": "https://polygon-bor-rpc.publicnode.com",
         "chainIdChecked": 137,
-        "gasEstimate": 1599828,
-        "gasPriceWei": "261490880955",
-        "estimatedCostNative": "0.41834043309647574",
-        "readAt": "2026-10-21T22:59:17.468Z"
+        "gasEstimate": 1819760,
+        "gasPriceWei": "153244470600",
+        "estimatedCostNative": "0.278868157819056",
+        "readAt": "2026-10-22T21:35:04.548Z"
       }
     },
     {
@@ -115,18 +115,18 @@
         "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
       },
       "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a000000000000000000000000000000000000000000000000000000000000000f424e4220536d61727420436861696e0000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0xe6df23e85966dbd17e1155f0eb8e4268b64b9a5d00f427820e1751335bf40f6d",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
+      "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
+      "initCodeHash": "0x93a20d4047f1e33951421443e762f3e0e521d257549610591d4d5fabd0c10a6c",
+      "initCodeBytes": 8813,
+      "runtimeCodeHash": "0x48bf95d0c7e94bd2279d7fa5c87a0cdb62ed6156d6923a0e7cdc3d72d716e700",
+      "runtimeCodeBytes": 7932,
       "publicRpcRead": {
         "rpc": "https://bsc-dataseed.bnbchain.org",
         "chainIdChecked": 56,
-        "gasEstimate": 1596538,
+        "gasEstimate": 1816470,
         "gasPriceWei": "50000000",
-        "estimatedCostNative": "0.0000798269",
-        "readAt": "2026-10-21T22:59:17.930Z"
+        "estimatedCostNative": "0.0000908235",
+        "readAt": "2026-10-22T21:35:05.058Z"
       }
     },
     {
@@ -139,18 +139,18 @@
         "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a"
       },
       "constructorArgsEncoded": "0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000fd21bf773a193cdcb9f793100cb13a8baadc3e9a00000000000000000000000000000000000000000000000000000000000000094176616c616e6368650000000000000000000000000000000000000000000000",
-      "creationCodeHash": "0x2daadaf61d8da9e802e1de7f9daa2e41dde6648a3f9eebeb1c74cabb9480bd99",
-      "initCodeHash": "0x84059865bfc7040628081c9f7ff6c913a1ba9027569043d532c4e24c5c458eb7",
-      "initCodeBytes": 7804,
-      "runtimeCodeHash": "0x883ef245131b71bb79b50e2abe4a17231b8d18c44f6b388f9ca83f95d091b305",
-      "runtimeCodeBytes": 6923,
+      "creationCodeHash": "0x6bb7d928ddd04fe5425d5f404855759ee877075354a08d015275c9ba21b2996b",
+      "initCodeHash": "0x70458d12ca909f63b3aa1cf0390621097220f5f679b00c1ed32284c3d291e095",
+      "initCodeBytes": 8813,
+      "runtimeCodeHash": "0x48bf95d0c7e94bd2279d7fa5c87a0cdb62ed6156d6923a0e7cdc3d72d716e700",
+      "runtimeCodeBytes": 7932,
       "publicRpcRead": {
         "rpc": "https://api.avax.network/ext/bc/C/rpc",
         "chainIdChecked": 43114,
-        "gasEstimate": 1596466,
-        "gasPriceWei": "2500000150",
-        "estimatedCostNative": "0.0039911652394699",
-        "readAt": "2026-10-21T22:59:18.179Z"
+        "gasEstimate": 1816397,
+        "gasPriceWei": "2526054847",
+        "estimatedCostNative": "0.004588318445926259",
+        "readAt": "2026-10-22T21:35:05.350Z"
       }
     }
   ]
