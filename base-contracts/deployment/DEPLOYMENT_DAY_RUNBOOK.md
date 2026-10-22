@@ -238,7 +238,7 @@ Base44 section 6).
 
 ### 4.2 App commit
 From the repository root: run the app tests (`node --test src/tests/
-src/base-verifier/tests/ src/xrpl-lock/tests/`), `npm run lint`,
+src/xrpl-lock/tests/`), `npm run lint`,
 `npm run build`. Then secret-scan and commit only
 `src/lib/vfDeployedAddresses.js`, and push.
 
