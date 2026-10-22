@@ -59,6 +59,7 @@ export const READERS = Object.freeze({
 export const RETIRED_LOCKS = Object.freeze([
   Object.freeze({ address: "0x968BFD5b580144b4398C10BB1E61bD8A6B1aC946", chains: ["Base"], status: 'RETIRED', new_locks: false, release_allowed: true, note: "2.5% Handshake lock, 2026-10-12" }),
   Object.freeze({ address: "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", chains: ["Ethereum","Arbitrum","Optimism","Polygon","BNB Smart Chain","Avalanche"], status: 'RETIRED', new_locks: false, release_allowed: true, note: "2.5% Handshake lock on the six non-Base EVM chains" }),
+  Object.freeze({ address: "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A", chains: ["Ethereum","Arbitrum","Optimism","Polygon","BNB Smart Chain","Avalanche"], status: 'RETIRED', new_locks: false, release_allowed: true, note: "f9e4d8c CommitmentVaultLock with HANDSHAKE_FEE_BPS=250 on the six non-Base EVM chains" }),
 ]);
 
 // Older Base contracts. History only; the app must not target them.
