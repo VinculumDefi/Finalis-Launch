@@ -261,7 +261,7 @@ function basePage() {
 <label for="resumeVerifier">Optional: resume on a Verifier this page already deployed (otherwise the saved addresses in this browser are used)</label><br>
 <input id="resumeVerifier" type="text" size="46" placeholder="0x..." autocomplete="off">
 </p>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 <button id="go" type="button">Connect, deploy, and configure (stops before finalize)</button>
 <button id="show" type="button">Print addresses</button>
 <button id="clear" type="button">Forget saved addresses</button>
@@ -506,13 +506,13 @@ function evmLockPage(env) {
 <li>Fee: 5.00% of gross to the Dev Fund for every duration, including the 1-hour Handshake</li>
 <li>Floors: Handshake $0.01 to $0.02; every other duration at least $0.01</li>
 </ul>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 <button id="go" type="button">Connect and deploy on ${esc(net.name)}</button>
 <button id="clear" type="button">Forget saved address</button>
 <pre id="log"></pre>
 <h2>Approved Asset Registry rows for ${esc(env)}</h2>
 <p>These are written to the Base Verifier by base.html, not on this network.</p>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 ${registryTable(env)}
 ${CDN}
 <script>
@@ -602,7 +602,7 @@ function utxoPage(env) {
 <pre id="log">${esc(lines.join("\n"))}</pre>
 <h2>Approved Asset Registry rows for ${esc(env)}</h2>
 <p>Written to the Base Verifier by base.html, not on ${esc(net.name)}.</p>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 ${registryTable(env)}
 </body>
 </html>
@@ -639,7 +639,7 @@ function solanaPage() {
 <button id="check" type="button">Read program status on mainnet-beta (read-only)</button>
 <h2>Approved Asset Registry rows for Solana</h2>
 <p>Written to the Base Verifier by base.html, not on Solana.</p>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 ${registryTable(env)}
 <script>
 const RPC = "https://api.mainnet-beta.solana.com";
@@ -699,7 +699,7 @@ function stellarPage() {
 <pre id="log">${esc(lines.join("\n"))}</pre>
 <h2>Approved Asset Registry rows for Stellar</h2>
 <p>Written to the Base Verifier by base.html, not on Stellar.</p>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 ${registryTable(env)}
 </body>
 </html>
@@ -732,7 +732,7 @@ function xrplPage() {
 <pre id="log">${esc(lines.join("\n"))}</pre>
 <h2>Approved Asset Registry rows for XRP Ledger</h2>
 <p>Written to the Base Verifier by base.html, not on the XRP Ledger.</p>
-${registryGateHtml()}
+${registryGateHtml({ filename: REGISTRY_FILENAME, rowCount: REGISTRY_ROWS, sha256: REGISTRY_SHA256 })}
 ${registryTable(env)}
 </body>
 </html>
