@@ -1,0 +1,76 @@
+{
+  "_note": "Machine-facing pre-deployment manifest. Verified by scripts/build_ceremony_artifacts.cjs. Not an operator checklist. The build hardcodes this file's SHA-256 so editing the manifest to match a wrong registry is refused.",
+  "revision": "Revision B",
+  "revisionLabel": "registry-revB-2026-10-20",
+  "artifacts": [
+    {
+      "filename": "assetRegistry.revB.json",
+      "path": "deployment/assetRegistry.revB.json",
+      "revisionLabel": "Revision B",
+      "sha256": "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9",
+      "rowCount": 487,
+      "rowCountNote": "486 Revision B rows plus Base ETH as row 2"
+    },
+    {
+      "filename": "baseCeremonyFlow.js",
+      "path": "scripts/deploy-pages/baseCeremonyFlow.js",
+      "revisionLabel": "Revision B ceremony flow",
+      "sha256": "99cd17fdead69693274b17ede465b2001d7b10603627f2de271b2b50777e525e",
+      "rowCount": null
+    },
+    {
+      "filename": "base.html",
+      "path": "scripts/deploy-pages/base.html",
+      "revisionLabel": "Revision B ceremony page",
+      "sha256": "c7b052c8dc91fee9e1f9f36433b882a0ba0fc1e2625b5a015d634ec727d91b99",
+      "rowCount": null
+    },
+    {
+      "filename": "liveConfig.json",
+      "path": "deployment/liveConfig.json",
+      "revisionLabel": "live Base config",
+      "sha256": "77bc0228aa2aa70df8e631f795d6cc7d1c9ad74f75ca620c8d097bf68b33e5ac",
+      "rowCount": null
+    },
+    {
+      "filename": "representativeBase.cjs",
+      "path": "deployment/representativeBase.cjs",
+      "revisionLabel": "sixteen-environment base",
+      "sha256": "6d7324b807a81213d095d53d94cc45e60c2d2012ceba37fdab76c1bd738bb4e8",
+      "rowCount": null
+    }
+  ],
+  "expectedRegistryRows": 487,
+  "registryWrittenRows": 486,
+  "registryBaseEthRow": 2,
+  "registryBaseEthEnvironment": "Base",
+  "registryBaseEthSymbol": "ETH",
+  "registryBaseEthAssetId": "native-ETH",
+  "deployOrder": [
+    "VinculumFinalisToken (VCLM)",
+    "VinculumFinalisToken (CHONX)",
+    "VinculumFinalisVerifier",
+    "VinculumFinalisSynth (Forge/SYNTH)",
+    "VinculumFinalisStake",
+    "BaseCommitmentVaultLock"
+  ],
+  "deployOrderNote": "Matches baseCeremonyFlow.js on main: tokens and Verifier before Forge and Stake; Base lock last among the six. Tokens-before-lock reorder is already the live order.",
+  "deployOrderKeys": [
+    "TokenVCLM",
+    "TokenCHONX",
+    "VinculumFinalisVerifier",
+    "VinculumFinalisSynth",
+    "VinculumFinalisStake",
+    "BaseCommitmentVaultLock"
+  ],
+  "feeLanguage": "5.00% of gross",
+  "feeLanguageDetail": "5.00% of gross on every duration, including the 1-hour Handshake at $0.01 to $0.02",
+  "feePhrasesRequiredOnPages": [
+    "5.00% of gross",
+    "Handshake",
+    "$0.01",
+    "$0.02"
+  ],
+  "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a",
+  "pricePosterHandoff": "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4"
+}
