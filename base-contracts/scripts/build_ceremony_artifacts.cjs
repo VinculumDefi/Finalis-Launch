@@ -11,7 +11,7 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // unless these constants are changed in this file (reviewed commit).
 const EXPECTED_REGISTRY_SHA256 = "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9";
 const EXPECTED_REGISTRY_ROWS = 487;
-const EXPECTED_MANIFEST_SHA256 = "47207210ea2d696bd052244e6c980e7791db9264cf25f0865d7f24d9b0a429b8";
+const EXPECTED_MANIFEST_SHA256 = "eb7c7ac8a644d2340cffa30df923d95807993a5597fca66a0556307671b5b5ba";
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
 
@@ -250,6 +250,35 @@ function verifyCeremonyManifest(opts = {}) {
     });
   }
 
+  // Non-Base lock artifact: main CommitmentVaultLock masked runtime hash, 5%, no HANDSHAKE_FEE_BPS.
+  const nbl = manifest.nonBaseLock;
+  if (!nbl) {
+    failures.push({ field: "nonBaseLock", expected: "object with expectedRuntimeHash / feeBps / environments", actual: "missing" });
+  } else {
+    const flowHashMatch = flowSrc.match(/const CVL_RUNTIME_HASH = "(0x[0-9a-fA-F]{64})"/);
+    const flowHash = flowHashMatch ? flowHashMatch[1].toLowerCase() : "";
+    if (!nbl.expectedRuntimeHash || nbl.expectedRuntimeHash.toLowerCase() !== flowHash) {
+      failures.push({
+        field: "nonBaseLock.expectedRuntimeHash",
+        expected: flowHash || "(CVL_RUNTIME_HASH in baseCeremonyFlow.js)",
+        actual: String(nbl.expectedRuntimeHash),
+      });
+    }
+    if (nbl.feeBps !== 500) {
+      failures.push({ field: "nonBaseLock.feeBps", expected: "500", actual: String(nbl.feeBps) });
+    }
+    if (nbl.noHandshakeFeeBpsSelector !== true) {
+      failures.push({ field: "nonBaseLock.noHandshakeFeeBpsSelector", expected: "true", actual: String(nbl.noHandshakeFeeBpsSelector) });
+    }
+    if (!nbl.devFund || nbl.devFund.toLowerCase() !== manifest.devFund.toLowerCase()) {
+      failures.push({ field: "nonBaseLock.devFund", expected: manifest.devFund, actual: String(nbl && nbl.devFund) });
+    }
+    const envs = ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"];
+    if (JSON.stringify(nbl.environments) !== JSON.stringify(envs)) {
+      failures.push({ field: "nonBaseLock.environments", expected: envs.join(", "), actual: JSON.stringify(nbl.environments) });
+    }
+  }
+
   // Fee language on generated / maintained pages (and base.html).
   const feePhrases = manifest.feePhrasesRequiredOnPages || [];
   const pageFiles = fs.readdirSync(pages).filter((f) => f.endsWith(".html"));
@@ -371,7 +400,21 @@ async function buildCeremonyArtifacts() {
   const data = {
     devFund: base.devFund,
     scheduledPricePoster: require("../deployment/liveConfig.json").scheduledPricePoster,
-    oldLocks: ["0x968BFD5b580144b4398C10BB1E61bD8A6B1aC946", "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a"],
+    oldLocks: [
+      "0x968BFD5b580144b4398C10BB1E61bD8A6B1aC946",
+      "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a",
+      "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A",
+    ],
+    nonBaseLock: {
+      contract: "CommitmentVaultLock",
+      expectedRuntimeHash: "0x70d73acf928a2f37ddebf165ca68e448eaa4ca76b73941d71f8b3569eeee1a79",
+      immutableRanges: [[2450, 32], [4116, 32], [4963, 32]],
+      feeBps: 500,
+      feeLanguage: "5.00% of gross on every duration",
+      noHandshakeFeeBpsSelector: true,
+      handshakeFeeBpsSelector: "0xee8a0fb0",
+      environments: ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"],
+    },
     readers: {
       evm: READY_EVM.map(([env, contract]) => ({ env, contract })),
       utxo: READY_UTXO.map(([env, contract]) => ({ env, contract, devFundScript: "0x" + devFundScript(env, rep.rows.find((r) => r.environment === env).devFund).toString("hex") })),
