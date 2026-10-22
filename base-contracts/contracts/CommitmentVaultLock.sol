@@ -1,7 +1,8 @@
 // =============================================================================
-// CommitmentVaultLock — source-chain Commitment Vault for the seven EVM
-// environments (Base, Ethereum, Polygon, Optimism, Arbitrum, BNB Smart Chain,
-// Avalanche). One contract. Each deployment is one environment.
+// CommitmentVaultLock: source-chain Commitment Vault for the six non-Base
+// EVM environments (Ethereum, Polygon, Optimism, Arbitrum, BNB Smart Chain,
+// Avalanche). One contract. Each deployment is one environment. Base uses
+// BaseCommitmentVaultLock.
 //
 // Authority: Vinculum Finalis Master Specification Revision 8 (3 October 2026).
 //
@@ -27,6 +28,16 @@
 //     The binding payload stored with the lock is exactly 117 bytes:
 //     lock id 32, Base recipient 20, output token 1, asset identity 32,
 //     valuation reference 32.
+//   VF-TOK-007 / VF-REG-008
+//     VCLM, CHONX and SYNTH are never lock inputs. The tokens live on Base.
+//     On this chain they can only appear later as Axelar ITS copies
+//     (Revision 13: ITS is post-launch), and a copy's address is not known
+//     when this lock is deployed. A copy carries the Base token's name and
+//     symbol, so createErc20Lock refuses any token whose symbol() is "VCLM",
+//     "CHONX" or "SYNTH", or whose name() is "Vinculum Finalis VCLM",
+//     "Vinculum Finalis CHONX" or "Vinculum Finalis SYNTH" (ABI string or
+//     bytes32 form). The refusal is the first check, before transferFrom,
+//     fee routing or any state change, so no fee is ever taken.
 //
 // Maturity is block.timestamp + duration. The duration gate is an exact
 // match against the sixteen COMMITMENT_DURATIONS rows. No range and no
@@ -115,6 +126,36 @@ contract CommitmentVaultLock {
         devFund = devFund_;
     }
 
+    /// @notice True when the token presents as VCLM, CHONX or SYNTH
+    ///         (VF-TOK-007 / VF-REG-008). Reads symbol() and name() with
+    ///         staticcall. A token whose call fails or returns other data is
+    ///         not a protocol token. Same name as BaseCommitmentVaultLock.
+    function isProtocolToken(address token) public view returns (bool) {
+        return _metadataIsProtocol(token, 0x95d89b41) // symbol()
+            || _metadataIsProtocol(token, 0x06fdde03); // name()
+    }
+
+    function _metadataIsProtocol(address token, bytes4 selector) internal view returns (bool) {
+        (bool ok, bytes memory ret) = token.staticcall(abi.encodeWithSelector(selector));
+        if (!ok) return false;
+        if (ret.length == 32) {
+            bytes32 w = abi.decode(ret, (bytes32));
+            return w == bytes32("VCLM")
+                || w == bytes32("CHONX")
+                || w == bytes32("SYNTH")
+                || w == bytes32("Vinculum Finalis VCLM")
+                || w == bytes32("Vinculum Finalis CHONX")
+                || w == bytes32("Vinculum Finalis SYNTH");
+        }
+        bytes32 h = keccak256(ret);
+        return h == keccak256(abi.encode("VCLM"))
+            || h == keccak256(abi.encode("CHONX"))
+            || h == keccak256(abi.encode("SYNTH"))
+            || h == keccak256(abi.encode("Vinculum Finalis VCLM"))
+            || h == keccak256(abi.encode("Vinculum Finalis CHONX"))
+            || h == keccak256(abi.encode("Vinculum Finalis SYNTH"));
+    }
+
     function lockRecord(bytes32 lockId) external view returns (LockRecord memory) {
         return _locks[lockId];
     }
@@ -188,6 +229,8 @@ contract CommitmentVaultLock {
         uint256 verifiedGrossUsd
     ) external nonReentrant returns (uint256 fee, uint256 principal) {
         require(token != address(0), "CVL: token");
+        // VF-TOK-007 / VF-REG-008: first, before any transfer or state change.
+        require(!isProtocolToken(token), "VF-TOK-007: protocol token is not a lock input");
         require(amount > 0, "CVL: zero gross");
         // Reject a stated amount that cannot clear the fee and principal
         // floors before tokens move. The received delta is checked again.
