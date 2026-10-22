@@ -218,4 +218,48 @@ async function main() {
   for (const e of unresolved) console.log(`  unresolved row ${e.row} ${e.environmentId} ${e.symbol}: ${e.unresolvedReason}`);
 }
 
-main().catch((err) => { console.error(err); process.exit(1); });
+// ---------------------------------------------------------------------------
+// Ceremony registry resolver (Revision B). The live ceremony, deploy pages,
+// and build_ceremony_artifacts.cjs call this. Never a folder glob.
+// deployment/assetRegistry.resolved.json remains the prior revision written
+// by main() above; it is not the ceremony source.
+// ---------------------------------------------------------------------------
+const { REGISTRY_FILE, REGISTRY_NAME, loadRegistry } = require("../registryFile.cjs");
+
+const EXPECTED_CEREMONY_ROWS = 487;
+
+function resolveCeremonyRegistry(file = REGISTRY_FILE) {
+  if (!fs.existsSync(file)) {
+    throw new Error("REGISTRY GUARD REFUSAL: ceremony registry file missing: " + file);
+  }
+  const raw = fs.readFileSync(file);
+  const sha256 = crypto.createHash("sha256").update(raw).digest("hex");
+  const { reg, written, baseEth, all } = loadRegistry(file);
+  const row2 = all.find((e) => e.row === 2 && e.environmentId === "Base");
+  if (!row2 || row2.symbol !== "ETH" || row2.assetId !== "native-ETH") {
+    throw new Error("REGISTRY GUARD REFUSAL: row 2 is not Base native ETH in " + path.basename(file));
+  }
+  return {
+    path: file,
+    name: file === REGISTRY_FILE ? REGISTRY_NAME : path.relative(path.join(__dirname, "../.."), file).replace(/\\/g, "/"),
+    filename: path.basename(file),
+    sha256,
+    rowCount: all.length,
+    entries: all,
+    written,
+    baseEth,
+    reg,
+    expectedRows: EXPECTED_CEREMONY_ROWS,
+  };
+}
+
+module.exports = {
+  resolveCeremonyRegistry,
+  EXPECTED_CEREMONY_ROWS,
+  REGISTRY_FILE,
+  REGISTRY_NAME,
+};
+
+if (require.main === module) {
+  main().catch((err) => { console.error(err); process.exit(1); });
+}
