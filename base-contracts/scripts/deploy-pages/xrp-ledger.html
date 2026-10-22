@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>Vinculum Protocol - XRP Ledger deploy plan</h1>
-<p>Network: <b>XRP Ledger mainnet</b>. Environment id: <b>XRP Ledger</b>. Built from Finalis-Launch source at commit <code>0eef3b3a77eb72d23c4904ffeadc878247165f40</code> (origin/main). This page stops before finalize.</p>
+<p>Network: <b>XRP Ledger mainnet</b>. Environment id: <b>XRP Ledger</b>. Built from Finalis-Launch source at commit <code>57ff8808076dfd312444fa00d0b9fa96e4db908e</code> (origin/main). This page stops before finalize.</p>
 
 <p>The XRP Ledger is not EVM. No wallet step. The page prints the lock, its destinations, and stops.</p>
 <pre id="log">Network: XRP Ledger mainnet
@@ -26,6 +26,14 @@ No transaction is printed here because none exists until a user locks.
 Stopped before finalize.</pre>
 <h2>Approved Asset Registry rows for XRP Ledger</h2>
 <p>Written to the Base Verifier by base.html, not on the XRP Ledger.</p>
+<div id="registry-gate">
+<p>Registry source: <code id="registry-filename">assetRegistry.revB.json</code>. Rows: <b id="registry-rows">487</b>. SHA-256: <code id="registry-sha256">1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9</code>.</p>
+<p id="registry-wrong" style="color:red;display:none">WRONG REGISTRY: expected 487 rows, found 487</p>
+</div>
+<script>
+window.__REGISTRY_ROW_COUNT = 487;
+window.__REGISTRY_EXPECTED_ROWS = 487;
+</script>
 <table border="1" cellpadding="3" cellspacing="0"><tr><th>row</th><th>symbol</th><th>assetId</th><th>canonicalAssetId</th><th>decimals</th><th>class</th><th>path</th><th>Base Verifier registry</th></tr><tr><td>12</td><td>XRP</td><td>native-XRP</td><td><code>0x6f8cbd21769db3fbde2544b11800d82e17de13dcc932bd924874514bc817a51a</code></td><td>6</td><td>S3</td><td>native</td><td>written on the Base page</td></tr></table>
 </body>
 </html>
