@@ -55,6 +55,7 @@ const RETIRED = {
   locks: [
     { address: "0x968BFD5b580144b4398C10BB1E61bD8A6B1aC946", chains: ["Base"], note: "2.5% Handshake lock, 2026-10-12" },
     { address: "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a", chains: EVM_ENVS, note: "2.5% Handshake lock on the six non-Base EVM chains" },
+    { address: "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A", chains: EVM_ENVS, note: "f9e4d8c CommitmentVaultLock with HANDSHAKE_FEE_BPS=250 on the six non-Base EVM chains" },
   ],
   base: [
     { name: "Verifier (finalized 2026-10-12)", address: "0xb0670826b79e29cc6a1c216Eb396D383a54af47D" },
