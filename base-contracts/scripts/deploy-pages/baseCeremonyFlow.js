@@ -220,7 +220,12 @@
     }
 
     const items = data.entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath }));
-    items.push({ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, symbol: data.row2.symbol, decimals: data.row2.decimals, custodyClass: data.row2.custodyClass, custodyPath: data.row2.custodyPath });
+    // ceremony-data.entries is the full Revision B set (486 + Base ETH = 487).
+    // Append row 2 only when a older data file omitted it.
+    const hasBaseEth = items.some((e) => e.environmentId === "Base" && String(e.canonicalAssetId).toLowerCase() === String(data.row2.canonicalAssetId).toLowerCase());
+    if (!hasBaseEth) {
+      items.push({ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, symbol: data.row2.symbol, decimals: data.row2.decimals, custodyClass: data.row2.custodyClass, custodyPath: data.row2.custodyPath });
+    }
     for (let i = 0; i < items.length; i += BATCH) {
       await (await verifier.registerAssetPrecisionBatch(items.slice(i, i + BATCH))).wait();
       log("registry " + Math.min(i + BATCH, items.length) + "/" + items.length);
