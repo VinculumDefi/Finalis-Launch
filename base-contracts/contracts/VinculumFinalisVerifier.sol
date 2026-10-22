@@ -233,9 +233,10 @@ contract VinculumFinalisVerifier {
     bytes32 public constant BCH_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Bitcoin Cash", "native-BCH"));
     bytes32 public constant LTC_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Litecoin", "native-LTC"));
 
-    // Ethereum USDC/USDT: a last successful scheduled price below $0.95 makes
-    // the asset unavailable for a new Handshake valuation until a later run
-    // is >= $0.95. Standard locks have no price floor beyond STANDARD_USD_MIN.
+    // USDC/USDT rows on every chain (see _isUsdStable): a last successful
+    // scheduled price below $0.95 makes the asset unavailable for every new
+    // valuation, at every duration, until a later run is >= $0.95. Exactly
+    // $0.95 is allowed. A lock already bound keeps its creation price.
     uint256 public constant USD_STABLE_MIN_PRICE = 0.95e18;
 
     // VF-COM-019: decay
@@ -959,15 +960,22 @@ contract VinculumFinalisVerifier {
     }
 
     // ===== USD resolution (VF-ORC / CL-01) =====
-    // Every asset, including Ethereum USDC/USDT: registry last successful
-    // scheduled price, read and bound at first lock valuation
-    // (VF-ORC-008/009/010). No deployment price hash. No admin invent-price
-    // setter. No $1 substitute. The $0.95 floor is Handshake-only.
+    // Every asset, including USDC/USDT: registry last successful scheduled
+    // price, read and bound at first lock valuation (VF-ORC-008/009/010). No
+    // deployment price hash. No admin invent-price setter. No $1 substitute.
+    // The $0.95 floor applies to every new USDC/USDT valuation, every duration.
 
-    function _isEthereumUsdStable(string memory envId, string memory symbol) internal pure returns (bool) {
-        if (keccak256(bytes(envId)) != keccak256("Ethereum")) return false;
-        bytes32 s = keccak256(bytes(symbol));
-        return s == keccak256("USDC") || s == keccak256("USDT");
+    /// @dev USDC/USDT stablecoin rows on every chain, by registry symbol:
+    ///      "USDC", "USDT", "USDC_<chain>", "USDT_<chain>" (USDC_ARB, USDT_OP,
+    ///      USDC_BASE, ...) and "USDTE" (Avalanche USDT.e). Other symbols that
+    ///      merely contain USDC (for example CUSDC) are not stablecoin rows.
+    function _isUsdStable(string memory symbol) internal pure returns (bool) {
+        bytes memory b = bytes(symbol);
+        if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+        if (b[3] != "C" && b[3] != "T") return false;
+        if (b.length == 4) return true;
+        if (b[4] == "_") return b.length > 5;
+        return b.length == 5 && b[3] == "T" && b[4] == "E";
     }
 
     function _resolveVerifiedGrossUsd(
@@ -987,13 +995,10 @@ contract VinculumFinalisVerifier {
             bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
             ScheduledPriceEntry memory sp = scheduledPrices[assetKey];
             require(sp.usable && sp.priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
-            // Ethereum USDC/USDT below $0.95: unavailable for a new Handshake
-            // until a later run is at or above $0.95. Standard locks take the
-            // scheduled price with no floor. Fail closed; never substitute $1.
-            if (
-                _isEthereumUsdStable(pkg.sourceEnvironmentId, entry.symbol) &&
-                pkg.durationSecs == HANDSHAKE_DURATION_SECS
-            ) {
+            // USDC/USDT below $0.95: unavailable for every new valuation, at
+            // every duration, until a later run is at or above $0.95. Fail
+            // closed; never substitute $1.
+            if (_isUsdStable(entry.symbol)) {
                 require(
                     sp.priceUsd18 >= USD_STABLE_MIN_PRICE,
                     "VF-ORC-005: USDC/USDT scheduled price below $0.95"
