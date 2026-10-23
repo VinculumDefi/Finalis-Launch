@@ -36,12 +36,16 @@ const priceFor = (dec) => (HS_USD * 10n ** BigInt(dec)) / HS_UNITS; // so HS_UNI
 
 const READERS = {
   Base: { contract: "BaseLockRecordVerifier", chainId: 8453 },
-  Ethereum: { contract: "SimpleEthereumLockReader", chainId: 1 },
-  Optimism: { contract: "OptimismLockReader", chainId: 10 },
-  Arbitrum: { contract: "ArbitrumLockReaderLocalHeaders", chainId: 42161 },
-  Polygon: { contract: "PolygonLockReaderLocalHeaders", chainId: 137 },
-  "BNB Smart Chain": { contract: "BnbSmartChainLockReaderLocalHeaders", chainId: 56 },
-  Avalanche: { contract: "AvalancheLockReaderLocalHeaders", chainId: 43114, avax: true },
+  // Fix 2026-10-23 (AG-01): production non-Base readers refuse finality. The
+  // TestAnchor harnesses stand in for the missing settled-history anchor so
+  // the proof path and issuance math stay covered; the refusal is tested in
+  // test/batch_fix_2026_10_23.test.cjs against the production readers.
+  Ethereum: { contract: "SimpleEthereumLockReaderTestAnchor", chainId: 1 },
+  Optimism: { contract: "OptimismLockReaderTestAnchor", chainId: 10 },
+  Arbitrum: { contract: "ArbitrumLockReaderTestAnchor", chainId: 42161 },
+  Polygon: { contract: "PolygonLockReaderTestAnchor", chainId: 137 },
+  "BNB Smart Chain": { contract: "BnbSmartChainLockReaderTestAnchor", chainId: 56 },
+  Avalanche: { contract: "AvalancheLockReaderTestAnchor", chainId: 43114, avax: true },
 };
 const NATIVE = { // the row each chain's native coin resolves to (registry row number)
   Base: { row: 2, env: "Base" }, Ethereum: { row: 2 }, Arbitrum: { row: 2 }, Optimism: { row: 2 },
