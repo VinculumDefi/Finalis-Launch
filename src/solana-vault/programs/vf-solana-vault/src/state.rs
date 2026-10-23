@@ -182,4 +182,3 @@ impl Default for HandshakeAllowance {
         }
     }
 }
-}
