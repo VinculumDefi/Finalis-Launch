@@ -66,11 +66,13 @@ library ExecutionHeader {
     }
 
     function payloadLen(bytes memory item) private pure returns (uint256) {
+        require(item.length > 0, "VF-XCH-011: RLP empty item");
         uint8 b = uint8(item[0]);
         if (b < 0x80) return 1;
         if (b < 0xb8) return b - 0x80;
         require(b < 0xc0, "not string");
         uint256 lol = b - 0xb7;
+        require(item.length > lol, "VF-XCH-011: RLP truncated length");
         uint256 len;
         for (uint256 i = 0; i < lol; i++) {
             len = (len << 8) | uint8(item[1 + i]);
@@ -79,7 +81,7 @@ library ExecutionHeader {
     }
 
     function listItems(bytes memory item) private pure returns (bytes[] memory) {
-        require(uint8(item[0]) >= 0xc0, "not list");
+        require(item.length > 0 && uint8(item[0]) >= 0xc0, "not list");
         (uint256 start, uint256 end) = bounds(item);
         uint256 count;
         uint256 p = start;
@@ -100,14 +102,18 @@ library ExecutionHeader {
     }
 
     function bounds(bytes memory item) private pure returns (uint256 start, uint256 end) {
+        require(item.length > 0, "VF-XCH-011: RLP empty item");
         uint8 b = uint8(item[0]);
         if (b < 0xb8) return (1, item.length);
-        if (b < 0xc0) return (1 + (b - 0xb7), item.length);
-        if (b < 0xf8) return (1, item.length);
-        return (1 + (b - 0xf7), item.length);
+        if (b < 0xc0) start = 1 + (b - 0xb7);
+        else if (b < 0xf8) return (1, item.length);
+        else start = 1 + (b - 0xf7);
+        require(start <= item.length, "VF-XCH-011: RLP truncated length");
+        return (start, item.length);
     }
 
     function spanEnd(bytes memory data, uint256 offset) private pure returns (uint256) {
+        require(offset < data.length, "VF-XCH-011: RLP truncated item");
         uint8 b = uint8(data[offset]);
         if (b < 0x80) return offset + 1;
         if (b < 0xb8) return offset + 1 + (b - 0x80);
@@ -117,10 +123,12 @@ library ExecutionHeader {
     }
 
     function readLen(bytes memory data, uint256 offset, uint256 lol) private pure returns (uint256 len) {
+        require(offset + lol <= data.length, "VF-XCH-011: RLP truncated length");
         for (uint256 i = 0; i < lol; i++) len = (len << 8) | uint8(data[offset + i]);
     }
 
     function sliceRange(bytes memory data, uint256 start, uint256 end) private pure returns (bytes memory out) {
+        require(start <= end && end <= data.length, "VF-XCH-011: RLP span");
         uint256 len = end - start;
         out = new bytes(len);
         for (uint256 i = 0; i < len; i++) out[i] = data[start + i];
