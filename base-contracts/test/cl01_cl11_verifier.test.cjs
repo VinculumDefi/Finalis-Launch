@@ -133,7 +133,7 @@ function buildPkg({
 }
 
 describe("CL-11 · handshake allowance lookup on Base", function () {
-  it("wrong package allowance reverts", async function () {
+  it("Rev 12 (AG-20): the package Handshake allowance value is ignored, never checked or counted", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await Token.deploy("V", "V", 10n ** 30n);
@@ -162,25 +162,35 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     await finalizeCeremony(verifier);
     await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
 
-    // Bitcoin mechanism allowance is 1; package claims 3
-    const gross = 100000n; // 0.001 BTC * $30k = $30
-    const pkg = buildPkg({
-      env: "Bitcoin",
-      lockId: ethers.id("lock-wrong-allow"),
-      identity: "btc-id-1",
-      allowance: 3,
-      assetId,
-      precision: 8,
-      custodyClass: 2,
-      gross,
-      duration: DAY30,
-      recipient: recipient.address,
-      racIdentity: ethers.id("rac-wrong-allow"),
-      priceRecord,
-    });
-    await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(
-      "VF-COM-006: handshake allowance mismatch"
-    );
+    // Rev 12 removed the Rev 6 allowance (3 or 1). Before the fix a Bitcoin
+    // package had to state exactly 1. Now any value verifies and mints, for a
+    // 30-day lock and for repeated 1-hour Handshakes by the same identity.
+    const cases = [
+      { allowance: 3, gross: 100000n, duration: DAY30 }, // 0.001 BTC * $30k = $30
+      { allowance: 0, gross: 40n, duration: HOUR },      // $0.012 Handshake
+      { allowance: 255, gross: 40n, duration: HOUR },
+      { allowance: 1, gross: 40n, duration: HOUR },
+    ];
+    for (const [i, c] of cases.entries()) {
+      const pkg = buildPkg({
+        env: "Bitcoin",
+        lockId: ethers.id("lock-allow-" + i),
+        identity: "btc-id-1",
+        allowance: c.allowance,
+        assetId,
+        precision: 8,
+        custodyClass: 2,
+        gross: c.gross,
+        duration: c.duration,
+        recipient: recipient.address,
+        racIdentity: ethers.id("rac-allow-" + i),
+        priceRecord,
+      });
+      await expect(verifier.recordFeeAndRac(pkg)).to.not.be.reverted;
+      const before = await vclm.balanceOf(recipient.address);
+      await expect(verifier.verifyAndMint(pkg, 0)).to.not.be.reverted;
+      expect(await vclm.balanceOf(recipient.address)).to.be.greaterThan(before);
+    }
   });
 
   it("no per-identity Handshake counter: repeat Handshakes mint at the 5% fee", async function () {
