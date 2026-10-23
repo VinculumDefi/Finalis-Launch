@@ -179,7 +179,8 @@ describe("predeploy 2: Base ETH row", function () {
     await expect(verifier.applyScheduledPriceRun(1n, [
       { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
     ])).to.be.revertedWith("VF-REG-001: asset not in registry");
-    await verifier.applyScheduledPriceRun(2n, [
+    // AG-07: a reverted run does not consume its id; the next run must be 1.
+    await verifier.applyScheduledPriceRun(1n, [
       { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
     ]);
     await expect(verifier.finalize()).to.be.revertedWith("VF-DEP-011: Base ETH registry row missing");
@@ -301,8 +302,10 @@ describe("predeploy 4: negative cases", function () {
     await c.verifier.recordFeeAndRac(pkg);
     await c.verifier.verifyAndMint(pkg, 0);
     await expect(c.verifier.verifyAndMint(pkg, 0)).to.be.revertedWith("VF-XCH-013: replay");
-    const pkg2 = pkgFrom(lockId, rec);
-    await c.verifier.recordFeeAndRac(pkg2);
+    // AG-04: RAC is recorded once per lock; a fresh racIdentity does not
+    // open a second record, and the mint stays a replay.
+    const pkg2 = { ...pkgFrom(lockId, rec), racIdentity: ethers.id("another rac identity") };
+    await expect(c.verifier.recordFeeAndRac(pkg2)).to.be.revertedWith("VF-RAC-001: RAC already recorded");
     await expect(c.verifier.verifyAndMint(pkg2, 0)).to.be.revertedWith("VF-XCH-013: replay");
   });
 });
@@ -372,7 +375,9 @@ describe("predeploy 6: access control after finalize", function () {
     await expect(verifier.finalize()).to.be.revertedWith(closed);
     await expect(verifier.connect(other).finalize()).to.be.revertedWith(closed);
     await expect(verifier.connect(other).applyScheduledPriceRun(5n, [])).to.be.revertedWith("VF-ORC-007: not price poster");
-    await expect(verifier.applyScheduledPriceRun(1n, [])).to.be.revertedWith("VF-ORC-001: run id must advance");
+    // AG-07: run ids are strictly sequential (no replay, no skip).
+    await expect(verifier.applyScheduledPriceRun(1n, [])).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
+    await expect(verifier.applyScheduledPriceRun(5n, [])).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
     expect(await verifier.deployer()).to.equal(ethers.ZeroAddress);
   });
   it("before finalize, non-deployer cannot configure and mint paths are closed", async function () {
