@@ -1,0 +1,44 @@
+
+
+  RIG 9 adversarial trust-boundary (safe behavior, fix 2026-10-23)
+    ✔ PASS ADV-P01: Base rejects a lockId that was never created (no unauthorized mint) (1106ms)
+    ✔ PASS ADV-P02: Base rejects package recipient that does not match the lock record (VF-XCH-011) (83ms)
+    ✔ PASS ADV-P03: Base rejects wrong lockId in proof vs package (VF-XCH-011) (81ms)
+    ✔ PASS ADV-P04: ticker 'USDC' cannot substitute for a registered Base token address (86ms)
+    ✔ PASS ADV-P05: Base mint replay of the same lockId is refused (VF-XCH-013) (114ms)
+    ✔ PASS ADV-P06: real Arbitrum-shaped env string cannot use Ethereum reader (env slot check) (98ms)
+    ✔ PASS ADV-P07: same address bytes on Base vs a non-indexed token cannot mint as ETH (77ms)
+    ✔ SAFE ADV-01: Ethereum fabricated MPT is refused, no mint [AG-01, VF-XCH-006] (94ms)
+    ✔ SAFE ADV-02: Arbitrum fabricated trie is refused, no mint [AG-01] (99ms)
+    ✔ SAFE ADV-03: Optimism fabricated trie is refused, no mint [AG-01] (92ms)
+    ✔ SAFE ADV-04: Polygon fabricated trie is refused, no mint [AG-01] (94ms)
+    ✔ SAFE ADV-05: BNB Smart Chain fabricated trie is refused, no mint [AG-01] (89ms)
+    ✔ SAFE ADV-06: Avalanche fabricated trie is refused, no mint [AG-01] (88ms)
+    ✔ SAFE ADV-07: Bitcoin header with no PoW is refused and records no RAC [AG-02] (79ms)
+    ✔ SAFE ADV-08: Stellar ledger with arbitrary previous hash is refused; no RAC [AG-03] (78ms)
+    ✔ SAFE ADV-09: XRPL ledger with arbitrary parent is refused; no RAC [AG-03] (81ms)
+    ✔ SAFE ADV-10: AG-01 style header mixHash forge on a real Hardhat Ethereum lock is refused [AG-01] (75ms)
+    ✔ PASS ADV-P08: lookalike LockCreated from a CVL clone at another address is rejected by Ethereum reader (77ms)
+    ✔ PASS ADV-P09: receipt with altered recipient word fails storage proof (VF-XCH-011) (2351ms)
+    ✔ SAFE ADV-11: the same Base lock records one RAC credit whatever racIdentity is supplied [AG-04, VF-RAC-001] (155ms)
+    ✔ SAFE ADV-12: valuationTimestamp=0 is refused; the lock mints at its proven creation day [AG-05] (88ms)
+    ✔ SAFE ADV-13: a later price run does not reprice an older lock [AG-06] (159ms)
+    ✔ SAFE ADV-14: the maximum runId is refused, so runs cannot be frozen [AG-07] (66ms)
+
+  RIG 9 adversarial controls that always run
+    ✔ PASS ADV-P10: non-poster cannot applyScheduledPriceRun (63ms)
+    ✔ PASS ADV-P11: out-of-order / non-advancing runId is refused (60ms)
+    ✔ PASS ADV-P12: Base lock resubmitted with different proof encoding records no second RAC and mints once (79ms)
+
+  RIG 9 adversarial UTXO remaining + genuine header (safe behavior, fix 2026-10-23)
+    ✔ SAFE ADV-16: Bitcoin Cash reader refuses a forged header with no settled-history / PoW [AG-02]
+    ✔ SAFE ADV-16: Litecoin reader refuses a forged header with no settled-history / PoW [AG-02]
+    ✔ SAFE ADV-16: Dogecoin reader refuses a forged header with no settled-history / PoW [AG-02]
+    ✔ SAFE ADV-16: DigiByte reader refuses a forged header with no settled-history / PoW [AG-02]
+    ✔ SAFE ADV-16: Zcash reader refuses a forged header with no settled-history / PoW [AG-02]
+    ✔ PASS ADV-P13: genuine Ethereum mainnet header with a non-lock receipt cannot extractFacts as a lock [case 2] (606ms)
+    ✔ PASS ADV-P14: XRPL issuer/currency style id is not accepted as an EVM lock asset on Base
+
+
+  33 passing (6s)
+
