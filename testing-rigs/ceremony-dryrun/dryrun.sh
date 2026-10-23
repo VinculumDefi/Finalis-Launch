@@ -2,7 +2,19 @@
 # npm run ceremony:dryrun (from base-contracts). Forks Base mainnet into the
 # LOCAL in-process Hardhat network a few blocks behind the tip, with the real
 # Base block gas limit, and runs ceremony_dryrun.cjs. Nothing is broadcast.
+#
+# --simulate-non-base-locks: a clearly labeled simulation. The fixed
+# CommitmentVaultLock is deployed on LOCAL Hardhat forks of the six non-Base
+# chains (never on a real chain) and steps 3 to 15 run against those locks.
+# Without the flag the default mode is unchanged and checks the live locks.
 set -euo pipefail
+export DRYRUN_SIMULATE_NON_BASE_LOCKS=0
+for a in "$@"; do
+  case "$a" in
+    --simulate-non-base-locks) export DRYRUN_SIMULATE_NON_BASE_LOCKS=1 ;;
+    *) echo "unknown option: $a (only --simulate-non-base-locks)" >&2; exit 64 ;;
+  esac
+done
 HERE="$(cd "$(dirname "$0")" && pwd)"
 BC="$HERE/../../base-contracts"
 # publicnode answered 403 mid-run on 2026-10-23, so the default is mainnet.base.org.
@@ -15,6 +27,9 @@ export RIG_FORK_BLOCK="${RIG_FORK_BLOCK:-$(( tip - 5 ))}"
 gl=$(rpc "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getBlockByNumber\",\"params\":[\"$(printf '0x%x' "$RIG_FORK_BLOCK")\",false]}" | sed -E 's/.*"gasLimit":"(0x[0-9a-f]+)".*/\1/')
 export RIG_BLOCK_GAS=$(( gl ))
 echo "dry-run: local Base fork at block $RIG_FORK_BLOCK, block gas limit $RIG_BLOCK_GAS" >&2
+if [ "$DRYRUN_SIMULATE_NON_BASE_LOCKS" = 1 ]; then
+  echo "dry-run: SIMULATE mode, non-Base locks are simulated on local forks (not the live locks)" >&2
+fi
 cd "$BC"
 OUTF=$(mktemp)
 set +e
