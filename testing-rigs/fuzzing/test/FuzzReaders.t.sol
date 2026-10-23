@@ -216,12 +216,10 @@ contract FuzzReaders is Test {
         _check(3, abi.encodeWithSignature("arbitrumHeaderExtras(bytes)", hdr), "arbitrumHeaderExtras");
     }
 
-    /// SHAPE (not a fuzz finding, adversarial tier): a self-made Bitcoin
-    /// "block" passes verifyFinality. The reader checks only header length,
-    /// the coinbase Merkle path and the BIP34 height. It checks no proof of
-    /// work and no trusted checkpoint, and the Verifier ignores the returned
-    /// hash (it reads only the bool).
-    function test_SHAPE_selfMadeBitcoinBlockPassesFinality() public {
+    /// SAFE (FZ-05, AG-03 fix 2026-10-23): a self-made Bitcoin "block" is
+    /// refused. The production Bitcoin reader has no on-chain settled-history
+    /// anchor, so it fails closed for every input.
+    function test_SAFE_selfMadeBitcoinBlockRefused() public {
         // coinbase: version 1, one input (null prevout), script = push3 height
         // + one pad byte (avoids the 64-byte rule), one zero-value output.
         bytes memory cb = abi.encodePacked(
@@ -233,9 +231,7 @@ contract FuzzReaders is Test {
         assertEq(hdr.length, 80);
         bytes32 hh = sha256(abi.encodePacked(sha256(hdr)));
         bytes memory lep = abi.encode(UtxoProof(hdr, cb, new bytes32[](0), cb, new bytes32[](0), 0, "", "", 0));
-        (bool fin, bytes32 rh, uint256 height) = btc.verifyFinality(lep, abi.encode(hh, uint256(900_000)));
-        assertTrue(fin);
-        assertEq(rh, hh);
-        assertEq(height, 900_000);
+        vm.expectRevert(bytes("VF-XCH-006: Bitcoin settled-history anchor not enforced on-chain; environment disabled"));
+        btc.verifyFinality(lep, abi.encode(hh, uint256(900_000)));
     }
 }
