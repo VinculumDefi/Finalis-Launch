@@ -94,11 +94,12 @@ describe("Rig 2: Base mainnet fork, full ceremony stack, real Base tokens", func
       await C.advance(Number(duration) + 1);
       const tk = sym === "ETH" ? null : new ethers.Contract(T[sym], ERC20, ethers.provider);
       const b0 = tk ? await tk.balanceOf(dest.address) : await ethers.provider.getBalance(dest.address);
-      await (await S.lock.connect(user).release(lockId)).wait();
-      const b1 = tk ? await tk.balanceOf(dest.address) : await ethers.provider.getBalance(dest.address);
+      const rr = await (await S.lock.connect(dest).release(lockId)).wait();
+      const gasPaid = tk ? 0n : rr.gasUsed * rr.gasPrice; // dest pays gas for native release
+      const b1 = (tk ? await tk.balanceOf(dest.address) : await ethers.provider.getBalance(dest.address)) + gasPaid;
       out.released = String(b1 - b0);
       expect(b1 - b0).to.equal(rec.principal);
-      await expect(S.lock.connect(user).release(lockId)).to.be.reverted;
+      await expect(S.lock.connect(dest).release(lockId)).to.be.reverted;
     }
     console.log(`      ${sym}: gross ${fmt(rec.gross, rw.decimals)} fee ${fmt(rec.fee, rw.decimals)} minted ${fmt(BigInt(out.minted))} ${output ? "CHONX" : "VCLM"}${release ? ", released " + fmt(BigInt(out.released), rw.decimals) : ""}`);
     results[sym + (output ? "_CHONX" : "")] = out;
