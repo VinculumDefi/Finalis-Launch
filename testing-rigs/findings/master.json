@@ -1,0 +1,1111 @@
+{
+ "as_of": "2026-10-23 08:05 EDT",
+ "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
+ "scope_rule": "LIVE = reachable on the live Base set today (Base-only config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LATENT = non-Base only, inert until a non-Base reader is registered. N/A = tooling coverage, not a code path.",
+ "rigs": [
+  {
+   "n": "1",
+   "name": "unit (Hardhat baseline, 779 tests)",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (scripts: testing-rigs/baseline/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "2",
+   "name": "mainnet-fork integration",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (tests: testing-rigs/fork-integration/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "3",
+   "name": "fuzzing (Foundry, Echidna)",
+   "status": "RUNNING",
+   "branch": "rigs/foundry",
+   "commit": "88315ea",
+   "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log (on rigs/foundry)",
+   "findings_file": null,
+   "note": "Logs pushed, no findings JSON yet."
+  },
+  {
+   "n": "4",
+   "name": "invariants",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (tests: testing-rigs/invariants/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "5",
+   "name": "symbolic (Mythril)",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/static",
+   "commit": "ab261e5",
+   "raw_output": "testing-rigs/mythril/results/ (summary.md, per-contract JSON and stderr); aborted creation-mode run in testing-rigs/mythril/results_creation_mode_aborted/",
+   "findings_file": "static.json",
+   "incomplete": "INCOMPLETE parts: INC-MYTHRIL-01 (timeouts on 22 contracts), INC-MYTHRIL-02 (errors or no result), INC-MYTHRIL-03 (partial coverage)."
+  },
+  {
+   "n": "6",
+   "name": "formal (SMTChecker CHC; Certora unavailable)",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/static",
+   "commit": "ab261e5",
+   "raw_output": "testing-rigs/smtchecker/results/ (summary.md, prod_*.txt, runlog_history.txt)",
+   "findings_file": "static.json",
+   "incomplete": "INCOMPLETE parts: INC-SMT-01 (13 of 20 properties not proved), INC-SMT-02 (Synth not analysable), INC-SMT-03 (solver failures on Stake/Verifier), INC-FORMAL-01 (no Certora)."
+  },
+  {
+   "n": "7",
+   "name": "static (Slither plus manual triage, PoCs)",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/static",
+   "commit": "ab261e5",
+   "raw_output": "testing-rigs/slither/slither_raw.json, slither_raw.txt, triage.md; testing-rigs/static-poc/poc_output.txt",
+   "findings_file": "static.json"
+  },
+  {
+   "n": "8",
+   "name": "mutation",
+   "status": "RUNNING",
+   "branch": "rigs/foundry",
+   "commit": "88315ea",
+   "raw_output": "none committed yet (scripts: testing-rigs/mutation/ on rigs/foundry)",
+   "findings_file": null,
+   "note": "Runner and summarizer pushed, no results yet."
+  },
+  {
+   "n": "9",
+   "name": "adversarial trust-boundary",
+   "status": "NOT YET RUN",
+   "branch": "rigs/adversarial (local clone only, not pushed)",
+   "commit": "-",
+   "raw_output": "none",
+   "findings_file": null,
+   "note": "A clone exists on the box with no commits; nothing pushed as of as_of."
+  },
+  {
+   "n": "10",
+   "name": "ceremony dry-run and reconciliation",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (scripts: testing-rigs/ceremony-dryrun/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "AG",
+   "name": "assumption-gap",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/gap",
+   "commit": "56f0c25",
+   "raw_output": "testing-rigs/assumption-gap/gap_table.md, gap_table.json, inputs.json, results/poc_output.txt",
+   "findings_file": "assumption_gap.json"
+  },
+  {
+   "n": "C",
+   "name": "combinatorial",
+   "status": "NOT YET RUN",
+   "branch": "rigs/extra (planned)",
+   "commit": "-",
+   "raw_output": "none",
+   "findings_file": null
+  },
+  {
+   "n": "M",
+   "name": "metamorphic",
+   "status": "NOT YET RUN",
+   "branch": "rigs/extra (planned)",
+   "commit": "-",
+   "raw_output": "none",
+   "findings_file": null
+  }
+ ],
+ "counts_by_class": {
+  "CONFIRMED VULNERABILITY": 8,
+  "UNVERIFIED ASSUMPTION": 22,
+  "SPEC CONFLICT": 2,
+  "INCOMPLETE TESTING": 7
+ },
+ "unscoped": [],
+ "findings": [
+  {
+   "ids": [
+    "AG-04",
+    "STATIC-C01"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654,686-701",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:692-702",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:774",
+    "base-contracts/contracts/VinculumFinalisStake.sol:415",
+    "base-contracts/contracts/VinculumFinalisStake.sol:428-487"
+   ],
+   "description": "Assumed: One RAC per real fee payment; racIdentity is derived from the lock's immutable facts Gap: The only check is !recordedRacs[racIdentity]. racIdentity is free caller input, so the same proven lock can record RAC any number of times, before or after it mints. Exploit: Create one real Base lock (about $2.39 in the PoC). Call recordFeeAndRac K times with K random racIdentity values. epochRewardBasis grows K times; allocateEpoch mints basis*10 VCLM to stakers. PoC: 50 records paid 358.8 VCLM of stake rewards versus 7.176 honest.",
+   "damage_potential": "Stake reward VCLM inflated without bound (until the VCLM cap), diluting every holder; attacker who stakes captures it. Works today on the Base-only ceremony.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-04)",
+    "PoC STATIC-C01: 5 racIdentity values for one lock, one credit 30e18, basis reached 150e18. PoC STATIC-C01b: 20 duplicate RACs for one 1000 USD lock; Stake minted 6000 VCLM for the epoch against an honest 300 VCLM (20x). testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)"
+   ],
+   "spec": [
+    "VF-RAC-001",
+    "VF-FEE-011",
+    "VF-RAC-004",
+    "VF-SEC-005",
+    "Rev 6 VF-FEE-011 note: RAC keyed by immutable-facts identity (Section D); VF-RAC-001 exact-once. Code keys RAC on a caller-chosen value.",
+    "Rev 6 VF-RAC-001 (RAC exact-once): exact-once is enforced per caller-chosen id, not per lock or fee event."
+   ],
+   "rank_hint": 4,
+   "rig_views": {
+    "STATIC-C01": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    }
+   },
+   "rank": 1
+  },
+  {
+   "ids": [
+    "AG-01"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LATENT (non-Base only)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84; AvalancheLockReader.sol:43-57"
+   ],
+   "description": "Assumed: The header is part of the source chain's settled (finalized) history, on the named chain Gap: Only keccak(header) == claimed hash, claimed height == header number, and claimed chain id == the reader's own constant. The claimed chain id is the caller's word; an Ethereum header carries no chain id. Nothing ties the header to any real chain. EthereumLockReader (beacon light client) exists but the ceremony registers SimpleEthereumLockReader; the checkers/ finality contracts are never called by any reader. Exploit: Run a local fork, create a real-looking lock, then rewrite header fields (mixHash, parentHash) so the header exists on no chain; the receipt proof still matches its receiptsRoot. Submit with claimed chain id 1. Known Oct 22 finding (non_base_finality_trust_model.test.cjs): about 311 VCLM per forged lock.",
+   "damage_potential": "Unlimited VCLM mint up to the 500,000,000 hard cap, and CHONX after activation, with no real asset locked. Inflated supply also inflates RAC and stake rewards.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-01)"
+   ],
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "VF-SEC-005",
+    "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers."
+   ],
+   "rank_hint": 1,
+   "rank": 2
+  },
+  {
+   "ids": [
+    "AG-02"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LATENT (non-Base only)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107"
+   ],
+   "description": "Assumed: The header carries real proof of work, links to the best chain, and has enough confirmations Gap: Only double-SHA256(header) == claimed hash and claimed height == coinbase height. No target check, no parent link, no confirmations. BitcoinHeaderChecker and ZcashHeaderChecker exist but are not called. Exploit: Build an 80-byte header with any prev hash, bits 0x1d00ffff and any nonce over a merkle root that includes a self-made lock transaction to the Dev Fund script; no mining needed. PoC AG-02 shows verifyFinality and extractFacts accept it.",
+   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated Bitcoin-family locks, valued at the registry price of BTC, LTC, etc.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-02)"
+   ],
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "Rev 6 VF-XCH-006/008."
+   ],
+   "rank_hint": 2,
+   "rank": 3
+  },
+  {
+   "ids": [
+    "AG-03"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LATENT (non-Base only)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:66-77; XrplLockReader.sol:84-95"
+   ],
+   "description": "Assumed: The ledger was closed by the network (SCP quorum for Stellar, UNL validator signatures for XRPL) Gap: Only hash(header) == claimed hash and claimed sequence/index == header field. Any self-built ledger header is accepted. Exploit: Build a ledger header whose tx-set or account-state hash commits to a fabricated payment to the Dev Fund account with a chosen memo; any previous-ledger/parent hash. PoC AG-03a/03b.",
+   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated XLM/XRP locks.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-03a, AG-03b)"
+   ],
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "Rev 6 VF-XCH-006/008."
+   ],
+   "rank_hint": 3,
+   "rank": 4
+  },
+  {
+   "ids": [
+    "AG-05",
+    "STATIC-H02"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "high",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:844,1023-1029",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:844",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1029",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:744",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:826",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:839"
+   ],
+   "description": "Assumed: Valuation Timestamp equals the finalized source block timestamp (lock creation time) Gap: valuationTimestamp is never compared with the reader's createdAt; any value <= launch gives day-0 emission. Exploit: Mint at day 400 with valuationTimestamp = 0. PoC: 310.96 VCLM instead of 249.92 for the same lock (24% more); the gap grows as decay continues.",
+   "damage_potential": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-05)",
+    "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)"
+   ],
+   "spec": [
+    "VF-ORC-011",
+    "VF-ORC-013",
+    "Rev 6 VF-ORC-011/013. src/lib/vfComplianceData.js:156 marks VF-ORC-011 IMPLEMENTED.",
+    "Rev 6 VF-ORC-011/013 (emission rate from the Valuation Timestamp, which is the source block time, not a caller value)."
+   ],
+   "rank_hint": 5,
+   "rig_views": {
+    "STATIC-H02": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
+    }
+   },
+   "rank": 5
+  },
+  {
+   "ids": [
+    "AG-06",
+    "STATIC-M01"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "high",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1020",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1010"
+   ],
+   "description": "Assumed: The reference price is the last successful run at lock creation and is retained for that lock Gap: The price is bound at the first recordFeeAndRac/verifyAndMint, using whatever run is current then. Lock time is not consulted. The submitter picks the moment. Exploit: Lock when the asset is cheap, wait for a higher run, then submit. PoC: price up 10x between lock and submission gives 3109.6 VCLM instead of 310.96.",
+   "damage_potential": "Free option on price: up to the full price move per lock; systematic over-issuance.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-06)",
+    "PoC STATIC-M01: price 1000 at lock creation, poster moves to 2000, first proof binds 2000. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)"
+   ],
+   "spec": [
+    "VF-ORC-009",
+    "VF-ORC-010",
+    "Rev 6 VF-ORC-009/010. vfComplianceData.js:154 marks VF-ORC-009 IMPLEMENTED with trace 'at verification time', which is the gap itself.",
+    "Rev 6 VF-ORC-009/010 and the rule that existing locks keep their creation price."
+   ],
+   "rank_hint": 6,
+   "rig_views": {
+    "STATIC-M01": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "medium"
+    }
+   },
+   "rank": 6
+  },
+  {
+   "ids": [
+    "AG-07",
+    "STATIC-L01"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "high",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:596-628",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:543-547"
+   ],
+   "description": "Assumed: Prices come from the twice-daily scheduled run; a record is valid until the next run; the poster has no value authority Gap: Only poster identity, runId > last, price > 0. No bound, no timestamp, no staleness. runId = 2^64-1 freezes all later runs forever (prices can never update or be marked failed). Exploit: A compromised or mistaken poster posts 1000x price and mints from a tiny lock; or posts runId 2^64-1 to freeze prices. PoC: a 0.001 ETH lock minted 31,096 VCLM.",
+   "damage_potential": "Unlimited mint via price; permanent price freeze (stale prices used forever, VF-ORC-008 violated).",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-07)",
+    "Code review: only checks are msg.sender == poster, runId increases, asset is registered, price > 0."
+   ],
+   "spec": [
+    "VF-ORC-001",
+    "VF-ORC-008",
+    "VF-SEC-005",
+    "Rev 6 VF-ORC-008 (stale record used), VF-SEC-005 (poster gets value authority).",
+    "none found"
+   ],
+   "rank_hint": 7,
+   "rig_views": {
+    "STATIC-L01": {
+     "class": "UNVERIFIED ASSUMPTION",
+     "severity": "low"
+    }
+   },
+   "rank": 7
+  },
+  {
+   "ids": [
+    "AG-09",
+    "STATIC-L02"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "medium",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:821-823"
+   ],
+   "description": "Assumed: The fee went to the configured Dev Fund for that environment Gap: The Dev Fund check is commented out ('In simulation: skip'). devFundDestinations is written by configureDevFund but never read at mint; the reader/lock Dev Fund is never compared with it. Exploit: Register (or point at) a lock whose devFund is the attacker; fee goes back to the attacker, mint still succeeds. PoC AG-09: verifier Dev Fund set to one address, lock fee to another, mint succeeds with junk devFundDestination and zero evidence.",
+   "damage_potential": "Fees can bypass the Dev Fund while still earning issuance and RAC; makes the fee cost of an attack zero when combined with a misconfigured or forged source.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-09)",
+    "Source lines 821-823 are comments only."
+   ],
+   "spec": [
+    "VF-FEE-009",
+    "VF-XCH-011",
+    "Rev 6 VF-FEE-009.",
+    "Rev 6 VF-FEE-009 (check is required in production)."
+   ],
+   "rank_hint": 9,
+   "rig_views": {
+    "STATIC-L02": {
+     "class": "SPEC CONFLICT",
+     "severity": "low"
+    }
+   },
+   "rank": 8
+  },
+  {
+   "ids": [
+    "AG-08"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "medium",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:219-269,273-294"
+   ],
+   "description": "Assumed: Token balances held by the lock do not change on their own Gap: Inbound fee-on-transfer is handled (balance delta). Rebasing is not: one shared pool, fixed principal per lock. Negative rebase makes the last releasers insolvent; positive rebase is stuck. Fee to Dev Fund uses transfer(fee) with no received check. No on-chain rebasing reject in the registry. Exploit: If any rebasing token is registered on a non-Base chain, a negative rebase shifts the loss to whoever releases last.",
+   "damage_potential": "Loss of principal for late releasers of that token; depends on registry content.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: rebasing token rejected or share accounting."
+   ],
+   "spec": [
+    "VF-SEC-001",
+    "Rev 6 VF-SEC-001 requires rejection of rebasing assets unless handled."
+   ],
+   "rank_hint": 8,
+   "rank": 9
+  },
+  {
+   "ids": [
+    "AG-12"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "medium",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "src/lib/vfEvmChainVerifier.js:38-100; src/pages/BaseVerifier.jsx:55,187; src/components/base/ChainVerifierPanel.jsx:62; src/lib/vfComplianceData.js:154,156,226; src/lib/vfPriceService.js:25,45"
+   ],
+   "description": "Assumed: The app only shows 'verified' when the chain says so Gap: The app verifier trusts self-reported status fields in the proof object; BaseVerifier page builds mock events and takes a typed 'Verified Gross USD'; ChainVerifierPanel says finality is verified by the chain verifier (false per AG-01..03); vfComplianceData marks VF-XCH-008, VF-ORC-009, VF-ORC-011 IMPLEMENTED; 'verified' USD is an off-chain quote. Exploit: Not an on-chain loss by itself; misleads users and reviewers about what is proven.",
+   "damage_potential": "Wrong status shown to users; compliance table hides AG-01, AG-05, AG-06.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: independent chain query (RPC/light client)."
+   ],
+   "spec": [
+    "VF-XCH-008",
+    "VF-SEC-005",
+    "Rev 13 section 5 already flags vfComplianceData as wrong for ITS rows (those rows are now fixed); other rows remain wrong."
+   ],
+   "rank_hint": 11,
+   "rank": 10
+  },
+  {
+   "ids": [
+    "AG-10"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "medium",
+   "scope": "LATENT (non-Base only)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:140-151; StellarLockReader.sol:79-115; XrplLockReader.sol:97-150"
+   ],
+   "description": "Assumed: A lockId names exactly one lock and only its creator can use it Gap: lockId is read from the payload the creator writes. Anyone can make a real (small) lock with a victim's announced lockId and mint first; consumedLocks then blocks the victim. Exploit: Watch the mempool for a lock payload, make a cheap lock with the same lockId, submit first.",
+   "damage_potential": "Victim's lock can never mint (griefing); principal still releases.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: lockId derived from the transaction (txid, sender)."
+   ],
+   "spec": [
+    "VF-XCH-011",
+    "VF-XCH-013"
+   ],
+   "rank_hint": 10,
+   "rank": 11
+  },
+  {
+   "ids": [
+    "AG-11"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:972-979,1001-1006"
+   ],
+   "description": "Assumed: Every USDC/USDT row is caught by the $0.95 rule Gap: Detection is by symbol shape (USDC, USDT, USDC_x, USDT_x, USDTE). A row named USDbC, USDC.e or USDT.e is not caught, so the $0.95 floor does not apply to it. Exploit: During a depeg, a lock of an unmatched stablecoin row is valued at the depegged run without the floor rule (the floor exists to block that).",
+   "damage_potential": "Limited to the depeg size on those rows.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: stablecoin flag stored per registry row."
+   ],
+   "spec": [
+    "VF-ORC-005"
+   ],
+   "rank_hint": 12,
+   "rank": 12
+  },
+  {
+   "ids": [
+    "AG-13"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:656-659"
+   ],
+   "description": "Assumed: Package precision matches the registry before RAC is credited Gap: Only verifyAndMint checks precision. RAC uses entry.decimals so the value is right, but VF-XCH-011 binding of asset_precision is not enforced on the RAC path. Exploit: None with value impact found.",
+   "damage_potential": "none found (binding gap only)",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: precision equals registry decimals."
+   ],
+   "spec": [
+    "VF-XCH-011",
+    "VF-RAC-001",
+    "Rev 6 VF-XCH-011 lists asset_precision as a bound field."
+   ],
+   "rank_hint": 13,
+   "rank": 13
+  },
+  {
+   "ids": [
+    "AG-15"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:295,832-839"
+   ],
+   "description": "Assumed: Source creation time is real chain time Gap: createdAt comes from the header the caller supplies (miner/validator-set time, unanchored per AG-01..03); the 1-day margin only covers honest clock skew. Exploit: With AG-01..03, set the header time after activation; without them, a source-chain clock skew under 1 day.",
+   "damage_potential": "CHONX eligibility for a lock made before activation.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: source time anchored."
+   ],
+   "spec": [
+    "VF-COM-025"
+   ],
+   "rank_hint": 15,
+   "rank": 14
+  },
+  {
+   "ids": [
+    "AG-16"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:183-195,356"
+   ],
+   "description": "Assumed: USD value used for the lock band gate is real Gap: The lock trusts the caller's USD for its band gate. The Verifier recomputes USD for issuance, so this only affects which band the lock lets through. Exploit: Pass a USD inside the band for an out-of-band lock; Verifier then rejects issuance, user pays fee for nothing (self-harm).",
+   "damage_potential": "Low; user self-harm.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: USD derived from a price source."
+   ],
+   "spec": [
+    "VF-COM-003",
+    "VF-SEC-005"
+   ],
+   "rank_hint": 16,
+   "rank": 15
+  },
+  {
+   "ids": [
+    "AG-18"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:453,522"
+   ],
+   "description": "Assumed: Each row's decimals and token address are the real token's Gap: Rows are written by the deployer before finalize from the off-chain build; nothing checks them on chain. A wrong decimals value mis-values every lock of that asset. Exploit: Operator error or a tampered registry build (deployer-only, pre-finalize).",
+   "damage_potential": "Mis-valuation of one asset for the protocol's lifetime (immutable).",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: on-chain identity check (decimals/code) or signed registry hash."
+   ],
+   "spec": [
+    "VF-REG-001",
+    "VF-QNORM (code tag)"
+   ],
+   "rank_hint": 17,
+   "rank": 16
+  },
+  {
+   "ids": [
+    "STATIC-L03"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:291"
+   ],
+   "description": "lockId is chosen by the caller and must be unused; a front-runner can use it first.",
+   "damage_potential": "Griefing: a watcher can take a pending lockId first so the victim's lock call reverts. No funds lost.",
+   "evidence": [
+    "require(!_locks[lockId].exists) with a caller-supplied lockId."
+   ],
+   "spec": [
+    "none found"
+   ],
+   "rank_hint": 99,
+   "rank": 17
+  },
+  {
+   "ids": [
+    "STATIC-L04"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:219-224"
+   ],
+   "description": "The CVL measures the received amount by balance delta (good for fee-on-transfer tokens) but stores a fixed amount. A negative rebase later makes the stored amount larger than the balance. Rated low because the asset list is allowlisted.",
+   "damage_potential": "A token that rebases down after deposit leaves the CVL short at release.",
+   "evidence": [
+    "Code review."
+   ],
+   "spec": [
+    "none found"
+   ],
+   "rank_hint": 99,
+   "related": "AG-08 (rebasing / balance-delta assumptions in the vault)",
+   "rank": 18
+  },
+  {
+   "ids": [
+    "STATIC-L05"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:763",
+    "base-contracts/contracts/VinculumFinalisSynth.sol:138"
+   ],
+   "description": "verifyAndMint and the Synth forge path write state after external calls (CEI not followed). Calls go to trusted tokens and readers, so the Slither entries are triaged FP for exploitability; kept here as a hardening note.",
+   "damage_potential": "None today with the allowlisted tokens; would matter if a hook token were ever added.",
+   "evidence": [
+    "testing-rigs/slither/triage.json SL-020, SL-021, SL-022."
+   ],
+   "spec": [
+    "none found"
+   ],
+   "rank_hint": 99,
+   "rank": 19
+  },
+  {
+   "ids": [
+    "STATIC-L06"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisStake.sol:231",
+    "base-contracts/contracts/VinculumFinalisStake.sol:496",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:512"
+   ],
+   "description": "External calls inside loops. Targets are protocol contracts, so the risk is liveness only.",
+   "damage_potential": "One reverting or gas-heavy external call in a loop blocks the whole call.",
+   "evidence": [
+    "testing-rigs/slither/triage.json SL-061 to SL-064."
+   ],
+   "spec": [
+    "none found"
+   ],
+   "rank_hint": 99,
+   "rank": 20
+  },
+  {
+   "ids": [
+    "AG-14"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LATENT (non-Base only)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:41,137"
+   ],
+   "description": "Assumed: Duration on a UTXO chain equals the chosen duration Gap: Maturity may differ from duration by up to TOLERANCE_SECS (1 day) of blocks; createdAt is the miner-set header time. Exploit: Lock slightly shorter than the multiplier tier implies.",
+   "damage_potential": "Up to 1 day less commitment per lock.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: exact duration."
+   ],
+   "spec": [
+    "VF-COM-002"
+   ],
+   "rank_hint": 14,
+   "rank": 21
+  },
+  {
+   "ids": [
+    "AG-19"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LATENT (non-Base only)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:549-554"
+   ],
+   "description": "Assumed: The reader registered for 'Ethereum' reads Ethereum Gap: Any non-zero address is accepted for any name. With AG-01, an EVM reader also accepts a testnet lock at the same CREATE address (same deployer key and nonce) because the chain id is only claimed. Exploit: Deploy the lock on a testnet with the mainnet deployer nonce, lock test ETH, mint as mainnet.",
+   "damage_potential": "Mint from worthless testnet assets (same root cause as AG-01).",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: reader ENVIRONMENT_ID equals the name."
+   ],
+   "spec": [
+    "VF-DEP-001",
+    "VF-XCH-006"
+   ],
+   "rank_hint": 18,
+   "rank": 22
+  },
+  {
+   "ids": [
+    "AG-20"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "SPEC CONFLICT",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:811-816,933-963"
+   ],
+   "description": "Assumed: (Rev 12) no Handshake allowance limit; no identity counter Gap: The Verifier still requires the package to state 3 (EVM/Base) or 1 (UTXO/Stellar/XRPL) from the Rev 6 allowance rule. It counts nothing, so no limit applies, but the Rev 6 field is still a required input.",
+   "damage_potential": "none (vestige; a wrong value only makes a mint revert)",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: field removed or ignored."
+   ],
+   "spec": [
+    "Rev 12",
+    "Rev 12 removes the allowance; Verifier still enforces the Rev 6 constant."
+   ],
+   "rank_hint": 20,
+   "rank": 23
+  },
+  {
+   "ids": [
+    "STATIC-I03"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "SPEC CONFLICT",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:713"
+   ],
+   "description": "extCreated from _verifySource is not used to bind valuationTimestamp.",
+   "damage_potential": "See STATIC-H02.",
+   "evidence": [
+    "testing-rigs/slither/triage.json override."
+   ],
+   "spec": [
+    "Rev 6 VF-ORC-011/013 (same root as STATIC-H02)."
+   ],
+   "rank_hint": 99,
+   "related": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
+   "rank": 24
+  },
+  {
+   "ids": [
+    "AG-17"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:121-134"
+   ],
+   "description": "Assumed: (comment) token locks revert Gap: The comment says token locks revert; code returns keccak(abi.encode('Base', token)), resolved through tokenAssetIndex. Stale comment; the code path is the intended one.",
+   "damage_potential": "none (documentation)",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: behaviour matches comment."
+   ],
+   "spec": [
+    "VF-XCH-011"
+   ],
+   "rank_hint": 19,
+   "rank": 25
+  },
+  {
+   "ids": [
+    "SMT-01"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisSynth.sol:145 (also :144)"
+   ],
+   "description": "CHC found a real overflow trace in forge() for a huge count. Solidity 0.8 checked math turns it into a revert, so no wrap and no free mint.",
+   "damage_potential": "",
+   "evidence": [
+    "testing-rigs/smtchecker/results/harness_synth.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 26
+  },
+  {
+   "ids": [
+    "SMT-02"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:349"
+   ],
+   "description": "CHC overflow trace for gross * STANDARD_FEE_BPS when gross > 2^256/500. Checked math reverts. No real token has that supply. Same trace on the extracted copy (FeeMath.sol:37).",
+   "damage_potential": "",
+   "evidence": [
+    "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt; results/harness_feemath.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 27
+  },
+  {
+   "ids": [
+    "SMT-03"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:224"
+   ],
+   "description": "CHC underflow trace for _balanceOf(after) - beforeBal when the pulled token lowers the vault balance during transferFrom (a hostile or rebasing token). Checked math reverts, so the lock is refused. Ties to finding L04 (rebasing tokens).",
+   "damage_potential": "",
+   "evidence": [
+    "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 28
+  },
+  {
+   "ids": [
+    "SMT-04"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:317"
+   ],
+   "description": "CHC overflow trace for createdAt + duration. duration is limited to the fixed CommitmentDurations table, so only a solver-chosen huge timestamp reaches it. Checked math reverts.",
+   "damage_potential": "",
+   "evidence": [
+    "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 29
+  },
+  {
+   "ids": [
+    "SMT-05"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisToken.sol:122 (hardCap set at :84 with no range check)"
+   ],
+   "description": "CHC overflow trace for totalSupply + amount. It needs a deployment with hardCap near 2^256, which the constructor accepts without a check. Checked math reverts. Deployment script must pass the Rev 6 cap.",
+   "damage_potential": "",
+   "evidence": [
+    "testing-rigs/smtchecker/results/prod_token.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 30
+  },
+  {
+   "ids": [
+    "STATIC-I01"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:846"
+   ],
+   "description": "The daysSinceLaunch parameter of verifyAndMint is ignored.",
+   "damage_potential": "None. Callers may think daysSinceLaunch affects the mint.",
+   "evidence": [
+    "Statement 'daysSinceLaunch;' at line 846."
+   ],
+   "spec": [
+    "none found"
+   ],
+   "rank_hint": 99,
+   "rank": 31
+  },
+  {
+   "ids": [
+    "STATIC-I02"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:170",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:208",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:335-348"
+   ],
+   "description": "The CVL Handshake and standard USD band gate uses verifiedGrossUsd as passed by the caller.",
+   "damage_potential": "A lock can be made with a false USD claim; the Verifier prices it again, so the effect is a lock that later fails to mint.",
+   "evidence": [
+    "Code review."
+   ],
+   "spec": [
+    "none found (Rev 12 band is re-checked by the Verifier on the priced value)"
+   ],
+   "rank_hint": 99,
+   "related": "AG-16 (vault trusts caller-supplied USD)",
+   "rank": 32
+  },
+  {
+   "ids": [
+    "INC-FORMAL-01"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "all contracts"
+   ],
+   "description": "Certora was not available (CERTORAKEY not set in env). SMTChecker CHC was the only formal layer, so no Certora rules were checked.",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "environment check"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 33
+  },
+  {
+   "ids": [
+    "INC-MYTHRIL-01"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "base-contracts/contracts (bytecode of 22 contracts)"
+   ],
+   "description": "Mythril hit its execution timeout on 22 contracts, so their symbolic search is incomplete: ArbitrumLockReader 3511/9120 (38.5%); AvalancheFinalityChecker 1745/3877 (45.0%); AvalancheLockReader 3337/9000 (37.1%); BaseCommitmentVaultLock 2357/4611 (51.1%); BitcoinCashLockReader 1221/10295 (11.9%); BitcoinHeaderChecker 959/1068 (89.8%); BitcoinLockReader 1229/10283 (12.0%); BnbFinalityChecker 1591/4026 (39.5%); BnbSmartChainLockReader 3270/8940 (36.6%); DigiByteLockReader not reported; EthereumFinalityChecker 1695/8123 (20.9%); EthereumLockReader 1858/8884 (20.9%); OptimismLockReader 3330/8932 (37.3%); PolygonFinalityChecker 1733/4853 (35.7%); PolygonLockReader 3381/8978 (37.7%); StellarLockReader 1334/5032 (26.5%); VinculumFinalisSynth 1802/1884 (95.6%); VinculumFinalisToken 1871/1892 (98.9%); VinculumFinalisVerifier 4109/11211 (36.7%); XrplLockReader 1644/6710 (24.5%); ZcashHeaderChecker 1957/4147 (47.2%); ZcashLockReader 1238/10280 (12.0%).",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "testing-rigs/mythril/results/summary.md, settings.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 34
+  },
+  {
+   "ids": [
+    "INC-MYTHRIL-02"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "base-contracts/contracts (bytecode)"
+   ],
+   "description": "Mythril logged an internal error or produced no result on: CommitmentVaultLock (exit 1, Mythril internal error logged (some paths dropped)); DigiByteLockReader (exit 1, Mythril internal error logged (some paths dropped); hit execution timeout (search incomplete)); DogecoinLockReader (exit 1, Mythril internal error logged (some paths dropped)); LitecoinLockReader (exit 0, Mythril internal error logged (some paths dropped)). Paths after the error were dropped.",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "testing-rigs/mythril/results/*.stderr.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 35
+  },
+  {
+   "ids": [
+    "INC-MYTHRIL-03"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "base-contracts/contracts (bytecode)"
+   ],
+   "description": "Mythril finished before the timeout but only reached part of the code within 2 transactions and depth 128: BaseLockRecordVerifier 719/1608 (44.7%); EthereumBeaconLightClient 1239/5412 (22.9%); VinculumFinalisStake 2547/7415 (34.3%).",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "testing-rigs/mythril/results/summary.md"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 36
+  },
+  {
+   "ids": [
+    "INC-SMT-01"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "testing-rigs/smtchecker/harness/IssuanceMath.sol:84",
+    "testing-rigs/smtchecker/harness/IssuanceMath.sol:91",
+    "testing-rigs/smtchecker/harness/SynthInstrumented.sol:205",
+    "testing-rigs/smtchecker/harness/SynthInstrumented.sol:206",
+    "testing-rigs/smtchecker/harness/SynthInstrumented.sol:207",
+    "testing-rigs/smtchecker/harness/SynthInstrumented.sol:208",
+    "testing-rigs/smtchecker/harness/SynthInstrumented.sol:209",
+    "testing-rigs/smtchecker/harness/TokenInstrumented.sol:194",
+    "testing-rigs/smtchecker/harness/TokenInstrumented.sol:195",
+    "testing-rigs/smtchecker/harness/TokenInstrumented.sol:196",
+    "testing-rigs/smtchecker/harness/TokenInstrumented.sol:197",
+    "testing-rigs/smtchecker/harness/TokenInstrumented.sol:198",
+    "testing-rigs/smtchecker/harness/TokenInstrumented.sol:199"
+   ],
+   "description": "SMTChecker CHC did not prove 13 of 20 properties: P2-token-conservation inconclusive; P2-token-cap inconclusive; P1-token-minter-only inconclusive; P1-token-no-mint-before-finalize counterexample (spurious trace); P3-token-frozen inconclusive; P3-token-deployer-only inconclusive; P2-synth-conservation inconclusive; P2-synth-cap inconclusive; P1-synth-mint-when-activated inconclusive; P1-synth-whole-units inconclusive; P3-synth-activation-one-way inconclusive; I1-issuance-monotonic inconclusive; I2-issuance-upper-bound inconclusive.",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "testing-rigs/smtchecker/results/properties.json, summary.md"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 37
+  },
+  {
+   "ids": [
+    "INC-SMT-02"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisSynth.sol"
+   ],
+   "description": "SMTChecker could not analyse the production Synth contract: solc/libz3 crashed (SIGSEGV) on every attempt (prod_synth exit 245, prod_synth_nocap exit 139).",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "testing-rigs/smtchecker/results/runlog.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 38
+  },
+  {
+   "ids": [
+    "INC-SMT-03"
+   ],
+   "source": "testing-rigs/findings/static.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisStake.sol",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol"
+   ],
+   "description": "SMTChecker ran on prod_stake, prod_verifier but the solver failed on most targets: prod_stake 92 solver errors, 97 unproved; prod_verifier 49 solver errors, 56 unproved.",
+   "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+   "evidence": [
+    "testing-rigs/smtchecker/results/prod_stake.txt, prod_verifier.txt"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 39
+  }
+ ]
+}
