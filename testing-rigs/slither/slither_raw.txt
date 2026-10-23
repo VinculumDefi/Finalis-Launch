@@ -1,0 +1,539 @@
+
+Detector: encode-packed-collision
+UtxoLockReader.constructor(string,bytes,uint256,bool,bool,string) (contracts/chain-verifiers/UtxoLockReader.sol#82-92) calls abi.encodePacked() with multiple dynamic arguments:
+	- nativeAssetId = keccak256(bytes)(abi.encodePacked(env_,nativeAsset_)) (contracts/chain-verifiers/UtxoLockReader.sol#83)
+XrplLockReader._proveInTree(bytes,bytes,bytes[],bytes32) (contracts/chain-verifiers/XrplLockReader.sol#182-199) calls abi.encodePacked() with multiple dynamic arguments:
+	- h = Sha512.sha512half(abi.encodePacked(bytes4(0x534E4400),_vl(txb.length),txb,_vl(meta.length),meta,txid)) (contracts/chain-verifiers/XrplLockReader.sol#185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#abi-encodePacked-collision
+
+Detector: reentrancy-balance
+Reentrancy in VinculumFinalisStake.createPosition(uint8,uint256,uint256) (contracts/VinculumFinalisStake.sol#253-300):
+	External call allowing reentrancy:
+	- require(bool,string)(stakeToken.transferFrom(msg.sender,address(this),amount),VFS: transfer failed) (contracts/VinculumFinalisStake.sol#270)
+	Balance read before the call:
+	- beforeBal = stakeToken.balanceOf(address(this)) (contracts/VinculumFinalisStake.sol#269)
+	Possible stale balance used after the call in a condition:
+	- require(bool,string)(stakeToken.balanceOf(address(this)) - beforeBal == amount,VFS: received amount mismatch) (contracts/VinculumFinalisStake.sol#271)
+		- stale variable `beforeBal`
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Detector: boolean-cst
+BaseCommitmentVaultLock.foreignHeaderFinalityNotDecided(bytes32,uint256) (contracts/BaseCommitmentVaultLock.sol#154-156) uses a Boolean constant improperly:
+	-blockHash != bytes32(0) && height != 0 && false (contracts/BaseCommitmentVaultLock.sol#155)
+CommitmentVaultLock.foreignHeaderFinalityNotDecided(bytes32,uint256) (contracts/CommitmentVaultLock.sol#175-177) uses a Boolean constant improperly:
+	-blockHash != bytes32(0) && height != 0 && false (contracts/CommitmentVaultLock.sol#176)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#misuse-of-a-boolean-constant
+
+Detector: divide-before-multiply
+VinculumFinalisStake._claimable(uint256,uint256,uint256,uint256,bool,uint256) (contracts/VinculumFinalisStake.sol#533-561) performs a multiplication on the result of a division:
+	- weight = (base * _termMult(positionId,k)) / 1e8 (contracts/VinculumFinalisStake.sol#558)
+	- amount += (ep.mintedVclm * weight) / ep.totalWeight (contracts/VinculumFinalisStake.sol#559)
+VinculumFinalisVerifier.recordFeeAndRac(ProofPackage) (contracts/VinculumFinalisVerifier.sol#646-704) performs a multiplication on the result of a division:
+	- feeUsd = (creditUsd * fee) / gross (contracts/VinculumFinalisVerifier.sol#694)
+	- racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000 (contracts/VinculumFinalisVerifier.sol#695)
+VinculumFinalisVerifier._resolveVerifiedGrossUsd(ProofPackage,AssetPrecisionEntry) (contracts/VinculumFinalisVerifier.sol#981-1020) performs a multiplication on the result of a division:
+	- assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals)) (contracts/VinculumFinalisVerifier.sol#1018)
+	- (assetUnitsFp * priceUsd18) / SCALE (contracts/VinculumFinalisVerifier.sol#1019)
+VinculumFinalisVerifier._computeIssuance(uint256,uint8,uint8,uint256,uint256) (contracts/VinculumFinalisVerifier.sol#1035-1062) performs a multiplication on the result of a division:
+	- step = (verifiedGrossUsdMicro * emissionRate) / SCALE (contracts/VinculumFinalisVerifier.sol#1046)
+	- assetMultFp = (SCALE * assetBps) / 10000 (contracts/VinculumFinalisVerifier.sol#1052)
+	- step = (step * assetMultFp) / SCALE (contracts/VinculumFinalisVerifier.sol#1053)
+VinculumFinalisVerifier._computeIssuance(uint256,uint8,uint8,uint256,uint256) (contracts/VinculumFinalisVerifier.sol#1035-1062) performs a multiplication on the result of a division:
+	- step = (step * assetMultFp) / SCALE (contracts/VinculumFinalisVerifier.sol#1053)
+	- durMultFp = (SCALE * durBps) / 10000 (contracts/VinculumFinalisVerifier.sol#1058)
+	- step = (step * durMultFp) / SCALE (contracts/VinculumFinalisVerifier.sol#1059)
+Sha512.sha512(bytes) (contracts/checkers/Sha512.sol#16-59) performs a multiplication on the result of a division:
+	- total = ((n + 17 + 127) / 128) * 128 (contracts/checkers/Sha512.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Detector: incorrect-equality
+VinculumFinalisStake._applyWeight(uint256,uint256,uint256,bool,uint256) (contracts/VinculumFinalisStake.sol#589-605) uses a dangerous strict equality:
+	- a == 0 || a > b (contracts/VinculumFinalisStake.sol#590)
+VinculumFinalisStake._rangeWeight(uint256,uint256,uint256,bool) (contracts/VinculumFinalisStake.sol#611-624) uses a dangerous strict equality:
+	- w == 0 || from > to (contracts/VinculumFinalisStake.sol#612)
+VinculumFinalisStake._tokenOf(uint8) (contracts/VinculumFinalisStake.sol#671-673) uses a dangerous strict equality:
+	- token == 0 (contracts/VinculumFinalisStake.sol#672)
+VinculumFinalisStake._tokenOf(uint8) (contracts/VinculumFinalisStake.sol#671-673) uses a dangerous strict equality:
+	- token == 1 (contracts/VinculumFinalisStake.sol#672)
+VinculumFinalisStake.allocateEpoch(uint256) (contracts/VinculumFinalisStake.sol#428-487) uses a dangerous strict equality:
+	- ep.rewardBasis == 0 || totalWeight == 0 (contracts/VinculumFinalisStake.sol#456)
+VinculumFinalisStake.createPosition(uint8,uint256,uint256) (contracts/VinculumFinalisStake.sol#253-300) uses a dangerous strict equality:
+	- require(bool,string)(stakeToken.balanceOf(address(this)) - beforeBal == amount,VFS: received amount mismatch) (contracts/VinculumFinalisStake.sol#271)
+VinculumFinalisVerifier._daysSinceLaunchFromValuation(uint256) (contracts/VinculumFinalisVerifier.sol#1023-1029) uses a dangerous strict equality:
+	- launch == 0 || valuationTimestamp <= launch (contracts/VinculumFinalisVerifier.sol#1025)
+VinculumFinalisVerifier.currentEpoch() (contracts/VinculumFinalisVerifier.sol#1139-1143) uses a dangerous strict equality:
+	- t0 == 0 || block.timestamp < t0 (contracts/VinculumFinalisVerifier.sol#1141)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Detector: reentrancy-no-eth
+Reentrancy in VinculumFinalisSynth.forge(uint256) (contracts/VinculumFinalisSynth.sol#138-166):
+	External calls:
+	- vclmToken.burnFrom(msg.sender,vclmToBurn) (contracts/VinculumFinalisSynth.sol#156)
+	- chonxToken.burnFrom(msg.sender,chonxToBurn) (contracts/VinculumFinalisSynth.sol#157)
+	State variables written after the call(s):
+	- totalSupply += synthToMint (contracts/VinculumFinalisSynth.sol#160)
+	VinculumFinalisSynth.totalSupply (contracts/VinculumFinalisSynth.sol#73) can be used in cross function reentrancies:
+	- VinculumFinalisSynth.forge(uint256) (contracts/VinculumFinalisSynth.sol#138-166)
+	- VinculumFinalisSynth.totalSupply (contracts/VinculumFinalisSynth.sol#73)
+Reentrancy in VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886):
+	External calls:
+	- vclmToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#872)
+	State variables written after the call(s):
+	- _syncChonxActivation() (contracts/VinculumFinalisVerifier.sol#875)
+		- chonxActivated = true (contracts/VinculumFinalisVerifier.sol#1131)
+	VinculumFinalisVerifier.chonxActivated (contracts/VinculumFinalisVerifier.sol#287) can be used in cross function reentrancies:
+	- VinculumFinalisVerifier._syncChonxActivation() (contracts/VinculumFinalisVerifier.sol#1129-1136)
+	- VinculumFinalisVerifier.chonxActivated (contracts/VinculumFinalisVerifier.sol#287)
+	- VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886)
+	- _syncChonxActivation() (contracts/VinculumFinalisVerifier.sol#875)
+		- chonxActivationTimestamp = block.timestamp (contracts/VinculumFinalisVerifier.sol#1133)
+	VinculumFinalisVerifier.chonxActivationTimestamp (contracts/VinculumFinalisVerifier.sol#294) can be used in cross function reentrancies:
+	- VinculumFinalisVerifier._syncChonxActivation() (contracts/VinculumFinalisVerifier.sol#1129-1136)
+	- VinculumFinalisVerifier.chonxActivationTimestamp (contracts/VinculumFinalisVerifier.sol#294)
+	- VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886)
+Reentrancy in VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886):
+	External calls:
+	- vclmToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#872)
+	- chonxToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#878)
+	State variables written after the call(s):
+	- consumedLocks[lockIdHash] = true (contracts/VinculumFinalisVerifier.sol#882)
+	VinculumFinalisVerifier.consumedLocks (contracts/VinculumFinalisVerifier.sol#277) can be used in cross function reentrancies:
+	- VinculumFinalisVerifier.consumedLocks (contracts/VinculumFinalisVerifier.sol#277)
+	- VinculumFinalisVerifier.isLockConsumed(string,bytes32) (contracts/VinculumFinalisVerifier.sol#1092-1094)
+	- VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Detector: uninitialized-local
+ZcashHeaderChecker._assertOrdered(uint32[512]).less (contracts/checkers/ZcashHeaderChecker.sol#204) is a local variable never initialized
+ExecutionHeader.listItems(bytes).count (contracts/checkers/ExecutionHeader.sol#84) is a local variable never initialized
+BnbFinalityChecker.verify(bytes).count (contracts/checkers/BnbFinalityChecker.sol#66) is a local variable never initialized
+ZcashHeaderChecker._assertBindingXor(uint256[512]).x (contracts/checkers/ZcashHeaderChecker.sol#182) is a local variable never initialized
+UtxoLockReader._outputs(bytes,UtxoLockReader.Out[],bytes,bytes).nPrincipal (contracts/chain-verifiers/UtxoLockReader.sol#212) is a local variable never initialized
+ExecutionHeader.payloadLen(bytes).len (contracts/checkers/ExecutionHeader.sol#74) is a local variable never initialized
+MptProof.decodeHp(bytes).idx (contracts/checkers/MptProof.sol#94) is a local variable never initialized
+EthereumBeaconLightClient._committee(bytes,bytes,bytes,bytes32).count (contracts/checkers/EthereumBeaconLightClient.sol#143) is a local variable never initialized
+ZcashHeaderChecker._decodeIndices(bytes,uint32[512]).bits (contracts/checkers/ZcashHeaderChecker.sol#233) is a local variable never initialized
+RlpReader.listItems(bytes).count (contracts/checkers/RlpReader.sol#13) is a local variable never initialized
+ZcashHeaderChecker._assertBindingXor(uint256[512]).all (contracts/checkers/ZcashHeaderChecker.sol#190) is a local variable never initialized
+BeaconSsz.u64(uint64).le (contracts/checkers/BeaconSsz.sol#36) is a local variable never initialized
+MptProof.rlpListItems(bytes).count (contracts/checkers/MptProof.sol#126) is a local variable never initialized
+UtxoLockReader._outputs(bytes,UtxoLockReader.Out[],bytes,bytes).nBinding (contracts/chain-verifiers/UtxoLockReader.sol#213) is a local variable never initialized
+MptGet.decodeHp(bytes).k (contracts/checkers/MptGet.sol#78) is a local variable never initialized
+PolygonFinalityChecker.verify(bytes).signedPower (contracts/checkers/PolygonFinalityChecker.sol#91) is a local variable never initialized
+ZcashHeaderChecker._decodeIndices(bytes,uint32[512]).acc (contracts/checkers/ZcashHeaderChecker.sol#232) is a local variable never initialized
+ZcashHeaderChecker.verifyEquihash(bytes).idx (contracts/checkers/ZcashHeaderChecker.sol#95) is a local variable never initialized
+ZcashHeaderChecker._assertDistinct(uint32[512]).seen (contracts/checkers/ZcashHeaderChecker.sol#221) is a local variable never initialized
+AvalancheFinalityChecker.verify(bytes).signedStake (contracts/checkers/AvalancheFinalityChecker.sol#71) is a local variable never initialized
+MptProof.verifyReceipt(bytes32,uint256,bytes,bytes[]).nibblePos (contracts/checkers/MptProof.sol#21) is a local variable never initialized
+UtxoLockReader._outputs(bytes,UtxoLockReader.Out[],bytes,bytes).nFee (contracts/chain-verifiers/UtxoLockReader.sol#211) is a local variable never initialized
+EthereumFinalityChecker.verify(bytes).sawCheckpoint (contracts/checkers/EthereumFinalityChecker.sol#82) is a local variable never initialized
+EthereumFinalityChecker.listOf(bytes).count (contracts/checkers/EthereumFinalityChecker.sol#154) is a local variable never initialized
+EthereumFinalityChecker.uint64Chunk(uint64).le (contracts/checkers/EthereumFinalityChecker.sol#109) is a local variable never initialized
+MptGet.rlpIndex(uint256).len (contracts/checkers/MptGet.sol#89) is a local variable never initialized
+MptGet.get(bytes32,bytes,bytes[]).pos (contracts/checkers/MptGet.sol#17) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Detector: unused-return
+VinculumFinalisVerifier._verifySource(ProofPackage) (contracts/VinculumFinalisVerifier.sol#713-754) ignores return value by (finalized,None,None) = verifier.verifyFinality(pkg.lockEventProof,pkg.sourceFinalityProof) (contracts/VinculumFinalisVerifier.sol#716)
+VinculumFinalisVerifier._verifySource(ProofPackage) (contracts/VinculumFinalisVerifier.sol#713-754) ignores return value by (extLockId,extGross,extFee,extPrincipal,extDuration,extCreation,None,extRecipient,extOutputToken) = verifier.extractFacts(pkg.lockEventProof) (contracts/VinculumFinalisVerifier.sol#723-733)
+UtxoLockReader.extractAssetId(bytes) (contracts/chain-verifiers/UtxoLockReader.sol#111-114) ignores return value by this.extractFacts(lockEventProof) (contracts/chain-verifiers/UtxoLockReader.sol#112)
+EvmReceiptLockReader.extractAssetId(bytes) (contracts/chain-verifiers/EvmReceiptLockReader.sol#117-124) ignores return value by this.extractFacts(lockEventProof) (contracts/chain-verifiers/EvmReceiptLockReader.sol#118)
+StellarLockReader.extractAssetId(bytes) (contracts/chain-verifiers/StellarLockReader.sol#118-121) ignores return value by this.extractFacts(lockEventProof) (contracts/chain-verifiers/StellarLockReader.sol#119)
+XrplLockReader.extractAssetId(bytes) (contracts/chain-verifiers/XrplLockReader.sol#154-157) ignores return value by this.extractFacts(lockEventProof) (contracts/chain-verifiers/XrplLockReader.sol#155)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Detector: shadowing-builtin
+UtxoLockReader._bip34Height(bytes,uint256,uint256).tx (contracts/chain-verifiers/UtxoLockReader.sol#191) (local variable) shadows built-in symbol"
+UtxoLockReader._outputs(bytes,UtxoLockReader.Out[],bytes,bytes).tx (contracts/chain-verifiers/UtxoLockReader.sol#202) (local variable) shadows built-in symbol"
+UtxoLockReader._isPushOf(bytes,uint256,uint256,bytes).tx (contracts/chain-verifiers/UtxoLockReader.sol#261) (local variable) shadows built-in symbol"
+UtxoLockReader._parse(bytes).tx (contracts/chain-verifiers/UtxoLockReader.sol#281) (local variable) shadows built-in symbol"
+UtxoLockReader._zip244(bytes,bytes,bytes,uint256,uint256).tx (contracts/chain-verifiers/UtxoLockReader.sol#350) (local variable) shadows built-in symbol"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#builtin-symbol-shadowing
+
+Detector: calls-loop
+VinculumFinalisStake._launched() (contracts/VinculumFinalisStake.sol#231-234) has external calls inside a loop: t0 = verifier.protocolLaunchTimestamp() (contracts/VinculumFinalisStake.sol#232)
+	Calls stack containing the loop:
+		VinculumFinalisStake.claimPositions(uint256[],uint256)
+		VinculumFinalisStake.claimPosition(uint256,uint256)
+VinculumFinalisStake.claimPosition(uint256,uint256) (contracts/VinculumFinalisStake.sol#496-512) has external calls inside a loop: require(bool,string)(vclmToken.transfer(msg.sender,amount),VFS: transfer failed) (contracts/VinculumFinalisStake.sol#509)
+	Calls stack containing the loop:
+		VinculumFinalisStake.claimPositions(uint256[],uint256)
+VinculumFinalisVerifier._isProtocolToken(address) (contracts/VinculumFinalisVerifier.sol#512-516) has external calls inside a loop: stake = vclmToken.minterStake() (contracts/VinculumFinalisVerifier.sol#514)
+	Calls stack containing the loop:
+		VinculumFinalisVerifier.registerTokenAddressBatch(VinculumFinalisVerifier.TokenAddressInput[])
+VinculumFinalisVerifier._isProtocolToken(address) (contracts/VinculumFinalisVerifier.sol#512-516) has external calls inside a loop: stake != address(0) && token == IStakeRewardView(stake).synthToken() (contracts/VinculumFinalisVerifier.sol#515)
+	Calls stack containing the loop:
+		VinculumFinalisVerifier.registerTokenAddressBatch(VinculumFinalisVerifier.TokenAddressInput[])
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Detector: reentrancy-benign
+Reentrancy in VinculumFinalisStake.allocateEpoch(uint256) (contracts/VinculumFinalisStake.sol#428-487):
+	External calls:
+	- vclmToken.mint(address(this),totalReward) (contracts/VinculumFinalisStake.sol#479)
+	State variables written after the call(s):
+	- _enterTerminalIfCapReached() (contracts/VinculumFinalisStake.sol#486)
+		- terminalState = true (contracts/VinculumFinalisStake.sol#244)
+Reentrancy in BaseCommitmentVaultLock.createErc20Lock(bytes32,address,uint8,bytes32,bytes32,address,uint256,address,uint256,uint256) (contracts/BaseCommitmentVaultLock.sol#198-248):
+	External calls:
+	- require(bool,string)(_erc20(token,abi.encodeWithSelector(IERC20MinimalBaseLock.transferFrom.selector,msg.sender,address(this),amount)),CVL: transferFrom) (contracts/BaseCommitmentVaultLock.sol#220-223)
+		- (ok,ret) = token.call(data) (contracts/BaseCommitmentVaultLock.sol#363)
+	State variables written after the call(s):
+	- _open(lockId,baseRecipient,outputToken,assetIdentity,valuationReference,releaseDestination,duration,token,received,fee,principal,multiplierBps) (contracts/BaseCommitmentVaultLock.sol#229-242)
+		- _locks[lockId] = LockRecord({exists:true,released:false,creator:msg.sender,releaseDestination:releaseDestination,asset:asset,baseRecipient:baseRecipient,outputToken:outputToken,gross:gross,fee:fee,principal:principal,duration:duration,multiplierBps:multiplierBps,createdAt:createdAt,maturity:createdAt + duration,assetIdentity:assetIdentity,valuationReference:valuationReference,bindingPayload:payload}) (contracts/BaseCommitmentVaultLock.sol#303-321)
+Reentrancy in CommitmentVaultLock.createErc20Lock(bytes32,address,uint8,bytes32,bytes32,address,uint256,address,uint256,uint256) (contracts/CommitmentVaultLock.sol#219-269):
+	External calls:
+	- require(bool,string)(_erc20(token,abi.encodeWithSelector(IERC20Minimal.transferFrom.selector,msg.sender,address(this),amount)),CVL: transferFrom) (contracts/CommitmentVaultLock.sol#241-244)
+		- (ok,ret) = token.call(data) (contracts/CommitmentVaultLock.sol#384)
+	State variables written after the call(s):
+	- _open(lockId,baseRecipient,outputToken,assetIdentity,valuationReference,releaseDestination,duration,token,received,fee,principal,multiplierBps) (contracts/CommitmentVaultLock.sol#250-263)
+		- _locks[lockId] = LockRecord({exists:true,released:false,creator:msg.sender,releaseDestination:releaseDestination,asset:asset,baseRecipient:baseRecipient,outputToken:outputToken,gross:gross,fee:fee,principal:principal,duration:duration,multiplierBps:multiplierBps,createdAt:createdAt,maturity:createdAt + duration,assetIdentity:assetIdentity,valuationReference:valuationReference,bindingPayload:payload}) (contracts/CommitmentVaultLock.sol#324-342)
+Reentrancy in VinculumFinalisStake.createPosition(uint8,uint256,uint256) (contracts/VinculumFinalisStake.sol#253-300):
+	External calls:
+	- require(bool,string)(stakeToken.transferFrom(msg.sender,address(this),amount),VFS: transfer failed) (contracts/VinculumFinalisStake.sol#270)
+	State variables written after the call(s):
+	- _applyWeight(id,first,_lastEligibleBy(start + durationSecs,t0),true,t0) (contracts/VinculumFinalisStake.sol#296)
+		- _runningWeight[i] = _runningWeight[i] + w (contracts/VinculumFinalisStake.sol#617)
+		- _runningWeight[i] = _runningWeight[i] - w (contracts/VinculumFinalisStake.sol#617)
+	- _terms[id].push(Term({start:start,multiplierBps:multBps})) (contracts/VinculumFinalisStake.sol#289)
+	- _applyWeight(id,first,_lastEligibleBy(start + durationSecs,t0),true,t0) (contracts/VinculumFinalisStake.sol#296)
+		- _weightAddAt[from] += w (contracts/VinculumFinalisStake.sol#621)
+		- _weightAddAt[to + 1] += w (contracts/VinculumFinalisStake.sol#623)
+	- _applyWeight(id,first,_lastEligibleBy(start + durationSecs,t0),true,t0) (contracts/VinculumFinalisStake.sol#296)
+		- _weightSubAt[from] += w (contracts/VinculumFinalisStake.sol#621)
+		- _weightSubAt[to + 1] += w (contracts/VinculumFinalisStake.sol#623)
+	- nextClaimEpoch[id] = first (contracts/VinculumFinalisStake.sol#295)
+	- id = nextPositionId ++ (contracts/VinculumFinalisStake.sol#273)
+	- positions[id] = Position({owner:msg.sender,token:token,amount:amount,durationSecs:durationSecs,startTimestamp:start,endTimestamp:start + durationSecs,multiplierBps:multBps,queuedExtensionBps:0,queuedExtensionSecs:0,withdrawn:false,activeSince:start,withdrawnAt:0}) (contracts/VinculumFinalisStake.sol#275-288)
+Reentrancy in VinculumFinalisSynth.forge(uint256) (contracts/VinculumFinalisSynth.sol#138-166):
+	External calls:
+	- vclmToken.burnFrom(msg.sender,vclmToBurn) (contracts/VinculumFinalisSynth.sol#156)
+	- chonxToken.burnFrom(msg.sender,chonxToBurn) (contracts/VinculumFinalisSynth.sol#157)
+	State variables written after the call(s):
+	- balanceOf[msg.sender] += synthToMint (contracts/VinculumFinalisSynth.sol#161)
+Reentrancy in VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886):
+	External calls:
+	- vclmToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#872)
+	State variables written after the call(s):
+	- _syncChonxActivation() (contracts/VinculumFinalisVerifier.sol#875)
+		- chonxActivationBlock = block.number (contracts/VinculumFinalisVerifier.sol#1132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Detector: reentrancy-events
+Reentrancy in VinculumFinalisStake.allocateEpoch(uint256) (contracts/VinculumFinalisStake.sol#428-487):
+	External calls:
+	- vclmToken.mint(address(this),totalReward) (contracts/VinculumFinalisStake.sol#479)
+	Event emitted after the call(s):
+	- EpochAllocated(epochN,totalReward,totalWeight) (contracts/VinculumFinalisStake.sol#485)
+	- TerminalStateEntered() (contracts/VinculumFinalisStake.sol#245)
+		- _enterTerminalIfCapReached() (contracts/VinculumFinalisStake.sol#486)
+Reentrancy in VinculumFinalisStake.claimPosition(uint256,uint256) (contracts/VinculumFinalisStake.sol#496-512):
+	External calls:
+	- require(bool,string)(vclmToken.transfer(msg.sender,amount),VFS: transfer failed) (contracts/VinculumFinalisStake.sol#509)
+	Event emitted after the call(s):
+	- VclmClaimed(positionId,msg.sender,from,toEpoch,amount) (contracts/VinculumFinalisStake.sol#511)
+Reentrancy in VinculumFinalisStake.createPosition(uint8,uint256,uint256) (contracts/VinculumFinalisStake.sol#253-300):
+	External calls:
+	- require(bool,string)(stakeToken.transferFrom(msg.sender,address(this),amount),VFS: transfer failed) (contracts/VinculumFinalisStake.sol#270)
+	Event emitted after the call(s):
+	- PositionCreated(id,msg.sender,token,amount,durationSecs) (contracts/VinculumFinalisStake.sol#298)
+Reentrancy in VinculumFinalisSynth.forge(uint256) (contracts/VinculumFinalisSynth.sol#138-166):
+	External calls:
+	- vclmToken.burnFrom(msg.sender,vclmToBurn) (contracts/VinculumFinalisSynth.sol#156)
+	- chonxToken.burnFrom(msg.sender,chonxToBurn) (contracts/VinculumFinalisSynth.sol#157)
+	Event emitted after the call(s):
+	- SynthForged(msg.sender,count,vclmToBurn,chonxToBurn) (contracts/VinculumFinalisSynth.sol#163)
+	- Transfer(address(0),msg.sender,synthToMint) (contracts/VinculumFinalisSynth.sol#164)
+Reentrancy in VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886):
+	External calls:
+	- vclmToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#872)
+	Event emitted after the call(s):
+	- ChonxActivated(block.number) (contracts/VinculumFinalisVerifier.sol#1134)
+		- _syncChonxActivation() (contracts/VinculumFinalisVerifier.sol#875)
+Reentrancy in VinculumFinalisVerifier.verifyAndMint(ProofPackage,uint256) (contracts/VinculumFinalisVerifier.sol#763-886):
+	External calls:
+	- vclmToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#872)
+	- chonxToken.mint(pkg.baseRecipient,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#878)
+	Event emitted after the call(s):
+	- VerificationSucceeded(lockIdHash,pkg.sourceEnvironmentId,pkg.baseRecipient,pkg.selectedOutputToken,issuanceAmount) (contracts/VinculumFinalisVerifier.sol#884)
+Reentrancy in VinculumFinalisStake.withdrawPosition(uint256) (contracts/VinculumFinalisStake.sol#361-391):
+	External calls:
+	- require(bool,string)(stakeToken.transfer(pos.owner,pos.amount),VFS: return failed) (contracts/VinculumFinalisStake.sol#387)
+	Event emitted after the call(s):
+	- PositionWithdrawn(positionId) (contracts/VinculumFinalisStake.sol#390)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Detector: timestamp
+BaseCommitmentVaultLock.release(bytes32) (contracts/BaseCommitmentVaultLock.sol#252-273) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(record.exists,CVL: unknown lock) (contracts/BaseCommitmentVaultLock.sol#254)
+	- require(bool,string)(block.timestamp >= record.maturity,CVL: immature) (contracts/BaseCommitmentVaultLock.sol#255)
+	- require(bool,string)(! record.released,CVL: already released) (contracts/BaseCommitmentVaultLock.sol#256)
+	- require(bool,string)(msg.sender == record.releaseDestination,CVL: destination) (contracts/BaseCommitmentVaultLock.sol#257)
+BaseCommitmentVaultLock._open(bytes32,address,uint8,bytes32,bytes32,address,uint256,address,uint256,uint256,uint256,uint256) (contracts/BaseCommitmentVaultLock.sol#275-333) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! _locks[lockId].exists,CVL: lock exists) (contracts/BaseCommitmentVaultLock.sol#291)
+CommitmentVaultLock.release(bytes32) (contracts/CommitmentVaultLock.sol#273-294) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(record.exists,CVL: unknown lock) (contracts/CommitmentVaultLock.sol#275)
+	- require(bool,string)(block.timestamp >= record.maturity,CVL: immature) (contracts/CommitmentVaultLock.sol#276)
+	- require(bool,string)(! record.released,CVL: already released) (contracts/CommitmentVaultLock.sol#277)
+	- require(bool,string)(msg.sender == record.releaseDestination,CVL: destination) (contracts/CommitmentVaultLock.sol#278)
+CommitmentVaultLock._open(bytes32,address,uint8,bytes32,bytes32,address,uint256,address,uint256,uint256,uint256,uint256) (contracts/CommitmentVaultLock.sol#296-354) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! _locks[lockId].exists,CVL: lock exists) (contracts/CommitmentVaultLock.sol#312)
+VinculumFinalisStake.queueExtension(uint256,uint256) (contracts/VinculumFinalisStake.sol#304-335) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(pos.owner == msg.sender,VFS: not owner) (contracts/VinculumFinalisStake.sol#306)
+	- require(bool,string)(! pos.withdrawn,VFS: withdrawn) (contracts/VinculumFinalisStake.sol#307)
+	- require(bool,string)(block.timestamp < pos.endTimestamp,VF-STK-025: position not active) (contracts/VinculumFinalisStake.sol#314)
+	- require(bool,string)(pos.queuedExtensionBps == 0,VF-STK-023: already queued) (contracts/VinculumFinalisStake.sol#317)
+	- oldLast + 1 > from (contracts/VinculumFinalisStake.sol#332)
+VinculumFinalisStake.applyExtensionIfMatured(uint256) (contracts/VinculumFinalisStake.sol#341-357) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(pos.owner == msg.sender,VFS: not owner) (contracts/VinculumFinalisStake.sol#343)
+	- require(bool,string)(! pos.withdrawn,VFS: withdrawn) (contracts/VinculumFinalisStake.sol#344)
+	- require(bool,string)(pos.queuedExtensionBps > 0,VFS: no queued extension) (contracts/VinculumFinalisStake.sol#345)
+	- require(bool,string)(block.timestamp >= pos.endTimestamp,VFS: not matured) (contracts/VinculumFinalisStake.sol#346)
+VinculumFinalisStake.withdrawPosition(uint256) (contracts/VinculumFinalisStake.sol#361-391) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(pos.owner == msg.sender,VFS: not owner) (contracts/VinculumFinalisStake.sol#363)
+	- require(bool,string)(! pos.withdrawn,VFS: withdrawn) (contracts/VinculumFinalisStake.sol#364)
+	- require(bool,string)(block.timestamp >= _scheduledEnd(pos),VFS: not matured) (contracts/VinculumFinalisStake.sol#369)
+	- keptLast + 1 > from (contracts/VinculumFinalisStake.sol#379)
+	- require(bool,string)(stakeToken.transfer(pos.owner,pos.amount),VFS: return failed) (contracts/VinculumFinalisStake.sol#387)
+VinculumFinalisStake.closeEpoch(uint256) (contracts/VinculumFinalisStake.sol#399-424) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! ep.closed,VFS: already closed) (contracts/VinculumFinalisStake.sol#402)
+	- require(bool,string)(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS,VF-STK-008: epoch not ended) (contracts/VinculumFinalisStake.sol#408)
+	- require(bool,string)(epochs[epochN - 1].closed,VF-STK-010: chronological order) (contracts/VinculumFinalisStake.sol#412)
+VinculumFinalisStake.allocateEpoch(uint256) (contracts/VinculumFinalisStake.sol#428-487) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(ep.closed,VFS: not closed) (contracts/VinculumFinalisStake.sol#432)
+	- require(bool,string)(! ep.allocated,VFS: already allocated) (contracts/VinculumFinalisStake.sol#433)
+	- require(bool,string)(block.timestamp >= nPlus1End,VF-STK-013: wait for N+1 end) (contracts/VinculumFinalisStake.sol#437)
+	- ep.rewardBasis == 0 || totalWeight == 0 (contracts/VinculumFinalisStake.sol#456)
+	- totalReward > remaining (contracts/VinculumFinalisStake.sol#471)
+VinculumFinalisStake.claimPosition(uint256,uint256) (contracts/VinculumFinalisStake.sol#496-512) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(pos.owner == msg.sender,VFS: not owner) (contracts/VinculumFinalisStake.sol#499)
+VinculumFinalisStake.claimPositions(uint256[],uint256) (contracts/VinculumFinalisStake.sol#515-519) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nextClaimEpoch[positionIds[i]] <= toEpoch (contracts/VinculumFinalisStake.sol#517)
+VinculumFinalisStake.claimableVclm(uint256,uint256) (contracts/VinculumFinalisStake.sol#522-528) uses timestamp for comparisons
+	Dangerous comparisons:
+	- t0 == 0 || toEpoch < from || positions[positionId].owner == address(0) (contracts/VinculumFinalisStake.sol#525)
+VinculumFinalisStake._claimable(uint256,uint256,uint256,uint256,bool,uint256) (contracts/VinculumFinalisStake.sol#533-561) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS,VF-STK-013: epoch not final) (contracts/VinculumFinalisStake.sol#537)
+	- wLast < last (contracts/VinculumFinalisStake.sol#542)
+	- toEpoch < last (contracts/VinculumFinalisStake.sol#544)
+	- n <= last (contracts/VinculumFinalisStake.sol#549)
+	- k + 1 < nTerms && _termStart(positionId,k + 1) <= t (contracts/VinculumFinalisStake.sol#557)
+VinculumFinalisStake._firstEpochAtOrAfter(uint256,uint256) (contracts/VinculumFinalisStake.sol#574-577) uses timestamp for comparisons
+	Dangerous comparisons:
+	- t <= t0 (contracts/VinculumFinalisStake.sol#575)
+VinculumFinalisStake._lastEligibleBy(uint256,uint256) (contracts/VinculumFinalisStake.sol#580-583) uses timestamp for comparisons
+	Dangerous comparisons:
+	- T < t0 + 2 * EPOCH_DURATION_SECS (contracts/VinculumFinalisStake.sol#581)
+VinculumFinalisStake._applyWeight(uint256,uint256,uint256,bool,uint256) (contracts/VinculumFinalisStake.sol#589-605) uses timestamp for comparisons
+	Dangerous comparisons:
+	- a == 0 || a > b (contracts/VinculumFinalisStake.sol#590)
+	- lo <= hi (contracts/VinculumFinalisStake.sol#598)
+	- lo <= a (contracts/VinculumFinalisStake.sol#602)
+	- lo > a (contracts/VinculumFinalisStake.sol#599)
+VinculumFinalisStake._rangeWeight(uint256,uint256,uint256,bool) (contracts/VinculumFinalisStake.sol#611-624) uses timestamp for comparisons
+	Dangerous comparisons:
+	- w == 0 || from > to (contracts/VinculumFinalisStake.sol#612)
+	- from <= closedTo (contracts/VinculumFinalisStake.sol#614)
+	- i <= upTo (contracts/VinculumFinalisStake.sol#616)
+	- to < closedTo (contracts/VinculumFinalisStake.sol#619)
+	- to < closedTo (contracts/VinculumFinalisStake.sol#615)
+VinculumFinalisStake.getCurrentEpoch() (contracts/VinculumFinalisStake.sol#637-641) uses timestamp for comparisons
+	Dangerous comparisons:
+	- t0 == 0 || block.timestamp < t0 (contracts/VinculumFinalisStake.sol#639)
+VinculumFinalisStake._tokenOf(uint8) (contracts/VinculumFinalisStake.sol#671-673) uses timestamp for comparisons
+	Dangerous comparisons:
+	- token == 0 (contracts/VinculumFinalisStake.sol#672)
+	- token == 1 (contracts/VinculumFinalisStake.sol#672)
+VinculumFinalisStake.getPositionWeight(uint256) (contracts/VinculumFinalisStake.sol#719-723) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(pos.owner != address(0),VFS: unknown position) (contracts/VinculumFinalisStake.sol#721)
+VinculumFinalisVerifier.finalize() (contracts/VinculumFinalisVerifier.sol#566-580) uses timestamp for comparisons
+	Dangerous comparisons:
+	- protocolLaunchTimestamp == 0 (contracts/VinculumFinalisVerifier.sol#575)
+VinculumFinalisVerifier._daysSinceLaunchFromValuation(uint256) (contracts/VinculumFinalisVerifier.sol#1023-1029) uses timestamp for comparisons
+	Dangerous comparisons:
+	- launch == 0 || valuationTimestamp <= launch (contracts/VinculumFinalisVerifier.sol#1025)
+VinculumFinalisVerifier._computeEmissionRate(uint8,uint256) (contracts/VinculumFinalisVerifier.sol#1064-1079) uses timestamp for comparisons
+	Dangerous comparisons:
+	- i < periods (contracts/VinculumFinalisVerifier.sol#1070)
+VinculumFinalisVerifier.currentEpoch() (contracts/VinculumFinalisVerifier.sol#1139-1143) uses timestamp for comparisons
+	Dangerous comparisons:
+	- t0 == 0 || block.timestamp < t0 (contracts/VinculumFinalisVerifier.sol#1141)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: assembly
+BaseLockRecordVerifier._requireBinding(bytes32,bytes) (contracts/chain-verifiers/BaseLockRecordVerifier.sol#146-153) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/BaseLockRecordVerifier.sol#149-151)
+StellarLockReader.extractFacts(bytes) (contracts/chain-verifiers/StellarLockReader.sol#79-115) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/StellarLockReader.sol#105-108)
+StellarLockReader._u32(bytes,uint256) (contracts/chain-verifiers/StellarLockReader.sol#125-128) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/StellarLockReader.sol#127)
+StellarLockReader._u64(bytes,uint256) (contracts/chain-verifiers/StellarLockReader.sol#130-133) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/StellarLockReader.sol#132)
+StellarLockReader._b32(bytes,uint256) (contracts/chain-verifiers/StellarLockReader.sol#135-138) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/StellarLockReader.sol#137)
+UtxoLockReader.extractFacts(bytes) (contracts/chain-verifiers/UtxoLockReader.sol#116-152) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/UtxoLockReader.sol#142-145)
+UtxoLockReader._merkleRoot(bytes) (contracts/chain-verifiers/UtxoLockReader.sol#174-178) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/UtxoLockReader.sol#175-177)
+UtxoLockReader._parse(bytes) (contracts/chain-verifiers/UtxoLockReader.sol#281-348) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/UtxoLockReader.sol#305-307)
+UtxoLockReader._slice20(bytes,uint256) (contracts/chain-verifiers/UtxoLockReader.sol#402-406) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/UtxoLockReader.sol#403-405)
+XrplLockReader.extractFacts(bytes) (contracts/chain-verifiers/XrplLockReader.sol#97-150) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#140-143)
+XrplLockReader._header(bytes) (contracts/chain-verifiers/XrplLockReader.sol#166-176) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#170-173)
+XrplLockReader._slice4(bytes,uint256) (contracts/chain-verifiers/XrplLockReader.sol#178-180) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#179)
+XrplLockReader._proveInTree(bytes,bytes,bytes[],bytes32) (contracts/chain-verifiers/XrplLockReader.sol#182-199) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#194)
+XrplLockReader._parseTx(bytes) (contracts/chain-verifiers/XrplLockReader.sol#274-311) uses assembly
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#291)
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#298)
+	- INLINE ASM (contracts/chain-verifiers/XrplLockReader.sol#302)
+BitcoinHeaderChecker._word(bytes,uint256) (contracts/checkers/BitcoinHeaderChecker.sol#92-97) uses assembly
+	- INLINE ASM (contracts/checkers/BitcoinHeaderChecker.sol#94-96)
+Blake2b.personal256(bytes16,bytes) (contracts/checkers/Blake2b.sol#14-53) uses assembly
+	- INLINE ASM (contracts/checkers/Blake2b.sol#21-23)
+	- INLINE ASM (contracts/checkers/Blake2b.sol#28-34)
+	- INLINE ASM (contracts/checkers/Blake2b.sol#43-48)
+Bls12381.split(bytes) (contracts/checkers/Bls12381.sol#33-39) uses assembly
+	- INLINE ASM (contracts/checkers/Bls12381.sol#35-38)
+EthereumFinalityChecker.requireLockLog(bytes) (contracts/checkers/EthereumFinalityChecker.sol#119-149) uses assembly
+	- INLINE ASM (contracts/checkers/EthereumFinalityChecker.sol#135-137)
+	- INLINE ASM (contracts/checkers/EthereumFinalityChecker.sol#143-145)
+ExecutionHeader.asBytes32(bytes) (contracts/checkers/ExecutionHeader.sol#47-52) uses assembly
+	- INLINE ASM (contracts/checkers/ExecutionHeader.sol#49-51)
+MptProof.follow(bytes,bytes[],uint256) (contracts/checkers/MptProof.sol#53-74) uses assembly
+	- INLINE ASM (contracts/checkers/MptProof.sol#64-66)
+MptProof.rlpUint(uint256) (contracts/checkers/MptProof.sol#103-114) uses assembly
+	- INLINE ASM (contracts/checkers/MptProof.sol#106-108)
+MptProof.sliceBytes(bytes,uint256,uint256) (contracts/checkers/MptProof.sol#212-223) uses assembly
+	- INLINE ASM (contracts/checkers/MptProof.sol#216-222)
+RlpReader.toBytes32(bytes) (contracts/checkers/RlpReader.sol#37-42) uses assembly
+	- INLINE ASM (contracts/checkers/RlpReader.sol#39-41)
+RlpReader.toAddress(bytes) (contracts/checkers/RlpReader.sol#44-49) uses assembly
+	- INLINE ASM (contracts/checkers/RlpReader.sol#46-48)
+Secp256k1.recover(bytes32,bytes) (contracts/checkers/Secp256k1.sol#6-20) uses assembly
+	- INLINE ASM (contracts/checkers/Secp256k1.sol#11-15)
+Sha512.sha512(bytes) (contracts/checkers/Sha512.sol#16-59) uses assembly
+	- INLINE ASM (contracts/checkers/Sha512.sol#22-33)
+Sha512._block(uint256[8],uint256[80],uint256[20],bytes,uint256) (contracts/checkers/Sha512.sol#61-87) uses assembly
+	- INLINE ASM (contracts/checkers/Sha512.sol#63-68)
+ZcashHeaderChecker._setH(bytes,bytes32,bytes32) (contracts/checkers/ZcashHeaderChecker.sol#248-253) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#249-252)
+ZcashHeaderChecker._copyIntoM(bytes,bytes,uint256) (contracts/checkers/ZcashHeaderChecker.sol#255-259) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#256-258)
+ZcashHeaderChecker._zeroM(bytes) (contracts/checkers/ZcashHeaderChecker.sol#261-269) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#262-268)
+ZcashHeaderChecker._copyTail(bytes,bytes) (contracts/checkers/ZcashHeaderChecker.sol#271-275) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#272-274)
+ZcashHeaderChecker._blake2f(bytes) (contracts/checkers/ZcashHeaderChecker.sol#296-305) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#297-304)
+ZcashHeaderChecker._bswap(uint256) (contracts/checkers/ZcashHeaderChecker.sol#326-332) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#327-331)
+ZcashHeaderChecker._word(bytes,uint256) (contracts/checkers/ZcashHeaderChecker.sol#360-365) uses assembly
+	- INLINE ASM (contracts/checkers/ZcashHeaderChecker.sol#362-364)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Detector: costly-loop
+AvalancheFinalityChecker.constructor(address[],uint256[]) (contracts/checkers/AvalancheFinalityChecker.sol#42-52) has costly operations inside a loop:
+	- totalStake += stake_[i] (contracts/checkers/AvalancheFinalityChecker.sol#50)
+PolygonFinalityChecker.constructor(address[],uint256[]) (contracts/checkers/PolygonFinalityChecker.sol#43-53) has costly operations inside a loop:
+	- totalPower += power_[i] (contracts/checkers/PolygonFinalityChecker.sol#51)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Detector: cyclomatic-complexity
+StellarLockReader._opResults(bytes,uint256) (contracts/chain-verifiers/StellarLockReader.sol#205-265) has a high cyclomatic complexity (19).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Detector: dead-code
+EvmReceiptLockReader._checkHeaderShape(bytes[]) (contracts/chain-verifiers/EvmReceiptLockReader.sol#174) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Detector: low-level-calls
+Low level call in BaseCommitmentVaultLock.createNativeLock(bytes32,address,uint8,bytes32,bytes32,address,uint256,uint256) (contracts/BaseCommitmentVaultLock.sol#162-193):
+	- (ok,None) = devFund.call{value: fee}() (contracts/BaseCommitmentVaultLock.sol#190)
+Low level call in BaseCommitmentVaultLock.release(bytes32) (contracts/BaseCommitmentVaultLock.sol#252-273):
+	- (ok,None) = msg.sender.call{value: principal}() (contracts/BaseCommitmentVaultLock.sol#264)
+Low level call in BaseCommitmentVaultLock._balanceOf(address,address) (contracts/BaseCommitmentVaultLock.sol#353-359):
+	- (ok,ret) = token.staticcall(abi.encodeWithSelector(IERC20MinimalBaseLock.balanceOf.selector,account)) (contracts/BaseCommitmentVaultLock.sol#354-356)
+Low level call in BaseCommitmentVaultLock._erc20(address,bytes) (contracts/BaseCommitmentVaultLock.sol#362-368):
+	- (ok,ret) = token.call(data) (contracts/BaseCommitmentVaultLock.sol#363)
+Low level call in CommitmentVaultLock._metadataIsProtocol(address,bytes4) (contracts/CommitmentVaultLock.sol#138-157):
+	- (ok,ret) = token.staticcall(abi.encodeWithSelector(selector)) (contracts/CommitmentVaultLock.sol#139)
+Low level call in CommitmentVaultLock.createNativeLock(bytes32,address,uint8,bytes32,bytes32,address,uint256,uint256) (contracts/CommitmentVaultLock.sol#183-214):
+	- (ok,None) = devFund.call{value: fee}() (contracts/CommitmentVaultLock.sol#211)
+Low level call in CommitmentVaultLock.release(bytes32) (contracts/CommitmentVaultLock.sol#273-294):
+	- (ok,None) = msg.sender.call{value: principal}() (contracts/CommitmentVaultLock.sol#285)
+Low level call in CommitmentVaultLock._balanceOf(address,address) (contracts/CommitmentVaultLock.sol#374-380):
+	- (ok,ret) = token.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector,account)) (contracts/CommitmentVaultLock.sol#375-377)
+Low level call in CommitmentVaultLock._erc20(address,bytes) (contracts/CommitmentVaultLock.sol#383-389):
+	- (ok,ret) = token.call(data) (contracts/CommitmentVaultLock.sol#384)
+Low level call in Bls12381._call(address,bytes,uint256) (contracts/checkers/Bls12381.sol#22-26):
+	- (ok,out) = to.staticcall(input) (contracts/checkers/Bls12381.sol#24)
+Low level call in Bls12381.verify(bytes,bytes32,bytes) (contracts/checkers/Bls12381.sol#83-88):
+	- (ok,out) = address(0x0f).staticcall(abi.encodePacked(pk,hashToG2(message),NEG_G1,sig)) (contracts/checkers/Bls12381.sol#85-86)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: missing-inheritance
+BaseCommitmentVaultLock (contracts/BaseCommitmentVaultLock.sol#50-369) should inherit from ICommitmentVaultLockReader (contracts/chain-verifiers/BaseLockRecordVerifier.sol#44-66)
+CommitmentVaultLock (contracts/CommitmentVaultLock.sol#55-390) should inherit from ICommitmentVaultLockReader (contracts/chain-verifiers/BaseLockRecordVerifier.sol#44-66)
+BaseLockRecordVerifier (contracts/chain-verifiers/BaseLockRecordVerifier.sol#68-154) should inherit from IChainVerifier (contracts/VinculumFinalisVerifier.sol#57-99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Detector: naming-convention
+Parameter VinculumFinalisToken.initialize(address,address)._minterVerifier (contracts/VinculumFinalisToken.sol#95) is not in mixedCase
+Parameter VinculumFinalisToken.initialize(address,address)._minterStake (contracts/VinculumFinalisToken.sol#95) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Detector: redundant-statements
+Redundant expression "daysSinceLaunch (contracts/VinculumFinalisVerifier.sol#846)" inVinculumFinalisVerifier (contracts/VinculumFinalisVerifier.sol#191-1168)
+Redundant expression "inStart (contracts/chain-verifiers/UtxoLockReader.sol#347)" inUtxoLockReader (contracts/chain-verifiers/UtxoLockReader.sol#38-407)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Detector: too-many-digits
+VinculumFinalisVerifier.slitherConstructorConstantVariables() (contracts/VinculumFinalisVerifier.sol#191-1168) uses literals with too many digits:
+	- DECAY_SURVIVAL_FP = 983330000000000000 (contracts/VinculumFinalisVerifier.sol#243)
+UtxoLockReader._cltvHeight(bytes) (contracts/chain-verifiers/UtxoLockReader.sol#239-259) uses literals with too many digits:
+	- require(bool,string)(h < 500000000,VF-XCH-011: maturity must be a height) (contracts/chain-verifiers/UtxoLockReader.sol#252)
+UtxoLockReader._compact(bytes,uint256) (contracts/chain-verifiers/UtxoLockReader.sol#381-390) uses literals with too many digits:
+	- require(bool,string)(n >= 0x100000000,VF-XCH-011: compact size form) (contracts/chain-verifiers/UtxoLockReader.sol#388)
+BitcoinHeaderChecker._target(uint32) (contracts/checkers/BitcoinHeaderChecker.sol#59-65) uses literals with too many digits:
+	- (bits & 0x800000) != 0 || mant == 0 || exp == 0 || exp > 32 (contracts/checkers/BitcoinHeaderChecker.sol#62)
+Bls12381.slitherConstructorConstantVariables() (contracts/checkers/Bls12381.sol#10-107) uses literals with too many digits:
+	- NEG_G1 = 0x0000000000000000000000000000000017f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb00000000000000000000000000000000114d1d6855d545a8aa7d76c8cf2e21f267816aef1db507c96655b9d5caac42364e6f38ba0ecb751bad54dcd6b939c2ca (contracts/checkers/Bls12381.sol#18-20)
+EthereumBeaconLightClient.slitherConstructorConstantVariables() (contracts/checkers/EthereumBeaconLightClient.sol#17-174) uses literals with too many digits:
+	- DOMAIN_SYNC_COMMITTEE = 0x07000000 (contracts/checkers/EthereumBeaconLightClient.sol#25)
+ZcashHeaderChecker._toTarget(uint32) (contracts/checkers/ZcashHeaderChecker.sol#316-324) uses literals with too many digits:
+	- (bits & 0x800000) != 0 (contracts/checkers/ZcashHeaderChecker.sol#317)
+ZcashHeaderChecker.slitherConstructorConstantVariables() (contracts/checkers/ZcashHeaderChecker.sol#23-374) uses literals with too many digits:
+	- V5_HEADER = 0x80000005 (contracts/checkers/ZcashHeaderChecker.sol#25)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Detector: unindexed-event-address
+Event VinculumFinalisToken.Initialized(address,address) (contracts/VinculumFinalisToken.sol#61) has address parameters but no indexed parameters
+Event VinculumFinalisVerifier.DevFundConfigured(string,address) (contracts/VinculumFinalisVerifier.sol#376) has address parameters but no indexed parameters
+Event VinculumFinalisVerifier.ChainVerifierRegistered(string,address) (contracts/VinculumFinalisVerifier.sol#377) has address parameters but no indexed parameters
+Event VinculumFinalisVerifier.ScheduledPricePosterSet(address) (contracts/VinculumFinalisVerifier.sol#379) has address parameters but no indexed parameters
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unindexed-event-address-parameters
+
+Detector: immutable-states
+AvalancheFinalityChecker.totalStake (contracts/checkers/AvalancheFinalityChecker.sol#31) should be immutable 
+PolygonFinalityChecker.totalPower (contracts/checkers/PolygonFinalityChecker.sol#26) should be immutable 
+VinculumFinalisVerifier.chonxToken (contracts/VinculumFinalisVerifier.sol#350) should be immutable 
+VinculumFinalisVerifier.vclmToken (contracts/VinculumFinalisVerifier.sol#349) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+. analyzed (82 contracts with 102 detectors), 173 result(s) found
