@@ -172,7 +172,8 @@ describe("t262u TRS rewards on the real ceremony flow (487 rows, test chain)", f
     await (await h.r.chonx.connect(h.recipient).approve(F, 20_000n * SCALE)).wait();
     await (await h.r.forge.connect(h.recipient).forge(2)).wait();
     expect(await h.r.verifier.epochRewardBasis(1n)).to.be.gt(0n);
-    expect(await h.r.verifier.racEpoch(ethers.id("rac:" + e.lockId))).to.equal(1n);
+    // AG-04: RAC is keyed by racKey(environment, proven lock id), not by racIdentity.
+    expect(await h.r.verifier.racEpoch(await h.r.verifier.racKey("Base", e.lockId))).to.equal(1n);
   });
 
   it("Base lock refuses VCLM, CHONX and SYNTH as inputs before any token moves or fee (VF-TOK-007, BaseCommitmentVaultLock)", async () => {
@@ -217,7 +218,7 @@ describe("t262u TRS rewards on the real ceremony flow (487 rows, test chain)", f
     for (const wei of [1n * SCALE, 3n * SCALE]) {
       const e = await h.ethLock(wei, DAY7);
       await h.settle(e.lockId, e.rec, ETH_ID, 2);
-      const rid = ethers.id("rac:" + e.lockId);
+      const rid = await h.r.verifier.racKey("Base", e.lockId);
       expect(await h.r.verifier.racEpoch(rid)).to.equal(2n);
       sum += await h.r.verifier.racCredits(rid);
     }
