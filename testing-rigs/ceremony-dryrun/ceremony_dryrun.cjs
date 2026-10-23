@@ -18,6 +18,8 @@ const art = require(path.join(BC, "scripts/deploy-pages/ceremony.json"));
 const DATA = require(path.join(BC, "scripts/deploy-pages/ceremony-data.json"));
 const FLOW = require(path.join(BC, "scripts/deploy-pages/baseCeremonyFlow.js"));
 const PROOF = require(path.join(BC, "test/lib/ethProof.cjs"));
+const RECON = require("../reconciliation/reconcile.cjs");
+const RPCS = require("../reconciliation/rpcs.cjs");
 
 const TX_GAS_CAP = 16_777_216n; // Base Azul (May 28, 2026): EIP-7825 per-transaction gas maximum
 // The live 5% non-Base lock (same address on all six EVM chains), from
@@ -44,6 +46,7 @@ const STEPS = [
   "EVM readers on real mainnet receipts",
   "Ethereum reader on a real finalized header",
   "UTXO, Stellar and XRPL reader wiring",
+  "Rig 10 reconciliation: deployed set vs artifacts and ceremony-data",
 ];
 let step = 0;
 const gasRows = [];
@@ -203,15 +206,48 @@ async function main() {
   if (String(xv).toLowerCase() !== String(DATA.readers.xrpl.devFundAccount).toLowerCase()) throw new Error("XRPL Dev Fund account mismatch");
   err("  6 UTXO readers, Stellar and XRPL carry the ceremony-data Dev Fund wiring");
 
+  at(15);
+  // Rig 10: reconcile everything the rehearsal deployed. The operator's
+  // transactions are read back from the local fork's blocks.
+  const latest = await ethers.provider.getBlockNumber();
+  const txs = [];
+  for (let b = fb.number + 1; b <= latest; b++) {
+    const blk = await ethers.provider.getBlock(b, true);
+    for (const t of blk.prefetchedTransactions) {
+      if (ethers.getAddress(t.from) !== ethers.getAddress(signer.address)) continue;
+      const rc = await ethers.provider.getTransactionReceipt(t.hash);
+      txs.push({ nonce: t.nonce, from: t.from, to: t.to, data: t.data, value: t.value, status: rc.status, created: rc.contractAddress, logs: rc.logs });
+    }
+  }
+  const vAddr = ethers.getAddress(await V.getAddress());
+  const finIdx = txs.findIndex((t) => t.to && ethers.getAddress(t.to) === vAddr && t.data.startsWith(V.interface.getFunction("finalize").selector));
+  const cerTxs = txs.slice(0, finIdx + 1);
+  const set = {
+    vclm: await r.vclm.getAddress(), chonx: await r.chonx.getAddress(), verifier: await V.getAddress(), forge: await r.forge.getAddress(),
+    stake: await r.stake.getAddress(), lock: await r.lock.getAddress(),
+    readers: Object.fromEntries(await Promise.all(Object.entries(r.readers).map(async ([e, c]) => [e, await c.getAddress()]))),
+  };
+  const tokP = { ...RPCS.providers(ethers, FLOW.EVM_ENVS), Base: ethers.provider };
+  const recon = await RECON.reconcile({
+    hre, P: ethers.provider, set, DATA, art, FLOW, mode: "dryrun", nonBaseProviders: providers, nonBaseLock: LIVE_NON_BASE_LOCK,
+    operator: signer.address, txs: cerTxs, fromBlock: fb.number + 1, simFrom: signer.address, tokenProviders: tokP, receiptLogs: cerTxs.flatMap((t) => t.logs),
+    txListComplete: { ok: cerTxs.every((t, i) => i === 0 || t.nonce === cerTxs[i - 1].nonce + 1), detail: `${cerTxs.length} txs, local fork blocks ${fb.number + 1}..${latest}` },
+    log: err,
+  });
+  fs.writeFileSync(path.join(__dirname, "../reconciliation/reconciliation_dryrun.json"), JSON.stringify(recon, null, 1));
+  err(`  reconciliation: ${JSON.stringify(recon.counts)}`);
+
   const maxTx = gasRows.reduce((m, x) => (x.gasLimit > m.gasLimit ? x : m), gasRows[0]);
   const total = gasRows.filter((x) => x.step <= 8).reduce((s, x) => s + x.gasUsed, 0n);
   err(`  ceremony transactions ${gasRows.filter((x) => x.step <= 8).length}, total gas used ${total}, largest gas limit ${maxTx.gasLimit} at step ${maxTx.step} (cap ${TX_GAS_CAP})`);
   for (const n of notes) err("  NOTE " + n);
   fs.writeFileSync(path.join(__dirname, "dryrun_gas.json"), JSON.stringify(gasRows.map((x) => ({ step: x.step, gasLimit: String(x.gasLimit), gasUsed: String(x.gasUsed), to: short(x.to), created: short(x.created) })), null, 1));
   process.stdout.write("ceremony would succeed\n");
+  process.stdout.write(recon.verdict + "\n");
+  if (recon.verdict !== "reconciliation PASS") process.exitCode = 2;
 }
 
-main().then(() => process.exit(0)).catch((e) => {
+main().then(() => process.exit(process.exitCode || 0)).catch((e) => {
   process.stdout.write(`ceremony would FAIL at step ${step} ${STEPS[step]}: ${scrub(e.shortMessage || e.reason || e.message).slice(0, 400)}\n`);
   process.stdout.write("--- dump ---\n" + scrub((e.stack || String(e)).split("\n").slice(0, 12).join("\n")) + "\n");
   if (gasRows.length) {
