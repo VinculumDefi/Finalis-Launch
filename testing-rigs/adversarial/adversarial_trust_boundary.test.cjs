@@ -1,8 +1,8 @@
-// RIG 9 — Adversarial input and trust-boundary testing.
-// Discovery only. Does not fix contracts. Local Hardhat only.
-// Default: PASS cases run; FINDING cases are skipped (branch stays green).
-// Run findings: cd base-contracts && ADVERSARIAL=1 npx hardhat test \
-//   ../testing-rigs/adversarial/adversarial_trust_boundary.test.cjs
+// RIG 9: Adversarial input and trust-boundary testing. Local Hardhat only.
+// Converted 2026-10-23: every case is active. The former FINDING cases now
+// replay the same attack and assert the fixed, fail-closed behavior
+// (AG-01..AG-07). Run:
+//   testing-rigs/run.sh none adversarial/adversarial_trust_boundary.test.cjs
 // Cite: Rev 6 traceability, Rev 12 Handshake, Rev 13 ITS timing; AG-01..AG-20.
 const path = require("path");
 const crypto = require("crypto");
@@ -17,7 +17,8 @@ const UTXO = req(path.join(BC, "test/fixtures/utxo_local_locks.json"));
 const XLM = req(path.join(BC, "test/fixtures/stellar_local_locks.json"));
 const XRP = req(path.join(BC, "test/fixtures/xrpl_local_locks.json"));
 
-const run = process.env.ADVERSARIAL ? it : it.skip;
+const run = it;
+const REFUSED = (env) => `VF-XCH-006: ${env} settled-history anchor not enforced on-chain; environment disabled`;
 const pass = it;
 const SCALE = 10n ** 18n;
 const DAY = 86400n, DAY7 = 7n * DAY;
@@ -247,7 +248,7 @@ async function deploySystem(opts = {}) {
   await verifier.configureDevFund("Base", devFund.address);
 
   const ethLock = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Ethereum", devFund.address);
-  const ethReader = await (await ethers.getContractFactory("SimpleEthereumLockReader")).deploy(await ethLock.getAddress());
+  const ethReader = await (await ethers.getContractFactory(opts.ethReaderContract || "SimpleEthereumLockReader")).deploy(await ethLock.getAddress());
   await verifier.registerChainVerifier("Ethereum", await ethReader.getAddress());
   await verifier.registerAssetPrecision("Ethereum", ETH_ID, "ETH", 18, 2, 0);
   await verifier.configureDevFund("Ethereum", devFund.address);
@@ -373,7 +374,7 @@ function dsha(hex) {
   return crypto.createHash("sha256").update(crypto.createHash("sha256").update(Buffer.from(hex.slice(2), "hex")).digest()).digest();
 }
 
-describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", function () {
+describe("RIG 9 adversarial trust-boundary (safe behavior, fix 2026-10-23)", function () {
   this.timeout(600000);
 
   // ---------- PASS: Base path rejects fabricated / mismatched inputs ----------
@@ -501,9 +502,9 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith("VF-XCH-011: asset mismatch");
   });
 
-  // ---------- FINDING: fabricated EVM headers / MPT state (AG-01 class) ----------
+  // ---------- SAFE: fabricated EVM headers / MPT state are refused (AG-01) ----------
 
-  async function mintFromFabricatedEvm(spec) {
+  async function refuseFabricatedEvm(spec) {
     const c = await deploySystem({
       readers: [spec],
     });
@@ -524,14 +525,12 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     const p = forgedPkg(spec.env, spec.chainId, lockId, c.recipient.address, {
       gross, fee, principal, duration: DAY7, createdAt, maturity: createdAt + DAY7,
     }, ev, spec.assetId, 3);
-    await c.verifier.recordFeeAndRac(p);
-    await c.verifier.verifyAndMint(p, 0);
-    const minted = await c.vclm.balanceOf(c.recipient.address);
-    expect(minted).to.be.gt(0n);
-    return { minted, blockHash: ev.blockHash, env: spec.env };
+    await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED(spec.env));
+    await expect(c.verifier.verifyAndMint(p, 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
+    expect(await c.vclm.balanceOf(c.recipient.address)).to.equal(0n);
   }
 
-  run("FINDING ADV-01: Ethereum fabricated MPT unauthorized mint (no chain anchor) [AG-01, VF-XCH-006]", async () => {
+  run("SAFE ADV-01: Ethereum fabricated MPT is refused, no mint [AG-01, VF-XCH-006]", async () => {
     const c = await deploySystem();
     const lockAddr = await c.ethLock.getAddress();
     const lockId = ethers.hexlify(ethers.randomBytes(32));
@@ -547,56 +546,49 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     const p = forgedPkg("Ethereum", 1, lockId, c.recipient.address, {
       gross, fee, principal, duration: DAY7, createdAt, maturity: createdAt + DAY7,
     }, ev, ETH_ID);
-    await c.verifier.recordFeeAndRac(p);
-    await c.verifier.verifyAndMint(p, 0);
-    const minted = await c.vclm.balanceOf(c.recipient.address);
-    expect(minted).to.be.gt(0n);
-    console.log(`      ADV-01 Ethereum fabricated trie minted ${ethers.formatEther(minted)} VCLM`);
+    await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED("Ethereum"));
+    await expect(c.verifier.verifyAndMint(p, 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
+    expect(await c.vclm.balanceOf(c.recipient.address)).to.equal(0n);
   });
 
-  run("FINDING ADV-02: Arbitrum reader mints from fabricated trie [AG-01, cross-chain]", async () => {
-    const r = await mintFromFabricatedEvm({
+  run("SAFE ADV-02: Arbitrum fabricated trie is refused, no mint [AG-01]", async () => {
+    await refuseFabricatedEvm({
       env: "Arbitrum", contract: "ArbitrumLockReader", assetId: ETH_ID, symbol: "ETH",
       decimals: 18, chainId: 42161, shape: "arbitrum", aliasTo: "Ethereum",
     });
-    console.log(`      ADV-02 ${r.env} minted ${ethers.formatEther(r.minted)} VCLM`);
   });
 
-  run("FINDING ADV-03: Optimism reader mints from fabricated trie [AG-01]", async () => {
-    const r = await mintFromFabricatedEvm({
+  run("SAFE ADV-03: Optimism fabricated trie is refused, no mint [AG-01]", async () => {
+    await refuseFabricatedEvm({
       env: "Optimism", contract: "OptimismLockReader", assetId: ETH_ID, symbol: "ETH",
       decimals: 18, chainId: 10, shape: "optimism", aliasTo: "Ethereum",
     });
-    console.log(`      ADV-03 ${r.env} minted ${ethers.formatEther(r.minted)} VCLM`);
   });
 
-  run("FINDING ADV-04: Polygon reader mints from fabricated trie [AG-01]", async () => {
-    const r = await mintFromFabricatedEvm({
+  run("SAFE ADV-04: Polygon fabricated trie is refused, no mint [AG-01]", async () => {
+    await refuseFabricatedEvm({
       env: "Polygon", contract: "PolygonLockReader", assetId: POL_ID, symbol: "POL",
       decimals: 18, chainId: 137, shape: "polygon",
     });
-    console.log(`      ADV-04 ${r.env} minted ${ethers.formatEther(r.minted)} VCLM`);
   });
 
-  run("FINDING ADV-05: BNB Smart Chain reader mints from fabricated trie [AG-01]", async () => {
-    const r = await mintFromFabricatedEvm({
+  run("SAFE ADV-05: BNB Smart Chain fabricated trie is refused, no mint [AG-01]", async () => {
+    await refuseFabricatedEvm({
       env: "BNB Smart Chain", contract: "BnbSmartChainLockReader", assetId: BNB_ID, symbol: "BNB",
       decimals: 18, chainId: 56, shape: "bnb",
     });
-    console.log(`      ADV-05 ${r.env} minted ${ethers.formatEther(r.minted)} VCLM`);
   });
 
-  run("FINDING ADV-06: Avalanche reader mints from fabricated trie (incl. createdAt slot) [AG-01]", async () => {
-    const r = await mintFromFabricatedEvm({
+  run("SAFE ADV-06: Avalanche fabricated trie is refused, no mint [AG-01]", async () => {
+    await refuseFabricatedEvm({
       env: "Avalanche", contract: "AvalancheLockReader", assetId: AVAX_ID, symbol: "AVAX",
       decimals: 18, chainId: 43114, shape: "avalanche",
     });
-    console.log(`      ADV-06 ${r.env} minted ${ethers.formatEther(r.minted)} VCLM`);
   });
 
-  // ---------- FINDING: UTXO / Stellar / XRPL forged headers (AG-02/03) ----------
+  // ---------- SAFE: UTXO / Stellar / XRPL forged headers are refused (AG-02/03) ----------
 
-  run("FINDING ADV-07: Bitcoin reader accepts header with no PoW and records unauthorized RAC [AG-02]", async () => {
+  run("SAFE ADV-07: Bitcoin header with no PoW is refused and records no RAC [AG-02]", async () => {
     const c = await deploySystem({ utxo: ["Bitcoin"] });
     const S = c.utxo.Bitcoin.fixture;
     const b = Buffer.from(S.header.slice(2), "hex");
@@ -620,11 +612,9 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
       forged, S.coinbaseTx, S.coinbaseBranch, S.lockTx, S.lockBranch, S.lockIndex,
       S.redeemScript, S.payload, S.durationSecs,
     ]]);
-    const [ok] = await c.utxo.Bitcoin.reader.verifyFinality(
-      proof, coder.encode(["bytes32", "uint256"], [forgedHash, S.height]));
-    expect(ok).to.equal(true);
-    // RAC path: fixture outputToken=1 (CHONX). recordFeeAndRac still runs.
-    // Use recipient from payload.
+    await expect(c.utxo.Bitcoin.reader.verifyFinality(
+      proof, coder.encode(["bytes32", "uint256"], [forgedHash, S.height]))).to.be.revertedWith(REFUSED("Bitcoin"));
+    // The Verifier refuses the same forged proof before any fee or RAC.
     const recipient = S.baseRecipient;
     const p = {
       sourceEnvironmentId: "Bitcoin", commitmentVaultLockId: S.lockId, handshakeAllowanceCount: 1,
@@ -641,12 +631,11 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
       sourceFinalityProof: coder.encode(["bytes32", "uint256"], [forgedHash, S.height]),
       lockEventProof: proof,
     };
-    await c.verifier.recordFeeAndRac(p);
-    expect(await c.verifier.recordedRacs(p.racIdentity)).to.equal(true);
-    console.log(`      ADV-07 Bitcoin forged header accepted; unauthorized RAC recorded for lock ${S.lockId.slice(0, 10)}...`);
+    await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED("Bitcoin"));
+    expect(await c.verifier.isLockRacRecorded("Bitcoin", p.commitmentVaultLockId)).to.equal(false);
   });
 
-  run("FINDING ADV-08: Stellar reader accepts ledger with arbitrary previous hash; unauthorized RAC [AG-03]", async () => {
+  run("SAFE ADV-08: Stellar ledger with arbitrary previous hash is refused; no RAC [AG-03]", async () => {
     const c = await deploySystem({ stellar: true });
     const L = XLM.week;
     const b = Buffer.from(L.header.slice(2), "hex");
@@ -656,9 +645,8 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     const proof = coder.encode([XLM_PROOF], [{
       header: forged, resultSet: L.resultSet, txXdr: L.tx, payload: L.payload, durationSecs: L.durationSecs,
     }]);
-    const [ok] = await c.extra.Stellar.reader.verifyFinality(
-      proof, coder.encode(["bytes32", "uint256"], [forgedHash, L.ledgerSeq]));
-    expect(ok).to.equal(true);
+    await expect(c.extra.Stellar.reader.verifyFinality(
+      proof, coder.encode(["bytes32", "uint256"], [forgedHash, L.ledgerSeq]))).to.be.revertedWith(REFUSED("Stellar"));
     // payload: lockId 32 | recipient 20 | outputToken 1 | ...
     const pl = Buffer.from(L.payload.slice(2), "hex");
     const lockId = "0x" + pl.subarray(0, 32).toString("hex");
@@ -677,12 +665,11 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
       sourceFinalityProof: coder.encode(["bytes32", "uint256"], [forgedHash, L.ledgerSeq]),
       lockEventProof: proof,
     };
-    await c.verifier.recordFeeAndRac(p);
-    expect(await c.verifier.recordedRacs(p.racIdentity)).to.equal(true);
-    console.log(`      ADV-08 Stellar forged ledger accepted; unauthorized RAC recorded`);
+    await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED("Stellar"));
+    expect(await c.verifier.isLockRacRecorded("Stellar", p.commitmentVaultLockId)).to.equal(false);
   });
 
-  run("FINDING ADV-09: XRPL reader accepts ledger with arbitrary parent; unauthorized RAC [AG-03]", async () => {
+  run("SAFE ADV-09: XRPL ledger with arbitrary parent is refused; no RAC [AG-03]", async () => {
     const c = await deploySystem({ xrpl: true });
     const L = XRP.week;
     const b = Buffer.from(L.header.slice(2), "hex");
@@ -695,9 +682,8 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
       escrowTx: L.escrow.tx, escrowMeta: L.escrow.meta, escrowInner: L.escrow.inner,
       payload: L.payload, durationSecs: L.durationSecs,
     }]);
-    const [ok] = await c.extra["XRP Ledger"].reader.verifyFinality(
-      proof, coder.encode(["bytes32", "uint256"], [forgedHash, L.ledgerIndex]));
-    expect(ok).to.equal(true);
+    await expect(c.extra["XRP Ledger"].reader.verifyFinality(
+      proof, coder.encode(["bytes32", "uint256"], [forgedHash, L.ledgerIndex]))).to.be.revertedWith(REFUSED("XRP Ledger"));
     const pl = Buffer.from(L.payload.slice(2), "hex");
     const lockId = "0x" + pl.subarray(0, 32).toString("hex");
     const recipient = ethers.getAddress("0x" + pl.subarray(32, 52).toString("hex"));
@@ -715,14 +701,13 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
       sourceFinalityProof: coder.encode(["bytes32", "uint256"], [forgedHash, L.ledgerIndex]),
       lockEventProof: proof,
     };
-    await c.verifier.recordFeeAndRac(p);
-    expect(await c.verifier.recordedRacs(p.racIdentity)).to.equal(true);
-    console.log(`      ADV-09 XRPL forged ledger accepted; unauthorized RAC recorded`);
+    await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED("XRP Ledger"));
+    expect(await c.verifier.isLockRacRecorded("XRP Ledger", p.commitmentVaultLockId)).to.equal(false);
   });
 
-  // ---------- FINDING: genuine header / wrong lock, wrong contract, resubmit ----------
+  // ---------- SAFE: genuine header / wrong lock, wrong contract, resubmit ----------
 
-  run("FINDING ADV-10: AG-01 style header mixHash forge on a real Hardhat Ethereum lock still mints [AG-01]", async () => {
+  run("SAFE ADV-10: AG-01 style header mixHash forge on a real Hardhat Ethereum lock is refused [AG-01]", async () => {
     const c = await deploySystem();
     const lockId = ethers.hexlify(ethers.randomBytes(32));
     const rc = await (await c.ethLock.connect(c.other).createNativeLock(
@@ -746,9 +731,8 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
       sourceFinalityProof: coder.encode(["uint256", "bytes32", "uint256"], [1, forgedHash, ev.block.number]),
       lockEventProof: encodeEvidence({ ...ev, headerRlp: forged }),
     };
-    await c.verifier.recordFeeAndRac(p);
-    await c.verifier.verifyAndMint(p, 0);
-    expect(await c.vclm.balanceOf(c.recipient.address)).to.be.gt(0n);
+    await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED("Ethereum"));
+    expect(await c.vclm.balanceOf(c.recipient.address)).to.equal(0n);
   });
 
   pass("PASS ADV-P08: lookalike LockCreated from a CVL clone at another address is rejected by Ethereum reader", async () => {
@@ -777,7 +761,9 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
   });
 
   pass("PASS ADV-P09: receipt with altered recipient word fails storage proof (VF-XCH-011)", async () => {
-    const c = await deploySystem();
+    // Uses the test-only anchored reader so the check behind the (now
+    // refused) finality step is still exercised.
+    const c = await deploySystem({ ethReaderContract: "SimpleEthereumLockReaderTestAnchor" });
     const lockId = ethers.hexlify(ethers.randomBytes(32));
     const rc = await (await c.ethLock.connect(c.other).createNativeLock(
       lockId, c.recipient.address, 0, ETH_ID, ethers.ZeroHash, c.dest.address, DAY7, PRICE / 100n,
@@ -800,25 +786,23 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     await expect(c.verifier.recordFeeAndRac(p)).to.be.revertedWith("VF-XCH-011: recipient mismatch");
   });
 
-  // ---------- FINDING: double RAC / unbound racIdentity / price / valuation (AG-04..07) ----------
+  // ---------- SAFE: RAC once per lock, proven valuation time, creation price, sequential runs (AG-04..07) ----------
 
-  run("FINDING ADV-11: same Base lock records many RAC credits via caller-chosen racIdentity [AG-04, VF-RAC-001]", async () => {
+  run("SAFE ADV-11: the same Base lock records one RAC credit whatever racIdentity is supplied [AG-04, VF-RAC-001]", async () => {
     const c = await deploySystem();
     const p = await baseLockPkg(c);
     await c.verifier.recordFeeAndRac(p);
     await c.verifier.verifyAndMint(p, 0);
     const epoch = await c.verifier.currentEpoch();
     const one = await c.verifier.epochRewardBasis(epoch);
-    const K = 10n;
-    for (let i = 1n; i < K; i++) {
-      await c.verifier.connect(c.stranger).recordFeeAndRac({ ...p, racIdentity: ethers.hexlify(ethers.randomBytes(32)) });
+    for (let i = 1; i < 10; i++) {
+      await expect(c.verifier.connect(c.stranger).recordFeeAndRac({ ...p, racIdentity: ethers.hexlify(ethers.randomBytes(32)) }))
+        .to.be.revertedWith("VF-RAC-001: RAC already recorded");
     }
-    const after = await c.verifier.epochRewardBasis(epoch);
-    expect(after).to.equal(one * K);
-    console.log(`      ADV-11 epochRewardBasis x${K}: ${one} -> ${after}`);
+    expect(await c.verifier.epochRewardBasis(epoch)).to.equal(one);
   });
 
-  run("FINDING ADV-12: caller valuationTimestamp=0 keeps day-0 emission after long delay [AG-05]", async () => {
+  run("SAFE ADV-12: valuationTimestamp=0 is refused; the lock mints at its proven creation day [AG-05]", async () => {
     const c = await deploySystem();
     await network.provider.send("evm_increaseTime", [Number(400n * DAY)]);
     await network.provider.send("evm_mine", []);
@@ -831,13 +815,13 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     await c.verifier.verifyAndMint(honest, 0);
     const a = await c.vclm.balanceOf(c.recipient.address);
     await c.verifier.recordFeeAndRac(cheat);
-    await c.verifier.verifyAndMint({ ...cheat, valuationTimestamp: 0 }, 0);
-    const b = (await c.vclm.balanceOf(c.recipient.address)) - a;
-    expect(b).to.be.gt(a);
-    console.log(`      ADV-12 honest ${ethers.formatEther(a)} vs valuationTimestamp=0 ${ethers.formatEther(b)} VCLM`);
+    await expect(c.verifier.verifyAndMint({ ...cheat, valuationTimestamp: 0 }, 0))
+      .to.be.revertedWith("VF-ORC-011: valuation timestamp != proven lock creation time");
+    await c.verifier.verifyAndMint(cheat, 0);
+    expect((await c.vclm.balanceOf(c.recipient.address)) - a).to.equal(a);
   });
 
-  run("FINDING ADV-13: price bound at first submission, not lock creation; later run reprices [AG-06]", async () => {
+  run("SAFE ADV-13: a later price run does not reprice an older lock [AG-06]", async () => {
     const c = await deploySystem();
     const p = await baseLockPkg(c);
     await c.verifier.connect(c.poster).applyScheduledPriceRun(2n, [
@@ -851,23 +835,16 @@ describe("RIG 9 adversarial trust-boundary (FINDING cases need ADVERSARIAL=1)", 
     await c2.verifier.recordFeeAndRac(p2);
     await c2.verifier.verifyAndMint(p2, 0);
     const fair = await c2.vclm.balanceOf(c2.recipient.address);
-    expect(got).to.equal(fair * 10n);
-    console.log(`      ADV-13 fair ${ethers.formatEther(fair)} vs later-run ${ethers.formatEther(got)} VCLM`);
+    expect(got).to.equal(fair);
   });
 
-  run("FINDING ADV-14: price poster sets unbounded price and freezes runs with max runId [AG-07]", async () => {
+  run("SAFE ADV-14: the maximum runId is refused, so runs cannot be frozen [AG-07]", async () => {
     const c = await deploySystem();
-    await c.verifier.connect(c.poster).applyScheduledPriceRun(2n ** 64n - 1n, [
+    await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(2n ** 64n - 1n, [
       { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE * 1000n, success: true },
-    ]);
-    await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(2n ** 64n - 1n, []))
-      .to.be.revertedWith("VF-ORC-001: run id must advance");
-    const p = await baseLockPkg(c, { valueWei: SCALE / 1000n });
-    await c.verifier.recordFeeAndRac(p);
-    await c.verifier.verifyAndMint(p, 0);
-    const minted = await c.vclm.balanceOf(c.recipient.address);
-    expect(minted).to.be.gt(0n);
-    console.log(`      ADV-14 0.001 ETH at 1000x price minted ${ethers.formatEther(minted)} VCLM; runs frozen`);
+    ])).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
+    await c.verifier.connect(c.poster).applyScheduledPriceRun(2n, []);
+    expect(await c.verifier.lastScheduledRunId()).to.equal(2n);
   });
 
 });
@@ -885,23 +862,24 @@ describe("RIG 9 adversarial controls that always run", function () {
     const c = await deploySystem();
     await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(1n, [
       { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
-    ])).to.be.revertedWith("VF-ORC-001: run id must advance");
+    ])).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
+    await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(3n, []))
+      .to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
   });
 
-  it("PASS ADV-P12: Base lock resubmitted with different proof encoding still only mints once", async () => {
+  it("PASS ADV-P12: Base lock resubmitted with different proof encoding records no second RAC and mints once", async () => {
     const c = await deploySystem();
     const p = await baseLockPkg(c);
     await c.verifier.recordFeeAndRac(p);
     await c.verifier.verifyAndMint(p, 0);
     // Alternate encoding: same lockId, different trailing uints in lockEventProof.
-    // Base reader only uses lockId; mint must still hit replay.
     const alt = {
       ...p,
       lockEventProof: coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
         [p.commitmentVaultLockId, 0, 0, 0, 0, 0, 0]),
       racIdentity: ethers.hexlify(ethers.randomBytes(32)),
     };
-    await c.verifier.recordFeeAndRac(alt); // RAC still free (AG-04) — but mint:
+    await expect(c.verifier.recordFeeAndRac(alt)).to.be.revertedWith("VF-RAC-001: RAC already recorded");
     await expect(c.verifier.verifyAndMint(alt, 0)).to.be.revertedWith("VF-XCH-013: replay");
   });
 });
