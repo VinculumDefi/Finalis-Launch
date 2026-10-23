@@ -81,17 +81,30 @@ contract XrplLockReader is IChainVerifier {
 
     // ------------------------------------------------------------ IChainVerifier
 
-    function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
+    /// @notice Fail closed (fix 2026-10-23, AG-03). This reader proves a lock
+    /// is in the ledger the package names, but nothing on-chain anchors that
+    /// ledger to the chain's settled history: the ledger header is checked only against its own hash. No UNL validator signature is verified. Until an authoritative
+    /// anchor exists, finality is refused and the environment stays disabled.
+    /// headerClaimMatches keeps the ledger binding check available.
+    function verifyFinality(bytes calldata, bytes calldata)
+        external
+        view
+        returns (bool, bytes32, uint256)
+    {
+        revert(string.concat("VF-XCH-006: ", ENVIRONMENT_ID, " settled-history anchor not enforced on-chain; environment disabled"));
+    }
+
+    function headerClaimMatches(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
         external
         pure
-        returns (bool, bytes32, uint256)
+        returns (bytes32, uint256)
     {
         LockProof memory p = abi.decode(lockEventProof, (LockProof));
         (bytes32 hash, uint256 index, , ) = _header(p.header);
         (bytes32 claimedHash, uint256 claimedIndex) = abi.decode(sourceFinalityProof, (bytes32, uint256));
         require(claimedHash == hash, "VF-XCH-006: ledger hash mismatch");
         require(claimedIndex == index, "VF-XCH-006: ledger index mismatch");
-        return (true, hash, index);
+        return (hash, index);
     }
 
     function extractFacts(bytes calldata lockEventProof)
