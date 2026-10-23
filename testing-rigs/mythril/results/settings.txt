@@ -1,0 +1,11 @@
+mythril: Mythril version v0.24.8
+mode: --bin-runtime on Hardhat deployedBytecode (solc 0.8.19, optimizer 200, viaIR, paris)
+execution-timeout=300s transaction-count=2 max-depth=128 solver-timeout=20000ms parallel=3
+started: 2026-10-23T06:24:41-04:00
+note: parallelism lowered from 3 to 1 at 2026-10-23T06:46:51-04:00 (xargs SIGUSR2) because the shared box ran short of memory; per-target settings unchanged
+finished: 2026-10-23T07:05:16-04:00
+rerun (BitcoinLockReader BitcoinCashLockReader SolanaLockReader ArbitrumFinalityChecker AvalancheFinalityChecker BitcoinHeaderChecker BnbFinalityChecker EthereumBeaconLightClient EthereumFinalityChecker OptimismFinalityChecker PolygonFinalityChecker ZcashHeaderChecker) parallel=1: 2026-10-23T07:06:03-04:00
+rerun settings: execution-timeout=240s (lowered from 300s to fit the time budget), transaction-count=2 max-depth=128 solver-timeout=20000ms; Bitcoin and BitcoinCash readers rerun because first attempt exit=137 (OOM kill on shared box)
+note 2026-10-23T07:31:57-04:00: box rebooted about 07:18 EDT and /workspace was restored from a snapshot; the rerun was cut off during AvalancheFinalityChecker. mythril and coverage packages were reinstalled (the restore had dropped their coverage directories). Remaining targets rerun below.
+rerun (AvalancheFinalityChecker BnbFinalityChecker EthereumFinalityChecker OptimismFinalityChecker PolygonFinalityChecker BitcoinHeaderChecker EthereumBeaconLightClient ZcashHeaderChecker) parallel=1: 2026-10-23T07:31:58-04:00
+finished: 2026-10-23T07:59:10-04:00
