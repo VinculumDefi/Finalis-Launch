@@ -1,5 +1,5 @@
 {
- "as_of": "2026-10-23 08:20 EDT",
+ "as_of": "2026-10-23 09:40 EDT (America/New_York)",
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
  "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A = tooling coverage, not a code path.",
  "rigs": [
@@ -114,24 +114,24 @@
   {
    "n": "C",
    "name": "combinatorial",
-   "status": "NOT YET RUN",
-   "branch": "rigs/extra (planned)",
-   "commit": "-",
-   "raw_output": "none",
-   "findings_file": null
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/extra",
+   "commit": "5e5e3c4",
+   "raw_output": "testing-rigs/combinatorial/results/cells.jsonl (2696 cells), results/summary.json",
+   "findings_file": "combinatorial.json"
   },
   {
    "n": "M",
    "name": "metamorphic",
-   "status": "NOT YET RUN",
-   "branch": "rigs/extra (planned)",
-   "commit": "-",
-   "raw_output": "none",
-   "findings_file": null
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/extra",
+   "commit": "874f7d5",
+   "raw_output": "testing-rigs/metamorphic/results/relations.jsonl (344 lines), results/summary.json",
+   "findings_file": "metamorphic.json"
   }
  ],
  "counts_by_class": {
-  "CONFIRMED VULNERABILITY": 8,
+  "CONFIRMED VULNERABILITY": 10,
   "UNVERIFIED ASSUMPTION": 22,
   "SPEC CONFLICT": 2,
   "INCOMPLETE TESTING": 7
@@ -391,9 +391,10 @@
    "ids": [
     "AG-05",
     "STATIC-H02",
-    "ADV-12"
+    "ADV-12",
+    "META-01"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/metamorphic.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -403,14 +404,16 @@
     "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1029",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:744",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:826",
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:839"
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:839",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1027"
    ],
    "description": "Assumed: Valuation Timestamp equals the finalized source block timestamp (lock creation time) Gap: valuationTimestamp is never compared with the reader's createdAt; any value <= launch gives day-0 emission. Exploit: Mint at day 400 with valuationTimestamp = 0. PoC: 310.96 VCLM instead of 249.92 for the same lock (24% more); the gap grows as decay continues.",
    "damage_potential": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-05)",
     "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
-    "ADVERSARIAL=1 FINDING ADV-12. AG-05. LIVE on Base."
+    "ADVERSARIAL=1 FINDING ADV-12. AG-05. LIVE on Base.",
+    "VCLM lock at day 255: 162.5 vs 142.05 (x1.14). CHONX lock at day 500: 1625 vs 1241.77 (x1.31). VCLM and CHONX locks at day 4500: x10 (162.5 vs 16.25 VCLM; 1625 vs 162.5 CHONX)."
    ],
    "spec": [
     "VF-ORC-011",
@@ -427,6 +430,10 @@
     "ADV-12": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
+    },
+    "META-01": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
    "rank": 6
@@ -435,9 +442,11 @@
    "ids": [
     "AG-06",
     "STATIC-M01",
-    "ADV-13"
+    "ADV-13",
+    "COMB-01",
+    "META-02"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/combinatorial.json, testing-rigs/findings/metamorphic.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -450,7 +459,9 @@
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-06)",
     "PoC STATIC-M01: price 1000 at lock creation, poster moves to 2000, first proof binds 2000. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
-    "ADVERSARIAL=1 FINDING ADV-13. AG-06. LIVE on Base."
+    "ADVERSARIAL=1 FINDING ADV-13. AG-06. LIVE on Base.",
+    "244 cells DEVIATION:mint_at_later_price (Base native 76, Base erc20 46, Ethereum native 76, Ethereum erc20 46). Example: Base ETH 1h lock at $0.01 minted 0.26 VCLM where the creation-time price gives 0.13.",
+    "Ratio 2.0 for both VCLM (142.05 vs 284.10) and CHONX (1241.77 vs 2483.54)."
    ],
    "spec": [
     "VF-ORC-009",
@@ -465,6 +476,14 @@
      "severity": "medium"
     },
     "ADV-13": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
+    },
+    "COMB-01": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
+    },
+    "META-02": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
     }
@@ -506,6 +525,34 @@
   },
   {
    "ids": [
+    "COMB-03"
+   ],
+   "source": "testing-rigs/findings/combinatorial.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "medium",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:236-240",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:997-1006",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:340-347"
+   ],
+   "description": "The USDC/USDT $0.95 rule is applied at the first Verifier submission, not at lock creation, in both directions. The spec says a stablecoin below $0.95 is unavailable for every new lock, and that an existing lock keeps its creation price. (a) Depeg after the lock: a USDT lock created at $1.00 and first submitted after a run at $0.94 is refused with VF-ORC-005; the fee is kept and no VCLM is issued while the price stays below $0.95. (b) Lock during a depeg: the lock contracts have no $0.95 check, so a USDC_X lock is accepted at $0.94 and the fee taken. The Verifier refuses it while the price is below $0.95, but the refusal leaves the lock unbound, so after a later run at $1.00 it mints at $1.00. This happens even when the record was attempted at creation. Only the app is meant to refuse the lock; a direct contract call skips that.",
+   "damage_potential": "(b) Buy a depegged USDC/USDT row, lock it, and mint at the recovered price: about 6% more VCLM per dollar at a $0.94 depeg, scaling with depeg depth. (a) Fee paid with no mint during a depeg.",
+   "evidence": [
+    "Part (a): 156 cells DEVIATION:valid_lock_not_minted (stable_above_then_below, VF-ORC-005), Base and Ethereum. Part (b): 308 cells DEVIATION:minted_but_spec_refuses (stable_below_then_above, 154 of them bound, with record_err_A VF-ORC-005 and the record at B succeeding), plus 4 Handshake cells where the lock was accepted, the fee taken and the later band check refused it (DEVIATION:lock_accepted_fee_taken_no_mint). Example: USDC_X lock at $0.94 worth $0.01 minted 0.138 VCLM at the $1.00 run."
+   ],
+   "spec": [
+    "VF-ORC-005",
+    "VF-ORC-009",
+    "VF-ORC-010",
+    "deployment/BASE44_LIVE_CONFIG_2026-10-22.md:208 (stablecoin rule)"
+   ],
+   "rank_hint": 99,
+   "related": "AG-06 (price bound at first submission); AG-11 (which rows the $0.95 rule catches)",
+   "rank": 9
+  },
+  {
+   "ids": [
     "AG-08"
    ],
    "source": "testing-rigs/findings/assumption_gap.json",
@@ -525,7 +572,31 @@
     "Rev 6 VF-SEC-001 requires rejection of rebasing assets unless handled."
    ],
    "rank_hint": 8,
-   "rank": 9
+   "rank": 10
+  },
+  {
+   "ids": [
+    "AG-10"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "medium",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:140-151; StellarLockReader.sol:79-115; XrplLockReader.sol:97-150"
+   ],
+   "description": "Assumed: A lockId names exactly one lock and only its creator can use it Gap: lockId is read from the payload the creator writes. Anyone can make a real (small) lock with a victim's announced lockId and mint first; consumedLocks then blocks the victim. Exploit: Watch the mempool for a lock payload, make a cheap lock with the same lockId, submit first.",
+   "damage_potential": "Victim's lock can never mint (griefing); principal still releases.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: lockId derived from the transaction (txid, sender)."
+   ],
+   "spec": [
+    "VF-XCH-011",
+    "VF-XCH-013"
+   ],
+   "rank_hint": 10,
+   "note": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). The Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash, Stellar and XRP Ledger readers that take lockId from the payload are all registered, so the lockId front-run is reachable by direct contract calls once that asset is priced.",
+   "rank": 11
   },
   {
    "ids": [
@@ -549,31 +620,35 @@
     "Rev 13 section 5 already flags vfComplianceData as wrong for ITS rows (those rows are now fixed); other rows remain wrong."
    ],
    "rank_hint": 11,
-   "rank": 10
+   "rank": 12
   },
   {
    "ids": [
-    "AG-10"
+    "COMB-02"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "UNVERIFIED ASSUMPTION",
-   "severity": "medium",
-   "scope": "LATENT (non-Base only)",
+   "source": "testing-rigs/findings/combinatorial.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
    "file_line": [
-    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:140-151; StellarLockReader.sol:79-115; XrplLockReader.sol:97-150"
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:915-923",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1020",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:340-347"
    ],
-   "description": "Assumed: A lockId names exactly one lock and only its creator can use it Gap: lockId is read from the payload the creator writes. Anyone can make a real (small) lock with a victim's announced lockId and mint first; consumedLocks then blocks the victim. Exploit: Watch the mempool for a lock payload, make a cheap lock with the same lockId, submit first.",
-   "damage_potential": "Victim's lock can never mint (griefing); principal still releases.",
+   "description": "A lock that is valid at creation (in band at the creation price, fee already paid to the Dev Fund) becomes unmintable if a price run moves its USD out of band before the first submission. The Verifier re-checks the band at the later price: a Handshake that rises above $0.02 is refused with VF-COM-003, and a standard lock that falls below $0.01 is refused with VF-COM-009. The fee is kept and no VCLM is issued. The spec says a lock keeps its creation price. Root cause is AG-06 (price bound at first submission); AG-16 is the lock-side band gate.",
+   "damage_potential": "User pays the fee and gets no VCLM for a valid lock. Limited to locks near the band edges and to the fee amount. Principal release at maturity was not tested by this rig.",
    "evidence": [
-    "Static only (no PoC): build_gaps.py found no check matching: lockId derived from the transaction (txid, sender)."
+    "68 cells DEVIATION:valid_lock_not_minted outside the stablecoin classes: TKN price 2 to 1 drops $0.01 and $0.015 standard locks below $0.01 (60 cells, VF-COM-009); ETH price x2 pushes $0.015 and $0.02 Handshakes above $0.02 (4 cells, VF-COM-003); TKN Handshake cases (4 cells, VF-COM-003). All on Base and Ethereum alike. Fee equals the 5% floor and reached the Dev Fund in every one."
    ],
    "spec": [
-    "VF-XCH-011",
-    "VF-XCH-013"
+    "VF-ORC-009",
+    "VF-ORC-010",
+    "VF-COM-003",
+    "VF-COM-009"
    ],
-   "rank_hint": 10,
-   "note": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
-   "rank": 11
+   "rank_hint": 99,
+   "related": "AG-06 (price bound at first submission is the root cause); AG-16 (lock-side band gate)",
+   "rank": 13
   },
   {
    "ids": [
@@ -595,7 +670,7 @@
     "VF-ORC-005"
    ],
    "rank_hint": 12,
-   "rank": 12
+   "rank": 14
   },
   {
    "ids": [
@@ -619,7 +694,30 @@
     "Rev 6 VF-XCH-011 lists asset_precision as a bound field."
    ],
    "rank_hint": 13,
-   "rank": 13
+   "rank": 15
+  },
+  {
+   "ids": [
+    "AG-14"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:41,137"
+   ],
+   "description": "Assumed: Duration on a UTXO chain equals the chosen duration Gap: Maturity may differ from duration by up to TOLERANCE_SECS (1 day) of blocks; createdAt is the miner-set header time. Exploit: Lock slightly shorter than the multiplier tier implies.",
+   "damage_potential": "Up to 1 day less commitment per lock.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: exact duration."
+   ],
+   "spec": [
+    "VF-COM-002"
+   ],
+   "rank_hint": 14,
+   "note": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). All six live UTXO readers report TOLERANCE_SECS = 86400 (1 day); Stellar and XRP Ledger report 3600.",
+   "rank": 16
   },
   {
    "ids": [
@@ -641,7 +739,7 @@
     "VF-COM-025"
    ],
    "rank_hint": 15,
-   "rank": 14
+   "rank": 17
   },
   {
    "ids": [
@@ -664,7 +762,7 @@
     "VF-SEC-005"
    ],
    "rank_hint": 16,
-   "rank": 15
+   "rank": 18
   },
   {
    "ids": [
@@ -687,7 +785,31 @@
     "VF-QNORM (code tag)"
    ],
    "rank_hint": 17,
-   "rank": 16
+   "rank": 19
+  },
+  {
+   "ids": [
+    "AG-19"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:549-554"
+   ],
+   "description": "Assumed: The reader registered for 'Ethereum' reads Ethereum Gap: Any non-zero address is accepted for any name. With AG-01, an EVM reader also accepts a testnet lock at the same CREATE address (same deployer key and nonce) because the chain id is only claimed. Exploit: Deploy the lock on a testnet with the mainnet deployer nonce, lock test ETH, mint as mainnet.",
+   "damage_potential": "Mint from worthless testnet assets (same root cause as AG-01).",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: reader ENVIRONMENT_ID equals the name."
+   ],
+   "spec": [
+    "VF-DEP-001",
+    "VF-XCH-006"
+   ],
+   "rank_hint": 18,
+   "note": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01.",
+   "rank": 20
   },
   {
    "ids": [
@@ -709,7 +831,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 17
+   "rank": 21
   },
   {
    "ids": [
@@ -732,7 +854,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-08 (rebasing / balance-delta assumptions in the vault)",
-   "rank": 18
+   "rank": 22
   },
   {
    "ids": [
@@ -755,7 +877,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 19
+   "rank": 23
   },
   {
    "ids": [
@@ -779,54 +901,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 20
-  },
-  {
-   "ids": [
-    "AG-14"
-   ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "UNVERIFIED ASSUMPTION",
-   "severity": "low",
-   "scope": "LATENT (non-Base only)",
-   "file_line": [
-    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:41,137"
-   ],
-   "description": "Assumed: Duration on a UTXO chain equals the chosen duration Gap: Maturity may differ from duration by up to TOLERANCE_SECS (1 day) of blocks; createdAt is the miner-set header time. Exploit: Lock slightly shorter than the multiplier tier implies.",
-   "damage_potential": "Up to 1 day less commitment per lock.",
-   "evidence": [
-    "Static only (no PoC): build_gaps.py found no check matching: exact duration."
-   ],
-   "spec": [
-    "VF-COM-002"
-   ],
-   "rank_hint": 14,
-   "note": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
-   "rank": 21
-  },
-  {
-   "ids": [
-    "AG-19"
-   ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "UNVERIFIED ASSUMPTION",
-   "severity": "low",
-   "scope": "LATENT (non-Base only)",
-   "file_line": [
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:549-554"
-   ],
-   "description": "Assumed: The reader registered for 'Ethereum' reads Ethereum Gap: Any non-zero address is accepted for any name. With AG-01, an EVM reader also accepts a testnet lock at the same CREATE address (same deployer key and nonce) because the chain id is only claimed. Exploit: Deploy the lock on a testnet with the mainnet deployer nonce, lock test ETH, mint as mainnet.",
-   "damage_potential": "Mint from worthless testnet assets (same root cause as AG-01).",
-   "evidence": [
-    "Static only (no PoC): build_gaps.py found no check matching: reader ENVIRONMENT_ID equals the name."
-   ],
-   "spec": [
-    "VF-DEP-001",
-    "VF-XCH-006"
-   ],
-   "rank_hint": 18,
-   "note": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
-   "rank": 22
+   "rank": 24
   },
   {
    "ids": [
@@ -849,7 +924,7 @@
     "Rev 12 removes the allowance; Verifier still enforces the Rev 6 constant."
    ],
    "rank_hint": 20,
-   "rank": 23
+   "rank": 25
   },
   {
    "ids": [
@@ -872,7 +947,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
-   "rank": 24
+   "rank": 26
   },
   {
    "ids": [
@@ -894,7 +969,7 @@
     "VF-XCH-011"
    ],
    "rank_hint": 19,
-   "rank": 25
+   "rank": 27
   },
   {
    "ids": [
@@ -916,7 +991,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 26
+   "rank": 28
   },
   {
    "ids": [
@@ -938,7 +1013,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 27
+   "rank": 29
   },
   {
    "ids": [
@@ -960,7 +1035,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 28
+   "rank": 30
   },
   {
    "ids": [
@@ -982,7 +1057,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 29
+   "rank": 31
   },
   {
    "ids": [
@@ -1004,7 +1079,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 30
+   "rank": 32
   },
   {
    "ids": [
@@ -1026,7 +1101,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 31
+   "rank": 33
   },
   {
    "ids": [
@@ -1051,7 +1126,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-16 (vault trusts caller-supplied USD)",
-   "rank": 32
+   "rank": 34
   },
   {
    "ids": [
@@ -1073,7 +1148,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 33
+   "rank": 35
   },
   {
    "ids": [
@@ -1095,7 +1170,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 34
+   "rank": 36
   },
   {
    "ids": [
@@ -1117,7 +1192,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 35
+   "rank": 37
   },
   {
    "ids": [
@@ -1139,7 +1214,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 36
+   "rank": 38
   },
   {
    "ids": [
@@ -1173,7 +1248,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 37
+   "rank": 39
   },
   {
    "ids": [
@@ -1195,7 +1270,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 38
+   "rank": 40
   },
   {
    "ids": [
@@ -1218,7 +1293,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 39
+   "rank": 41
   }
  ]
 }
