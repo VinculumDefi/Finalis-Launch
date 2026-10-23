@@ -1,47 +1,262 @@
 {
- "as_of": "2026-10-23 08:05 EDT",
- "main_base": "b0e38a9",
+ "as_of": "2026-10-23 08:20 EDT",
+ "main_base": "2465817",
  "note": "Hand-maintained by the findings recorder. A rig is REPORTED only when its findings JSON is on main; everything else is the recorder's view of the rig branches at as_of. build_master.py reads this file plus every per-rig findings JSON in this folder.",
  "rigs": [
-  {"n": "1", "name": "unit (Hardhat baseline, 779 tests)", "status": "RUNNING", "branch": "rigs/hardhat", "commit": "77a332a", "raw_output": "none committed yet (scripts: testing-rigs/baseline/ on rigs/hardhat)", "findings_file": null, "note": "Not on main yet."},
-  {"n": "2", "name": "mainnet-fork integration", "status": "RUNNING", "branch": "rigs/hardhat", "commit": "77a332a", "raw_output": "none committed yet (tests: testing-rigs/fork-integration/ on rigs/hardhat)", "findings_file": null, "note": "Not on main yet."},
-  {"n": "3", "name": "fuzzing (Foundry, Echidna)", "status": "RUNNING", "branch": "rigs/foundry", "commit": "88315ea", "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log (on rigs/foundry)", "findings_file": null, "note": "Logs pushed, no findings JSON yet."},
-  {"n": "4", "name": "invariants", "status": "RUNNING", "branch": "rigs/hardhat", "commit": "77a332a", "raw_output": "none committed yet (tests: testing-rigs/invariants/ on rigs/hardhat)", "findings_file": null, "note": "Not on main yet."},
-  {"n": "5", "name": "symbolic (Mythril)", "status": "REPORTED WITH FINDINGS", "branch": "rigs/static", "commit": "ab261e5", "raw_output": "testing-rigs/mythril/results/ (summary.md, per-contract JSON and stderr); aborted creation-mode run in testing-rigs/mythril/results_creation_mode_aborted/", "findings_file": "static.json", "incomplete": "INCOMPLETE parts: INC-MYTHRIL-01 (timeouts on 22 contracts), INC-MYTHRIL-02 (errors or no result), INC-MYTHRIL-03 (partial coverage)."},
-  {"n": "6", "name": "formal (SMTChecker CHC; Certora unavailable)", "status": "REPORTED WITH FINDINGS", "branch": "rigs/static", "commit": "ab261e5", "raw_output": "testing-rigs/smtchecker/results/ (summary.md, prod_*.txt, runlog_history.txt)", "findings_file": "static.json", "incomplete": "INCOMPLETE parts: INC-SMT-01 (13 of 20 properties not proved), INC-SMT-02 (Synth not analysable), INC-SMT-03 (solver failures on Stake/Verifier), INC-FORMAL-01 (no Certora)."},
-  {"n": "7", "name": "static (Slither plus manual triage, PoCs)", "status": "REPORTED WITH FINDINGS", "branch": "rigs/static", "commit": "ab261e5", "raw_output": "testing-rigs/slither/slither_raw.json, slither_raw.txt, triage.md; testing-rigs/static-poc/poc_output.txt", "findings_file": "static.json"},
-  {"n": "8", "name": "mutation", "status": "RUNNING", "branch": "rigs/foundry", "commit": "88315ea", "raw_output": "none committed yet (scripts: testing-rigs/mutation/ on rigs/foundry)", "findings_file": null, "note": "Runner and summarizer pushed, no results yet."},
-  {"n": "9", "name": "adversarial trust-boundary", "status": "NOT YET RUN", "branch": "rigs/adversarial (local clone only, not pushed)", "commit": "-", "raw_output": "none", "findings_file": null, "note": "A clone exists on the box with no commits; nothing pushed as of as_of."},
-  {"n": "10", "name": "ceremony dry-run and reconciliation", "status": "RUNNING", "branch": "rigs/hardhat", "commit": "77a332a", "raw_output": "none committed yet (scripts: testing-rigs/ceremony-dryrun/ on rigs/hardhat)", "findings_file": null, "note": "Not on main yet."},
-  {"n": "AG", "name": "assumption-gap", "status": "REPORTED WITH FINDINGS", "branch": "rigs/gap", "commit": "56f0c25", "raw_output": "testing-rigs/assumption-gap/gap_table.md, gap_table.json, inputs.json, results/poc_output.txt", "findings_file": "assumption_gap.json"},
-  {"n": "C", "name": "combinatorial", "status": "NOT YET RUN", "branch": "rigs/extra (planned)", "commit": "-", "raw_output": "none", "findings_file": null},
-  {"n": "M", "name": "metamorphic", "status": "NOT YET RUN", "branch": "rigs/extra (planned)", "commit": "-", "raw_output": "none", "findings_file": null}
+  {
+   "n": "1",
+   "name": "unit (Hardhat baseline, 779 tests)",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (scripts: testing-rigs/baseline/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "2",
+   "name": "mainnet-fork integration",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (tests: testing-rigs/fork-integration/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "3",
+   "name": "fuzzing (Foundry, Echidna)",
+   "status": "RUNNING",
+   "branch": "rigs/foundry",
+   "commit": "88315ea",
+   "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log (on rigs/foundry)",
+   "findings_file": null,
+   "note": "Logs pushed, no findings JSON yet."
+  },
+  {
+   "n": "4",
+   "name": "invariants",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (tests: testing-rigs/invariants/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "5",
+   "name": "symbolic (Mythril)",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/static",
+   "commit": "ab261e5",
+   "raw_output": "testing-rigs/mythril/results/ (summary.md, per-contract JSON and stderr); aborted creation-mode run in testing-rigs/mythril/results_creation_mode_aborted/",
+   "findings_file": "static.json",
+   "incomplete": "INCOMPLETE parts: INC-MYTHRIL-01 (timeouts on 22 contracts), INC-MYTHRIL-02 (errors or no result), INC-MYTHRIL-03 (partial coverage)."
+  },
+  {
+   "n": "6",
+   "name": "formal (SMTChecker CHC; Certora unavailable)",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/static",
+   "commit": "ab261e5",
+   "raw_output": "testing-rigs/smtchecker/results/ (summary.md, prod_*.txt, runlog_history.txt)",
+   "findings_file": "static.json",
+   "incomplete": "INCOMPLETE parts: INC-SMT-01 (13 of 20 properties not proved), INC-SMT-02 (Synth not analysable), INC-SMT-03 (solver failures on Stake/Verifier), INC-FORMAL-01 (no Certora)."
+  },
+  {
+   "n": "7",
+   "name": "static (Slither plus manual triage, PoCs)",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/static",
+   "commit": "ab261e5",
+   "raw_output": "testing-rigs/slither/slither_raw.json, slither_raw.txt, triage.md; testing-rigs/static-poc/poc_output.txt",
+   "findings_file": "static.json"
+  },
+  {
+   "n": "8",
+   "name": "mutation",
+   "status": "RUNNING",
+   "branch": "rigs/foundry",
+   "commit": "88315ea",
+   "raw_output": "none committed yet (scripts: testing-rigs/mutation/ on rigs/foundry)",
+   "findings_file": null,
+   "note": "Runner and summarizer pushed, no results yet."
+  },
+  {
+   "n": "9",
+   "name": "adversarial trust-boundary",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/adversarial",
+   "commit": "af38192",
+   "raw_output": "No raw log committed by rig 9. Reproduce with ADVERSARIAL=1 (testing-rigs/adversarial/README.md); results recorded in findings/adversarial.json",
+   "findings_file": "adversarial.json",
+   "note": "14 CONFIRMED VULNERABILITY (ADV-01..14, ADV-16; there is no ADV-15), 14 PASS (ADV-P01..P14). All ADV rows merged into AG-01..AG-07. Live Verifier read-only check: finalized, 15 non-Base readers registered (no Solana), only Base ETH has a usable price."
+  },
+  {
+   "n": "10",
+   "name": "ceremony dry-run and reconciliation",
+   "status": "RUNNING",
+   "branch": "rigs/hardhat",
+   "commit": "77a332a",
+   "raw_output": "none committed yet (scripts: testing-rigs/ceremony-dryrun/ on rigs/hardhat)",
+   "findings_file": null,
+   "note": "Not on main yet."
+  },
+  {
+   "n": "AG",
+   "name": "assumption-gap",
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/gap",
+   "commit": "56f0c25",
+   "raw_output": "testing-rigs/assumption-gap/gap_table.md, gap_table.json, inputs.json, results/poc_output.txt",
+   "findings_file": "assumption_gap.json"
+  },
+  {
+   "n": "C",
+   "name": "combinatorial",
+   "status": "NOT YET RUN",
+   "branch": "rigs/extra (planned)",
+   "commit": "-",
+   "raw_output": "none",
+   "findings_file": null
+  },
+  {
+   "n": "M",
+   "name": "metamorphic",
+   "status": "NOT YET RUN",
+   "branch": "rigs/extra (planned)",
+   "commit": "-",
+   "raw_output": "none",
+   "findings_file": null
+  }
  ],
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
- "scope_rule": "LIVE = reachable on the live Base set today (Base-only config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LATENT = non-Base only, inert until a non-Base reader is registered. N/A = tooling coverage, not a code path.",
+ "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A = tooling coverage, not a code path.",
  "ag_class_overrides": {
   "AG-20": "SPEC CONFLICT"
  },
  "scope": {
-  "AG-01": "LATENT (non-Base only)", "AG-02": "LATENT (non-Base only)", "AG-03": "LATENT (non-Base only)",
-  "AG-04": "LIVE (Base set)", "AG-05": "LIVE (Base set)", "AG-06": "LIVE (Base set)", "AG-07": "LIVE (Base set)", "AG-09": "LIVE (Base set)",
-  "AG-08": "LIVE (ERC-20 path)", "AG-10": "LATENT (non-Base only)", "AG-11": "LIVE (ERC-20 path)", "AG-12": "LIVE (Base set)",
-  "AG-13": "LIVE (Base set)", "AG-14": "LATENT (non-Base only)", "AG-15": "LIVE (Base set)", "AG-16": "LIVE (Base set)",
-  "AG-17": "LIVE (Base set)", "AG-18": "LIVE (Base set)", "AG-19": "LATENT (non-Base only)", "AG-20": "LIVE (Base set)",
-  "STATIC-L03": "LIVE (Base set)", "STATIC-L04": "LIVE (ERC-20 path)", "STATIC-L05": "LIVE (Base set)", "STATIC-L06": "LIVE (Base set)",
-  "STATIC-I01": "LIVE (Base set)", "STATIC-I02": "LIVE (Base set)", "STATIC-I03": "LIVE (Base set)",
-  "SMT-01": "LIVE (Base set)", "SMT-02": "LIVE (Base set)", "SMT-03": "LIVE (ERC-20 path)", "SMT-04": "LIVE (Base set)", "SMT-05": "LIVE (Base set)"
+  "AG-01": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "AG-02": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "AG-03": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "AG-04": "LIVE (Base set)",
+  "AG-05": "LIVE (Base set)",
+  "AG-06": "LIVE (Base set)",
+  "AG-07": "LIVE (Base set)",
+  "AG-09": "LIVE (Base set)",
+  "AG-08": "LIVE (ERC-20 path)",
+  "AG-10": "LATENT (non-Base only)",
+  "AG-11": "LIVE (ERC-20 path)",
+  "AG-12": "LIVE (Base set)",
+  "AG-13": "LIVE (Base set)",
+  "AG-14": "LATENT (non-Base only)",
+  "AG-15": "LIVE (Base set)",
+  "AG-16": "LIVE (Base set)",
+  "AG-17": "LIVE (Base set)",
+  "AG-18": "LIVE (Base set)",
+  "AG-19": "LATENT (non-Base only)",
+  "AG-20": "LIVE (Base set)",
+  "STATIC-L03": "LIVE (Base set)",
+  "STATIC-L04": "LIVE (ERC-20 path)",
+  "STATIC-L05": "LIVE (Base set)",
+  "STATIC-L06": "LIVE (Base set)",
+  "STATIC-I01": "LIVE (Base set)",
+  "STATIC-I02": "LIVE (Base set)",
+  "STATIC-I03": "LIVE (Base set)",
+  "SMT-01": "LIVE (Base set)",
+  "SMT-02": "LIVE (Base set)",
+  "SMT-03": "LIVE (ERC-20 path)",
+  "SMT-04": "LIVE (Base set)",
+  "SMT-05": "LIVE (Base set)",
+  "ADV-01": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-02": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-03": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-04": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-05": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-06": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-10": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-07": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-16": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-08": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-09": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "ADV-11": "LIVE (Base set)",
+  "ADV-12": "LIVE (Base set)",
+  "ADV-13": "LIVE (Base set)",
+  "ADV-14": "LIVE (Base set)"
  },
  "merge": [
-  {"ids": ["AG-04", "STATIC-C01"]},
-  {"ids": ["AG-05", "STATIC-H02"]},
-  {"ids": ["AG-06", "STATIC-M01"]},
-  {"ids": ["AG-07", "STATIC-L01"]},
-  {"ids": ["AG-09", "STATIC-L02"]}
+  {
+   "ids": [
+    "AG-04",
+    "STATIC-C01",
+    "ADV-11"
+   ]
+  },
+  {
+   "ids": [
+    "AG-05",
+    "STATIC-H02",
+    "ADV-12"
+   ]
+  },
+  {
+   "ids": [
+    "AG-06",
+    "STATIC-M01",
+    "ADV-13"
+   ]
+  },
+  {
+   "ids": [
+    "AG-07",
+    "STATIC-L01",
+    "ADV-14"
+   ]
+  },
+  {
+   "ids": [
+    "AG-09",
+    "STATIC-L02"
+   ]
+  },
+  {
+   "ids": [
+    "AG-01",
+    "ADV-01",
+    "ADV-02",
+    "ADV-03",
+    "ADV-04",
+    "ADV-05",
+    "ADV-06",
+    "ADV-10"
+   ]
+  },
+  {
+   "ids": [
+    "AG-02",
+    "ADV-07",
+    "ADV-16"
+   ]
+  },
+  {
+   "ids": [
+    "AG-03",
+    "ADV-08",
+    "ADV-09"
+   ]
+  }
  ],
  "related": {
   "STATIC-L04": "AG-08 (rebasing / balance-delta assumptions in the vault)",
   "STATIC-I02": "AG-16 (vault trusts caller-supplied USD)",
   "STATIC-I03": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)"
+ },
+ "notes": {
+  "AG-01": "EVM readers (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche) confirmed by ADV-01..06, ADV-10. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+  "AG-02": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+  "AG-03": "Stellar and XRP Ledger readers confirmed by ADV-08, ADV-09. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+  "AG-10": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
+  "AG-14": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
+  "AG-19": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked."
  }
 }
