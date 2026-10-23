@@ -1,0 +1,81 @@
+# Raw output of the assumption-gap PoCs. Run 2026-10-23 07:59 EDT on a local Hardhat chain, contracts at main b0e38a9 (no contract changes since), node v22.23.4.
+# Command (from base-contracts): GAP_POC=1 npx hardhat test ../testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs
+Warning: This declaration shadows a builtin symbol.
+   --> contracts/chain-verifiers/UtxoLockReader.sol:191:27:
+    |
+191 |     function _bip34Height(bytes memory tx, uint256 s, uint256 n) private pure returns (uint256 height) {
+    |                           ^^^^^^^^^^^^^^^
+
+
+Warning: This declaration shadows a builtin symbol.
+   --> contracts/chain-verifiers/UtxoLockReader.sol:202:23:
+    |
+202 |     function _outputs(bytes memory tx, Out[] memory outs, bytes memory redeem, bytes memory payload)
+    |                       ^^^^^^^^^^^^^^^
+
+
+Warning: This declaration shadows a builtin symbol.
+   --> contracts/chain-verifiers/UtxoLockReader.sol:261:24:
+    |
+261 |     function _isPushOf(bytes memory tx, uint256 s, uint256 n, bytes memory want) private pure returns (bool) {
+    |                        ^^^^^^^^^^^^^^^
+
+
+Warning: This declaration shadows a builtin symbol.
+   --> contracts/chain-verifiers/UtxoLockReader.sol:281:21:
+    |
+281 |     function _parse(bytes memory tx) internal view returns (ParsedTx memory t) {
+    |                     ^^^^^^^^^^^^^^^
+
+
+Warning: This declaration shadows a builtin symbol.
+   --> contracts/chain-verifiers/UtxoLockReader.sol:350:22:
+    |
+350 |     function _zip244(bytes memory tx, bytes memory prevouts, bytes memory seqs, uint256 outStart, uint256 outEnd)
+    |                      ^^^^^^^^^^^^^^^
+
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/test/TestLock.sol:19:83:
+   |
+19 |         bytes32 valuationReference, address releaseDestination, uint256 duration, uint256 verifiedGrossUsd
+   |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning: Function state mutability can be restricted to pure
+   --> contracts/chain-verifiers/EvmReceiptLockReader.sol:132:5:
+    |
+132 |     function _lockAsset(bytes memory receipt, uint256 logIndex) internal view returns (address asset) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Compiled 59 Solidity files successfully (evm target: paris).
+
+
+  assumption-gap PoCs (skipped unless GAP_POC=1)
+      AG-01 minted 310.96 VCLM from forged header 0xe729ade2...
+    ✔ FINDING AG-01: EVM reader mints from an Ethereum header that exists on no chain (no settled-history anchor) (2731ms)
+      AG-02 Bitcoin header with no work accepted, gross 1000000 sats
+    ✔ FINDING AG-02: UTXO reader accepts a Bitcoin header with no proof of work and no parent (111ms)
+    ✔ FINDING AG-03a: Stellar reader accepts a ledger header with an arbitrary previous-ledger hash (no SCP quorum)
+    ✔ FINDING AG-03b: XRPL reader accepts a ledger header with an arbitrary parent hash (no validator signatures) (149ms)
+      AG-04 epochRewardBasis for one lock: 717600000000000000 -> 14352000000000000000 (x20); epoch reward VCLM = basis*10
+    ✔ FINDING AG-04: one real Base lock records RAC many times (caller-chosen racIdentity), multiplying stake reward VCLM (222ms)
+      AG-04 one lock, 50 RAC records: stake reward claimed 358.8 VCLM vs about 7.176 VCLM honest for that lock
+    ✔ FINDING AG-04 (damage): the inflated basis is paid out as newly minted stake reward VCLM (321ms)
+      AG-05 same lock size, day 400: honest 249.916704553711658528 VCLM, valuationTimestamp=0 310.96 VCLM
+    ✔ FINDING AG-05: caller-chosen valuationTimestamp = 0 keeps the day-0 emission rate after a year (126ms)
+      AG-06 lock-time price mint 310.96 VCLM, later-run price mint 3109.6 VCLM
+    ✔ FINDING AG-06: price is bound at first Base submission, not at lock creation; a later price run reprices an old lock (173ms)
+      AG-07 a 0.001 ETH (about $2.39) lock minted 31096.0 VCLM at a 1000x price; price runs now frozen
+    ✔ FINDING AG-07: the single price poster sets any price with no bound and can freeze all future runs with runId = 2^64-1 (109ms)
+    ✔ FINDING AG-09: Verifier Dev Fund configuration is never compared with the lock's actual fee destination (1632ms)
+
+
+  10 passing (6s)
+
+# Default run (no GAP_POC), PoCs stay skipped:
+
+  0 passing (2ms)
+  10 pending
+
