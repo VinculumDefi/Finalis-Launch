@@ -4,7 +4,25 @@ pragma solidity 0.8.19;
 import "../interfaces/IChainVerifier.sol";
 
 /// @dev Test double: always reports finalized and echoes facts from lockEventProof, including recipient and output token.
+interface IVerifierDevFundView {
+    function devFundDestinations(string calldata environmentId) external view returns (address);
+}
+
 contract MockAlwaysFinalizedVerifier is IChainVerifier {
+    /// @dev When set, lockDevFund reports this address (a lock that paid a
+    /// different Dev Fund). When unset it reports the calling Verifier's own
+    /// configured Dev Fund for the environment.
+    address public devFundOverride;
+
+    function setDevFundOverride(address d) external {
+        devFundOverride = d;
+    }
+
+    function lockDevFund(string calldata environmentId, bytes calldata) external view returns (address) {
+        if (devFundOverride != address(0)) return devFundOverride;
+        return IVerifierDevFundView(msg.sender).devFundDestinations(environmentId);
+    }
+
     function verifyFinality(
         bytes calldata,
         bytes calldata
