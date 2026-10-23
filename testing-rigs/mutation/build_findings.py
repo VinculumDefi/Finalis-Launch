@@ -69,6 +69,17 @@ BLIND = {"tx.origin": "contract-caller paths: no test calls restricted functions
          "activation": "activation threshold boundary: no test lands exactly on the threshold",
          "decay": "decay constant precision: tests check decay direction, not the exact rate",
          "ror": "comparison boundary: no test hits the equality case"}
+GBLIND = {"RequireMutation": "guard never exercised: no test reaches the revert path of this require (or another check makes it redundant)",
+          "DeleteExpressionMutation": "effect not asserted: no test checks the state change made by this statement",
+          "SwapArgumentsOperatorMutation": "comparison direction untested: tests only hit the equality case or one side",
+          "IfStatementMutation": "branch untested: no test distinguishes the two sides of this condition",
+          "AssignmentMutation": "stored value not asserted: no test reads back this value",
+          "BinaryOpMutation": "arithmetic result not asserted"}
+HOT = ("allowance", "_burn", "balanceOf", "owner", "cap", "CAP", "activat", "Activat", "remaining", "recipient", "tx.origin", "createdAt")
+def sev(r):
+    if r["status"] != "survived": return "Info"
+    w = r.get("what", "") + " " + (r.get("blind_class") or "")
+    return "Medium" if any(h in w for h in HOT) else "Low"
 def blind(r):
     w = (r.get("blind_class") or "") + " " + r.get("what", "")
     if "tx.origin" in w: return BLIND["tx.origin"]
@@ -76,12 +87,14 @@ def blind(r):
     if "activation" in w.lower() or "ACTIVATION" in w: return BLIND["activation"]
     if "decay" in w: return BLIND["decay"]
     if r["kind"] == "ROR": return BLIND["ror"]
+    for k, v in GBLIND.items():
+        if k in w: return v
     return r.get("blind_class") or "unmapped: " + r["kind"]
 n = 0
 for r in S["survivors"] + [x for x in S["all"] if x["status"] in ("pin_only", "error", "timeout")]:
     n += 1
     st = r["status"]
-    add(id="MUT-%02d" % n, rig="rig8-mutation", cls="INCOMPLETE TESTING", severity="Low" if st == "survived" else "Info",
+    add(id="MUT-%02d" % n, rig="rig8-mutation", cls="INCOMPLETE TESTING", severity=sev(r),
         damage_potential="A real bug of this shape would ship unnoticed by the Hardhat suite.",
         file_line="base-contracts/%s:%s" % (r["file"], r["line"]),
         description="%s mutant %s (%s): %s. Blind class: %s." % (st.upper(), r["id"], r["kind"], r["what"], blind(r)),
