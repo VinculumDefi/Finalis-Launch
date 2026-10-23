@@ -1,0 +1,195 @@
+=== FILE test/checkers/ZcashHeaderChecker.test.cjs
+
+
+  ZcashHeaderChecker
+    ✔ accepts the mainnet genesis Equihash solution under its nBits target (1384ms)
+    ✔ reverts a mutated Equihash solution (945ms)
+    ✔ reverts when the header hash is above the nBits target (989ms)
+    ✔ accepts 10 headers after a lock whose solution meets Equihash and its nBits target (3744ms)
+    ✔ reverts when fewer than 10 headers follow the lock header (257ms)
+Killed
+=== EXIT 137 test/checkers/ZcashHeaderChecker.test.cjs
+=== FILE test/sampled/cvl_trs_arbitrum.test.cjs
+
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Arbitrum: 8 of 22 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11147ms)
+      ✔ USDC_ARB (row 11): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (9966ms)
+      ✔ USDT_ARB (row 20): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10269ms)
+      ✔ WBTC_ARB (row 38): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13436ms)
+      ✔ DAI_ARB (row 44): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10932ms)
+      ✔ UNI_ARB (row 85): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10009ms)
+      ✔ CRV_ARB (row 273): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10425ms)
+      ✔ JONES (row 320): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10446ms)
+      ✔ WETH_ARB (row 425): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11214ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (4068ms)
+
+
+  10 passing (2m)
+
+=== EXIT 0 test/sampled/cvl_trs_arbitrum.test.cjs
+=== FILE test/sampled/cvl_trs_avalanche.test.cjs
+
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Avalanche: 9 of 28 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12486ms)
+      ✔ USDC_AVAX (row 42): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13971ms)
+      ✔ USDT_AVAX (row 121): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12219ms)
+      ✔ DAI_AVAX (row 160): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11831ms)
+      ✔ WETH_AVAX (row 429): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11570ms)
+      ✔ WAVAX (row 528): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12756ms)
+      ✔ XAVA (row 558): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12146ms)
+      ✔ BTCB (row 624): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13277ms)
+      ✔ ISA (row 655): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13535ms)
+      ✔ SHIBX (row 686): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13418ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (4181ms)
+
+
+  11 passing (2m)
+
+=== EXIT 0 test/sampled/cvl_trs_avalanche.test.cjs
+=== FILE test/sampled/cvl_trs_bnb_smart_chain.test.cjs
+
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    BNB Smart Chain: 16 of 95 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13326ms)
+      ✔ USDC_BSC (row 41): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10580ms)
+      ✔ USDT_BSC (row 50): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11007ms)
+      ✔ CAKE (row 62): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10963ms)
+      ✔ DAI_BSC (row 96): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10583ms)
+      ✔ GMT (row 147): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10595ms)
+      ✔ GALXE (row 185): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11307ms)
+      ✔ TKO (row 358): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10992ms)
+      ✔ WETH_BSC (row 428): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11636ms)
+      ✔ WBNB (row 515): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12642ms)
+      ✔ BTCB (row 529): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13983ms)
+      ✔ SXP (row 554): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13470ms)
+      ✔ EOS (row 577): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12547ms)
+      ✔ FIL (row 579): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12235ms)
+      ✔ BONDLY (row 737): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (15186ms)
+      ✔ RFOX (row 850): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13170ms)
+      ✔ THG (row 875): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13242ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (5819ms)
+
+
+  18 passing (4m)
+
+=== EXIT 0 test/sampled/cvl_trs_bnb_smart_chain.test.cjs
+=== FILE test/sampled/cvl_trs_ethereum.test.cjs
+
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Ethereum: 32 of 264 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14659ms)
+      ✔ USDC (row 1): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13189ms)
+      ✔ USDT (row 6): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13533ms)
+      ✔ WBTC (row 7): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13476ms)
+      ✔ DAI (row 10): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13794ms)
+      ✔ PAXG (row 37): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13573ms)
+      ✔ RNDR (row 53): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12977ms)
+      ✔ CRV (row 56): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12911ms)
+      ✔ RPL (row 58): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13288ms)
+      ✔ CBBTC_ETH (row 70): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14059ms)
+      ✔ CRO (row 112): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13617ms)
+      ✔ SAND (row 128): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14775ms)
+      ✔ BAND (row 241): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13206ms)
+      ✔ OHM (row 248): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12644ms)
+      ✔ OLAS (row 250): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12964ms)
+      ✔ ELON (row 279): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14071ms)
+      ✔ MASK (row 296): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14057ms)
+      ✔ AIOZ (row 298): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13528ms)
+      ✔ T (row 314): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13529ms)
+      ✔ RLC (row 324): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13852ms)
+      ✔ rsETH (row 404): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13404ms)
+      ✔ ezETH (row 408): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13310ms)
+      ✔ INJ (row 491): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12826ms)
+      ✔ RLUSD (row 500): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12753ms)
+      ✔ SHFL (row 503): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12891ms)
+      ✔ USDG (row 512): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12562ms)
+      ✔ ALEPH (row 609): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (15268ms)
+      ✔ COTI (row 631): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14139ms)
+      ✔ DEXT (row 636): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13618ms)
+      ✔ KEEP (row 657): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13716ms)
+      ✔ UFO (row 701): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (17680ms)
+      ✔ POND (row 836): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (17508ms)
+      ✔ SETH2 (row 856): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14439ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (4734ms)
+
+
+  34 passing (8m)
+
+=== EXIT 0 test/sampled/cvl_trs_ethereum.test.cjs
+=== FILE test/sampled/cvl_trs_optimism.test.cjs
+
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Optimism: 12 of 12 indexed tokens (all) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14157ms)
+      ✔ OP (row 26): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (15454ms)
+      ✔ USDC_OP (row 39): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13482ms)
+      ✔ AAVE_OP (row 83): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12925ms)
+      ✔ UNI_OP (row 86): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12734ms)
+      ✔ WBTC_OP (row 87): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12274ms)
+      ✔ DAI_OP (row 89): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12073ms)
+      ✔ VELO (row 113): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13334ms)
+      ✔ USDT_OP (row 119): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12745ms)
+      ✔ SNS (row 141): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13187ms)
+      ✔ LINK_OP (row 195): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12852ms)
+      ✔ WETH_OP (row 426): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13223ms)
+      ✔ LYRA (row 807): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13606ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (4567ms)
+
+
+  14 passing (3m)
+
+=== EXIT 0 test/sampled/cvl_trs_optimism.test.cjs
+=== FILE test/sampled/cvl_trs_polygon.test.cjs
+
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Polygon: 9 of 28 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12411ms)
+      ✔ USDC_POL (row 40): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (15010ms)
+      ✔ USDT_POL (row 49): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (14389ms)
+      ✔ WBTC_POL (row 88): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11400ms)
+      ✔ DAI_POL (row 90): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11110ms)
+      ✔ WETH_POL (row 427): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10568ms)
+      ✔ WMATIC (row 523): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10656ms)
+      ✔ PLOT (row 672): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11328ms)
+      ✔ ROUTE (row 683): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12043ms)
+      ✔ OMEN (row 823): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12430ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (4696ms)
+
+
+  11 passing (2m)
+
+=== EXIT 0 test/sampled/cvl_trs_polygon.test.cjs
+=== FILE test/stake_t276_claim_planner.test.cjs
+
+
+  t276u claim planner against the compiled Stake
+      inflated estimates: 4 estimates (4x1060, 2x1060, 1x1060, 1x1042) before a fitting batch: position 6, epoch 1042, 74479 gas
+    ✔ estimates above the limit shrink the batch (position set halved, then epoch range halved) and are re-estimated (8741ms)
+      preview: 3 transactions for 509958.342626812333870846 VCLM over 5 positions
+      claimPositions([6,2,1,3], 1060): estimate 663279, used 663279, paid 7136.62560209662065104
+      claimPosition([0], 647): estimate 6490241, used 6490241, paid 305550.646834815717885832
+      claimPosition([0], 1060): estimate 4162842, used 4162842, paid 197271.070189899995333974
+      stopped after 1, resumed: 3 transactions in all, max gas used 6490241
+PLANNER_RUN {"preview":3,"sent":[{"kind":"many","ids":["6","2","1","3"],"toEpoch":1060,"estimate":663279,"gasUsed":663279,"amount":"7136625602096620651040"},{"kind":"one","ids":["0"],"toEpoch":647,"estimate":6490241,"gasUsed":6490241,"amount":"305550646834815717885832"},{"kind":"one","ids":["0"],"toEpoch":1060,"estimate":4162842,"gasUsed":4162842,"amount":"197271070189899995333974"}],"maxGas":6490241,"progress":[{"stage":"before","index":1,"total":3,"remaining":null},{"stage":"after","index":1,"total":3,"remaining":"502821717024715713219806"},{"stage":"before","index":2,"total":3,"remaining":null},{"stage":"stopped","index":2,"total":3,"remaining":"502821717024715713219806"},{"stage":"before","index":1,"total":2,"remaining":null},{"stage":"after","index":1,"total":2,"remaining":"197271070189899995333974"},{"stage":"before","index":2,"total":2,"remaining":null},{"stage":"after","index":2,"total":2,"remaining":"0"}]}
+    ✔ preview, stop after transaction 1, resume later: exact total, every transaction at most 8,000,000 gas (77878ms)
+    ✔ claiming the same range again pays nothing and never pays twice (80ms)
+
+
+  3 passing (2m)
+
+=== EXIT 0 test/stake_t276_claim_planner.test.cjs
+=== FILE test/stake_t277_claim_display.test.cjs
+
+
+  t277u displayed claimable amount equals the contract, per epoch, no overlap
+Killed
+=== EXIT 137 test/stake_t277_claim_display.test.cjs
+RERUN TOTAL passing=101 failing=0
