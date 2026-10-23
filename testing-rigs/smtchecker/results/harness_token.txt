@@ -1,0 +1,176 @@
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:195:9:
+    |
+195 |         assert(totalSupply <= hardCap); // HARNESS P2 cap
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:196:31:
+    |
+196 |         if (totalSupply > hS) assert(msg.sender == hV || msg.sender == hSt); // HARNESS P1 minter only
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:198:17:
+    |
+198 |         if (hF) assert(finalized && minterVerifier == hV && minterStake == hSt && deployer == address(0)); // HARNESS P3 frozen
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:199:38:
+    |
+199 |         if (!hF && msg.sender != hD) assert(minterVerifier == hV && minterStake == hSt && finalized == hF); // HARNESS P3 only deployer configures
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:177:39:
+    |
+177 |         allowance[from][msg.sender] = currentAllowance - amount;
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:194:9:
+    |
+194 |         assert(ghostSum == totalSupply); // HARNESS P2 conservation
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:183:9:
+    |
+183 |         balanceOf[from] -= amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:184:9:
+    |
+184 |         ghostSum -= amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:185:9:
+    |
+185 |         balanceOf[to] += amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:186:9:
+    |
+186 |         ghostSum += amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:122:17:
+    |
+122 |         require(totalSupply + amount <= hardCap, "VF-SUP-015: hard cap exceeded");
+    |                 ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:124:9:
+    |
+124 |         balanceOf[to] += amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:125:9:
+    |
+125 |         ghostSum += amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:150:9:
+    |
+150 |         balanceOf[account] -= amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:151:9:
+    |
+151 |         ghostSum -= amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:152:9:
+    |
+152 |         totalSupply -= amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:177:39:
+    |
+177 |         allowance[from][msg.sender] = currentAllowance - amount;
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:183:9:
+    |
+183 |         balanceOf[from] -= amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:184:9:
+    |
+184 |         ghostSum -= amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:185:9:
+    |
+185 |         balanceOf[to] += amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:186:9:
+    |
+186 |         ghostSum += amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:194:9:
+    |
+194 |         assert(ghostSum == totalSupply); // HARNESS P2 conservation
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:195:9:
+    |
+195 |         assert(totalSupply <= hardCap); // HARNESS P2 cap
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:196:31:
+    |
+196 |         if (totalSupply > hS) assert(msg.sender == hV || msg.sender == hSt); // HARNESS P1 minter only
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation happens here.
+Counterexample:
+decimals = 18, hardCap = 40, deployer = 0x0, minterVerifier = 0x0, minterStake = 0x0, finalized = false, totalSupply = 40, ghostSum = 40
+to = 0x52f7
+amount = 40
+hS = 0
+hV = 0x0
+hSt = 0x0
+hF = false
+hD = 0x0
+
+Transaction trace:
+VinculumFinalisToken.constructor(_name, _symbol, 40){ msg.sender: 0x0 }
+State: decimals = 18, hardCap = 40, deployer = 0x0, minterVerifier = 0x0, minterStake = 0x0, finalized = false, totalSupply = 0, ghostSum = 0
+VinculumFinalisToken.mint(0x52f7, 40)
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:197:31:
+    |
+197 |         if (totalSupply > hS) assert(hF); // HARNESS P1 no mint before finalization
+    |                               ^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:198:17:
+    |
+198 |         if (hF) assert(finalized && minterVerifier == hV && minterStake == hSt && deployer == address(0)); // HARNESS P3 frozen
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:199:38:
+    |
+199 |         if (!hF && msg.sender != hD) assert(minterVerifier == hV && minterStake == hSt && finalized == hF); // HARNESS P3 only deployer configures
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
