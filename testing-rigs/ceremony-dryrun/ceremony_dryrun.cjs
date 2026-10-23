@@ -60,7 +60,7 @@ const STEPS = [
   "Base reader with a real lock on the fork",
   SIMULATE ? "EVM readers bound to the simulated locks and their slot 0" : "EVM readers bound to the live locks and real slot 0",
   "EVM readers on real mainnet receipts",
-  "Ethereum reader on a real finalized header",
+  "Ethereum reader on a real finalized header (fails closed, AG-01 to AG-07)",
   "UTXO, Stellar and XRPL reader wiring",
   "Rig 10 reconciliation: deployed set vs artifacts and ceremony-data",
 ];
@@ -74,9 +74,10 @@ const { spawn } = require("child_process");
 const children = [];
 function stopForks() { for (const c of children) { try { c.kill("SIGKILL"); } catch (_) {} } children.length = 0; }
 process.on("exit", stopForks);
-async function waitRpc(url, chainId, ms) {
+async function waitRpc(url, chainId, ms, dead) {
   const t0 = Date.now();
   for (;;) {
+    if (dead && dead()) throw new Error("fork process exited");
     try {
       const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] }) });
       const j = await r.json();
@@ -89,31 +90,60 @@ async function waitRpc(url, chainId, ms) {
     }
   }
 }
-async function simulateNonBaseLocks() {
+// Fallback public RPCs per chain, tried in order when a fork cannot start
+// (public endpoints rate limit or refuse now and then). Read-only.
+const SIM_FALLBACK_RPCS = {
+  Ethereum: ["https://eth.drpc.org", "https://1rpc.io/eth"],
+  Arbitrum: ["https://arbitrum.drpc.org", "https://1rpc.io/arb"],
+  Optimism: ["https://optimism.drpc.org", "https://1rpc.io/op"],
+  Polygon: ["https://polygon.drpc.org", "https://1rpc.io/matic"],
+  "BNB Smart Chain": ["https://bsc.drpc.org", "https://1rpc.io/bnb"],
+  Avalanche: ["https://avalanche.drpc.org", "https://1rpc.io/avax/c"],
+};
+function forkCandidates(env, i) {
+  const list = [process.env[`DRYRUN_SIM_RPC_${i}`], RPCS.URLS[env], FLOW.EVM_RPC[env].url, ...(SIM_FALLBACK_RPCS[env] || [])].filter(Boolean);
+  return [...new Set(list)];
+}
+async function startFork(env, i, port) {
   const cli = path.join(BC, "node_modules/hardhat/internal/cli/cli.js");
   const cfg = path.join(__dirname, "hardhat.simfork.config.cjs");
-  const basePort = Number(process.env.DRYRUN_SIM_PORT || 18700);
-  const provs = {};
-  const tail = {};
-  FLOW.EVM_ENVS.forEach((env, i) => {
-    const port = basePort + i;
-    const forkUrl = process.env[`DRYRUN_SIM_RPC_${i}`] || RPCS.URLS[env] || FLOW.EVM_RPC[env].url;
+  const chainId = FLOW.EVM_RPC[env].chainId;
+  const url = `http://127.0.0.1:${port}`;
+  const errors = [];
+  for (const forkUrl of forkCandidates(env, i)) {
+    let tail = "";
+    let exited = false;
+    let forkBlock = "";
+    try {
+      const r = await fetch(forkUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] }), signal: AbortSignal.timeout(15000) });
+      const j = await r.json();
+      forkBlock = String(Number(BigInt(j.result)) - 2);
+    } catch (_) { forkBlock = ""; }
     const c = spawn(process.execPath, [cli, "--config", cfg, "node", "--hostname", "127.0.0.1", "--port", String(port)], {
-      cwd: BC, env: { ...process.env, SIM_FORK_URL: forkUrl, SIM_CHAIN_ID: String(FLOW.EVM_RPC[env].chainId), NODE_OPTIONS: "--max-old-space-size=1536" }, stdio: ["ignore", "pipe", "pipe"],
+      cwd: BC, env: { ...process.env, SIM_FORK_URL: forkUrl, SIM_FORK_BLOCK: forkBlock, SIM_CHAIN_ID: String(chainId), NODE_OPTIONS: "--max-old-space-size=1536" }, stdio: ["ignore", "pipe", "pipe"],
     });
-    tail[env] = "";
-    const keep = (d) => { tail[env] = (tail[env] + d.toString()).slice(-400); };
+    const keep = (d) => { tail = (tail + d.toString()).slice(-400); };
     c.stdout.on("data", keep); c.stderr.on("data", keep);
+    c.on("exit", () => { exited = true; });
     children.push(c);
-    provs[env] = { url: `http://127.0.0.1:${port}`, port };
-  });
-  const out = {};
-  for (const env of FLOW.EVM_ENVS) {
-    const chainId = FLOW.EVM_RPC[env].chainId;
-    try { await waitRpc(provs[env].url, chainId, 120000); }
-    catch (e) { throw new Error(`${env}: ${e.message}; fork log: ${scrub(tail[env]).replace(/\s+/g, " ").slice(-200)}`); }
-    out[env] = new ethers.JsonRpcProvider(provs[env].url, chainId, { staticNetwork: true, batchMaxCount: 1 });
+    try {
+      await waitRpc(url, chainId, 90000, () => exited);
+      return new ethers.JsonRpcProvider(url, chainId, { staticNetwork: true, batchMaxCount: 1 });
+    } catch (e) {
+      try { c.kill("SIGKILL"); } catch (_) {}
+      const host = (() => { try { return new URL(forkUrl).host; } catch (_) { return "rpc"; } })();
+      errors.push(`${host}: ${e.message}; fork log: ${scrub(tail).replace(/\s+/g, " ").slice(-160)}`);
+      err(`  ${env}: fork from ${host} did not start, trying the next public RPC`);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
   }
+  throw new Error(`${env}: no local fork could be started (${errors.join(" | ")})`);
+}
+async function simulateNonBaseLocks() {
+  const basePort = Number(process.env.DRYRUN_SIM_PORT || 18700);
+  const started = await Promise.all(FLOW.EVM_ENVS.map((env, i) => startFork(env, i, basePort + i)));
+  const out = {};
+  FLOW.EVM_ENVS.forEach((env, i) => { out[env] = started[i]; });
   // One throwaway key, funded only on the local forks, so nonce 0 gives the
   // same lock address on all six chains (as the operator's deployment does).
   const key = ethers.Wallet.createRandom();
@@ -274,18 +304,26 @@ async function main() {
   const ev = (headerRlp) => coder.encode(["tuple(bytes,bytes,uint256,bytes[],uint256,bytes[],bytes[],bytes[])"], [[headerRlp, "0x", 0, [], 0, [], [], []]]);
   const claim = (h, n) => coder.encode(["uint256", "bytes32", "uint256"], [1, h, n]);
   const er = r.readers.Ethereum;
-  const [ok] = await er.verifyFinality(ev(hdr), claim(fin.hash, BigInt(fin.number)));
-  if (!ok) throw new Error("Ethereum reader refused a real finalized header");
-  err(`  Ethereum reader accepts real finalized block ${BigInt(fin.number)}`);
-  // FINDING-HH-003 context (not a ceremony failure): a header that is not
-  // Ethereum history is accepted the same way.
+  // Since the AG-01 to AG-07 fixes the EVM readers fail closed: with no
+  // on-chain settled-history anchor, verifyFinality refuses every header,
+  // real or made up (VF-XCH-006). That refusal is the expected ceremony state
+  // (FINDING-HH-003 closed); acceptance of any header is a failure.
+  const refuses = async (label, headerRlp, h, n) => {
+    try {
+      const [okX] = await er.verifyFinality(ev(headerRlp), claim(h, n));
+      throw new Error(`Ethereum reader ${okX ? "accepted" : "returned false for"} a ${label} header instead of failing closed with VF-XCH-006`);
+    } catch (e) {
+      const m = String(e.shortMessage || e.reason || e.message);
+      if (!/VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled/.test(m)) throw e;
+    }
+  };
+  await refuses("real finalized", hdr, fin.hash, BigInt(fin.number));
+  err(`  real finalized Ethereum block ${BigInt(fin.number)} re-encodes to its hash; the reader fails closed on it (VF-XCH-006, environment disabled)`);
   const local = await ethers.provider.send("eth_getBlockByNumber", ["latest", false]);
   const fake = { ...fin, parentHash: local.hash, stateRoot: local.stateRoot, receiptsRoot: local.receiptsRoot, number: fin.number };
   const fhdr = PROOF.encodeBlockHeader(fake);
-  try {
-    const [ok2] = await er.verifyFinality(ev(fhdr), claim(ethers.keccak256(fhdr), BigInt(fin.number)));
-    if (ok2) notes.push(`FINDING-HH-003: the Ethereum reader also accepts a made-up header at height ${BigInt(fin.number)} (hash ${ethers.keccak256(fhdr).slice(0, 10)}) that is not Ethereum history`);
-  } catch (e) { notes.push("made-up Ethereum header refused: " + scrub(e.shortMessage || e.message).slice(0, 120)); }
+  await refuses("made-up", fhdr, ethers.keccak256(fhdr), BigInt(fin.number));
+  err("  a made-up header at the same height is refused the same way (FINDING-HH-003 closed)");
 
   at(14);
   for (const u of DATA.readers.utxo) {
