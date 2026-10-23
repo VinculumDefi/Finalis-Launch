@@ -1,0 +1,908 @@
+{
+  "scope": "base-contracts at origin/main b0e38a9; rigs 5 (Mythril), 6 (SMTChecker), 7 (Slither)",
+  "tools": {
+    "slither": "0.11.6",
+    "mythril": "v0.24.8",
+    "solc": "0.8.19+commit.7dd6d404",
+    "z3": "4.11.2",
+    "certora": "not available (CERTORAKEY not set); SMTChecker CHC was the formal layer"
+  },
+  "classification_rule": "Every finding is CONFIRMED VULNERABILITY, SPEC CONFLICT, UNVERIFIED ASSUMPTION or INCOMPLETE TESTING. A tool that cannot analyse a contract or times out is INCOMPLETE TESTING, not evidence of safety.",
+  "counts_by_severity": {
+    "critical": 1,
+    "high": 1,
+    "medium": 1,
+    "low": 6,
+    "info": 15
+  },
+  "counts_by_classification": {
+    "CONFIRMED VULNERABILITY": 3,
+    "UNVERIFIED ASSUMPTION": 12,
+    "SPEC CONFLICT": 2,
+    "INCOMPLETE TESTING": 7
+  },
+  "findings": [
+    {
+      "id": "STATIC-C01",
+      "rig": "7 (manual triage next to Slither, confirmed by PoC)",
+      "severity": "critical",
+      "damage_potential": "Unbounded reward VCLM minted to stakers, up to the VCLM hard cap, from one real lock. The same gap can also be used to inflate an epoch basis past remaining capacity so honest stakers get nothing.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:654",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:692-702",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:774",
+        "base-contracts/contracts/VinculumFinalisStake.sol:415",
+        "base-contracts/contracts/VinculumFinalisStake.sol:428-487"
+      ],
+      "description": "racIdentity is supplied by the caller of the permissionless recordFeeAndRac and is not bound to the lock, transaction, log index or fee. One real lock can be recorded many times under different racIdentity values; each adds a full RAC credit to epochRewardBasis, which Stake.allocateEpoch later mints against. The app derives racIdentity from (env, lockId, txhash, logIndex, asset, fee) but the contract does not enforce it.",
+      "evidence": "PoC STATIC-C01: 5 racIdentity values for one lock, one credit 30e18, basis reached 150e18. PoC STATIC-C01b: 20 duplicate RACs for one 1000 USD lock; Stake minted 6000 VCLM for the epoch against an honest 300 VCLM (20x). testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
+      "rev_conflict": "Rev 6 VF-RAC-001 (RAC exact-once): exact-once is enforced per caller-chosen id, not per lock or fee event.",
+      "classification": "CONFIRMED VULNERABILITY",
+      "classification_note": "Reproduced by PoC; also breaks Rev 6 VF-RAC-001."
+    },
+    {
+      "id": "STATIC-H02",
+      "rig": "7 (Slither incorrect-equality SL-016, confirmed by PoC)",
+      "severity": "high",
+      "damage_potential": "Any minter can take the day-0 emission rate forever, up to 10x the floor rate (SMTChecker I4 shows day 0 is the maximum rate).",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:844",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1029",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:744",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:826",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:839"
+      ],
+      "description": "verifyAndMint computes emission days from pkg.valuationTimestamp, which the caller chooses. It is never compared with the reader-proven creation time extCreated (createdAt), which is only used for the CHONX activation check. valuationTimestamp=0 (or any time before launch) returns day 0.",
+      "evidence": "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
+      "rev_conflict": "Rev 6 VF-ORC-011/013 (emission rate from the Valuation Timestamp, which is the source block time, not a caller value).",
+      "classification": "CONFIRMED VULNERABILITY",
+      "classification_note": "Reproduced by PoC; also breaks Rev 6 VF-ORC-011/013."
+    },
+    {
+      "id": "STATIC-M01",
+      "rig": "7 (manual triage, confirmed by PoC)",
+      "severity": "medium",
+      "damage_potential": "Free option for the user: wait for a better scheduled price, then submit the first proof. Over-issuance scales with price moves during the wait.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1010"
+      ],
+      "description": "The scheduled price is bound to a lock on the first proof submission (_resolveVerifiedGrossUsd), not at lock creation.",
+      "evidence": "PoC STATIC-M01: price 1000 at lock creation, poster moves to 2000, first proof binds 2000. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
+      "rev_conflict": "Rev 6 VF-ORC-009/010 and the rule that existing locks keep their creation price.",
+      "classification": "CONFIRMED VULNERABILITY",
+      "classification_note": "Reproduced by PoC; also breaks Rev 6 VF-ORC-009/010."
+    },
+    {
+      "id": "STATIC-L01",
+      "rig": "7 (manual triage)",
+      "severity": "low",
+      "damage_potential": "If the poster key is lost, prices stop and all valuation stops. If it is compromised, any price can be posted (no bound or deviation check), which drives issuance directly.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:543-547",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:596-628"
+      ],
+      "description": "scheduledPricePoster is a single address. applyScheduledPriceRun accepts any positive price with no bounds, deviation limit or staleness rule. This is a trust assumption, rated low because the poster is an operator role by design.",
+      "evidence": "Code review: only checks are msg.sender == poster, runId increases, asset is registered, price > 0.",
+      "rev_conflict": "none found",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Safety rests on the single poster key posting correct prices; nothing on chain checks it."
+    },
+    {
+      "id": "STATIC-L02",
+      "rig": "7 (manual triage)",
+      "severity": "low",
+      "damage_potential": "Fees for an environment with no Dev Fund destination are not caught at verify time.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:821-823"
+      ],
+      "description": "Step 10 Dev Fund destination check (VF-FEE-009) is commented out with a note that it is skipped in simulation.",
+      "evidence": "Source lines 821-823 are comments only.",
+      "rev_conflict": "Rev 6 VF-FEE-009 (check is required in production).",
+      "classification": "SPEC CONFLICT",
+      "classification_note": "Rev 6 VF-FEE-009 requires the Dev Fund destination check; the code has it commented out."
+    },
+    {
+      "id": "STATIC-L03",
+      "rig": "7 (manual triage)",
+      "severity": "low",
+      "damage_potential": "Griefing: a watcher can take a pending lockId first so the victim's lock call reverts. No funds lost.",
+      "file_line": [
+        "base-contracts/contracts/BaseCommitmentVaultLock.sol:291"
+      ],
+      "description": "lockId is chosen by the caller and must be unused; a front-runner can use it first.",
+      "evidence": "require(!_locks[lockId].exists) with a caller-supplied lockId.",
+      "rev_conflict": "none found",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Assumes nobody front-runs a chosen lockId. Not reproduced in a PoC."
+    },
+    {
+      "id": "STATIC-L04",
+      "rig": "7 (manual triage)",
+      "severity": "low",
+      "damage_potential": "A token that rebases down after deposit leaves the CVL short at release.",
+      "file_line": [
+        "base-contracts/contracts/BaseCommitmentVaultLock.sol:219-224"
+      ],
+      "description": "The CVL measures the received amount by balance delta (good for fee-on-transfer tokens) but stores a fixed amount. A negative rebase later makes the stored amount larger than the balance. Rated low because the asset list is allowlisted.",
+      "evidence": "Code review.",
+      "rev_conflict": "none found",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Assumes no rebasing token is ever on the asset list."
+    },
+    {
+      "id": "STATIC-L05",
+      "rig": "7 (Slither reentrancy-no-eth)",
+      "severity": "low",
+      "damage_potential": "None today with the allowlisted tokens; would matter if a hook token were ever added.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:763",
+        "base-contracts/contracts/VinculumFinalisSynth.sol:138"
+      ],
+      "description": "verifyAndMint and the Synth forge path write state after external calls (CEI not followed). Calls go to trusted tokens and readers, so the Slither entries are triaged FP for exploitability; kept here as a hardening note.",
+      "evidence": "testing-rigs/slither/triage.json SL-020, SL-021, SL-022.",
+      "rev_conflict": "none found",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Safe only while every called token and reader is trusted and non-reentrant."
+    },
+    {
+      "id": "STATIC-L06",
+      "rig": "7 (Slither calls-loop)",
+      "severity": "low",
+      "damage_potential": "One reverting or gas-heavy external call in a loop blocks the whole call.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisStake.sol:231",
+        "base-contracts/contracts/VinculumFinalisStake.sol:496",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:512"
+      ],
+      "description": "External calls inside loops. Targets are protocol contracts, so the risk is liveness only.",
+      "evidence": "testing-rigs/slither/triage.json SL-061 to SL-064.",
+      "rev_conflict": "none found",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Assumes loop targets are protocol contracts that never revert or run out of gas."
+    },
+    {
+      "id": "STATIC-I01",
+      "rig": "7 (Slither redundant-statements)",
+      "severity": "info",
+      "damage_potential": "None. Callers may think daysSinceLaunch affects the mint.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:846"
+      ],
+      "description": "The daysSinceLaunch parameter of verifyAndMint is ignored.",
+      "evidence": "Statement 'daysSinceLaunch;' at line 846.",
+      "rev_conflict": "none found",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Assumes no caller or off-chain tool relies on the ignored daysSinceLaunch value."
+    },
+    {
+      "id": "STATIC-I02",
+      "rig": "7 (manual triage)",
+      "severity": "info",
+      "damage_potential": "A lock can be made with a false USD claim; the Verifier prices it again, so the effect is a lock that later fails to mint.",
+      "file_line": [
+        "base-contracts/contracts/BaseCommitmentVaultLock.sol:170",
+        "base-contracts/contracts/BaseCommitmentVaultLock.sol:208",
+        "base-contracts/contracts/BaseCommitmentVaultLock.sol:335-348"
+      ],
+      "description": "The CVL Handshake and standard USD band gate uses verifiedGrossUsd as passed by the caller.",
+      "evidence": "Code review.",
+      "rev_conflict": "none found (Rev 12 band is re-checked by the Verifier on the priced value)",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "The CVL trusts the caller-supplied USD value; safety rests on the Verifier re-check of the Rev 12 band."
+    },
+    {
+      "id": "STATIC-I03",
+      "rig": "7 (Slither unused-return)",
+      "severity": "info",
+      "damage_potential": "See STATIC-H02.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisVerifier.sol:713"
+      ],
+      "description": "extCreated from _verifySource is not used to bind valuationTimestamp.",
+      "evidence": "testing-rigs/slither/triage.json override.",
+      "rev_conflict": "Rev 6 VF-ORC-011/013 (same root as STATIC-H02).",
+      "classification": "SPEC CONFLICT",
+      "classification_note": "Same root as STATIC-H02; Rev 6 VF-ORC-011/013 says the valuation time is the source block time."
+    },
+    {
+      "id": "SMT-01",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; the call reverts with Panic 0x11",
+      "file_line": "base-contracts/contracts/VinculumFinalisSynth.sol:145 (also :144)",
+      "description": "CHC found a real overflow trace in forge() for a huge count. Solidity 0.8 checked math turns it into a revert, so no wrap and no free mint.",
+      "evidence": "testing-rigs/smtchecker/results/harness_synth.txt",
+      "rev_conflict": "none",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Reverts, no damage. Assumes callers never need counts that large."
+    },
+    {
+      "id": "SMT-02",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts",
+      "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:349",
+      "description": "CHC overflow trace for gross * STANDARD_FEE_BPS when gross > 2^256/500. Checked math reverts. No real token has that supply. Same trace on the extracted copy (FeeMath.sol:37).",
+      "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt; results/harness_feemath.txt",
+      "rev_conflict": "none",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Reverts, no damage. Assumes no listed token has a supply above 2^256/500."
+    },
+    {
+      "id": "SMT-03",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts, the lock fails closed",
+      "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:224",
+      "description": "CHC underflow trace for _balanceOf(after) - beforeBal when the pulled token lowers the vault balance during transferFrom (a hostile or rebasing token). Checked math reverts, so the lock is refused. Ties to finding L04 (rebasing tokens).",
+      "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt",
+      "rev_conflict": "none",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Reverts (fails closed). Assumes listed tokens do not lower the vault balance on transferFrom."
+    },
+    {
+      "id": "SMT-04",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts",
+      "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:317",
+      "description": "CHC overflow trace for createdAt + duration. duration is limited to the fixed CommitmentDurations table, so only a solver-chosen huge timestamp reaches it. Checked math reverts.",
+      "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt",
+      "rev_conflict": "none",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Reverts, no damage. Assumes sane block timestamps."
+    },
+    {
+      "id": "SMT-05",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts. Deployment input only",
+      "file_line": "base-contracts/contracts/VinculumFinalisToken.sol:122 (hardCap set at :84 with no range check)",
+      "description": "CHC overflow trace for totalSupply + amount. It needs a deployment with hardCap near 2^256, which the constructor accepts without a check. Checked math reverts. Deployment script must pass the Rev 6 cap.",
+      "evidence": "testing-rigs/smtchecker/results/prod_token.txt",
+      "rev_conflict": "none",
+      "classification": "UNVERIFIED ASSUMPTION",
+      "classification_note": "Reverts, no damage. Assumes the deployment passes the Rev 6 hard cap; the constructor does not check it."
+    },
+    {
+      "id": "INC-MYTHRIL-01",
+      "rig": "mythril",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "base-contracts/contracts (bytecode of 22 contracts)"
+      ],
+      "description": "Mythril hit its execution timeout on 22 contracts, so their symbolic search is incomplete: ArbitrumLockReader 3511/9120 (38.5%); AvalancheFinalityChecker 1745/3877 (45.0%); AvalancheLockReader 3337/9000 (37.1%); BaseCommitmentVaultLock 2357/4611 (51.1%); BitcoinCashLockReader 1221/10295 (11.9%); BitcoinHeaderChecker 959/1068 (89.8%); BitcoinLockReader 1229/10283 (12.0%); BnbFinalityChecker 1591/4026 (39.5%); BnbSmartChainLockReader 3270/8940 (36.6%); DigiByteLockReader not reported; EthereumFinalityChecker 1695/8123 (20.9%); EthereumLockReader 1858/8884 (20.9%); OptimismLockReader 3330/8932 (37.3%); PolygonFinalityChecker 1733/4853 (35.7%); PolygonLockReader 3381/8978 (37.7%); StellarLockReader 1334/5032 (26.5%); VinculumFinalisSynth 1802/1884 (95.6%); VinculumFinalisToken 1871/1892 (98.9%); VinculumFinalisVerifier 4109/11211 (36.7%); XrplLockReader 1644/6710 (24.5%); ZcashHeaderChecker 1957/4147 (47.2%); ZcashLockReader 1238/10280 (12.0%).",
+      "evidence": "testing-rigs/mythril/results/summary.md, settings.txt",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    },
+    {
+      "id": "INC-MYTHRIL-02",
+      "rig": "mythril",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "base-contracts/contracts (bytecode)"
+      ],
+      "description": "Mythril logged an internal error or produced no result on: CommitmentVaultLock (exit 1, Mythril internal error logged (some paths dropped)); DigiByteLockReader (exit 1, Mythril internal error logged (some paths dropped); hit execution timeout (search incomplete)); DogecoinLockReader (exit 1, Mythril internal error logged (some paths dropped)); LitecoinLockReader (exit 0, Mythril internal error logged (some paths dropped)). Paths after the error were dropped.",
+      "evidence": "testing-rigs/mythril/results/*.stderr.txt",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    },
+    {
+      "id": "INC-MYTHRIL-03",
+      "rig": "mythril",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "base-contracts/contracts (bytecode)"
+      ],
+      "description": "Mythril finished before the timeout but only reached part of the code within 2 transactions and depth 128: BaseLockRecordVerifier 719/1608 (44.7%); EthereumBeaconLightClient 1239/5412 (22.9%); VinculumFinalisStake 2547/7415 (34.3%).",
+      "evidence": "testing-rigs/mythril/results/summary.md",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    },
+    {
+      "id": "INC-SMT-01",
+      "rig": "smt",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "testing-rigs/smtchecker/harness/IssuanceMath.sol:84",
+        "testing-rigs/smtchecker/harness/IssuanceMath.sol:91",
+        "testing-rigs/smtchecker/harness/SynthInstrumented.sol:205",
+        "testing-rigs/smtchecker/harness/SynthInstrumented.sol:206",
+        "testing-rigs/smtchecker/harness/SynthInstrumented.sol:207",
+        "testing-rigs/smtchecker/harness/SynthInstrumented.sol:208",
+        "testing-rigs/smtchecker/harness/SynthInstrumented.sol:209",
+        "testing-rigs/smtchecker/harness/TokenInstrumented.sol:194",
+        "testing-rigs/smtchecker/harness/TokenInstrumented.sol:195",
+        "testing-rigs/smtchecker/harness/TokenInstrumented.sol:196",
+        "testing-rigs/smtchecker/harness/TokenInstrumented.sol:197",
+        "testing-rigs/smtchecker/harness/TokenInstrumented.sol:198",
+        "testing-rigs/smtchecker/harness/TokenInstrumented.sol:199"
+      ],
+      "description": "SMTChecker CHC did not prove 13 of 20 properties: P2-token-conservation inconclusive; P2-token-cap inconclusive; P1-token-minter-only inconclusive; P1-token-no-mint-before-finalize counterexample (spurious trace); P3-token-frozen inconclusive; P3-token-deployer-only inconclusive; P2-synth-conservation inconclusive; P2-synth-cap inconclusive; P1-synth-mint-when-activated inconclusive; P1-synth-whole-units inconclusive; P3-synth-activation-one-way inconclusive; I1-issuance-monotonic inconclusive; I2-issuance-upper-bound inconclusive.",
+      "evidence": "testing-rigs/smtchecker/results/properties.json, summary.md",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    },
+    {
+      "id": "INC-SMT-02",
+      "rig": "smt",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisSynth.sol"
+      ],
+      "description": "SMTChecker could not analyse the production Synth contract: solc/libz3 crashed (SIGSEGV) on every attempt (prod_synth exit 245, prod_synth_nocap exit 139).",
+      "evidence": "testing-rigs/smtchecker/results/runlog.txt",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    },
+    {
+      "id": "INC-SMT-03",
+      "rig": "smt",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "base-contracts/contracts/VinculumFinalisStake.sol",
+        "base-contracts/contracts/VinculumFinalisVerifier.sol"
+      ],
+      "description": "SMTChecker ran on prod_stake, prod_verifier but the solver failed on most targets: prod_stake 92 solver errors, 97 unproved; prod_verifier 49 solver errors, 56 unproved.",
+      "evidence": "testing-rigs/smtchecker/results/prod_stake.txt, prod_verifier.txt",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    },
+    {
+      "id": "INC-FORMAL-01",
+      "rig": "formal",
+      "severity": "info",
+      "damage_potential": "Unknown. The code paths were not fully analysed, so no safety claim is made for them.",
+      "file_line": [
+        "all contracts"
+      ],
+      "description": "Certora was not available (CERTORAKEY not set in env). SMTChecker CHC was the only formal layer, so no Certora rules were checked.",
+      "evidence": "environment check",
+      "rev_conflict": "none",
+      "classification": "INCOMPLETE TESTING",
+      "classification_note": "A tool that could not finish is not evidence of safety."
+    }
+  ],
+  "slither": {
+    "results": 173,
+    "by_verdict_severity": {
+      "FP/info": 56,
+      "FP/low": 3,
+      "TP/high": 1,
+      "TP/info": 109,
+      "TP/low": 4
+    },
+    "triage": "testing-rigs/slither/triage.json and triage.md"
+  },
+  "mythril": {
+    "targets_run": 31,
+    "runlog_lines": 33,
+    "verdicts": "{'FP': 372, 'TP-info': 1}",
+    "summary": "testing-rigs/mythril/results/summary.md",
+    "true_positive_issues": 1,
+    "untriaged_issues": 0
+  },
+  "smtchecker": {
+    "formal_layer": "solc 0.8.19 SMTChecker, CHC engine, z3 4.11.2. Certora not available (CERTORAKEY not set in env), so SMTChecker is the only formal layer.",
+    "targets": "assert, overflow, underflow, divByZero, outOfBounds",
+    "note_checked_math": "Solidity 0.8 checked arithmetic: an overflow or underflow 'happens' result means the call reverts with Panic 0x11, not a silent wrap.",
+    "notes": [
+      "prod_synth (production VinculumFinalisSynth.sol): FAIL-TO-RUN. solc/libz3 crashes with SIGSEGV after about 25 s, three times, with a 5 GB cap, a 6.5 GB cap and no cap. The Synth properties are covered by the instrumented copy (harness_synth), which ran to completion.",
+      "prod_stake and prod_verifier ran to exit 0 but almost every target came back 'Error trying to invoke SMT solver' (92 of 97 and 49 of 56). Those targets are inconclusive, not proven.",
+      "harness_feemath first run inherited the whole BaseCommitmentVaultLock and was OOM-killed (exit 247). It was replaced by FeeMath.sol, a verbatim extract of _quote (extract_feemath.py), which ran in 26 s.",
+      "A second token run with only the assert target was OOM-killed after 639 s (results/harness_token_assert_only.txt).",
+      "The box rebooted about 07:18 EDT on Oct 23 and /workspace was restored from a snapshot. prod_verifier and prod_synth were rerun after that; all other outputs survived.",
+      "Supplementary BMC runs (run_bmc_supplement.sh) are labelled as such and are not counted as CHC verdicts."
+    ],
+    "jobs": {
+      "harness_token": {
+        "exit": 0,
+        "seconds": 714
+      },
+      "harness_synth": {
+        "exit": 0,
+        "seconds": 446
+      },
+      "harness_feemath": {
+        "exit": 0,
+        "seconds": 26
+      },
+      "harness_issuance": {
+        "exit": 0,
+        "seconds": 129
+      },
+      "prod_token": {
+        "exit": 0,
+        "seconds": 101
+      },
+      "prod_synth": {
+        "exit": 245,
+        "seconds": 24
+      },
+      "prod_basecvl": {
+        "exit": 0,
+        "seconds": 192
+      },
+      "prod_stake": {
+        "exit": 0,
+        "seconds": 201
+      },
+      "harness_token_assert_only": {
+        "exit": 247,
+        "seconds": 639
+      },
+      "prod_verifier": {
+        "exit": 0,
+        "seconds": 261
+      },
+      "prod_synth_nocap": {
+        "exit": 139,
+        "seconds": 32
+      },
+      "bmc_token": {
+        "exit": 0,
+        "seconds": 0
+      },
+      "bmc_synth": {
+        "exit": 0,
+        "seconds": 1
+      }
+    },
+    "properties": [
+      {
+        "id": "P2-token-conservation",
+        "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:194",
+        "property": "Token: sum of balances equals totalSupply after every call (supply conservation)",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_token",
+          "exit": 0,
+          "seconds": 714
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P2-token-cap",
+        "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:195",
+        "property": "Token: totalSupply never exceeds hardCap",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_token",
+          "exit": 0,
+          "seconds": 714
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P1-token-minter-only",
+        "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:196",
+        "property": "Token: supply only grows when msg.sender is minterVerifier or minterStake (only a minter can mint)",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_token",
+          "exit": 0,
+          "seconds": 714
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "proven",
+          "detail": "no warning for this line",
+          "note": "BMC proved it for every single call from an arbitrary starting state, which is stronger than needed for this per-call property."
+        }
+      },
+      {
+        "id": "P1-token-no-mint-before-finalize",
+        "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:197",
+        "property": "Token: supply only grows after initialize() finalized the minters",
+        "engine": "CHC",
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "run": {
+          "job": "harness_token",
+          "exit": 0,
+          "seconds": 714
+        },
+        "counterexample_reading": "spurious",
+        "counterexample_note": "Trace needs msg.sender == address(0) while both minters are still unset (address(0)) before initialize(). No transaction can come from address(0); initialize() sets both minters and finalized=true in one call (VinculumFinalisToken.sol:95-107) and onlyMinter is VinculumFinalisToken.sol:65-71.",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P3-token-frozen",
+        "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:198",
+        "property": "Token: after finalize, minters, finalized flag and deployer never change (no unauthorized state change)",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_token",
+          "exit": 0,
+          "seconds": 714
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P3-token-deployer-only",
+        "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:199",
+        "property": "Token: before finalize, only the deployer can change minter config",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_token",
+          "exit": 0,
+          "seconds": 714
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "proven",
+          "detail": "no warning for this line",
+          "note": "BMC proved it for every single call from an arbitrary starting state, which is stronger than needed for this per-call property."
+        }
+      },
+      {
+        "id": "P2-synth-conservation",
+        "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:205",
+        "property": "Synth: sum of balances equals totalSupply (supply conservation)",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_synth",
+          "exit": 0,
+          "seconds": 446
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P2-synth-cap",
+        "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:206",
+        "property": "Synth: totalSupply never exceeds HARD_CAP",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_synth",
+          "exit": 0,
+          "seconds": 446
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P1-synth-mint-when-activated",
+        "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:207",
+        "property": "Synth: supply only grows when synthActivated",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_synth",
+          "exit": 0,
+          "seconds": 446
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P1-synth-whole-units",
+        "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:208",
+        "property": "Synth: forge mints whole 1e18 units only",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Division by zero might happen here.; Error trying to invoke SMT solver.; Underflow (resulting value less than 0) might happen here.",
+        "run": {
+          "job": "harness_synth",
+          "exit": 0,
+          "seconds": 446
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "P3-synth-activation-one-way",
+        "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:209",
+        "property": "Synth: activation can never be undone",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+        "run": {
+          "job": "harness_synth",
+          "exit": 0,
+          "seconds": 446
+        },
+        "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+        "bmc_supplement": {
+          "verdict": "counterexample",
+          "detail": "Assertion violation happens here.",
+          "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+        }
+      },
+      {
+        "id": "F1-fee-conservation",
+        "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:48",
+        "property": "Fee math: fee + principal == gross",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_feemath",
+          "exit": 0,
+          "seconds": 26
+        }
+      },
+      {
+        "id": "F2-fee-exact",
+        "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:49",
+        "property": "Fee math: fee == floor(gross / 20)",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_feemath",
+          "exit": 0,
+          "seconds": 26
+        }
+      },
+      {
+        "id": "F3-verifier-accepts-cvl-fee",
+        "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:50",
+        "property": "Fee math: Verifier VF-COM-011 check accepts the CVL fee",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_feemath",
+          "exit": 0,
+          "seconds": 26
+        }
+      },
+      {
+        "id": "F4-principal-nonzero",
+        "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:51",
+        "property": "Fee math: principal > 0 when gross >= 2",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_feemath",
+          "exit": 0,
+          "seconds": 26
+        }
+      },
+      {
+        "id": "F5-multiplier-range",
+        "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:52",
+        "property": "Fee math: duration multiplier in [1.0x, 8.0x]",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_feemath",
+          "exit": 0,
+          "seconds": 26
+        }
+      },
+      {
+        "id": "I1-issuance-monotonic",
+        "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:84",
+        "property": "Issuance: more verified USD never mints less",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.",
+        "run": {
+          "job": "harness_issuance",
+          "exit": 0,
+          "seconds": 129
+        },
+        "reason": "CHC could not find an invariant within the 30 s per-query timeout"
+      },
+      {
+        "id": "I2-issuance-upper-bound",
+        "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:91",
+        "property": "Issuance: issuance <= usd * rate * 12 (max multipliers)",
+        "engine": "CHC",
+        "verdict": "inconclusive",
+        "detail": "Assertion violation might happen here.",
+        "run": {
+          "job": "harness_issuance",
+          "exit": 0,
+          "seconds": 129
+        },
+        "reason": "CHC could not find an invariant within the 30 s per-query timeout"
+      },
+      {
+        "id": "I3-rate-bounds",
+        "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:100",
+        "property": "Issuance: emission rate between floor and initial",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_issuance",
+          "exit": 0,
+          "seconds": 129
+        }
+      },
+      {
+        "id": "I4-day-zero-max",
+        "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:107",
+        "property": "Issuance: day 0 rate is the maximum",
+        "engine": "CHC",
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "run": {
+          "job": "harness_issuance",
+          "exit": 0,
+          "seconds": 129
+        }
+      }
+    ],
+    "production_contracts": {
+      "prod_token": {
+        "exit": 0,
+        "seconds": 101,
+        "counts": {
+          "counterexample": 1,
+          "unproved": 3
+        },
+        "counterexample_lines": [
+          "VinculumFinalisToken.sol:122"
+        ]
+      },
+      "prod_synth": {
+        "exit": 245,
+        "seconds": 24,
+        "counts": {},
+        "counterexample_lines": []
+      },
+      "prod_basecvl": {
+        "exit": 0,
+        "seconds": 192,
+        "counts": {
+          "counterexample": 3
+        },
+        "counterexample_lines": [
+          "BaseCommitmentVaultLock.sol:224",
+          "BaseCommitmentVaultLock.sol:317",
+          "BaseCommitmentVaultLock.sol:349"
+        ]
+      },
+      "prod_stake": {
+        "exit": 0,
+        "seconds": 201,
+        "counts": {
+          "solver_error": 92,
+          "unproved": 97
+        },
+        "counterexample_lines": []
+      },
+      "prod_verifier": {
+        "exit": 0,
+        "seconds": 261,
+        "counts": {
+          "solver_error": 49,
+          "unproved": 56
+        },
+        "counterexample_lines": []
+      },
+      "prod_synth_nocap": {
+        "exit": 139,
+        "seconds": 32,
+        "counts": {},
+        "counterexample_lines": []
+      }
+    },
+    "findings": [
+      {
+        "id": "SMT-01",
+        "rig": "6-smtchecker",
+        "severity": "info",
+        "damage": "none; the call reverts with Panic 0x11",
+        "file_line": "base-contracts/contracts/VinculumFinalisSynth.sol:145 (also :144)",
+        "description": "CHC found a real overflow trace in forge() for a huge count. Solidity 0.8 checked math turns it into a revert, so no wrap and no free mint.",
+        "evidence": "testing-rigs/smtchecker/results/harness_synth.txt",
+        "rev_conflict": "none"
+      },
+      {
+        "id": "SMT-02",
+        "rig": "6-smtchecker",
+        "severity": "info",
+        "damage": "none; reverts",
+        "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:349",
+        "description": "CHC overflow trace for gross * STANDARD_FEE_BPS when gross > 2^256/500. Checked math reverts. No real token has that supply. Same trace on the extracted copy (FeeMath.sol:37).",
+        "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt; results/harness_feemath.txt",
+        "rev_conflict": "none"
+      },
+      {
+        "id": "SMT-03",
+        "rig": "6-smtchecker",
+        "severity": "info",
+        "damage": "none; reverts, the lock fails closed",
+        "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:224",
+        "description": "CHC underflow trace for _balanceOf(after) - beforeBal when the pulled token lowers the vault balance during transferFrom (a hostile or rebasing token). Checked math reverts, so the lock is refused. Ties to finding L04 (rebasing tokens).",
+        "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt",
+        "rev_conflict": "none"
+      },
+      {
+        "id": "SMT-04",
+        "rig": "6-smtchecker",
+        "severity": "info",
+        "damage": "none; reverts",
+        "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:317",
+        "description": "CHC overflow trace for createdAt + duration. duration is limited to the fixed CommitmentDurations table, so only a solver-chosen huge timestamp reaches it. Checked math reverts.",
+        "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt",
+        "rev_conflict": "none"
+      },
+      {
+        "id": "SMT-05",
+        "rig": "6-smtchecker",
+        "severity": "info",
+        "damage": "none; reverts. Deployment input only",
+        "file_line": "base-contracts/contracts/VinculumFinalisToken.sol:122 (hardCap set at :84 with no range check)",
+        "description": "CHC overflow trace for totalSupply + amount. It needs a deployment with hardCap near 2^256, which the constructor accepts without a check. Checked math reverts. Deployment script must pass the Rev 6 cap.",
+        "evidence": "testing-rigs/smtchecker/results/prod_token.txt",
+        "rev_conflict": "none"
+      }
+    ],
+    "verdict_counts": {
+      "inconclusive": 12,
+      "counterexample": 1,
+      "proven": 7
+    }
+  }
+}
