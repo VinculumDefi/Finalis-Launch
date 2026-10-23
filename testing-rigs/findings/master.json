@@ -1,27 +1,32 @@
 {
- "as_of": "2026-10-23 09:40 EDT (America/New_York)",
+ "as_of": "2026-10-23 09:12 EDT (America/New_York)",
+ "header_notes": [
+  "Rig 10 PASSED: the live Base set of Oct 22 is byte-identical to what was tested (live 350 of 350 checks PASS, dry-run 349 of 349, 0 mismatches, 0 incomplete). So every finding tagged LIVE and CONFIRMED below is present in the deployed contracts (HH-008 is app code, not a contract).",
+  "Ceremony dry-run gas: every one of the 72 transactions was sent at the 16,777,216 gas cap (Base per-transaction maximum, EIP-7825). Actual use was 30,295 to 4,247,636 per transaction (109,844,802 total), so none came near the cap.",
+  "Fix-phase note: rigs/hardhat also adds an npm script 'ceremony:dryrun' to base-contracts/package.json. That is outside testing-rigs/ and was not brought to main."
+ ],
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
  "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A = tooling coverage, not a code path.",
  "rigs": [
   {
    "n": "1",
-   "name": "unit (Hardhat baseline, 779 tests)",
-   "status": "RUNNING",
+   "name": "unit (Hardhat baseline, 779 tests expected)",
+   "status": "REPORTED (PASS)",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (scripts: testing-rigs/baseline/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/baseline/results.md, logs/ (hardhat_files.log, rerun_killed*.log, app_tests.log, lint.log, build.log)",
+   "findings_file": "hardhat.json",
+   "note": "PASS, run file by file due to memory; 783 vs 779 count untraced (HH-011). 61 of 61 files, 783 passing, 0 failing; no single-process full-suite run completed on the shared box. App tests 65 of 65, lint and build EXIT 0."
   },
   {
    "n": "2",
    "name": "mainnet-fork integration",
-   "status": "RUNNING",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (tests: testing-rigs/fork-integration/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/fork-integration/results.md, eth_fork_results.json, base_fork_results.json, base_live_probe_results.json, *_run.log",
+   "findings_file": "hardhat.json",
+   "note": "Local Ethereum and Base forks plus a read-only live probe; nothing broadcast. Findings HH-001, HH-002, HH-005..HH-009, HH-012, HH-013 in hardhat.json."
   },
   {
    "n": "3",
@@ -36,12 +41,12 @@
   {
    "n": "4",
    "name": "invariants",
-   "status": "RUNNING",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (tests: testing-rigs/invariants/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/invariants/results.md, run_default.log, run_show_findings.log, sequence.log",
+   "findings_file": "hardhat.json",
+   "note": "INV-1..3 and INV-5..7 hold; INV-4 breaks for non-Base readers (HH-003). Findings HH-001..HH-004, HH-010."
   },
   {
    "n": "5",
@@ -94,13 +99,23 @@
   },
   {
    "n": "10",
-   "name": "ceremony dry-run and reconciliation",
-   "status": "RUNNING",
+   "name": "reconciliation (deployment artifacts vs live Oct 22 set)",
+   "status": "REPORTED (PASS)",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (scripts: testing-rigs/ceremony-dryrun/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/reconciliation/results.md, reconciliation_live.json, reconciliation_dryrun.json, live_progress.log",
+   "findings_file": "hardhat.json",
+   "note": "PASS: live Base set of Oct 22 byte-identical to the tested artifacts and ceremony-data; live 350 PASS, dry-run 349 PASS, 0 MISMATCH, 0 INCOMPLETE. Findings HH-014..HH-016."
+  },
+  {
+   "n": "DR",
+   "name": "ceremony dry-run (local Base fork)",
+   "status": "REPORTED (PASS)",
+   "branch": "rigs/hardhat",
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/ceremony-dryrun/dryrun_output.txt, dryrun_progress.log, dryrun_gas.json",
+   "findings_file": "hardhat.json",
+   "note": "Forked Base block 52985059: 'ceremony would succeed', reconciliation PASS (349 checks). 72 transactions, every one sent with gasLimit 16,777,216, the Base per-transaction cap (EIP-7825); gas used 30,295 to 4,247,636 per tx, 109,844,802 total. The rig branch also adds an npm script 'ceremony:dryrun' to base-contracts/package.json; that file is outside testing-rigs/ and was NOT brought to main (fix phase)."
   },
   {
    "n": "AG",
@@ -131,10 +146,10 @@
   }
  ],
  "counts_by_class": {
-  "CONFIRMED VULNERABILITY": 10,
-  "UNVERIFIED ASSUMPTION": 22,
-  "SPEC CONFLICT": 2,
-  "INCOMPLETE TESTING": 7
+  "CONFIRMED VULNERABILITY": 12,
+  "UNVERIFIED ASSUMPTION": 23,
+  "SPEC CONFLICT": 4,
+  "INCOMPLETE TESTING": 10
  },
  "unscoped": [],
  "findings": [
@@ -147,9 +162,10 @@
     "ADV-04",
     "ADV-05",
     "ADV-06",
-    "ADV-10"
+    "ADV-10",
+    "HH-003"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/hardhat.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
@@ -173,14 +189,16 @@
     "ADVERSARIAL=1 FINDING ADV-04 minted 310.96 VCLM.",
     "ADVERSARIAL=1 FINDING ADV-05 minted 310.96 VCLM.",
     "ADVERSARIAL=1 FINDING ADV-06 minted 310.96 VCLM.",
-    "ADVERSARIAL=1 FINDING ADV-10. AG-01."
+    "ADVERSARIAL=1 FINDING ADV-10. AG-01.",
+    "invariants FINDING HH-003 (INV-4 breaks for non-Base readers as expected)"
    ],
    "spec": [
     "VF-XCH-006",
     "VF-XCH-007",
     "VF-XCH-008",
     "VF-SEC-005",
-    "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers."
+    "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers.",
+    "Rev 6 (every mint traces to a real lock)"
    ],
    "rank_hint": 1,
    "rig_views": {
@@ -211,6 +229,10 @@
     "ADV-10": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "critical"
+    },
+    "HH-003": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
    "note": "EVM readers (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche) confirmed by ADV-01..06, ADV-10. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
@@ -302,9 +324,10 @@
    "ids": [
     "AG-04",
     "STATIC-C01",
-    "ADV-11"
+    "ADV-11",
+    "HH-001"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/hardhat.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (Base set)",
@@ -315,14 +338,17 @@
     "base-contracts/contracts/VinculumFinalisVerifier.sol:774",
     "base-contracts/contracts/VinculumFinalisStake.sol:415",
     "base-contracts/contracts/VinculumFinalisStake.sol:428-487",
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:646-704"
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:646-704",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:692-700",
+    "base-contracts/contracts/VinculumFinalisStake.sol:428-464"
    ],
    "description": "Assumed: One RAC per real fee payment; racIdentity is derived from the lock's immutable facts Gap: The only check is !recordedRacs[racIdentity]. racIdentity is free caller input, so the same proven lock can record RAC any number of times, before or after it mints. Exploit: Create one real Base lock (about $2.39 in the PoC). Call recordFeeAndRac K times with K random racIdentity values. epochRewardBasis grows K times; allocateEpoch mints basis*10 VCLM to stakers. PoC: 50 records paid 358.8 VCLM of stake rewards versus 7.176 honest.",
    "damage_potential": "Stake reward VCLM inflated without bound (until the VCLM cap), diluting every holder; attacker who stakes captures it. Works today on the Base-only ceremony.",
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-04)",
     "PoC STATIC-C01: 5 racIdentity values for one lock, one credit 30e18, basis reached 150e18. PoC STATIC-C01b: 20 duplicate RACs for one 1000 USD lock; Stake minted 6000 VCLM for the epoch against an honest 300 VCLM (20x). testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
-    "ADVERSARIAL=1 FINDING ADV-11. AG-04. LIVE on Base path (no non-Base price needed)."
+    "ADVERSARIAL=1 FINDING ADV-11. AG-04. LIVE on Base path (no non-Base price needed).",
+    "invariants/invariants.test.cjs FINDING HH-001 (run_show_findings.log); fork-integration/base_fork_stack.test.cjs and base_live_probe_results.json (live replay +358.83 USD over 5 replays, simulated only)"
    ],
    "spec": [
     "VF-RAC-001",
@@ -330,7 +356,8 @@
     "VF-RAC-004",
     "VF-SEC-005",
     "Rev 6 VF-FEE-011 note: RAC keyed by immutable-facts identity (Section D); VF-RAC-001 exact-once. Code keys RAC on a caller-chosen value.",
-    "Rev 6 VF-RAC-001 (RAC exact-once): exact-once is enforced per caller-chosen id, not per lock or fee event."
+    "Rev 6 VF-RAC-001 (RAC exact-once): exact-once is enforced per caller-chosen id, not per lock or fee event.",
+    "Rev 6 VF-RAC-001 (one credit per verified lock) conflicts with the implemented repeatable path"
    ],
    "rank_hint": 4,
    "rig_views": {
@@ -341,8 +368,13 @@
     "ADV-11": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
+    },
+    "HH-001": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
     }
    },
+   "note": "HH-001 replay amounts (rigs 2 and 4): on real Base state one stranger call moved a lock basis from 3312.80 to 3384.82 USD; a simulated replay on the live set (not sent) added 358.83 USD over 5 replays, about 3588 future VCLM; the invariant run minted 15,609.24 VCLM to Stake from 25 replays on one lock. HH-001 is live (same code deployed, rig 10).",
    "rank": 4
   },
   {
@@ -392,9 +424,10 @@
     "AG-05",
     "STATIC-H02",
     "ADV-12",
-    "META-01"
+    "META-01",
+    "HH-002"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/metamorphic.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/metamorphic.json, testing-rigs/findings/hardhat.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -405,7 +438,8 @@
     "base-contracts/contracts/VinculumFinalisVerifier.sol:744",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:826",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:839",
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1027"
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1027",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023"
    ],
    "description": "Assumed: Valuation Timestamp equals the finalized source block timestamp (lock creation time) Gap: valuationTimestamp is never compared with the reader's createdAt; any value <= launch gives day-0 emission. Exploit: Mint at day 400 with valuationTimestamp = 0. PoC: 310.96 VCLM instead of 249.92 for the same lock (24% more); the gap grows as decay continues.",
    "damage_potential": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
@@ -413,13 +447,15 @@
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-05)",
     "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
     "ADVERSARIAL=1 FINDING ADV-12. AG-05. LIVE on Base.",
-    "VCLM lock at day 255: 162.5 vs 142.05 (x1.14). CHONX lock at day 500: 1625 vs 1241.77 (x1.31). VCLM and CHONX locks at day 4500: x10 (162.5 vs 16.25 VCLM; 1625 vs 162.5 CHONX)."
+    "VCLM lock at day 255: 162.5 vs 142.05 (x1.14). CHONX lock at day 500: 1625 vs 1241.77 (x1.31). VCLM and CHONX locks at day 4500: x10 (162.5 vs 16.25 VCLM; 1625 vs 162.5 CHONX).",
+    "invariants FINDING HH-002; base_live_probe_results.json valuationTimestamp=0 check"
    ],
    "spec": [
     "VF-ORC-011",
     "VF-ORC-013",
     "Rev 6 VF-ORC-011/013. src/lib/vfComplianceData.js:156 marks VF-ORC-011 IMPLEMENTED.",
-    "Rev 6 VF-ORC-011/013 (emission rate from the Valuation Timestamp, which is the source block time, not a caller value)."
+    "Rev 6 VF-ORC-011/013 (emission rate from the Valuation Timestamp, which is the source block time, not a caller value).",
+    "Rev 6 VF-ORC-011 and VF-ORC-013"
    ],
    "rank_hint": 5,
    "rig_views": {
@@ -434,8 +470,13 @@
     "META-01": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
+    },
+    "HH-002": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
+   "note": "Rig 2 (HH-002) labels this latent because launch was Oct 22, so valuationTimestamp=0 gives the same value today (31098.86). Recorder keeps LIVE (Base set) by the stronger view: the path is reachable on the live Base set now (rig 9), and the gain grows with each day of decay (day 840 model x1.601; metamorphic META-01 up to x10).",
    "rank": 6
   },
   {
@@ -444,9 +485,10 @@
     "STATIC-M01",
     "ADV-13",
     "COMB-01",
-    "META-02"
+    "META-02",
+    "HH-004"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/combinatorial.json, testing-rigs/findings/metamorphic.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/combinatorial.json, testing-rigs/findings/metamorphic.json, testing-rigs/findings/hardhat.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -461,13 +503,15 @@
     "PoC STATIC-M01: price 1000 at lock creation, poster moves to 2000, first proof binds 2000. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
     "ADVERSARIAL=1 FINDING ADV-13. AG-06. LIVE on Base.",
     "244 cells DEVIATION:mint_at_later_price (Base native 76, Base erc20 46, Ethereum native 76, Ethereum erc20 46). Example: Base ETH 1h lock at $0.01 minted 0.26 VCLM where the creation-time price gives 0.13.",
-    "Ratio 2.0 for both VCLM (142.05 vs 284.10) and CHONX (1241.77 vs 2483.54)."
+    "Ratio 2.0 for both VCLM (142.05 vs 284.10) and CHONX (1241.77 vs 2483.54).",
+    "invariants HH-004 test"
    ],
    "spec": [
     "VF-ORC-009",
     "VF-ORC-010",
     "Rev 6 VF-ORC-009/010. vfComplianceData.js:154 marks VF-ORC-009 IMPLEMENTED with trace 'at verification time', which is the gap itself.",
-    "Rev 6 VF-ORC-009/010 and the rule that existing locks keep their creation price."
+    "Rev 6 VF-ORC-009/010 and the rule that existing locks keep their creation price.",
+    "Rev 6 ownership/claim rules"
    ],
    "rank_hint": 6,
    "rig_views": {
@@ -486,9 +530,63 @@
     "META-02": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
+    },
+    "HH-004": {
+     "class": "SPEC CONFLICT",
+     "severity": "medium"
     }
    },
+   "note": "HH-004 is the same root cause (price bound at the first recordFeeAndRac, not at creation). It adds that the first submitter can be a stranger, so a third party can bind someone else's lock at a low run (test: half price bound). hardhat.json's line 'steering who receives the mint path' is not shown by the test; the recipient is checked against the reader.",
    "rank": 7
+  },
+  {
+   "ids": [
+    "AG-08",
+    "HH-005",
+    "HH-006",
+    "HH-007"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/hardhat.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "medium",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:219-269,273-294",
+    "base-contracts/contracts/CommitmentVaultLock.sol:273-294",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:252",
+    "base-contracts/contracts/CommitmentVaultLock.sol:240-247",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:219-226"
+   ],
+   "description": "Assumed: Token balances held by the lock do not change on their own Gap: Inbound fee-on-transfer is handled (balance delta). Rebasing is not: one shared pool, fixed principal per lock. Negative rebase makes the last releasers insolvent; positive rebase is stuck. Fee to Dev Fund uses transfer(fee) with no received check. No on-chain rebasing reject in the registry. Exploit: If any rebasing token is registered on a non-Base chain, a negative rebase shifts the loss to whoever releases last.",
+   "damage_potential": "Loss of principal for late releasers of that token; depends on registry content.",
+   "evidence": [
+    "Static only (no PoC): build_gaps.py found no check matching: rebasing token rejected or share accounting.",
+    "fork-integration/eth_fork_tokens.test.cjs AMPL, eth_fork_results.json",
+    "eth_fork_tokens.test.cjs stETH",
+    "eth_fork_tokens.test.cjs RFOT, fot/RigFeeOnTransfer.sol"
+   ],
+   "spec": [
+    "VF-SEC-001",
+    "Rev 6 VF-SEC-001 requires rejection of rebasing assets unless handled.",
+    "none"
+   ],
+   "rank_hint": 8,
+   "rig_views": {
+    "HH-005": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "medium"
+    },
+    "HH-006": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "low"
+    },
+    "HH-007": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "low"
+    }
+   },
+   "note": "Merged by root cause (the vault assumes the token moves exactly the recorded amount): HH-005 AMPL -10% rebase, pool 17,100 vs principals 19,000, second release reverted 'CVL: release' (Ethereum fork, live non-Base lock); HH-006 stETH 1-wei rounding on release; HH-007 1% fee-on-transfer token: Dev Fund short 0.00099 of 0.099, release 1.86219 of 1.881. HH-007 is latent: no registered token charges a transfer fee today (PAXG and USDT fee switches are zero).",
+   "rank": 8
   },
   {
    "ids": [
@@ -521,7 +619,7 @@
      "severity": "low"
     }
    },
-   "rank": 8
+   "rank": 9
   },
   {
    "ids": [
@@ -549,30 +647,31 @@
    ],
    "rank_hint": 99,
    "related": "AG-06 (price bound at first submission); AG-11 (which rows the $0.95 rule catches)",
-   "rank": 9
+   "rank": 10
   },
   {
    "ids": [
-    "AG-08"
+    "HH-008"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "UNVERIFIED ASSUMPTION",
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "CONFIRMED VULNERABILITY",
    "severity": "medium",
    "scope": "LIVE (ERC-20 path)",
    "file_line": [
-    "base-contracts/contracts/CommitmentVaultLock.sol:219-269,273-294"
+    "app/base44-lock-2026-10-13/src/pages/Lock.jsx:171",
+    "app/base44-lock-2026-10-12/src/pages/Lock.jsx:171"
    ],
-   "description": "Assumed: Token balances held by the lock do not change on their own Gap: Inbound fee-on-transfer is handled (balance delta). Rebasing is not: one shared pool, fixed principal per lock. Negative rebase makes the last releasers insolvent; positive rebase is stuck. Fee to Dev Fund uses transfer(fee) with no received check. No on-chain rebasing reject in the registry. Exploit: If any rebasing token is registered on a non-Base chain, a negative rebase shifts the loss to whoever releases last.",
-   "damage_potential": "Loss of principal for late releasers of that token; depends on registry content.",
+   "description": "App calls approve(lock, amount) with no approve(0) reset.",
+   "damage_potential": "USDT approve over a nonzero allowance reverts, so a second USDT lock from the app fails until the allowance is reset. Contract-side USDT (no-bool return) works: fee 250, release 4750.",
    "evidence": [
-    "Static only (no PoC): build_gaps.py found no check matching: rebasing token rejected or share accounting."
+    "eth_fork_tokens.test.cjs USDT"
    ],
    "spec": [
-    "VF-SEC-001",
-    "Rev 6 VF-SEC-001 requires rejection of rebasing assets unless handled."
+    "none"
    ],
-   "rank_hint": 8,
-   "rank": 10
+   "rank_hint": 99,
+   "note": "App copies on main (app/base44-lock-2026-10-12 and -13, Lock.jsx:171). The live Base44 app was not checked.",
+   "rank": 11
   },
   {
    "ids": [
@@ -596,7 +695,7 @@
    ],
    "rank_hint": 10,
    "note": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). The Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash, Stellar and XRP Ledger readers that take lockId from the payload are all registered, so the lockId front-run is reachable by direct contract calls once that asset is priced.",
-   "rank": 11
+   "rank": 12
   },
   {
    "ids": [
@@ -620,7 +719,7 @@
     "Rev 13 section 5 already flags vfComplianceData as wrong for ITS rows (those rows are now fixed); other rows remain wrong."
    ],
    "rank_hint": 11,
-   "rank": 12
+   "rank": 13
   },
   {
    "ids": [
@@ -648,7 +747,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-06 (price bound at first submission is the root cause); AG-16 (lock-side band gate)",
-   "rank": 13
+   "rank": 14
   },
   {
    "ids": [
@@ -670,7 +769,7 @@
     "VF-ORC-005"
    ],
    "rank_hint": 12,
-   "rank": 14
+   "rank": 15
   },
   {
    "ids": [
@@ -694,7 +793,7 @@
     "Rev 6 VF-XCH-011 lists asset_precision as a bound field."
    ],
    "rank_hint": 13,
-   "rank": 15
+   "rank": 16
   },
   {
    "ids": [
@@ -717,7 +816,7 @@
    ],
    "rank_hint": 14,
    "note": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). All six live UTXO readers report TOLERANCE_SECS = 86400 (1 day); Stellar and XRP Ledger report 3600.",
-   "rank": 16
+   "rank": 17
   },
   {
    "ids": [
@@ -739,30 +838,46 @@
     "VF-COM-025"
    ],
    "rank_hint": 15,
-   "rank": 17
+   "rank": 18
   },
   {
    "ids": [
-    "AG-16"
+    "AG-16",
+    "HH-009"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/hardhat.json",
    "class": "UNVERIFIED ASSUMPTION",
    "severity": "low",
    "scope": "LIVE (Base set)",
    "file_line": [
-    "base-contracts/contracts/CommitmentVaultLock.sol:183-195,356"
+    "base-contracts/contracts/CommitmentVaultLock.sol:183-195,356",
+    "base-contracts/contracts/CommitmentVaultLock.sol:356",
+    "base-contracts/contracts/CommitmentVaultLock.sol:364",
+    "base-contracts/contracts/CommitmentVaultLock.sol:368",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:335",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:343",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:347"
    ],
    "description": "Assumed: USD value used for the lock band gate is real Gap: The lock trusts the caller's USD for its band gate. The Verifier recomputes USD for issuance, so this only affects which band the lock lets through. Exploit: Pass a USD inside the band for an out-of-band lock; Verifier then rejects issuance, user pays fee for nothing (self-harm).",
    "damage_potential": "Low; user self-harm.",
    "evidence": [
-    "Static only (no PoC): build_gaps.py found no check matching: USD derived from a price source."
+    "Static only (no PoC): build_gaps.py found no check matching: USD derived from a price source.",
+    "reconciliation lock sims accept any band-conforming value"
    ],
    "spec": [
     "VF-COM-003",
-    "VF-SEC-005"
+    "VF-SEC-005",
+    "Rev 12 Handshake $0.01 to $0.02"
    ],
    "rank_hint": 16,
-   "rank": 18
+   "rig_views": {
+    "HH-009": {
+     "class": "UNVERIFIED ASSUMPTION",
+     "severity": "low"
+    }
+   },
+   "note": "HH-009 (rig 2) is the same gap: the lock's band gate uses caller-supplied verifiedGrossUsd.",
+   "rank": 19
   },
   {
    "ids": [
@@ -785,7 +900,7 @@
     "VF-QNORM (code tag)"
    ],
    "rank_hint": 17,
-   "rank": 19
+   "rank": 20
   },
   {
    "ids": [
@@ -809,7 +924,29 @@
    ],
    "rank_hint": 18,
    "note": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01.",
-   "rank": 20
+   "rank": 21
+  },
+  {
+   "ids": [
+    "HH-010"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol"
+   ],
+   "description": "Mint after release.",
+   "damage_potential": "A mint is accepted after the lock was released; whether this is allowed by design is not stated in the code.",
+   "evidence": [
+    "invariants run"
+   ],
+   "spec": [
+    "Rev 6 (unclear)"
+   ],
+   "rank_hint": 99,
+   "rank": 22
   },
   {
    "ids": [
@@ -831,7 +968,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 21
+   "rank": 23
   },
   {
    "ids": [
@@ -853,8 +990,8 @@
     "none found"
    ],
    "rank_hint": 99,
-   "related": "AG-08 (rebasing / balance-delta assumptions in the vault)",
-   "rank": 22
+   "related": "AG-08 (rebasing / balance-delta assumptions in the vault; HH-005 reproduces this on an Ethereum fork)",
+   "rank": 24
   },
   {
    "ids": [
@@ -877,7 +1014,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 23
+   "rank": 25
   },
   {
    "ids": [
@@ -901,7 +1038,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 24
+   "rank": 26
   },
   {
    "ids": [
@@ -924,7 +1061,54 @@
     "Rev 12 removes the allowance; Verifier still enforces the Rev 6 constant."
    ],
    "rank_hint": 20,
-   "rank": 25
+   "rank": 27
+  },
+  {
+   "ids": [
+    "HH-013"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "SPEC CONFLICT",
+   "severity": "info",
+   "scope": "LIVE (ERC-20 path)",
+   "file_line": [
+    "testing-rigs/fork-integration/base_fork_stack.test.cjs"
+   ],
+   "description": "Feed label case mismatch.",
+   "damage_potential": "cbETH on Base not exercised: the Chainlink feed label is 'CBETH / USD' while the registry expects 'cbETH / USD'. Rig fails closed. If the live path also compares labels exactly, cbETH locks cannot mint.",
+   "evidence": [
+    "base_fork_run.log pending test"
+   ],
+   "spec": [
+    "Rev 6 registry"
+   ],
+   "rank_hint": 99,
+   "note": "Not exercised: the rig failed closed on the label mismatch. Whether the live path compares labels the same way is unverified.",
+   "rank": 28
+  },
+  {
+   "ids": [
+    "HH-015"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "SPEC CONFLICT",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "testing-rigs/reconciliation/reconcile.cjs (WRITE_CLASS)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654"
+   ],
+   "description": "Closed-path rule cannot hold literally; user paths classified open by design.",
+   "damage_potential": "The addendum asks that after finalize every non-view function reverts or is the poster path. On live, user paths stay open by design (lock, release, verifyAndMint, recordFeeAndRac, Stake and Synth user calls, token transfers). recordFeeAndRac is the HH-001 path, so an open user path is where the critical bug lives. The user/config split in WRITE_CLASS is the rig's judgement, not a spec table.",
+   "evidence": [
+    "reconciliation_live.json area closed (71 checks)"
+   ],
+   "spec": [
+    "Rev 6 (no spec list of post-finalize open functions)"
+   ],
+   "rank_hint": 99,
+   "related": "AG-04 / HH-001 (recordFeeAndRac is an open user path after finalize)",
+   "rank": 29
   },
   {
    "ids": [
@@ -947,7 +1131,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
-   "rank": 26
+   "rank": 30
   },
   {
    "ids": [
@@ -969,7 +1153,7 @@
     "VF-XCH-011"
    ],
    "rank_hint": 19,
-   "rank": 27
+   "rank": 31
   },
   {
    "ids": [
@@ -991,7 +1175,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 28
+   "rank": 32
   },
   {
    "ids": [
@@ -1013,7 +1197,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 29
+   "rank": 33
   },
   {
    "ids": [
@@ -1035,7 +1219,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 30
+   "rank": 34
   },
   {
    "ids": [
@@ -1057,7 +1241,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 31
+   "rank": 35
   },
   {
    "ids": [
@@ -1079,7 +1263,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 32
+   "rank": 36
   },
   {
    "ids": [
@@ -1101,7 +1285,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 33
+   "rank": 37
   },
   {
    "ids": [
@@ -1126,7 +1310,98 @@
    ],
    "rank_hint": 99,
    "related": "AG-16 (vault trusts caller-supplied USD)",
-   "rank": 34
+   "rank": 38
+  },
+  {
+   "ids": [
+    "HH-016"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "deployment/BASE44_LIVE_CONFIG_2026-10-22.md:60"
+   ],
+   "description": "Pre-ceremony operator transactions to the retired Verifier.",
+   "damage_potential": "None found. Operator nonces 676 and 677 (Oct 22) ran a price run and finalize on the retired Oct 21 Verifier 0x3bce..9381 before the live ceremony (nonces 678 to 749). No live contract references the retired set (every reference reconciles to the intended address).",
+   "evidence": [
+    "reconciliation_live.json preCeremonyTxs"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "note": "Historical operator transactions; no live exposure found. N/A here means not a reachable code path.",
+   "rank": 39
+  },
+  {
+   "ids": [
+    "HH-011"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "testing-rigs/baseline/logs/hardhat_files.log",
+    "testing-rigs/baseline/logs/rerun_killed.log"
+   ],
+   "description": "Baseline completeness caveat.",
+   "damage_potential": "All 61 files completed only across one per-file run plus three reruns of OOM-killed files (783 passing, 0 failing vs 779 expected, +4 untraced). No single-process full-suite run completed on the shared box.",
+   "evidence": [
+    "EXIT 137"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 40
+  },
+  {
+   "ids": [
+    "HH-012"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "testing-rigs/fork-integration/eth_fork_tokens.test.cjs"
+   ],
+   "description": "Gated behind RIG_ETH_MINT.",
+   "damage_potential": "Ethereum lock to VCLM mint not exercised on the fork: EDR does not serve eth_getProof after local state changes.",
+   "evidence": [
+    "eth_fork_run.log"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "rank": 41
+  },
+  {
+   "ids": [
+    "HH-014"
+   ],
+   "source": "testing-rigs/findings/hardhat.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (tooling coverage)",
+   "file_line": [
+    "base-contracts/scripts/deploy-pages/ceremony-data.json"
+   ],
+   "description": "chainVerifiers(Solana) = 0.",
+   "damage_potential": "Solana has no registered reader on the live Verifier (by design for this ceremony); Solana locks cannot mint and were not tested.",
+   "evidence": [
+    "reconciliation readers checks"
+   ],
+   "spec": [
+    "none"
+   ],
+   "rank_hint": 99,
+   "note": "Recorder's live read (2026-10-23 08:20 EDT) also shows no Solana reader registered.",
+   "rank": 42
   },
   {
    "ids": [
@@ -1148,7 +1423,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 35
+   "rank": 43
   },
   {
    "ids": [
@@ -1170,7 +1445,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 36
+   "rank": 44
   },
   {
    "ids": [
@@ -1192,7 +1467,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 37
+   "rank": 45
   },
   {
    "ids": [
@@ -1214,7 +1489,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 38
+   "rank": 46
   },
   {
    "ids": [
@@ -1248,7 +1523,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 39
+   "rank": 47
   },
   {
    "ids": [
@@ -1270,7 +1545,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 40
+   "rank": 48
   },
   {
    "ids": [
@@ -1293,7 +1568,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 41
+   "rank": 49
   }
  ]
 }
