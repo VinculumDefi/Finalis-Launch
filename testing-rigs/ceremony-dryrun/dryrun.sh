@@ -28,4 +28,9 @@ if ! grep -q "^ceremony would" "$OUTF"; then
   echo "dry-run harness did not reach a verdict (exit $rc, see stderr); this is NOT a pass"
   rm -f "$OUTF"; exit 1
 fi
+# Rig 10: a rehearsal that succeeded must also print its reconciliation verdict.
+if grep -q "^ceremony would succeed" "$OUTF" && ! grep -q "^reconciliation " "$OUTF"; then
+  echo "reconciliation did not reach a verdict (exit $rc); this is NOT a pass"
+  rm -f "$OUTF"; exit 1
+fi
 rm -f "$OUTF"; exit $rc
