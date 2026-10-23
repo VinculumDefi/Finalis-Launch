@@ -63,7 +63,7 @@ async function main() {
   const tokenProviders = { ...RPCS.providers(ethers, FLOW.EVM_ENVS), Base: P };
   const rec = await RECON.reconcile({
     hre, P, set, DATA, art, FLOW, mode: "live", nonBaseProviders, nonBaseLock: LIVE.nonBaseLock, operator, txs: cer,
-    fromBlock: cer[0].block, simFrom, tokenProviders, logPaceMs: 1500, logP: new ethers.JsonRpcProvider(process.env.RIG_LOGS_RPC || "https://base.gateway.tenderly.co", 8453, { staticNetwork: true, batchMaxCount: 1 }), receiptLogs: cer.flatMap((t) => t.logs),
+    fromBlock: cer[0].block, simFrom, tokenProviders, logPaceMs: 1000, logChunk: 1000, logP: new ethers.JsonRpcProvider(process.env.RIG_LOGS_RPC || "https://base.gateway.tenderly.co", 8453, { staticNetwork: true, batchMaxCount: 1 }), receiptLogs: cer.flatMap((t) => t.logs),
     txListComplete: { ok: contiguous, detail: `nonces ${cer[0].nonce}..${cer[cer.length - 1].nonce} contiguous=${contiguous}; finalize at block ${cer[cer.length - 1].block}` },
     log: err,
   });
