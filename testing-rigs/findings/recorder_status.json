@@ -1,5 +1,5 @@
 {
- "as_of": "2026-10-23 09:12 EDT (America/New_York)",
+ "as_of": "2026-10-23 09:40 EDT (America/New_York)",
  "main_base": "2465817",
  "note": "Hand-maintained by the findings recorder. A rig is REPORTED only when its findings JSON is on main; everything else is the recorder's view of the rig branches at as_of. build_master.py reads this file plus every per-rig findings JSON in this folder.",
  "rigs": [
@@ -26,12 +26,12 @@
   {
    "n": "3",
    "name": "fuzzing (Foundry, Echidna)",
-   "status": "RUNNING",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/foundry",
-   "commit": "88315ea",
-   "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log (on rigs/foundry)",
-   "findings_file": null,
-   "note": "Logs pushed, no findings JSON yet."
+   "commit": "397a638",
+   "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log",
+   "findings_file": "fuzz_mutation.json",
+   "note": "Forge: 41 tests at 10,000 runs, 35 pass, 6 fail (FZ-01, FZ-01b, FZ-02 pinned on purpose; FZ-06, FZ-07 reader panics). Echidna: 20,000 calls, echidna_one_rac_per_lock FALSIFIED (FZ-01), 7 other properties pass; Stake epoch reward mint not reached (IT-ECH-01). The rig labelled live/latent against the Oct 21 build 7dee25d; the recorder relabels against the live Oct 22 set (byte-identical to main b0e38a9, rig 10), so the exposure text in fuzz_mutation.json is superseded by the scope column here."
   },
   {
    "n": "4",
@@ -74,13 +74,13 @@
   },
   {
    "n": "8",
-   "name": "mutation",
-   "status": "RUNNING",
+   "name": "mutation (Gambit plus ROR and targeted mutants)",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/foundry",
-   "commit": "88315ea",
-   "raw_output": "none committed yet (scripts: testing-rigs/mutation/ on rigs/foundry)",
-   "findings_file": null,
-   "note": "Runner and summarizer pushed, no results yet."
+   "commit": "397a638",
+   "raw_output": "testing-rigs/mutation/results/mutants_w0.jsonl, mutants_w1.jsonl, retry.jsonl, mutation_summary.json",
+   "findings_file": "fuzz_mutation.json",
+   "note": "Sample score 0.733: 110 killed, 40 survived, 10 pin_only, 23 stillborn. Survivors by contract: Verifier 22, Stake 6, Token 6, Synth 6; BaseCVL 10 pin_only; CVL and Durations 0. Three OOM records rerun one at a time (retry.jsonl), all survived. Survivors grouped into one row per contract."
   },
   {
    "n": "9",
@@ -141,7 +141,7 @@
   }
  ],
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
- "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A = tooling coverage, not a code path.",
+ "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A (tooling coverage) = tooling coverage, not a code path. N/A (test gap in a LIVE contract) = a mutant or path the test suite does not exercise, in a contract that is deployed in the live Oct 22 set; not a demonstrated exploit.",
  "ag_class_overrides": {
   "AG-20": "SPEC CONFLICT"
  },
@@ -205,7 +205,18 @@
   "HH-011": "N/A (tooling coverage)",
   "HH-012": "N/A (tooling coverage)",
   "HH-014": "N/A (tooling coverage)",
-  "HH-016": "N/A (tooling coverage)"
+  "HH-016": "N/A (tooling coverage)",
+  "FZ-01": "LIVE (Base set)",
+  "FZ-01b": "LIVE (Base set)",
+  "FZ-02": "LIVE (Base set)",
+  "FZ-03": "LIVE (Base set)",
+  "FZ-04": "LIVE (Base set)",
+  "FZ-05": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "FZ-06": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "FZ-07": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+  "FZ-LOCK-01": "LIVE (Base set)",
+  "IT-ECH-01": "N/A (test gap in a LIVE contract)",
+  "IT-MUT-00": "N/A (test gap in a LIVE contract)"
  },
  "merge": [
   {
@@ -213,7 +224,9 @@
     "AG-04",
     "STATIC-C01",
     "ADV-11",
-    "HH-001"
+    "HH-001",
+    "FZ-01",
+    "FZ-01b"
    ]
   },
   {
@@ -222,7 +235,8 @@
     "STATIC-H02",
     "ADV-12",
     "META-01",
-    "HH-002"
+    "HH-002",
+    "FZ-02"
    ]
   },
   {
@@ -232,7 +246,8 @@
     "ADV-13",
     "COMB-01",
     "META-02",
-    "HH-004"
+    "HH-004",
+    "FZ-03"
    ]
   },
   {
@@ -265,7 +280,8 @@
    "ids": [
     "AG-02",
     "ADV-07",
-    "ADV-16"
+    "ADV-16",
+    "FZ-05"
    ]
   },
   {
@@ -288,6 +304,106 @@
     "AG-16",
     "HH-009"
    ]
+  },
+  {
+   "ids": [
+    "MUT-19",
+    "MUT-20",
+    "MUT-21",
+    "MUT-22",
+    "MUT-23",
+    "MUT-24",
+    "MUT-25",
+    "MUT-26",
+    "MUT-27",
+    "MUT-28",
+    "MUT-29",
+    "MUT-30",
+    "MUT-31",
+    "MUT-32",
+    "MUT-33",
+    "MUT-34",
+    "MUT-35",
+    "MUT-36",
+    "MUT-37",
+    "MUT-38",
+    "MUT-39",
+    "MUT-40"
+   ],
+   "label": "MUT-VERIFIER (MUT-19..MUT-40, 22 survivors)",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "hide_rig_views": true,
+   "description": "22 mutants of VinculumFinalisVerifier survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. Includes CHONX activation and cap boundaries, price poster msg.sender to tx.origin, baseRecipient zero check and emission-day boundaries. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "member_evidence": "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):"
+  },
+  {
+   "ids": [
+    "MUT-01",
+    "MUT-02",
+    "MUT-03",
+    "MUT-04",
+    "MUT-05",
+    "MUT-06"
+   ],
+   "label": "MUT-STAKE (MUT-01..MUT-06, 6 survivors)",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "hide_rig_views": true,
+   "description": "6 mutants of VinculumFinalisStake survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. Includes the position owner check removed and msg.sender to tx.origin. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "member_evidence": "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):"
+  },
+  {
+   "ids": [
+    "MUT-07",
+    "MUT-08",
+    "MUT-09",
+    "MUT-10",
+    "MUT-11",
+    "MUT-12"
+   ],
+   "label": "MUT-SYNTH (MUT-07..MUT-12, 6 survivors)",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "hide_rig_views": true,
+   "description": "6 mutants of VinculumFinalisSynth survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "member_evidence": "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):"
+  },
+  {
+   "ids": [
+    "MUT-13",
+    "MUT-14",
+    "MUT-15",
+    "MUT-16",
+    "MUT-17",
+    "MUT-18"
+   ],
+   "label": "MUT-TOKEN (MUT-13..MUT-18, 6 survivors)",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "hide_rig_views": true,
+   "description": "6 mutants of VinculumFinalisToken survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "member_evidence": "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):"
+  },
+  {
+   "ids": [
+    "MUT-41",
+    "MUT-42",
+    "MUT-43",
+    "MUT-44",
+    "MUT-45",
+    "MUT-46",
+    "MUT-47",
+    "MUT-48",
+    "MUT-49",
+    "MUT-50"
+   ],
+   "label": "MUT-BASECVL-PIN (MUT-41..MUT-50, 10 pin-only)",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "hide_rig_views": true,
+   "description": "10 mutants of BaseCommitmentVaultLock were caught only by the runtime code-hash pin (lock_5pct_native_erc20_7chains), not by any behaviour test, so they are not counted as killed. They cover the Handshake band (Rev 12) bounds and boundaries, zero fee or principal checks, the maturity boundary and release msg.sender to tx.origin. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "member_evidence": "Pin-only mutants (mutation/results/mutation_summary.json; killed only by the code-hash pin):"
   }
  ],
  "related": {
@@ -296,28 +412,37 @@
   "STATIC-I03": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
   "COMB-02": "AG-06 (price bound at first submission is the root cause); AG-16 (lock-side band gate)",
   "COMB-03": "AG-06 (price bound at first submission); AG-11 (which rows the $0.95 rule catches)",
-  "HH-015": "AG-04 / HH-001 (recordFeeAndRac is an open user path after finalize)"
+  "HH-015": "AG-04 / HH-001 (recordFeeAndRac is an open user path after finalize)",
+  "AG-02": "AG-01 and AG-03 (FZ-05 also covers self-consistent EVM blocks and XRPL/Stellar ledgers)"
  },
  "notes": {
   "AG-01": "EVM readers (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche) confirmed by ADV-01..06, ADV-10. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
-  "AG-02": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+  "AG-02": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced. Rig 3 (FZ-05): a self-made coinbase plus an 80-byte header with no proof of work passes BitcoinLockReader.verifyFinality (forge test_SHAPE_selfMadeBitcoinBlockPassesFinality; the pass is the finding). FZ-05 also notes _verifySource reads only `finalized` and ignores the returned hash (Verifier :716). The rig called it latent (readers not deployed); the readers are deployed and registered, so it takes this row's gated scope.",
   "AG-03": "Stellar and XRP Ledger readers confirmed by ADV-08, ADV-09. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
   "AG-10": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). The Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash, Stellar and XRP Ledger readers that take lockId from the payload are all registered, so the lockId front-run is reachable by direct contract calls once that asset is priced.",
   "AG-14": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). All six live UTXO readers report TOLERANCE_SECS = 86400 (1 day); Stellar and XRP Ledger report 3600.",
   "AG-19": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01.",
-  "AG-04": "HH-001 replay amounts (rigs 2 and 4): on real Base state one stranger call moved a lock basis from 3312.80 to 3384.82 USD; a simulated replay on the live set (not sent) added 358.83 USD over 5 replays, about 3588 future VCLM; the invariant run minted 15,609.24 VCLM to Stake from 25 replays on one lock. HH-001 is live (same code deployed, rig 10).",
-  "AG-05": "Rig 2 (HH-002) labels this latent because launch was Oct 22, so valuationTimestamp=0 gives the same value today (31098.86). Recorder keeps LIVE (Base set) by the stronger view: the path is reachable on the live Base set now (rig 9), and the gain grows with each day of decay (day 840 model x1.601; metamorphic META-01 up to x10).",
-  "AG-06": "HH-004 is the same root cause (price bound at the first recordFeeAndRac, not at creation). It adds that the first submitter can be a stranger, so a third party can bind someone else's lock at a low run (test: half price bound). hardhat.json's line 'steering who receives the mint path' is not shown by the test; the recipient is checked against the reader.",
+  "AG-04": "HH-001 replay amounts (rigs 2 and 4): on real Base state one stranger call moved a lock basis from 3312.80 to 3384.82 USD; a simulated replay on the live set (not sent) added 358.83 USD over 5 replays, about 3588 future VCLM; the invariant run minted 15,609.24 VCLM to Stake from 25 replays on one lock. HH-001 is live (same code deployed, rig 10). Rig 3 (FZ-01, FZ-01b): forge testFuzz_PROP_oneRacPerLock fails and Echidna echidna_one_rac_per_lock is FALSIFIED (shrunk to openLock, recordRac(seed A), recordRac(seed B) on one lock). FZ-01b (credit still accepted after verifyAndMint consumed the lock; basis 27,181.30 vs 4,530.22) is the same root cause: recordFeeAndRac keys only on racIdentity and never checks the lock or consumedLocks (:770), so it is merged here. The rig wrongly called this \"no Stake to pay it\" (Oct 21 build); Stake is live, so the reward path is open.",
+  "AG-05": "Rig 2 (HH-002) labels this latent because launch was Oct 22, so valuationTimestamp=0 gives the same value today (31098.86). Recorder keeps LIVE (Base set) by the stronger view: the path is reachable on the live Base set now (rig 9), and the gain grows with each day of decay (day 840 model x1.601; metamorphic META-01 up to x10). Rig 3 (FZ-02): forge testFuzz_PROP_issuanceIndependentOfCallerValuationTs fails (issuance 393,034.75 vs 367,475.26 for the same lock).",
+  "AG-06": "HH-004 is the same root cause (price bound at the first recordFeeAndRac, not at creation). It adds that the first submitter can be a stranger, so a third party can bind someone else's lock at a low run (test: half price bound). hardhat.json's line 'steering who receives the mint path' is not shown by the test; the recipient is checked against the reader. Rig 3 (FZ-03, spec conflict, no failing test) observes the same first-valuation price binding at :991-1009.",
   "AG-08": "Merged by root cause (the vault assumes the token moves exactly the recorded amount): HH-005 AMPL -10% rebase, pool 17,100 vs principals 19,000, second release reverted 'CVL: release' (Ethereum fork, live non-Base lock); HH-006 stETH 1-wei rounding on release; HH-007 1% fee-on-transfer token: Dev Fund short 0.00099 of 0.099, release 1.86219 of 1.881. HH-007 is latent: no registered token charges a transfer fee today (PAXG and USDT fee switches are zero).",
   "AG-16": "HH-009 (rig 2) is the same gap: the lock's band gate uses caller-supplied verifiedGrossUsd.",
   "HH-008": "App copies on main (app/base44-lock-2026-10-12 and -13, Lock.jsx:171). The live Base44 app was not checked.",
   "HH-013": "Not exercised: the rig failed closed on the label mismatch. Whether the live path compares labels the same way is unverified.",
   "HH-014": "Recorder's live read (2026-10-23 08:20 EDT) also shows no Solana reader registered.",
-  "HH-016": "Historical operator transactions; no live exposure found. N/A here means not a reachable code path."
+  "HH-016": "Historical operator transactions; no live exposure found. N/A here means not a reachable code path.",
+  "FZ-04": "Fails closed (Panic 0x11, no coded error). Rig called it LIVE (shape) against 7dee25d; the Verifier is live, so LIVE (Base set).",
+  "FZ-06": "Fails closed (Panic 0x32). The rig called it latent; the EVM readers are deployed and registered on the live Verifier, so it takes the gated non-Base scope.",
+  "FZ-07": "Fails closed (Panic 0x41) and burns the caller's gas. The rig called it latent; the UTXO readers are deployed and registered on the live Verifier, so it takes the gated non-Base scope.",
+  "FZ-LOCK-01": "Both CommitmentVaultLock and BaseCommitmentVaultLock are in the live Oct 22 set, so LIVE (Base set), not latent for BaseCVL as the rig said.",
+  "IT-ECH-01": "Stake is deployed in the live Oct 22 set (the rig said it was not), so this is a gap in coverage of live code.",
+  "IT-MUT-00": "Scores are sample scores; all sampled contracts are in the live Oct 22 set."
  },
  "header_notes": [
+  "Discovery pass complete: 2026-10-23 09:40 EDT. All rigs (1 to 10, the ceremony dry-run, assumption-gap, combinatorial and metamorphic) are REPORTED and their findings are folded into this file. Next step is the fix phase.",
   "Rig 10 PASSED: the live Base set of Oct 22 is byte-identical to what was tested (live 350 of 350 checks PASS, dry-run 349 of 349, 0 mismatches, 0 incomplete). So every finding tagged LIVE and CONFIRMED below is present in the deployed contracts (HH-008 is app code, not a contract).",
   "Ceremony dry-run gas: every one of the 72 transactions was sent at the 16,777,216 gas cap (Base per-transaction maximum, EIP-7825). Actual use was 30,295 to 4,247,636 per transaction (109,844,802 total), so none came near the cap.",
-  "Fix-phase note: rigs/hardhat also adds an npm script 'ceremony:dryrun' to base-contracts/package.json. That is outside testing-rigs/ and was not brought to main."
+  "Fix-phase note: rigs/hardhat also adds an npm script 'ceremony:dryrun' to base-contracts/package.json. That is outside testing-rigs/ and was not brought to main.",
+  "Rigs 3 and 8 (fuzz_mutation.json) labelled live/latent against the Oct 21 build 7dee25d with no Stake or Synth. That was wrong: the live Oct 22 set is byte-identical to main b0e38a9 with Stake, Synth and the 15 readers deployed and registered. The recorder relabelled every FZ row by the scope rules below; the \"exposure\" text inside fuzz_mutation.json is superseded."
  ]
 }
