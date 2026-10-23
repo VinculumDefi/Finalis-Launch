@@ -1,0 +1,62 @@
+{
+ "ETH": {
+  "sym": "ETH",
+  "amount": "1000000000000000000",
+  "gross": "1000000000000000000",
+  "fee": "50000000000000000",
+  "principal": "950000000000000000",
+  "minted": "30687310308200000000000",
+  "racCredit": "72017400000000000000"
+ },
+ "USDC_BASE": {
+  "sym": "USDC_BASE",
+  "amount": "2000000000",
+  "userPaid": "2000000000",
+  "devGot": "100000000",
+  "lockGot": "1900000000",
+  "gross": "2000000000",
+  "fee": "100000000",
+  "principal": "1900000000",
+  "minted": "19996714400000000000000",
+  "racCredit": "59990143200000000000",
+  "released": "1900000000"
+ },
+ "AERO": {
+  "sym": "AERO",
+  "amount": "500000000000000000000",
+  "userPaid": "500000000000000000000",
+  "devGot": "25000000000000000000",
+  "lockGot": "475000000000000000000",
+  "gross": "500000000000000000000",
+  "fee": "25000000000000000000",
+  "principal": "475000000000000000000",
+  "minted": "3927209700000000000000",
+  "racCredit": "11781629100000000000",
+  "released": "475000000000000000000"
+ },
+ "cbBTC": {
+  "sym": "cbBTC",
+  "amount": "1000000",
+  "userPaid": "1000000",
+  "devGot": "50000",
+  "lockGot": "950000",
+  "gross": "1000000",
+  "fee": "50000",
+  "principal": "950000",
+  "minted": "8153948778476000000000",
+  "racCredit": "24461846335428000000",
+  "released": "950000"
+ },
+ "usdc095": "below 0.95 refused (VF-ORC-005); at 0.95 accepted; valuation bound before the dip still minted",
+ "ETH_CHONX": {
+  "sym": "ETH",
+  "amount": "45000000000000000000",
+  "gross": "45000000000000000000",
+  "fee": "2250000000000000000",
+  "principal": "42750000000000000000",
+  "minted": "110474317109520000000000000",
+  "racCredit": "3240783000000000000000"
+ },
+ "chonxSynth": "lifetime VCLM 11317498.170078476, lifetime CHONX 110474317.10952, 1 SYNTH forged",
+ "racReplay": "epoch 4 basis 3312.8004 -> 3384.8178 USD from one extra call by a stranger"
+}
