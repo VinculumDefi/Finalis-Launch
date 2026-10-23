@@ -1,0 +1,955 @@
+{
+ "about": "Hand-written assumption table. Each row names what the protocol treats as proven, the spec rule, and the check evidence that would satisfy each required property. build_gaps.py matches these against inputs.json.",
+ "spec_sources": {
+  "Rev 6": "Vinculum_Finalis_Requirement_Traceability.csv (the Rev 6 docx is not in the repo) and src/lib/vfRevision6Authority.js",
+  "Rev 12": "docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md",
+  "Rev 13": "docs/Vinculum_Finalis_Master_Specification_Revision_13_2026-10-22.md"
+ },
+ "poc_file": "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs",
+ "assumptions": [
+  {
+   "id": "A-01",
+   "finding": "AG-01",
+   "domain": "block headers and finality",
+   "input": "EVM block header + sourceFinalityProof (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche)",
+   "select": [
+    {
+     "contract": "SimpleEthereumLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "ArbitrumLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "OptimismLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "PolygonLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "BnbSmartChainLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "AvalancheLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84; AvalancheLockReader.sol:43-57",
+   "assumed": "The header is part of the source chain's settled (finalized) history, on the named chain",
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "VF-SEC-005"
+   ],
+   "required": [
+    {
+     "property": "header anchored to settled history (light client, checkpoint, validator signatures or confirmations)",
+     "evidence": "lightClient|isFinalized|checkpoint|anchor|finalizedRoot|validator|signature|quorum|confirm"
+    },
+    {
+     "property": "chain id read from chain data, not from the caller's claim",
+     "evidence": "h\\.chainId|header\\.chainId|f\\[\\d+\\].*chainId"
+    }
+   ],
+   "gap": "Only keccak(header) == claimed hash, claimed height == header number, and claimed chain id == the reader's own constant. The claimed chain id is the caller's word; an Ethereum header carries no chain id. Nothing ties the header to any real chain. EthereumLockReader (beacon light client) exists but the ceremony registers SimpleEthereumLockReader; the checkers/ finality contracts are never called by any reader.",
+   "exploit": "Run a local fork, create a real-looking lock, then rewrite header fields (mixHash, parentHash) so the header exists on no chain; the receipt proof still matches its receiptsRoot. Submit with claimed chain id 1. Known Oct 22 finding (non_base_finality_trust_model.test.cjs): about 311 VCLM per forged lock.",
+   "damage": "Unlimited VCLM mint up to the 500,000,000 hard cap, and CHONX after activation, with no real asset locked. Inflated supply also inflates RAC and stake rewards.",
+   "severity": "critical",
+   "rank": 1,
+   "poc": "AG-01",
+   "rev_conflict": "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers."
+  },
+  {
+   "id": "A-02",
+   "finding": "AG-02",
+   "domain": "block headers and finality",
+   "input": "UTXO block header + sourceFinalityProof (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash)",
+   "select": [
+    {
+     "contract": "BitcoinLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "BitcoinCashLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "LitecoinLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "DogecoinLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "DigiByteLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "ZcashLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107",
+   "assumed": "The header carries real proof of work, links to the best chain, and has enough confirmations",
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008"
+   ],
+   "required": [
+    {
+     "property": "proof of work meets the header's target",
+     "evidence": "_powOk|target|checkWork|Equihash"
+    },
+    {
+     "property": "linked to a known chain (prev hash / checkpoint)",
+     "evidence": "prevBlock|prev_block|prevHash|parentHash|checkpoint"
+    },
+    {
+     "property": "confirmation depth",
+     "evidence": "confirm|depth"
+    }
+   ],
+   "gap": "Only double-SHA256(header) == claimed hash and claimed height == coinbase height. No target check, no parent link, no confirmations. BitcoinHeaderChecker and ZcashHeaderChecker exist but are not called.",
+   "exploit": "Build an 80-byte header with any prev hash, bits 0x1d00ffff and any nonce over a merkle root that includes a self-made lock transaction to the Dev Fund script; no mining needed. PoC AG-02 shows verifyFinality and extractFacts accept it.",
+   "damage": "Unlimited VCLM/CHONX mint from fabricated Bitcoin-family locks, valued at the registry price of BTC, LTC, etc.",
+   "severity": "critical",
+   "rank": 2,
+   "poc": "AG-02",
+   "rev_conflict": "Rev 6 VF-XCH-006/008."
+  },
+  {
+   "id": "A-03",
+   "finding": "AG-03",
+   "domain": "block headers and finality",
+   "input": "Stellar ledger header and XRPL ledger header",
+   "select": [
+    {
+     "contract": "StellarLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    },
+    {
+     "contract": "XrplLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:66-77; XrplLockReader.sol:84-95",
+   "assumed": "The ledger was closed by the network (SCP quorum for Stellar, UNL validator signatures for XRPL)",
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008"
+   ],
+   "required": [
+    {
+     "property": "quorum or validator signatures over the ledger",
+     "evidence": "quorum|validator|signature|UNL|ed25519|secp256k1"
+    },
+    {
+     "property": "linked to a trusted ledger",
+     "evidence": "previousLedgerHash\\s*==|parent_hash\\s*==|checkpoint|anchor"
+    }
+   ],
+   "gap": "Only hash(header) == claimed hash and claimed sequence/index == header field. Any self-built ledger header is accepted.",
+   "exploit": "Build a ledger header whose tx-set or account-state hash commits to a fabricated payment to the Dev Fund account with a chosen memo; any previous-ledger/parent hash. PoC AG-03a/03b.",
+   "damage": "Unlimited VCLM/CHONX mint from fabricated XLM/XRP locks.",
+   "severity": "critical",
+   "rank": 3,
+   "poc": "AG-03a, AG-03b",
+   "rev_conflict": "Rev 6 VF-XCH-006/008."
+  },
+  {
+   "id": "A-04",
+   "finding": null,
+   "domain": "block headers and finality",
+   "input": "Solana lock proof",
+   "select": [
+    {
+     "contract": "SolanaLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/SolanaLockReader.sol:29-31",
+   "assumed": "Fail closed until a Solana proof exists",
+   "spec": [
+    "VF-XCH-006"
+   ],
+   "fail_closed": true,
+   "required": [],
+   "gap": "None. The reader always reverts.",
+   "exploit": "",
+   "damage": "none",
+   "severity": "none",
+   "rank": null,
+   "poc": ""
+  },
+  {
+   "id": "A-05",
+   "finding": null,
+   "domain": "block headers and finality",
+   "input": "Base lock record (same chain)",
+   "select": [
+    {
+     "contract": "BaseLockRecordVerifier",
+     "function": "verifyFinality",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:82-95",
+   "assumed": "The lock exists in the Base lock contract and its binding payload matches",
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-011"
+   ],
+   "required": [
+    {
+     "property": "lock record exists",
+     "evidence": "exists|LockNotFound"
+    }
+   ],
+   "gap": "None for finality: same-chain state read.",
+   "exploit": "",
+   "damage": "none",
+   "severity": "none",
+   "rank": null,
+   "poc": ""
+  },
+  {
+   "id": "A-06",
+   "finding": "AG-04",
+   "domain": "lock records and RAC identity",
+   "input": "pkg.racIdentity",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "recordFeeAndRac",
+     "input": "pkg.racIdentity"
+    },
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "recordFeeAndRac",
+     "input": "pkg"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:654,686-701",
+   "assumed": "One RAC per real fee payment; racIdentity is derived from the lock's immutable facts",
+   "spec": [
+    "VF-RAC-001",
+    "VF-FEE-011",
+    "VF-RAC-004",
+    "VF-SEC-005"
+   ],
+   "required": [
+    {
+     "property": "racIdentity derived from proven lock facts",
+     "evidence": "racIdentity\\s*==\\s*(keccak|_rac)"
+    },
+    {
+     "property": "at most one RAC per lock",
+     "evidence": "racByLock|lockRac|racRecordedForLock|consumedLocks"
+    }
+   ],
+   "gap": "The only check is !recordedRacs[racIdentity]. racIdentity is free caller input, so the same proven lock can record RAC any number of times, before or after it mints.",
+   "exploit": "Create one real Base lock (about $2.39 in the PoC). Call recordFeeAndRac K times with K random racIdentity values. epochRewardBasis grows K times; allocateEpoch mints basis*10 VCLM to stakers. PoC: 50 records paid 358.8 VCLM of stake rewards versus 7.176 honest.",
+   "damage": "Stake reward VCLM inflated without bound (until the VCLM cap), diluting every holder; attacker who stakes captures it. Works today on the Base-only ceremony.",
+   "severity": "critical",
+   "rank": 4,
+   "poc": "AG-04",
+   "rev_conflict": "Rev 6 VF-FEE-011 note: RAC keyed by immutable-facts identity (Section D); VF-RAC-001 exact-once. Code keys RAC on a caller-chosen value."
+  },
+  {
+   "id": "A-07",
+   "finding": "AG-05",
+   "domain": "epoch, time and block.timestamp",
+   "input": "pkg.valuationTimestamp",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "verifyAndMint",
+     "input": "pkg.valuationTimestamp"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:844,1023-1029",
+   "assumed": "Valuation Timestamp equals the finalized source block timestamp (lock creation time)",
+   "spec": [
+    "VF-ORC-011",
+    "VF-ORC-013"
+   ],
+   "required": [
+    {
+     "property": "equal to the proven creation time",
+     "evidence": "valuationTimestamp.*(createdAt|extCreat)|(createdAt|extCreat).*valuationTimestamp"
+    }
+   ],
+   "gap": "valuationTimestamp is never compared with the reader's createdAt; any value <= launch gives day-0 emission.",
+   "exploit": "Mint at day 400 with valuationTimestamp = 0. PoC: 310.96 VCLM instead of 249.92 for the same lock (24% more); the gap grows as decay continues.",
+   "damage": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
+   "severity": "high",
+   "rank": 5,
+   "poc": "AG-05",
+   "rev_conflict": "Rev 6 VF-ORC-011/013. src/lib/vfComplianceData.js:156 marks VF-ORC-011 IMPLEMENTED."
+  },
+  {
+   "id": "A-08",
+   "finding": "AG-06",
+   "domain": "prices and price-run timestamps",
+   "input": "lock reference price (scheduledPrices at first submission)",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "recordFeeAndRac",
+     "input": "pkg"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1020",
+   "assumed": "The reference price is the last successful run at lock creation and is retained for that lock",
+   "spec": [
+    "VF-ORC-009",
+    "VF-ORC-010"
+   ],
+   "required": [
+    {
+     "property": "price selected by lock creation time",
+     "evidence": "(createdAt|extCreat\\w*|valuationTimestamp).*(price|run)|(price|run).*(createdAt|extCreat)"
+    }
+   ],
+   "gap": "The price is bound at the first recordFeeAndRac/verifyAndMint, using whatever run is current then. Lock time is not consulted. The submitter picks the moment.",
+   "exploit": "Lock when the asset is cheap, wait for a higher run, then submit. PoC: price up 10x between lock and submission gives 3109.6 VCLM instead of 310.96.",
+   "damage": "Free option on price: up to the full price move per lock; systematic over-issuance.",
+   "severity": "high",
+   "rank": 6,
+   "poc": "AG-06",
+   "rev_conflict": "Rev 6 VF-ORC-009/010. vfComplianceData.js:154 marks VF-ORC-009 IMPLEMENTED with trace 'at verification time', which is the gap itself."
+  },
+  {
+   "id": "A-09",
+   "finding": "AG-07",
+   "domain": "prices and price-run timestamps",
+   "input": "applyScheduledPriceRun(runId, updates[].priceUsd18)",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "applyScheduledPriceRun",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:596-628",
+   "assumed": "Prices come from the twice-daily scheduled run; a record is valid until the next run; the poster has no value authority",
+   "spec": [
+    "VF-ORC-001",
+    "VF-ORC-008",
+    "VF-SEC-005"
+   ],
+   "required": [
+    {
+     "property": "bounded price change or second source",
+     "evidence": "deviation|maxChange|<=\\s*\\w*prev|median"
+    },
+    {
+     "property": "run timestamp / staleness",
+     "evidence": "timestamp|stale|expires"
+    },
+    {
+     "property": "runId advances by a bounded step",
+     "evidence": "runId\\s*(==|<=)\\s*lastScheduledRunId\\s*\\+"
+    }
+   ],
+   "gap": "Only poster identity, runId > last, price > 0. No bound, no timestamp, no staleness. runId = 2^64-1 freezes all later runs forever (prices can never update or be marked failed).",
+   "exploit": "A compromised or mistaken poster posts 1000x price and mints from a tiny lock; or posts runId 2^64-1 to freeze prices. PoC: a 0.001 ETH lock minted 31,096 VCLM.",
+   "damage": "Unlimited mint via price; permanent price freeze (stale prices used forever, VF-ORC-008 violated).",
+   "severity": "high",
+   "rank": 7,
+   "poc": "AG-07",
+   "rev_conflict": "Rev 6 VF-ORC-008 (stale record used), VF-SEC-005 (poster gets value authority)."
+  },
+  {
+   "id": "A-10",
+   "finding": "AG-09",
+   "domain": "Dev Fund",
+   "input": "pkg.devFundDestination, pkg.feeTransferEvidence, pkg.maturityTimestamp",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "verifyAndMint",
+     "input": "pkg.devFundDestination"
+    },
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "verifyAndMint",
+     "input": "pkg.feeTransferEvidence"
+    },
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "verifyAndMint",
+     "input": "pkg.maturityTimestamp"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:821-823",
+   "assumed": "The fee went to the configured Dev Fund for that environment",
+   "spec": [
+    "VF-FEE-009",
+    "VF-XCH-011"
+   ],
+   "required": [
+    {
+     "property": "fee destination equals devFundDestinations[env]",
+     "evidence": "devFundDestinations\\["
+    }
+   ],
+   "gap": "The Dev Fund check is commented out ('In simulation: skip'). devFundDestinations is written by configureDevFund but never read at mint; the reader/lock Dev Fund is never compared with it.",
+   "exploit": "Register (or point at) a lock whose devFund is the attacker; fee goes back to the attacker, mint still succeeds. PoC AG-09: verifier Dev Fund set to one address, lock fee to another, mint succeeds with junk devFundDestination and zero evidence.",
+   "damage": "Fees can bypass the Dev Fund while still earning issuance and RAC; makes the fee cost of an attack zero when combined with a misconfigured or forged source.",
+   "severity": "medium",
+   "rank": 9,
+   "poc": "AG-09",
+   "rev_conflict": "Rev 6 VF-FEE-009."
+  },
+  {
+   "id": "A-11",
+   "finding": "AG-08",
+   "domain": "balances and amounts received",
+   "input": "ERC20 lock token balance over time (rebasing)",
+   "select": [
+    {
+     "contract": "CommitmentVaultLock",
+     "function": "createErc20Lock",
+     "input": "*"
+    },
+    {
+     "contract": "CommitmentVaultLock",
+     "function": "release",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/CommitmentVaultLock.sol:219-269,273-294",
+   "assumed": "Token balances held by the lock do not change on their own",
+   "spec": [
+    "VF-SEC-001"
+   ],
+   "required": [
+    {
+     "property": "rebasing token rejected or share accounting",
+     "evidence": "rebas|shares"
+    }
+   ],
+   "gap": "Inbound fee-on-transfer is handled (balance delta). Rebasing is not: one shared pool, fixed principal per lock. Negative rebase makes the last releasers insolvent; positive rebase is stuck. Fee to Dev Fund uses transfer(fee) with no received check. No on-chain rebasing reject in the registry.",
+   "exploit": "If any rebasing token is registered on a non-Base chain, a negative rebase shifts the loss to whoever releases last.",
+   "damage": "Loss of principal for late releasers of that token; depends on registry content.",
+   "severity": "medium",
+   "rank": 8,
+   "poc": "",
+   "rev_conflict": "Rev 6 VF-SEC-001 requires rejection of rebasing assets unless handled."
+  },
+  {
+   "id": "A-12",
+   "finding": null,
+   "domain": "balances and amounts received",
+   "input": "ERC20 amount received (fee-on-transfer inbound)",
+   "select": [
+    {
+     "contract": "CommitmentVaultLock",
+     "function": "createErc20Lock",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/CommitmentVaultLock.sol:240-248",
+   "assumed": "Fee and principal are computed on the amount actually received",
+   "spec": [
+    "VF-SEC-001"
+   ],
+   "required": [
+    {
+     "property": "received amount measured as a balance delta (not a guard, so matched in the function body)",
+     "evidence": "_balanceOf\\(token, address\\(this\\)\\) - beforeBal",
+     "in": "body"
+    }
+   ],
+   "gap": "None.",
+   "exploit": "",
+   "damage": "none",
+   "severity": "none",
+   "rank": null,
+   "poc": ""
+  },
+  {
+   "id": "A-13",
+   "finding": "AG-10",
+   "domain": "lock records, proofs and recipients",
+   "input": "lockId in UTXO / Stellar / XRPL payload",
+   "select": [
+    {
+     "contract": "BitcoinLockReader",
+     "function": "extractFacts",
+     "input": "*"
+    },
+    {
+     "contract": "StellarLockReader",
+     "function": "extractFacts",
+     "input": "*"
+    },
+    {
+     "contract": "XrplLockReader",
+     "function": "extractFacts",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:140-151; StellarLockReader.sol:79-115; XrplLockReader.sol:97-150",
+   "assumed": "A lockId names exactly one lock and only its creator can use it",
+   "spec": [
+    "VF-XCH-011",
+    "VF-XCH-013"
+   ],
+   "required": [
+    {
+     "property": "lockId derived from the transaction (txid, sender)",
+     "evidence": "lockId\\s*==\\s*(keccak|sha256)|txid.*lockId"
+    }
+   ],
+   "gap": "lockId is read from the payload the creator writes. Anyone can make a real (small) lock with a victim's announced lockId and mint first; consumedLocks then blocks the victim.",
+   "exploit": "Watch the mempool for a lock payload, make a cheap lock with the same lockId, submit first.",
+   "damage": "Victim's lock can never mint (griefing); principal still releases.",
+   "severity": "medium",
+   "rank": 10,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-14",
+   "finding": "AG-11",
+   "domain": "token identity",
+   "input": "registry symbol used by _isUsdStable",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "recordFeeAndRac",
+     "input": "pkg"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:972-979,1001-1006",
+   "assumed": "Every USDC/USDT row is caught by the $0.95 rule",
+   "spec": [
+    "VF-ORC-005"
+   ],
+   "required": [
+    {
+     "property": "stablecoin flag stored per registry row",
+     "evidence": "isStable|stableFlag"
+    }
+   ],
+   "gap": "Detection is by symbol shape (USDC, USDT, USDC_x, USDT_x, USDTE). A row named USDbC, USDC.e or USDT.e is not caught, so the $0.95 floor does not apply to it.",
+   "exploit": "During a depeg, a lock of an unmatched stablecoin row is valued at the depegged run without the floor rule (the floor exists to block that).",
+   "damage": "Limited to the depeg size on those rows.",
+   "severity": "low",
+   "rank": 12,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-15",
+   "finding": "AG-12",
+   "domain": "app-side src/ trusted inputs",
+   "input": "app finality proof fields (finalityStatus, l1Finalized, challengePeriodPassed, confirmations)",
+   "app": {
+    "file": "src/lib/vfEvmChainVerifier.js",
+    "trusts": "proof\\.(finalityStatus|l1Finalized|challengePeriodPassed|confirmations|status)|sameChain"
+   },
+   "location": "src/lib/vfEvmChainVerifier.js:38-100; src/pages/BaseVerifier.jsx:55,187; src/components/base/ChainVerifierPanel.jsx:62; src/lib/vfComplianceData.js:154,156,226; src/lib/vfPriceService.js:25,45",
+   "assumed": "The app only shows 'verified' when the chain says so",
+   "spec": [
+    "VF-XCH-008",
+    "VF-SEC-005"
+   ],
+   "required": [
+    {
+     "property": "independent chain query (RPC/light client)",
+     "evidence": "eth_getBlockByNumber|getBlock\\(|provider\\.|lightClient|rpc"
+    }
+   ],
+   "gap": "The app verifier trusts self-reported status fields in the proof object; BaseVerifier page builds mock events and takes a typed 'Verified Gross USD'; ChainVerifierPanel says finality is verified by the chain verifier (false per AG-01..03); vfComplianceData marks VF-XCH-008, VF-ORC-009, VF-ORC-011 IMPLEMENTED; 'verified' USD is an off-chain quote.",
+   "exploit": "Not an on-chain loss by itself; misleads users and reviewers about what is proven.",
+   "damage": "Wrong status shown to users; compliance table hides AG-01, AG-05, AG-06.",
+   "severity": "medium",
+   "rank": 11,
+   "poc": "",
+   "rev_conflict": "Rev 13 section 5 already flags vfComplianceData as wrong for ITS rows (those rows are now fixed); other rows remain wrong."
+  },
+  {
+   "id": "A-16",
+   "finding": "AG-13",
+   "domain": "token identity",
+   "input": "pkg.assetPrecision at recordFeeAndRac",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "recordFeeAndRac",
+     "input": "pkg.assetPrecision"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:656-659",
+   "assumed": "Package precision matches the registry before RAC is credited",
+   "spec": [
+    "VF-XCH-011",
+    "VF-RAC-001"
+   ],
+   "required": [
+    {
+     "property": "precision equals registry decimals",
+     "evidence": "decimals\\s*==\\s*pkg\\.assetPrecision"
+    }
+   ],
+   "gap": "Only verifyAndMint checks precision. RAC uses entry.decimals so the value is right, but VF-XCH-011 binding of asset_precision is not enforced on the RAC path.",
+   "exploit": "None with value impact found.",
+   "damage": "none found (binding gap only)",
+   "severity": "low",
+   "rank": 13,
+   "poc": "",
+   "rev_conflict": "Rev 6 VF-XCH-011 lists asset_precision as a bound field."
+  },
+  {
+   "id": "A-17",
+   "finding": "AG-14",
+   "domain": "epoch, time and block.timestamp",
+   "input": "UTXO lock time and maturity (miner-set time)",
+   "select": [
+    {
+     "contract": "BitcoinLockReader",
+     "function": "extractFacts",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:41,137",
+   "assumed": "Duration on a UTXO chain equals the chosen duration",
+   "spec": [
+    "VF-COM-002"
+   ],
+   "required": [
+    {
+     "property": "exact duration",
+     "evidence": "blocks\\s*==\\s*remaining"
+    }
+   ],
+   "gap": "Maturity may differ from duration by up to TOLERANCE_SECS (1 day) of blocks; createdAt is the miner-set header time.",
+   "exploit": "Lock slightly shorter than the multiplier tier implies.",
+   "damage": "Up to 1 day less commitment per lock.",
+   "severity": "low",
+   "rank": 14,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-18",
+   "finding": "AG-15",
+   "domain": "epoch, time and block.timestamp",
+   "input": "createdAt from non-Base readers for the CHONX causal check",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "verifyAndMint",
+     "input": "pkg"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:295,832-839",
+   "assumed": "Source creation time is real chain time",
+   "spec": [
+    "VF-COM-025"
+   ],
+   "required": [
+    {
+     "property": "source time anchored",
+     "evidence": "lightClient|isFinalized|checkpoint|anchor|finalizedRoot|validator|signature|quorum|confirm"
+    }
+   ],
+   "gap": "createdAt comes from the header the caller supplies (miner/validator-set time, unanchored per AG-01..03); the 1-day margin only covers honest clock skew.",
+   "exploit": "With AG-01..03, set the header time after activation; without them, a source-chain clock skew under 1 day.",
+   "damage": "CHONX eligibility for a lock made before activation.",
+   "severity": "low",
+   "rank": 15,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-19",
+   "finding": "AG-16",
+   "domain": "prices and price-run timestamps",
+   "input": "verifiedGrossUsd on the lock contract",
+   "select": [
+    {
+     "contract": "CommitmentVaultLock",
+     "function": "createNativeLock",
+     "input": "verifiedGrossUsd"
+    }
+   ],
+   "location": "base-contracts/contracts/CommitmentVaultLock.sol:183-195,356",
+   "assumed": "USD value used for the lock band gate is real",
+   "spec": [
+    "VF-COM-003",
+    "VF-SEC-005"
+   ],
+   "required": [
+    {
+     "property": "USD derived from a price source",
+     "evidence": "price|oracle"
+    }
+   ],
+   "gap": "The lock trusts the caller's USD for its band gate. The Verifier recomputes USD for issuance, so this only affects which band the lock lets through.",
+   "exploit": "Pass a USD inside the band for an out-of-band lock; Verifier then rejects issuance, user pays fee for nothing (self-harm).",
+   "damage": "Low; user self-harm.",
+   "severity": "low",
+   "rank": 16,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-20",
+   "finding": "AG-18",
+   "domain": "registry rows",
+   "input": "registry rows and token address index",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "registerAssetPrecisionBatch",
+     "input": "*"
+    },
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "registerTokenAddressBatch",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:453,522",
+   "assumed": "Each row's decimals and token address are the real token's",
+   "spec": [
+    "VF-REG-001",
+    "VF-QNORM (code tag)"
+   ],
+   "required": [
+    {
+     "property": "on-chain identity check (decimals/code) or signed registry hash",
+     "evidence": "decimals\\(\\)|code\\.length|registryHash"
+    }
+   ],
+   "gap": "Rows are written by the deployer before finalize from the off-chain build; nothing checks them on chain. A wrong decimals value mis-values every lock of that asset.",
+   "exploit": "Operator error or a tampered registry build (deployer-only, pre-finalize).",
+   "damage": "Mis-valuation of one asset for the protocol's lifetime (immutable).",
+   "severity": "low",
+   "rank": 17,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-21",
+   "finding": "AG-19",
+   "domain": "chain IDs and names",
+   "input": "environment name to reader mapping",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "registerChainVerifier",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:549-554",
+   "assumed": "The reader registered for 'Ethereum' reads Ethereum",
+   "spec": [
+    "VF-DEP-001",
+    "VF-XCH-006"
+   ],
+   "required": [
+    {
+     "property": "reader ENVIRONMENT_ID equals the name",
+     "evidence": "ENVIRONMENT_ID|environmentId\\(\\)"
+    }
+   ],
+   "gap": "Any non-zero address is accepted for any name. With AG-01, an EVM reader also accepts a testnet lock at the same CREATE address (same deployer key and nonce) because the chain id is only claimed.",
+   "exploit": "Deploy the lock on a testnet with the mainnet deployer nonce, lock test ETH, mint as mainnet.",
+   "damage": "Mint from worthless testnet assets (same root cause as AG-01).",
+   "severity": "low",
+   "rank": 18,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-22",
+   "finding": null,
+   "domain": "msg.sender and minter roles",
+   "input": "msg.sender on VCLM/CHONX mint and initialize",
+   "select": [
+    {
+     "contract": "VinculumFinalisToken",
+     "function": "mint",
+     "input": "msg.sender"
+    },
+    {
+     "contract": "VinculumFinalisToken",
+     "function": "initialize",
+     "input": "msg.sender"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisToken.sol:65-70,95-120",
+   "assumed": "Only the Verifier and the Stake mint; set once; no new minter (Rev 13)",
+   "spec": [
+    "VF-SUP-013",
+    "Rev 13 s3"
+   ],
+   "required": [
+    {
+     "property": "minter gate",
+     "evidence": "minterVerifier|minterStake|deployer"
+    }
+   ],
+   "gap": "None.",
+   "exploit": "",
+   "damage": "none",
+   "severity": "none",
+   "rank": null,
+   "poc": "",
+   "rev_conflict": "Rev 13: no new minter; code agrees."
+  },
+  {
+   "id": "A-23",
+   "finding": null,
+   "domain": "epoch, time and block.timestamp",
+   "input": "block.timestamp in Stake epoch close",
+   "select": [
+    {
+     "contract": "VinculumFinalisStake",
+     "function": "closeEpoch",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisStake.sol:399-427",
+   "assumed": "An epoch closes only after it ends",
+   "spec": [
+    "VF-STK-007",
+    "VF-RAC-004"
+   ],
+   "required": [
+    {
+     "property": "epoch end reached",
+     "evidence": "block\\.timestamp|epochEnd|closed"
+    }
+   ],
+   "gap": "None found (Base time).",
+   "exploit": "",
+   "damage": "none",
+   "severity": "none",
+   "rank": null,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-24",
+   "finding": "AG-17",
+   "domain": "token identity",
+   "input": "Base token lock asset id",
+   "select": [
+    {
+     "contract": "BaseLockRecordVerifier",
+     "function": "extractAssetId",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:121-134",
+   "assumed": "(comment) token locks revert",
+   "spec": [
+    "VF-XCH-011"
+   ],
+   "required": [
+    {
+     "property": "behaviour matches comment",
+     "evidence": "$^"
+    }
+   ],
+   "gap": "The comment says token locks revert; code returns keccak(abi.encode('Base', token)), resolved through tokenAssetIndex. Stale comment; the code path is the intended one.",
+   "exploit": "",
+   "damage": "none (documentation)",
+   "severity": "info",
+   "rank": 19,
+   "poc": "",
+   "rev_conflict": ""
+  },
+  {
+   "id": "A-25",
+   "finding": "AG-20",
+   "domain": "lock records, proofs and recipients",
+   "input": "pkg.handshakeAllowanceCount",
+   "select": [
+    {
+     "contract": "VinculumFinalisVerifier",
+     "function": "verifyAndMint",
+     "input": "pkg.handshakeAllowanceCount"
+    }
+   ],
+   "location": "base-contracts/contracts/VinculumFinalisVerifier.sol:811-816,933-963",
+   "assumed": "(Rev 12) no Handshake allowance limit; no identity counter",
+   "spec": [
+    "Rev 12"
+   ],
+   "required": [
+    {
+     "property": "field removed or ignored",
+     "evidence": "$^"
+    }
+   ],
+   "gap": "The Verifier still requires the package to state 3 (EVM/Base) or 1 (UTXO/Stellar/XRPL) from the Rev 6 allowance rule. It counts nothing, so no limit applies, but the Rev 6 field is still a required input.",
+   "exploit": "",
+   "damage": "none (vestige; a wrong value only makes a mint revert)",
+   "severity": "info",
+   "rank": 20,
+   "poc": "",
+   "rev_conflict": "Rev 12 removes the allowance; Verifier still enforces the Rev 6 constant."
+  },
+  {
+   "id": "A-26",
+   "finding": null,
+   "domain": "block headers and finality",
+   "input": "Ethereum header via beacon light client (EthereumLockReader, control row)",
+   "select": [
+    {
+     "contract": "EthereumLockReader",
+     "function": "verifyFinality",
+     "input": "*"
+    }
+   ],
+   "location": "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:82-112",
+   "assumed": "The header is in finalized Ethereum history",
+   "spec": [
+    "VF-XCH-006"
+   ],
+   "required": [
+    {
+     "property": "header anchored to settled history (light client, checkpoint, validator signatures or confirmations)",
+     "evidence": "lightClient|isFinalized|checkpoint|anchor|finalizedRoot|validator|signature|quorum|confirm"
+    }
+   ],
+   "gap": "None at the reader (control row: shows the AG-01 rule passes a reader that has an anchor). Note: this reader is not the one the ceremony registers.",
+   "exploit": "",
+   "damage": "none",
+   "severity": "none",
+   "rank": null,
+   "poc": "",
+   "rev_conflict": ""
+  }
+ ]
+}
