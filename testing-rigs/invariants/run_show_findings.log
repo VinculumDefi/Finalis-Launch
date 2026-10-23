@@ -1,0 +1,67 @@
+
+
+  Rig 4: invariants on the real ceremony stack (property tests)
+      seed 20261023 steps 60; Verifier 0x2279...eBe6, Base lock 0xB7f8...4F5e
+      action counts {"crossEnv":6,"baseEth":7,"ethEnv":5,"replay":5,"chonxEarly":6,"unauthMint":4,"transfer":4,"forge":8,"whale":4,"baseUsdc":5,"burn":6}
+      lifetime VCLM 35570423.49396 CHONX 112379691.253 SYNTH 5.0 CHONX active true
+    ✔ random sequence: INV-1, INV-2, INV-3, INV-5, INV-6 hold after every step (17936ms)
+    ✔ INV-5: CHONX opens exactly at the 10M lifetime VCLM threshold; SYNTH opens at 100M lifetime CHONX
+      0 CHONX locks to reach 112379691.253 lifetime CHONX; forged 3 SYNTH for 3,000 VCLM + 30,000 CHONX
+    ✔ INV-5: SYNTH stays closed below 100M lifetime CHONX, then forge burns exactly 1,000 VCLM + 10,000 CHONX per SYNTH
+      USDC_BASE 4762.0 at $0.95 minted 45239.0 VCLM (USD basis 4523.9)
+    ✔ INV-7: $0.95 USDC rule. Below 0.95 refused for a new valuation at every duration; 0.95 accepted; never $1 substituted (554ms)
+    ✔ INV-3: replay across the same lock, chains and readers is refused (Base lock as Ethereum, Ethereum lock as Base) (70ms)
+    1) FINDING-HH-003: INV-4 every VCLM mint traces to a real lock on a header in real chain history (non-Base readers)
+    2) FINDING-HH-001: INV-8 at most one Reward-Accounting Credit per lock
+    3) FINDING-HH-002: INV-9 emission rate follows the lock's own creation time
+      lock 0xb5f2ee60 (already minted): 25 extra recordFeeAndRac calls by a stranger, avg gas 215180
+      epoch 43 reward basis 0.0 -> 1560.92355 USD; +62.436942 per call = +624.36942 reward VCLM per call
+      epoch 43 minted 15609.2355 VCLM to Stake (basis 1560.92355); attacker position claimable 15609.2355 VCLM
+    ✔ EVIDENCE FINDING-HH-001: one real settled lock, fresh racIdentity values, Stake mints reward VCLM for each (283ms)
+      day 840 since launch, 1 ETH 7d: honest package minted 19423.369107341849538934 VCLM; valuationTimestamp=0 minted 31098.86 VCLM (x1.601)
+    ✔ EVIDENCE FINDING-HH-002: valuationTimestamp is caller-chosen; 0 gives the day-0 emission rate after decay (41ms)
+      5 Ethereum-environment mints; proving chain id 31337 (not 1); first header 0x8c462eee
+    ✔ EVIDENCE FINDING-HH-003: Ethereum-environment mints in the sequence rest on headers from this test chain
+      RAC credit bound 35.8833 USD vs 71.7666 at the creation-time price
+    ✔ EVIDENCE FINDING-HH-004: price binds at the first recordFeeAndRac, not at lock creation; a stranger can bind it
+      mints: 23 (Base 18, Ethereum 5)
+
+
+  9 passing (21s)
+  3 failing
+
+  1) Rig 4: invariants on the real ceremony stack (property tests)
+       FINDING-HH-003: INV-4 every VCLM mint traces to a real lock on a header in real chain history (non-Base readers):
+
+      mint for lock 0x7c58c2e2 rests on header 0x8c462eee that real Ethereum does not have
+      + expected - actual
+
+
+      at Context.<anonymous> (/workspace/rigs/hardhat/testing-rigs/invariants/invariants.test.cjs:341:146)
+      at processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+  2) Rig 4: invariants on the real ceremony stack (property tests)
+       FINDING-HH-001: INV-8 at most one Reward-Accounting Credit per lock:
+
+      epoch reward basis grew from one settled lock
+      + expected - actual
+
+      -3995509194000000000000
+      +3808198368000000000000
+      
+      at Context.<anonymous> (/workspace/rigs/hardhat/testing-rigs/invariants/invariants.test.cjs:351:132)
+
+  3) Rig 4: invariants on the real ceremony stack (property tests)
+       FINDING-HH-002: INV-9 emission rate follows the lock's own creation time:
+
+      valuationTimestamp=0 must not mint more than the honest same-day lock
+      + expected - actual
+
+      -11195589600000000000000
+      +9006826676183993737179
+      
+      at Context.<anonymous> (/workspace/rigs/hardhat/testing-rigs/invariants/invariants.test.cjs:367:114)
+
+
+
+EXIT 3
