@@ -1,7 +1,9 @@
 // Batch fix 2026-10-23: tests that kill the mutants that survived the
-// 2026-10-22 mutation run (VERIFIER, STAKE, SYNTH, TOKEN) and the BaseCVL
-// pin-only mutants MUT-41..50 (run on both CVLs). Every test asserts the
-// intended behavior of the unmutated code.
+// 2026-10-22 mutation run (VERIFIER, STAKE, SYNTH, TOKEN), the BaseCVL
+// pin-only mutants MUT-41..50 (run on both CVLs), and the three real gaps
+// from the 2026-10-23 re-run (R-Verifier-639-37, R-Verifier-478-29,
+// G-Verifier-532). Every test asserts the intended behavior of the
+// unmutated code.
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
@@ -417,6 +419,64 @@ describe("Mutant kills: VinculumFinalisVerifier", function () {
     const minted = await submit(f, pkg({ recipient: f.recipient.address, created }));
     expect(minted).to.equal(await f.verifier.previewIssuance(1000n * SCALE, 0, 2, D30, 30n));
     expect(minted).to.be.lt(await f.verifier.previewIssuance(1000n * SCALE, 0, 2, D30, 0n));
+  });
+
+  it("R-Verifier-639-37: a scheduled price of exactly 2^128-1 is accepted; 2^128 is refused", async function () {
+    const { verifier } = await vfx();
+    const MAX = (1n << 128n) - 1n;
+    const row = (price) => [{ environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd18: price, success: true }];
+    const last = await verifier.lastScheduledRunId();
+    await expect(verifier.applyScheduledPriceRun(last + 1n, row(MAX + 1n))).to.be.revertedWith("VF-ORC-004: price out of range");
+    await expect(verifier.applyScheduledPriceRun(last + 1n, row(MAX))).to.not.be.reverted;
+    expect(await verifier.lastScheduledRunId()).to.equal(last + 1n);
+    const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Ethereum", ETH]);
+    const e = await verifier.scheduledPrices(key);
+    expect(e.priceUsd18).to.equal(MAX);
+    expect(e.usable).to.equal(true);
+  });
+
+  it("R-Verifier-478-29: registry batches of exactly 50 rows and 50 token addresses are accepted; 51 is refused", async function () {
+    const Token = await ethers.getContractFactory("VinculumFinalisToken");
+    const vclm = await Token.deploy("Vinculum", "VCLM", 10n ** 30n);
+    const chonx = await Token.deploy("Chonx", "CHONX", 10n ** 30n);
+    const verifier = await (await ethers.getContractFactory("VinculumFinalisVerifier")).deploy(await vclm.getAddress(), await chonx.getAddress());
+    const rows = (n, tag) => Array.from({ length: n }, (_, i) => ({
+      environmentId: "Ethereum", canonicalAssetId: ethers.id(`batch50/${tag}/${i}`), symbol: `T${i}`, decimals: 18, custodyClass: 3, custodyPath: 0,
+    }));
+    await expect(verifier.registerAssetPrecisionBatch(rows(51, "x"))).to.be.revertedWith("VF-REG: batch exceeds 50");
+    const fifty = rows(50, "ok");
+    await expect(verifier.registerAssetPrecisionBatch(fifty)).to.not.be.reverted;
+    for (const r of [fifty[0], fifty[49]]) {
+      const key = ethers.solidityPackedKeccak256(["string", "bytes32"], [r.environmentId, r.canonicalAssetId]);
+      expect((await verifier.assetPrecisionTable(key)).canonicalAssetId).to.equal(r.canonicalAssetId);
+    }
+    const addrs = (n) => Array.from({ length: n }, (_, i) => ({
+      environmentId: "Ethereum", token: ethers.getAddress(ethers.dataSlice(ethers.id(`batch50/token/${i}`), 12)), canonicalAssetId: fifty[i % 50].canonicalAssetId,
+    }));
+    await expect(verifier.registerTokenAddressBatch(addrs(51))).to.be.revertedWith("VF-REG: batch exceeds 50");
+    await expect(verifier.registerTokenAddressBatch(addrs(50))).to.not.be.reverted;
+  });
+
+  it("G-Verifier-532: with the VCLM cap fully issued the fee is still verified but no RAC credit is recorded", async function () {
+    const f = await vfx({ rewards: VCAP });
+    expect(await f.verifier.lifetimeVclmIssued()).to.equal(VCAP);
+    const created = await post(f.verifier, [["Ethereum", ETH, PRICE]]);
+    await mineAt(created + 5n);
+    const p = pkg({ recipient: f.recipient.address, created });
+    const epoch = await f.verifier.currentEpoch();
+    const basis = await f.verifier.epochRewardBasis(epoch);
+    await expect(f.verifier.recordFeeAndRac(p)).to.not.emit(f.verifier, "RacCreditRecorded");
+    const rk = await f.verifier.racKey("Ethereum", p.commitmentVaultLockId);
+    expect(await f.verifier.recordedRacs(rk)).to.equal(true);
+    expect(await f.verifier.racCredits(rk)).to.equal(0n);
+    expect(await f.verifier.epochRewardBasis(epoch)).to.equal(basis);
+    // Below the cap the same lock shape does record a credit.
+    const g = await vfx({ rewards: VCAP - 1n });
+    const c2 = await post(g.verifier, [["Ethereum", ETH, PRICE]]);
+    await mineAt(c2 + 5n);
+    const q = pkg({ recipient: g.recipient.address, created: c2 });
+    await expect(g.verifier.recordFeeAndRac(q)).to.emit(g.verifier, "RacCreditRecorded");
+    expect(await g.verifier.racCredits(await g.verifier.racKey("Ethereum", q.commitmentVaultLockId))).to.be.gt(0n);
   });
 });
 
