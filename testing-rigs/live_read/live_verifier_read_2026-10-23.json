@@ -1,0 +1,191 @@
+{
+ "checked_at": "2026-10-23 08:20 EDT (America/New_York)",
+ "method": "eth_call only via the public Base RPC; Verifier from deployment/BASE44_LIVE_CONFIG_2026-10-22.md; addresses truncated",
+ "verifier": "0xfA8A18e0...",
+ "block": 52984350,
+ "finalized": true,
+ "deployerZero": true,
+ "posterSet": true,
+ "lastRun": "1",
+ "envs": {
+  "Base": {
+   "registered": true,
+   "reader": "0x93613396...",
+   "envName": "Base",
+   "tolerance": "null",
+   "chainId": "null"
+  },
+  "Ethereum": {
+   "registered": true,
+   "reader": "0xE92ac194...",
+   "envName": "Ethereum",
+   "tolerance": "null",
+   "chainId": "1",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Arbitrum": {
+   "registered": true,
+   "reader": "0xA310F01d...",
+   "envName": "Arbitrum",
+   "tolerance": "null",
+   "chainId": "42161",
+   "native": {
+    "aliased": true,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Optimism": {
+   "registered": true,
+   "reader": "0x02412446...",
+   "envName": "Optimism",
+   "tolerance": "null",
+   "chainId": "10",
+   "native": {
+    "aliased": true,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Polygon": {
+   "registered": true,
+   "reader": "0xCc2F4119...",
+   "envName": "Polygon",
+   "tolerance": "null",
+   "chainId": "137",
+   "native": {
+    "aliased": true,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "BNB Smart Chain": {
+   "registered": true,
+   "reader": "0x9e0Ead13...",
+   "envName": "BNB Smart Chain",
+   "tolerance": "null",
+   "chainId": "56",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Avalanche": {
+   "registered": true,
+   "reader": "0x5d021f3b...",
+   "envName": "Avalanche",
+   "tolerance": "null",
+   "chainId": "43114",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Bitcoin": {
+   "registered": true,
+   "reader": "0x2cb46E27...",
+   "envName": "Bitcoin",
+   "tolerance": "86400",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Bitcoin Cash": {
+   "registered": true,
+   "reader": "0x38bC1fED...",
+   "envName": "Bitcoin Cash",
+   "tolerance": "86400",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Litecoin": {
+   "registered": true,
+   "reader": "0x17BF2c3c...",
+   "envName": "Litecoin",
+   "tolerance": "86400",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Dogecoin": {
+   "registered": true,
+   "reader": "0x3C2b2B90...",
+   "envName": "Dogecoin",
+   "tolerance": "86400",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "DigiByte": {
+   "registered": true,
+   "reader": "0x7393D6Ee...",
+   "envName": "DigiByte",
+   "tolerance": "86400",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Zcash": {
+   "registered": true,
+   "reader": "0x0c3b7304...",
+   "envName": "Zcash",
+   "tolerance": "86400",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Stellar": {
+   "registered": true,
+   "reader": "0x821A566D...",
+   "envName": "Stellar",
+   "tolerance": "3600",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "XRP Ledger": {
+   "registered": true,
+   "reader": "0xfcbbe7Af...",
+   "envName": "XRP Ledger",
+   "tolerance": "3600",
+   "chainId": "null",
+   "native": {
+    "aliased": false,
+    "usable": false,
+    "priceUsd": 0
+   }
+  },
+  "Solana": {
+   "registered": false,
+   "reader": "0x00000000..."
+  }
+ }
+}
