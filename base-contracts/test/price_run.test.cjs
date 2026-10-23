@@ -72,7 +72,7 @@ describe("Price run for the live poster (test chain)", function () {
 
   it("the Verifier rejects a reused run number and any sender but the poster", async () => {
     const r = buildPriceRun([{ environmentId: "Base", canonicalAssetId: eth, usd: "1" }], 2);
-    await expect(postOnTestChain(hre, v, r)).to.be.revertedWith("VF-ORC-001: run id must advance");
+    await expect(postOnTestChain(hre, v, r)).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
     const [, stranger] = await ethers.getSigners();
     await expect(v.connect(stranger).applyScheduledPriceRun(3, r.updates)).to.be.revertedWith("VF-ORC-007: not price poster");
   });
