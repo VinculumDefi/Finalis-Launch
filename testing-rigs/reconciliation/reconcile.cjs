@@ -260,8 +260,9 @@ async function reconcile(o) {
     const scan = async (address, topics) => {
       const to = await retry(() => P.getBlockNumber());
       const out = [];
-      for (let b = o.fromBlock; b <= to; b += 2000) {
-        out.push(...(await retry(() => (o.logP || P).getLogs({ address, topics, fromBlock: b, toBlock: Math.min(to, b + 1999) }), 8)));
+      const step = o.logChunk || 2000;
+      for (let b = o.fromBlock; b <= to; b += step) {
+        out.push(...(await retry(() => (o.logP || P).getLogs({ address, topics, fromBlock: b, toBlock: Math.min(to, b + step - 1) }), 8)));
         if (o.logPaceMs) await sleep(o.logPaceMs);
       }
       return out;
