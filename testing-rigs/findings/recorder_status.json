@@ -1,5 +1,5 @@
 {
- "as_of": "2026-10-23 08:20 EDT",
+ "as_of": "2026-10-23 09:40 EDT (America/New_York)",
  "main_base": "2465817",
  "note": "Hand-maintained by the findings recorder. A rig is REPORTED only when its findings JSON is on main; everything else is the recorder's view of the rig branches at as_of. build_master.py reads this file plus every per-rig findings JSON in this folder.",
  "rigs": [
@@ -114,20 +114,20 @@
   {
    "n": "C",
    "name": "combinatorial",
-   "status": "NOT YET RUN",
-   "branch": "rigs/extra (planned)",
-   "commit": "-",
-   "raw_output": "none",
-   "findings_file": null
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/extra",
+   "commit": "5e5e3c4",
+   "raw_output": "testing-rigs/combinatorial/results/cells.jsonl (2696 cells), results/summary.json",
+   "findings_file": "combinatorial.json"
   },
   {
    "n": "M",
    "name": "metamorphic",
-   "status": "NOT YET RUN",
-   "branch": "rigs/extra (planned)",
-   "commit": "-",
-   "raw_output": "none",
-   "findings_file": null
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/extra",
+   "commit": "874f7d5",
+   "raw_output": "testing-rigs/metamorphic/results/relations.jsonl (344 lines), results/summary.json",
+   "findings_file": "metamorphic.json"
   }
  ],
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
@@ -145,16 +145,16 @@
   "AG-07": "LIVE (Base set)",
   "AG-09": "LIVE (Base set)",
   "AG-08": "LIVE (ERC-20 path)",
-  "AG-10": "LATENT (non-Base only)",
+  "AG-10": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
   "AG-11": "LIVE (ERC-20 path)",
   "AG-12": "LIVE (Base set)",
   "AG-13": "LIVE (Base set)",
-  "AG-14": "LATENT (non-Base only)",
+  "AG-14": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
   "AG-15": "LIVE (Base set)",
   "AG-16": "LIVE (Base set)",
   "AG-17": "LIVE (Base set)",
   "AG-18": "LIVE (Base set)",
-  "AG-19": "LATENT (non-Base only)",
+  "AG-19": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
   "AG-20": "LIVE (Base set)",
   "STATIC-L03": "LIVE (Base set)",
   "STATIC-L04": "LIVE (ERC-20 path)",
@@ -182,7 +182,12 @@
   "ADV-11": "LIVE (Base set)",
   "ADV-12": "LIVE (Base set)",
   "ADV-13": "LIVE (Base set)",
-  "ADV-14": "LIVE (Base set)"
+  "ADV-14": "LIVE (Base set)",
+  "COMB-01": "LIVE (Base set)",
+  "COMB-02": "LIVE (Base set)",
+  "META-01": "LIVE (Base set)",
+  "META-02": "LIVE (Base set)",
+  "COMB-03": "LIVE (ERC-20 path)"
  },
  "merge": [
   {
@@ -196,14 +201,17 @@
    "ids": [
     "AG-05",
     "STATIC-H02",
-    "ADV-12"
+    "ADV-12",
+    "META-01"
    ]
   },
   {
    "ids": [
     "AG-06",
     "STATIC-M01",
-    "ADV-13"
+    "ADV-13",
+    "COMB-01",
+    "META-02"
    ]
   },
   {
@@ -249,14 +257,16 @@
  "related": {
   "STATIC-L04": "AG-08 (rebasing / balance-delta assumptions in the vault)",
   "STATIC-I02": "AG-16 (vault trusts caller-supplied USD)",
-  "STATIC-I03": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)"
+  "STATIC-I03": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
+  "COMB-02": "AG-06 (price bound at first submission is the root cause); AG-16 (lock-side band gate)",
+  "COMB-03": "AG-06 (price bound at first submission); AG-11 (which rows the $0.95 rule catches)"
  },
  "notes": {
   "AG-01": "EVM readers (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche) confirmed by ADV-01..06, ADV-10. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
   "AG-02": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
   "AG-03": "Stellar and XRP Ledger readers confirmed by ADV-08, ADV-09. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
-  "AG-10": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
-  "AG-14": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
-  "AG-19": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked."
+  "AG-10": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). The Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash, Stellar and XRP Ledger readers that take lockId from the payload are all registered, so the lockId front-run is reachable by direct contract calls once that asset is priced.",
+  "AG-14": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). All six live UTXO readers report TOLERANCE_SECS = 86400 (1 day); Stellar and XRP Ledger report 3600.",
+  "AG-19": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01."
  }
 }
