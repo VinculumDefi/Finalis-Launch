@@ -1,7 +1,7 @@
 // RIG 9 companion: remaining UTXO forged headers + genuine header with no lock.
-// Default skipped FINDING cases; PASS cases always run.
-//   cd base-contracts && ADVERSARIAL=1 npx hardhat test \
-//     ../testing-rigs/adversarial/adversarial_utxo_and_header.test.cjs
+// Converted 2026-10-23: every case is active and asserts the safe behavior
+// (the forged-header attacks are refused since fix AG-02).
+//   testing-rigs/run.sh none adversarial/adversarial_utxo_and_header.test.cjs
 const path = require("path");
 const crypto = require("crypto");
 const { createRequire } = require("module");
@@ -12,7 +12,8 @@ const { ethers } = req("hardhat");
 const UTXO = req(path.join(BC, "test/fixtures/utxo_local_locks.json"));
 const ETH_FIX = req(path.join(BC, "test/fixtures/ethereum_mainnet_receipt.json"));
 
-const run = process.env.ADVERSARIAL ? it : it.skip;
+const run = it;
+const REFUSED = (env) => `VF-XCH-006: ${env} settled-history anchor not enforced on-chain; environment disabled`;
 const coder = ethers.AbiCoder.defaultAbiCoder();
 const UTXO_PROOF =
   "tuple(bytes header, bytes coinbaseTx, bytes32[] coinbaseBranch, bytes lockTx, bytes32[] lockBranch, uint256 lockIndex, bytes redeemScript, bytes payload, uint256 durationSecs)";
@@ -50,11 +51,11 @@ function forgeUtxoHeader(S) {
   return { forged, forgedHash: useLe ? le : be };
 }
 
-describe("RIG 9 adversarial UTXO remaining + genuine header (ADVERSARIAL=1 for findings)", function () {
+describe("RIG 9 adversarial UTXO remaining + genuine header (safe behavior, fix 2026-10-23)", function () {
   this.timeout(300000);
 
   for (const name of ["Bitcoin Cash", "Litecoin", "Dogecoin", "DigiByte", "Zcash"]) {
-    run(`FINDING ADV-16: ${name} reader accepts forged header with no settled-history / PoW [AG-02]`, async () => {
+    run(`SAFE ADV-16: ${name} reader refuses a forged header with no settled-history / PoW [AG-02]`, async () => {
       const S = UTXO.chains[name].standard;
       const reader = await (await ethers.getContractFactory(READER[name])).deploy(S.devFundScript);
       const { forged, forgedHash } = forgeUtxoHeader(S);
@@ -62,12 +63,8 @@ describe("RIG 9 adversarial UTXO remaining + genuine header (ADVERSARIAL=1 for f
         forged, S.coinbaseTx, S.coinbaseBranch, S.lockTx, S.lockBranch, S.lockIndex,
         S.redeemScript, S.payload, S.durationSecs,
       ]]);
-      const [ok] = await reader.verifyFinality(
-        proof, coder.encode(["bytes32", "uint256"], [forgedHash, S.height]));
-      expect(ok).to.equal(true);
-      const f = await reader.extractFacts(proof);
-      expect(f[0]).to.equal(S.lockId);
-      console.log(`      ADV-16 ${name} forged header accepted, gross ${f[1]}`);
+      await expect(reader.verifyFinality(proof, coder.encode(["bytes32", "uint256"], [forgedHash, S.height])))
+        .to.be.revertedWith(REFUSED(name));
     });
   }
 
