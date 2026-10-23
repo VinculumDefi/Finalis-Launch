@@ -1,0 +1,116 @@
+{
+ "date": "2026-10-23",
+ "old_score": 0.733,
+ "combined": {
+  "killed": 140,
+  "survived": 7,
+  "score": 0.952
+ },
+ "fresh_changed_contracts": {
+  "killed": 75,
+  "survived": 5,
+  "pin_only": 6,
+  "stillborn": 17,
+  "score": 0.938
+ },
+ "per_contract": {
+  "Verifier": {
+   "killed": 46,
+   "survived": 5,
+   "stillborn": 11,
+   "score": 0.902,
+   "source": "fresh sample on the fixed source"
+  },
+  "BaseCVL": {
+   "killed": 13,
+   "pin_only": 6,
+   "stillborn": 4,
+   "score": 1.0,
+   "source": "fresh sample on the fixed source"
+  },
+  "CVL": {
+   "killed": 16,
+   "stillborn": 2,
+   "score": 1.0,
+   "source": "fresh sample on the fixed source"
+  },
+  "Token": {
+   "killed": 14,
+   "survived": 0,
+   "stillborn": 5,
+   "score": 1.0,
+   "source": "old killed plus replay of the old survivors"
+  },
+  "Stake": {
+   "killed": 27,
+   "survived": 2,
+   "stillborn": 6,
+   "score": 0.931,
+   "source": "old killed plus replay of the old survivors"
+  },
+  "Synth": {
+   "killed": 13,
+   "survived": 0,
+   "stillborn": 2,
+   "score": 1.0,
+   "source": "old killed plus replay of the old survivors"
+  },
+  "Durations": {
+   "killed": 11,
+   "score": 1.0,
+   "source": "old run, source unchanged"
+  }
+ },
+ "survivors": [
+  {
+   "id": "R-Verifier-639-37",
+   "contract": "Verifier",
+   "line": 639,
+   "what": "`<=` -> `<` in: require(u.priceUsd18 <= type(uint128).max, \"VF-ORC-004: price out of range\");"
+  },
+  {
+   "id": "R-Verifier-863-20",
+   "contract": "Verifier",
+   "line": 863,
+   "what": "`<=` -> `<` in: require(fee <= gross && gross - fee == principal, \"VF-COM-012: principal != gross - fee\");"
+  },
+  {
+   "id": "R-Verifier-478-29",
+   "contract": "Verifier",
+   "line": 478,
+   "what": "`<=` -> `<` in: require(items.length <= 50, \"VF-REG: batch exceeds 50\");"
+  },
+  {
+   "id": "R-Verifier-1206-17",
+   "contract": "Verifier",
+   "line": 1206,
+   "what": "`<` -> `<=` in: if (rate < floorRate) rate = floorRate;"
+  },
+  {
+   "id": "G-Verifier-532",
+   "contract": "Verifier",
+   "line": 734,
+   "what": "IfStatementMutation(`lifetimeVclmIssued() < VCLM_HARD_CAP` |==> `true`) of: `if (lifetimeVclmIssued() < VCLM_HARD_CAP) {`"
+  },
+  {
+   "id": "G-Stake-1080",
+   "contract": "Stake",
+   "line": 598,
+   "what": "IfStatementMutation(`lo <= hi` |==> `true`) of: `if (lo <= hi) {`"
+  },
+  {
+   "id": "R-Stake-686-38",
+   "contract": "Stake",
+   "line": 686,
+   "what": "`>` -> `>=` in: for (uint256 k = ts.length; k > 0; k--) {"
+  }
+ ],
+ "notes": [
+  "score = killed / (killed + survived); pin_only and stillborn are excluded, as in the old run",
+  "Verifier, CommitmentVaultLock and BaseCommitmentVaultLock changed in the fix, so their old mutants no longer apply; they were re-sampled (seed unchanged, gambit re-run on the fixed source)",
+  "G-Stake-1080 and R-Stake-686-38 were already judged equivalent",
+  "R-Verifier-1206-17 (rate < floor to rate <= floor) assigns the same value at equality, so it is equivalent",
+  "R-Verifier-863-20 needs fee == gross, which leaves principal 0 and is refused elsewhere; judged equivalent pending a direct test",
+  "R-Verifier-639-37 (price exactly 2^128-1), R-Verifier-478-29 (registry batch of exactly 50) and G-Verifier-532 (VCLM cap branch) are real test gaps, left OPEN"
+ ]
+}
