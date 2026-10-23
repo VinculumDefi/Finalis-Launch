@@ -1,0 +1,25 @@
+=== FILE test/checkers/ZcashHeaderChecker.test.cjs
+
+
+  ZcashHeaderChecker
+    ✔ accepts the mainnet genesis Equihash solution under its nBits target (1665ms)
+    ✔ reverts a mutated Equihash solution (845ms)
+    ✔ reverts when the header hash is above the nBits target (914ms)
+    ✔ accepts 10 headers after a lock whose solution meets Equihash and its nBits target (4832ms)
+    ✔ reverts when fewer than 10 headers follow the lock header (373ms)
+    ✔ reverts a one-bit flip of a header or a merkle sibling (12392ms)
+    ✔ refuses a shielded-shaped sapling output marker and an orchard action marker (499ms)
+
+
+  7 passing (22s)
+
+=== EXIT 0 test/checkers/ZcashHeaderChecker.test.cjs
+=== FILE test/stake_t277_claim_display.test.cjs
+
+
+  t277u displayed claimable amount equals the contract, per epoch, no overlap
+      214 comparisons, all equal (L = 1063, current epoch 1067)
+    ✔ every position, many toEpochs and read groups 1, 7, 499, 500, 501: equal to claimableVclm to the wei (205977ms)
+Killed
+=== EXIT 137 test/stake_t277_claim_display.test.cjs
+RERUN TOTAL passing=7 failing=0
