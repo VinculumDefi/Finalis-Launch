@@ -1,0 +1,88 @@
+{
+ "checkedOn": "2026-10-23",
+ "rowsChecked": 876,
+ "batches": 12,
+ "byStatus": {
+  "pass": 857,
+  "fail": 19
+ },
+ "failOrUncheckedByReason": {
+  "fail:symbol_mismatch": 19
+ },
+ "candidate": {
+  "file": "base-contracts/deployment/assetRegistry.candidate-2026-10-23.json",
+  "total": 811,
+  "tokens": 810,
+  "excluded": 66,
+  "excludedPassRows": {
+   "duplicateAddress": 44,
+   "operatorDropped": 3
+  }
+ },
+ "revisionB": {
+  "tokens": 475,
+  "natives": 12,
+  "tokensFailingNow": [],
+  "tokensUncheckedNow": [],
+  "tokensPassingNow": 475,
+  "passingNotInRevB": 382,
+  "candidateNotInRevB": 335,
+  "revBNotInCandidate": [
+   {
+    "row": 2,
+    "environmentId": "Ethereum",
+    "kind": "native"
+   },
+   {
+    "row": 3,
+    "environmentId": "Bitcoin",
+    "kind": "native"
+   },
+   {
+    "row": 4,
+    "environmentId": "Dogecoin",
+    "kind": "native"
+   },
+   {
+    "row": 12,
+    "environmentId": "XRP Ledger",
+    "kind": "native"
+   },
+   {
+    "row": 18,
+    "environmentId": "BNB Smart Chain",
+    "kind": "native"
+   },
+   {
+    "row": 19,
+    "environmentId": "Litecoin",
+    "kind": "native"
+   },
+   {
+    "row": 23,
+    "environmentId": "Avalanche",
+    "kind": "native"
+   },
+   {
+    "row": 54,
+    "environmentId": "Bitcoin Cash",
+    "kind": "native"
+   },
+   {
+    "row": 100,
+    "environmentId": "DigiByte",
+    "kind": "native"
+   },
+   {
+    "row": 166,
+    "environmentId": "Zcash",
+    "kind": "native"
+   },
+   {
+    "row": 518,
+    "environmentId": "Stellar",
+    "kind": "native"
+   }
+  ]
+ }
+}
