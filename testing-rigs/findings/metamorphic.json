@@ -1,0 +1,43 @@
+{
+ "rig": "metamorphic",
+ "generated_from": "testing-rigs/metamorphic/results/relations.jsonl (344 lines), summarized in results/summary.json",
+ "branch": "rigs/extra",
+ "note": "Discovery only. Base environment, local Hardhat deployment. Relations: MR1 scale x2, MR2 split in two, MR3a/b/c same lock submitted later / backdated / after a price run, MR4 fee fuzz (40 grosses), MR5 decay sweep (days 300 to 4500, step 30, VCLM and CHONX) against the spec formula, MR6 output token follows the lock record. CHONX cases run after a $100k 10-year activation lock.",
+ "counts": {"relations": 344, "PASS": 337, "VIOLATION": 6, "setup": 1},
+ "findings": [
+  {
+   "id": "META-01",
+   "rig": "metamorphic",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "high",
+   "scope": "LIVE (Base set)",
+   "file_line": ["base-contracts/contracts/VinculumFinalisVerifier.sol:844", "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1027"],
+   "description": "Relation MR3b: the same lock submitted with valuationTimestamp set to launch should mint the same as an honest submission. It mints more, and the gap grows with lock age until the emission floor. The backdated package was accepted every time. Same root cause as AG-05.",
+   "evidence": "VCLM lock at day 255: 162.5 vs 142.05 (x1.14). CHONX lock at day 500: 1625 vs 1241.77 (x1.31). VCLM and CHONX locks at day 4500: x10 (162.5 vs 16.25 VCLM; 1625 vs 162.5 CHONX).",
+   "damage_potential": "Up to 10x over-issuance per lock once emission has decayed to the floor.",
+   "spec_refs": ["VF-ORC-011", "VF-ORC-013"],
+   "ag_cross_ref": "AG-05"
+  },
+  {
+   "id": "META-02",
+   "rig": "metamorphic",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "high",
+   "scope": "LIVE (Base set)",
+   "file_line": "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1020",
+   "description": "Relation MR3c: two identical locks created under the same price run should mint the same. If a price run doubles the price before the second is first submitted, the second mints exactly twice as much. Same root cause as AG-06.",
+   "evidence": "Ratio 2.0 for both VCLM (142.05 vs 284.10) and CHONX (1241.77 vs 2483.54).",
+   "damage_potential": "See AG-06.",
+   "spec_refs": ["VF-ORC-009", "VF-ORC-010"],
+   "ag_cross_ref": "AG-06"
+  }
+ ],
+ "pass_cases": [
+  "MR1: doubling gross doubles the mint (6 of 6).",
+  "MR2: two half locks mint the same total as one lock (6 of 6, durations 7d/1y/10y x $5/$50).",
+  "MR3a: the same lock submitted 45 days later at the same price with an honest timestamp mints the same (2 of 2).",
+  "MR4: fee is the floored 5% and the Dev Fund delta equals the fee for 40 fuzzed grosses, ETH and ERC-20.",
+  "MR5: decay matches the spec formula, is monotonic and holds its floor (VCLM 1, CHONX 10) for 282 points.",
+  "MR6: a package whose output token differs from the lock record is refused."
+ ]
+}
