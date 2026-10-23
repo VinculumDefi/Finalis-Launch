@@ -1,0 +1,21 @@
+# previous run, archived 2026-10-23T06:41:30-04:00
+harness_issuance exit=247 seconds=157 violations=0 unproved=0 badspec=0
+harness_feemath exit=247 seconds=202 violations=0 unproved=0 badspec=0
+prod_synth exit=245 seconds=28 violations=0 unproved=0 badspec=0
+prod_token exit=0 seconds=106 violations=1 unproved=3 badspec=0
+harness_synth exit=247 seconds=288 violations=0 unproved=0 badspec=0
+harness_token exit=247 seconds=333 violations=0 unproved=0 badspec=0
+prod_stake exit=245 seconds=83 violations=0 unproved=0 badspec=0
+prod_basecvl exit=0 seconds=186 violations=3 unproved=0 badspec=0
+prod_verifier exit=247 seconds=221 violations=0 unproved=0 badspec=0
+# previous run, archived 2026-10-23T07:32:19-04:00
+harness_token exit=0 seconds=714 violations=1 unproved=16 badspec=0
+harness_synth exit=0 seconds=446 violations=1 unproved=18 badspec=0
+harness_feemath exit=247 seconds=190 violations=0 unproved=0 badspec=0
+harness_issuance exit=0 seconds=129 violations=0 unproved=5 badspec=0
+prod_token exit=0 seconds=101 violations=1 unproved=3 badspec=0
+harness_feemath exit=0 seconds=26 violations=1 unproved=0 badspec=0 (rerun with FeeMath.sol)
+prod_synth exit=245 seconds=25 violations=0 unproved=0 badspec=0
+prod_basecvl exit=0 seconds=192 violations=3 unproved=0 badspec=0
+prod_stake exit=0 seconds=201 violations=0 unproved=97 badspec=0
+harness_token_assert_only exit=247 seconds=639 (assert target only, OOM kill)
