@@ -27,7 +27,8 @@ import "../checkers/RlpReader.sol";
 ///      header number must equal the claimed height.
 /// SCOPE: this reader proves a lock is in the block whose hash the package
 /// names. Whether that block hash belongs to the chain's settled history is
-/// the claim the package makes; this contract does not decide it.
+/// not proven here, so verifyFinality refuses (fail closed, fix 2026-10-23,
+/// AG-01) and the environment stays disabled.
 contract EvmReceiptLockReader is IChainVerifier {
     bytes32 public constant LOCK_CREATED_TOPIC =
         keccak256("LockCreated(bytes32,address,address,address,uint256,uint256,uint256,uint256)");
@@ -67,11 +68,25 @@ contract EvmReceiptLockReader is IChainVerifier {
         environmentWord = bytes32(bytes(environmentId_)) | bytes32(n * 2);
     }
 
-    function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
+    /// @notice Fail closed (fix 2026-10-23, AG-01). This reader proves a lock
+    /// is in the block the package names, but nothing on-chain anchors that
+    /// block to the chain's settled history: a header is accepted on its own hash, and the chain id is the caller's word. Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche all use this path. Until an authoritative
+    /// anchor exists, finality is refused and the environment stays disabled.
+    /// headerClaimMatches keeps the block binding check available.
+    function verifyFinality(bytes calldata, bytes calldata)
         external
         view
         virtual
         returns (bool, bytes32, uint256)
+    {
+        revert(string.concat("VF-XCH-006: ", environmentId, " settled-history anchor not enforced on-chain; environment disabled"));
+    }
+
+    function headerClaimMatches(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
+        external
+        view
+        virtual
+        returns (bytes32, uint256)
     {
         LockEventProof memory e = abi.decode(lockEventProof, (LockEventProof));
         ExecutionHeader.View memory h = _openHeader(e.headerRlp);
@@ -80,7 +95,7 @@ contract EvmReceiptLockReader is IChainVerifier {
         require(claimedChain == chainId, "VF-XCH-006: wrong chain");
         require(claimedHash == h.hash, "VF-XCH-006: block hash mismatch");
         require(claimedHeight == h.number, "VF-XCH-006: block height mismatch");
-        return (true, h.hash, h.number);
+        return (h.hash, h.number);
     }
 
     function extractFacts(bytes calldata lockEventProof)
