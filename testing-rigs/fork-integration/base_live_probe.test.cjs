@@ -19,6 +19,9 @@ describe("Rig 2: live finalized Base set (read-only probe on a local fork)", fun
 
   before(async () => {
     expect((await ethers.provider.getNetwork()).chainId).to.equal(8453n);
+    // EDR cannot execute calls at the fork block itself on chain 8453 without a
+    // hardfork history entry for it; mine one local block so calls run at fork+1.
+    await network.provider.send("evm_mine");
     V = new ethers.Contract(LIVE.base.VinculumFinalisVerifier, art.VinculumFinalisVerifier.abi, ethers.provider);
     lock = new ethers.Contract(LIVE.base.BaseCommitmentVaultLock, art.BaseCommitmentVaultLock.abi, ethers.provider);
     vclm = new ethers.Contract(LIVE.base.TokenVCLM, art.TokenVCLM.abi, ethers.provider);
