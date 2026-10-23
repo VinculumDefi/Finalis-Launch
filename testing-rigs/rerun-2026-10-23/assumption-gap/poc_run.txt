@@ -1,0 +1,17 @@
+
+
+  assumption-gap: every gap is closed (safe behavior, fix 2026-10-23)
+    ✔ AG-01: a forged Ethereum header is refused, and so is a real one (environment disabled until anchored) (660ms)
+    ✔ AG-02: a Bitcoin header with no proof of work is refused (environment disabled until anchored)
+    ✔ AG-03a: a Stellar ledger header with an arbitrary previous-ledger hash is refused
+    ✔ AG-03b: an XRPL ledger header with an arbitrary parent hash is refused
+    ✔ AG-04: one real Base lock records RAC exactly once, whatever racIdentity is supplied (216ms)
+    ✔ AG-04 (damage): the stake reward for an epoch is the one credit per lock, not a multiple (358ms)
+    ✔ AG-05: valuationTimestamp = 0 is refused; the proven creation time sets the decayed rate (94ms)
+    ✔ AG-06: a later price run does not reprice an older lock (price in effect at creation) (145ms)
+    ✔ AG-07: run ids are sequential, so runId = 2^64-1 cannot freeze future runs (70ms)
+    ✔ AG-09: a lock whose Dev Fund differs from the configured Dev Fund is refused (3469ms)
+
+
+  10 passing (5s)
+
