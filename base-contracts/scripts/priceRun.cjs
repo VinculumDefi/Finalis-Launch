@@ -61,12 +61,14 @@ function buildPriceRun(fetched, runId, { registry = registryKeys() } = {}) {
   return { runId: id, poster: LIVE.scheduledPricePoster, updates, skipped };
 }
 
-// A full registry run does not fit one transaction: a success line costs about
-// 57,000 gas (measured on the test chain), so 487 lines (Revision B) are about
-// 28M gas, above the 2^24 (16,777,216) per-transaction gas cap. Split the lines into
-// consecutive runs of at most MAX_LINES_PER_RUN (250 lines, about 14.3M gas),
+// A full registry run does not fit one transaction. Since the 2026-10-23 fix
+// (AG-06: every line is also appended to the per-asset price history used for
+// the price in effect at lock creation) a line costs about 102,000 gas (measured
+// on the test chain), so 487 lines (Revision B) are about 50M gas, far above the
+// 2^24 (16,777,216) per-transaction gas cap. Split the lines into consecutive
+// runs of at most MAX_LINES_PER_RUN (140 lines, about 14.3M gas),
 // numbered firstRunId, firstRunId + 1, ... Each run is posted on its own.
-const MAX_LINES_PER_RUN = 250;
+const MAX_LINES_PER_RUN = 140;
 function buildPriceRuns(fetched, firstRunId, { registry = registryKeys(), maxLines = MAX_LINES_PER_RUN } = {}) {
   const all = buildPriceRun(fetched, firstRunId, { registry }); // validates and de-duplicates the whole set
   const runs = [];
