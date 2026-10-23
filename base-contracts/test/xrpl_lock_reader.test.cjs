@@ -32,14 +32,15 @@ describe("XrplLockReader (XRP Ledger, local standalone rippled lock)", function 
     }
   });
 
-  it("verifyFinality: the header hashes to the claimed ledger hash and index", async function () {
+  it("verifyFinality is refused (AG-03, no ed25519 quorum anchor); headerClaimMatches: the header hashes to the claimed ledger hash and index", async function () {
     const L = FX.week;
-    const r = await reader.verifyFinality(proof(L), claim(L.ledgerHash, L.ledgerIndex));
-    expect(r[0]).to.equal(true);
-    expect(r[1]).to.equal(L.ledgerHash.toLowerCase());
-    await expect(reader.verifyFinality(proof(L), claim(ethers.ZeroHash, L.ledgerIndex))).to.be.revertedWith("VF-XCH-006: ledger hash mismatch");
-    await expect(reader.verifyFinality(proof(L), claim(L.ledgerHash, L.ledgerIndex + 1))).to.be.revertedWith("VF-XCH-006: ledger index mismatch");
-    await expect(reader.verifyFinality(proof(L, { header: flip(L.header, 5) }), claim(L.ledgerHash, L.ledgerIndex))).to.be.revertedWith("VF-XCH-006: ledger hash mismatch");
+    await expect(reader.verifyFinality(proof(L), claim(L.ledgerHash, L.ledgerIndex)))
+      .to.be.revertedWith("VF-XCH-006: XRP Ledger settled-history anchor not enforced on-chain; environment disabled");
+    const r = await reader.headerClaimMatches(proof(L), claim(L.ledgerHash, L.ledgerIndex));
+    expect(r[0].toLowerCase()).to.equal(L.ledgerHash.toLowerCase());
+    await expect(reader.headerClaimMatches(proof(L), claim(ethers.ZeroHash, L.ledgerIndex))).to.be.revertedWith("VF-XCH-006: ledger hash mismatch");
+    await expect(reader.headerClaimMatches(proof(L), claim(L.ledgerHash, L.ledgerIndex + 1))).to.be.revertedWith("VF-XCH-006: ledger index mismatch");
+    await expect(reader.headerClaimMatches(proof(L, { header: flip(L.header, 5) }), claim(L.ledgerHash, L.ledgerIndex))).to.be.revertedWith("VF-XCH-006: ledger hash mismatch");
   });
 
   it("accepts a real 7-day lock: lock id, recipient, amounts, 5% fee, times and asset from ledger data", async function () {
