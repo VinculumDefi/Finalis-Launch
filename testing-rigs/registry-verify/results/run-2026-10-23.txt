@@ -1,0 +1,13 @@
+rows to check: 876 total, 876 not yet pass/fail
+batch 1 Ethereum#1: 93 rows, 1 attempt(s), {"pass":91,"fail":2}
+batch 2 Ethereum#2: 93 rows, 1 attempt(s), {"pass":87,"fail":6}
+batch 3 Ethereum#3: 93 rows, 1 attempt(s), {"pass":90,"fail":3}
+batch 4 Ethereum#4: 93 rows, 1 attempt(s), {"pass":92,"fail":1}
+batch 5 Ethereum#5: 92 rows, 1 attempt(s), {"pass":88,"fail":4}
+batch 6 Arbitrum#1: 40 rows, 1 attempt(s), {"pass":40}
+batch 7 Base#1: 33 rows, 1 attempt(s), {"pass":33}
+batch 8 Optimism#1: 18 rows, 1 attempt(s), {"pass":17,"fail":1}
+batch 9 Polygon#1: 78 rows, 1 attempt(s), {"pass":78}
+batch 10 BNB Smart Chain#1: 78 rows, 2 attempt(s), {"pass":78}
+batch 11 BNB Smart Chain#2: 77 rows, 1 attempt(s), {"pass":76,"fail":1}
+batch 12 Avalanche#1: 88 rows, 1 attempt(s), {"pass":87,"fail":1}
