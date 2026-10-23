@@ -1,0 +1,155 @@
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:205:9:
+    |
+205 |         assert(ghostSum == totalSupply); // HARNESS P2 conservation
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+   = false
+  CHONX_BURN_PER_SYNTH = 0
+  HARD_CAP = 0
+  SYNTH_ACTIVATION_THRESHOLD = 0
+  VCLM_BURN_PER_SYNTH = 0
+  chonxToken = 0
+  decimals = 0
+  ghostSum = 0
+  hA = false
+  hS = 0
+  synthActivated = false
+  synthActivationBlock = 38
+  totalSupply = 1
+  vclmToken = 0
+  verifier = 0
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:115:39:
+    |
+115 |     function checkActivation() public harnessGuard returns (bool) {
+    |                                       ^^^^^^^^^^^^
+Note: 
+Note that external function calls are not inlined, even if the source code of the function is available. This is due to the possibility that the actual called contract has the same ABI but implements the function differently.
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:206:9:
+    |
+206 |         assert(totalSupply <= HARD_CAP); // HARNESS P2 cap
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+   = false
+  CHONX_BURN_PER_SYNTH = 0
+  HARD_CAP = 0
+  SYNTH_ACTIVATION_THRESHOLD = 0
+  VCLM_BURN_PER_SYNTH = 0
+  chonxToken = 0
+  decimals = 0
+  ghostSum = 0
+  hA = false
+  hS = 0
+  synthActivated = false
+  synthActivationBlock = 26285
+  totalSupply = 0x084595161401484A000001
+  vclmToken = 0
+  verifier = 0
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:115:39:
+    |
+115 |     function checkActivation() public harnessGuard returns (bool) {
+    |                                       ^^^^^^^^^^^^
+Note: 
+Note that external function calls are not inlined, even if the source code of the function is available. This is due to the possibility that the actual called contract has the same ABI but implements the function differently.
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:207:31:
+    |
+207 |         if (totalSupply > hS) assert(synthActivated); // HARNESS P1 mint only when activated
+    |                               ^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+   = false
+  CHONX_BURN_PER_SYNTH = 0
+  HARD_CAP = 0
+  SYNTH_ACTIVATION_THRESHOLD = 0
+  VCLM_BURN_PER_SYNTH = 0
+  chonxToken = 0
+  decimals = 0
+  ghostSum = 0
+  hA = false
+  hS = 0
+  synthActivated = false
+  synthActivationBlock = 21237
+  totalSupply = 0x084595161401484A000001
+  vclmToken = 0
+  verifier = 0
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:115:39:
+    |
+115 |     function checkActivation() public harnessGuard returns (bool) {
+    |                                       ^^^^^^^^^^^^
+Note: 
+Note that external function calls are not inlined, even if the source code of the function is available. This is due to the possibility that the actual called contract has the same ABI but implements the function differently.
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:31:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+   = false
+  CHONX_BURN_PER_SYNTH = 0
+  HARD_CAP = 0
+  SYNTH_ACTIVATION_THRESHOLD = 0
+  VCLM_BURN_PER_SYNTH = 0
+  chonxToken = 0
+  decimals = 0
+  ghostSum = 0
+  hA = false
+  hS = 0x084595161401484a * 2**24
+  synthActivated = false
+  synthActivationBlock = 12279
+  totalSupply = 0x084595161401484A000001
+  vclmToken = 0
+  verifier = 0
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:115:39:
+    |
+115 |     function checkActivation() public harnessGuard returns (bool) {
+    |                                       ^^^^^^^^^^^^
+Note: 
+Note that external function calls are not inlined, even if the source code of the function is available. This is due to the possibility that the actual called contract has the same ABI but implements the function differently.
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:209:17:
+    |
+209 |         if (hA) assert(synthActivated); // HARNESS P3 activation is one-way
+    |                 ^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+   = true
+  CHONX_BURN_PER_SYNTH = 2**256 - 1
+  HARD_CAP = 0
+  SYNTH_ACTIVATION_THRESHOLD = 2**256 - 1
+  VCLM_BURN_PER_SYNTH = 2**256 - 1
+  chonxToken = 2**160 - 1
+  decimals = 0
+  ghostSum = 2**256 - 1
+  hA = true
+  hS = 2**256 - 1
+  synthActivated = false
+  synthActivationBlock = 0
+  totalSupply = 0xFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFfffe
+  vclmToken = 0
+  verifier = 0
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:115:39:
+    |
+115 |     function checkActivation() public harnessGuard returns (bool) {
+    |                                       ^^^^^^^^^^^^
+Note: 
+Note that external function calls are not inlined, even if the source code of the function is available. This is due to the possibility that the actual called contract has the same ABI but implements the function differently.
+
