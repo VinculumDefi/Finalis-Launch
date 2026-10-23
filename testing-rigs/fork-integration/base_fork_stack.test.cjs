@@ -89,7 +89,8 @@ describe("Rig 2: Base mainnet fork, full ceremony stack, real Base tokens", func
     await (await S.verifier.recordFeeAndRac(p)).wait();
     await (await S.verifier.verifyAndMint(p, 0)).wait();
     out.minted = String((await tok.balanceOf(recipient.address)) - v0);
-    out.racCredit = String(await S.verifier.racCredits(p.racIdentity));
+    // AG-04: credits are keyed by racKey(environment, proven lock id).
+    out.racCredit = String(await S.verifier.racCredits(await S.verifier.racKey(p.sourceEnvironmentId, p.commitmentVaultLockId)));
     if (release) {
       await C.advance(Number(duration) + 1);
       const tk = sym === "ETH" ? null : new ethers.Contract(T[sym], ERC20, ethers.provider);
