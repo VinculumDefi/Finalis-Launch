@@ -21,7 +21,7 @@
    "area": "bytecode",
    "name": "verifier (VinculumFinalisVerifier) at 0x489F...3650",
    "status": "PASS",
-   "detail": "runtime 19081 bytes, keccak 0x0cd23dfaed, immutables and constructor args derived"
+   "detail": "runtime 20558 bytes, keccak 0x73c3d81535, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
@@ -39,133 +39,133 @@
    "area": "bytecode",
    "name": "lock (BaseCommitmentVaultLock) at 0x2285...3513",
    "status": "PASS",
-   "detail": "runtime 7489 bytes, keccak 0xc595b54aeb, immutables and constructor args derived"
+   "detail": "runtime 8363 bytes, keccak 0x3fb0965a8f, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Base (BaseLockRecordVerifier) at 0xD9da...6517",
    "status": "PASS",
-   "detail": "runtime 2530 bytes, keccak 0x53fdc45d27, immutables and constructor args derived"
+   "detail": "runtime 2891 bytes, keccak 0x8be36ea8ce, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Ethereum (SimpleEthereumLockReader) at 0x51a3...E4c3",
    "status": "PASS",
-   "detail": "runtime 14528 bytes, keccak 0xc2c104bde7, immutables and constructor args derived"
+   "detail": "runtime 15314 bytes, keccak 0x4d14282d01, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Arbitrum (ArbitrumLockReader) at 0xa1c0...8CD6",
    "status": "PASS",
-   "detail": "runtime 14957 bytes, keccak 0x35c31daa46, immutables and constructor args derived"
+   "detail": "runtime 15743 bytes, keccak 0x209f671c92, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Optimism (OptimismLockReader) at 0x88B7...31BB",
    "status": "PASS",
-   "detail": "runtime 14645 bytes, keccak 0x3143f40cdd, immutables and constructor args derived"
+   "detail": "runtime 15431 bytes, keccak 0xc5c2e790bd, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Polygon (PolygonLockReader) at 0xCDfE...56C9",
    "status": "PASS",
-   "detail": "runtime 14751 bytes, keccak 0x5b3488c2a7, immutables and constructor args derived"
+   "detail": "runtime 15537 bytes, keccak 0x535113b974, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:BNB Smart Chain (BnbSmartChainLockReader) at 0xf92B...c9D1",
    "status": "PASS",
-   "detail": "runtime 14662 bytes, keccak 0x8d5fd7102d, immutables and constructor args derived"
+   "detail": "runtime 15448 bytes, keccak 0x63c405ea3f, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Avalanche (AvalancheLockReader) at 0x420A...5E93",
    "status": "PASS",
-   "detail": "runtime 14697 bytes, keccak 0xcef24f809d, immutables and constructor args derived"
+   "detail": "runtime 15479 bytes, keccak 0x57f4df6ca0, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Bitcoin (BitcoinLockReader) at 0x4e5b...6f0F",
    "status": "PASS",
-   "detail": "runtime 17084 bytes, keccak 0xd7a377112f, immutables and constructor args derived"
+   "detail": "runtime 17581 bytes, keccak 0x37a0035519, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Bitcoin Cash (BitcoinCashLockReader) at 0x9887...551a",
    "status": "PASS",
-   "detail": "runtime 17084 bytes, keccak 0xf347f9cf32, immutables and constructor args derived"
+   "detail": "runtime 17581 bytes, keccak 0xcea2464112, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Litecoin (LitecoinLockReader) at 0x73AC...067F",
    "status": "PASS",
-   "detail": "runtime 17084 bytes, keccak 0xfed3415f2b, immutables and constructor args derived"
+   "detail": "runtime 17581 bytes, keccak 0x87cc93cbb0, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Dogecoin (DogecoinLockReader) at 0xA436...7211",
    "status": "PASS",
-   "detail": "runtime 17084 bytes, keccak 0xb81245f3ca, immutables and constructor args derived"
+   "detail": "runtime 17581 bytes, keccak 0x8fc059d247, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:DigiByte (DigiByteLockReader) at 0x122a...099d",
    "status": "PASS",
-   "detail": "runtime 17084 bytes, keccak 0x20345592b2, immutables and constructor args derived"
+   "detail": "runtime 17581 bytes, keccak 0xe87d7958f3, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Zcash (ZcashLockReader) at 0x4C45...6b0B",
    "status": "PASS",
-   "detail": "runtime 17084 bytes, keccak 0xe6d01c28fc, immutables and constructor args derived"
+   "detail": "runtime 17581 bytes, keccak 0x8acc3b59fc, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:Stellar (StellarLockReader) at 0x8d37...35bf",
    "status": "PASS",
-   "detail": "runtime 9110 bytes, keccak 0x41d1db645b, immutables and constructor args derived"
+   "detail": "runtime 9366 bytes, keccak 0xe09fd38a44, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
    "name": "reader:XRP Ledger (XrplLockReader) at 0xa91A...68EA",
    "status": "PASS",
-   "detail": "runtime 11783 bytes, keccak 0x2d5fd37e56, immutables and constructor args derived"
+   "detail": "runtime 12009 bytes, keccak 0xef58e24dfb, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "non-Base lock on Ethereum at 0x115b...626E",
+   "name": "non-Base lock on Ethereum at 0x5B7B...8c40",
    "status": "PASS",
-   "detail": "masked runtime 0x07b599f652, label Ethereum, Dev Fund 0xFD21...3e9a"
+   "detail": "masked runtime 0x7ee4878767, label Ethereum, Dev Fund 0xFD21...3e9a"
   },
   {
    "area": "bytecode",
-   "name": "non-Base lock on Arbitrum at 0x115b...626E",
+   "name": "non-Base lock on Arbitrum at 0x5B7B...8c40",
    "status": "PASS",
-   "detail": "masked runtime 0x07b599f652, label Arbitrum, Dev Fund 0xFD21...3e9a"
+   "detail": "masked runtime 0x7ee4878767, label Arbitrum, Dev Fund 0xFD21...3e9a"
   },
   {
    "area": "bytecode",
-   "name": "non-Base lock on Optimism at 0x115b...626E",
+   "name": "non-Base lock on Optimism at 0x5B7B...8c40",
    "status": "PASS",
-   "detail": "masked runtime 0x07b599f652, label Optimism, Dev Fund 0xFD21...3e9a"
+   "detail": "masked runtime 0x7ee4878767, label Optimism, Dev Fund 0xFD21...3e9a"
   },
   {
    "area": "bytecode",
-   "name": "non-Base lock on Polygon at 0x115b...626E",
+   "name": "non-Base lock on Polygon at 0x5B7B...8c40",
    "status": "PASS",
-   "detail": "masked runtime 0x07b599f652, label Polygon, Dev Fund 0xFD21...3e9a"
+   "detail": "masked runtime 0x7ee4878767, label Polygon, Dev Fund 0xFD21...3e9a"
   },
   {
    "area": "bytecode",
-   "name": "non-Base lock on BNB Smart Chain at 0x115b...626E",
+   "name": "non-Base lock on BNB Smart Chain at 0x5B7B...8c40",
    "status": "PASS",
-   "detail": "masked runtime 0x07b599f652, label BNB Smart Chain, Dev Fund 0xFD21...3e9a"
+   "detail": "masked runtime 0x7ee4878767, label BNB Smart Chain, Dev Fund 0xFD21...3e9a"
   },
   {
    "area": "bytecode",
-   "name": "non-Base lock on Avalanche at 0x115b...626E",
+   "name": "non-Base lock on Avalanche at 0x5B7B...8c40",
    "status": "PASS",
-   "detail": "masked runtime 0x07b599f652, label Avalanche, Dev Fund 0xFD21...3e9a"
+   "detail": "masked runtime 0x7ee4878767, label Avalanche, Dev Fund 0xFD21...3e9a"
   },
   {
    "area": "creation",
@@ -531,7 +531,7 @@
    "area": "references",
    "name": "Verifier.protocolLaunchTimestamp set",
    "status": "PASS",
-   "detail": "launch 2026-10-23T12:48:26.000Z"
+   "detail": "launch 2026-10-23T17:38:30.000Z"
   },
   {
    "area": "references",
@@ -1647,7 +1647,7 @@
    "area": "ceremony txs",
    "name": "one pre-finalize price run 1: Base ETH at ceremony-data priceUsd18",
    "status": "PASS",
-   "detail": "run 1: Base 2392.22 USD"
+   "detail": "run 1: Base 2406.36 USD"
   },
   {
    "area": "ceremony txs",
@@ -1671,7 +1671,7 @@
    "area": "ceremony txs",
    "name": "operator transaction list is complete (contiguous nonces from first create to finalize)",
    "status": "PASS",
-   "detail": "72 txs, local fork blocks 52985060..52985134"
+   "detail": "72 txs, local fork blocks 52993572..52993646"
   },
   {
    "area": "closed",
