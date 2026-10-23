@@ -10,6 +10,10 @@ const fs = require("fs");
 const url = process.env.SIM_FORK_URL;
 const chainId = Number(process.env.SIM_CHAIN_ID);
 if (!url || !chainId) throw new Error("SIM_FORK_URL and SIM_CHAIN_ID are required");
+// Pinned fork block (a couple of blocks behind the tip). Pruned public nodes,
+// BNB Smart Chain in particular, keep state for only about 100 recent blocks,
+// so Hardhat's default reorg-safety offset would ask for state they no longer hold.
+const blockNumber = process.env.SIM_FORK_BLOCK ? Number(process.env.SIM_FORK_BLOCK) : undefined;
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "simfork-"));
 fs.mkdirSync(path.join(root, "contracts"));
 
@@ -20,7 +24,7 @@ module.exports = {
       chainId,
       hardfork: "cancun",
       chains: { [chainId]: { hardforkHistory: { cancun: 0 } } },
-      forking: { url },
+      forking: blockNumber ? { url, blockNumber } : { url },
       mining: { auto: true },
       allowUnlimitedContractSize: false,
     },
