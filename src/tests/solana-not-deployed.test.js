@@ -1,7 +1,7 @@
 // Solana is not part of the 2026-10-21 deployment (t251u): the app does not
 // offer it for a new lock and cannot build or submit a Solana lock (fail closed).
-// The Solana program constants (vfSolanaProgram.js, mirrors the Rust program)
-// are not changed.
+// The program id and PDA seeds in vfSolanaProgram.js are unchanged. Its
+// Handshake constants follow Rev 12 (see solana-program-rev12.test.js).
 // Run: node --test src/tests/solana-not-deployed.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -55,7 +55,7 @@ test('Solana mock adapter refuses to submit and records nothing as pending', () 
   assert.ok(a.events.every((e) => e.type === 'SUBMISSION_PREVENTED'));
 });
 
-test('Solana instruction builder refuses; program constants unchanged', () => {
+test('Solana instruction builder refuses; program id and seeds unchanged', () => {
   const src = read('lib/vfSolanaProgram.js');
   assert.match(src, /export async function buildCommitVaultLockParams\(params\) \{\n  \/\/ Solana is not part of this deployment: no lock instruction is built\.\n  if \(!SOLANA_LOCKS_ENABLED\) throw new Error\(SOLANA_NOT_DEPLOYED_MESSAGE\);/);
   // the Rust-mirrored constants are as before
