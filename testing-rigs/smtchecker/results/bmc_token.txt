@@ -1,0 +1,126 @@
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:194:9:
+    |
+194 |         assert(ghostSum == totalSupply); // HARNESS P2 conservation
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+  _minterStake = 2
+  _minterVerifier = 1
+  decimals = 0
+  deployer = 0
+  finalized = true
+  ghostSum = 1
+  hD = 38
+  hF = false
+  hS = 0
+  hSt = 0
+  hV = 0
+  hardCap = 0
+  minterStake = 2
+  minterVerifier = 1
+  totalSupply = 0
+
+Note: Callstack:
+Note:
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:95:81:
+   |
+95 |     function initialize(address _minterVerifier, address _minterStake) external harnessGuard {
+   |                                                                                 ^^^^^^^^^^^^
+Note:
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:195:9:
+    |
+195 |         assert(totalSupply <= hardCap); // HARNESS P2 cap
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+  _minterStake = 2
+  _minterVerifier = 1
+  decimals = 0
+  deployer = 0
+  finalized = true
+  ghostSum = 2
+  hD = 20537
+  hF = false
+  hS = 1
+  hSt = 0
+  hV = 0
+  hardCap = 0
+  minterStake = 2
+  minterVerifier = 1
+  totalSupply = 1
+
+Note: Callstack:
+Note:
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:95:81:
+   |
+95 |     function initialize(address _minterVerifier, address _minterStake) external harnessGuard {
+   |                                                                                 ^^^^^^^^^^^^
+Note:
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:197:31:
+    |
+197 |         if (totalSupply > hS) assert(hF); // HARNESS P1 no mint before finalization
+    |                               ^^^^^^^^^^
+Note: Counterexample:
+  amount = 1
+  balanceOf[to] = 22114
+  decimals = 0
+  deployer = 0
+  finalized = false
+  ghostSum = 3
+  hD = 0
+  hF = false
+  hS = 0
+  hSt = 1
+  hV = 0
+  hardCap = 1
+  minterStake = 1
+  minterVerifier = 0
+  to = 31598
+  totalSupply = 1
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:120:56:
+    |
+120 |     function mint(address to, uint256 amount) external harnessGuard onlyMinter {
+    |                                                        ^^^^^^^^^^^^
+Note: 
+Note that array aliasing is not supported, therefore all mapping information is erased after a mapping local variable/parameter is assigned.
+You can re-introduce information using require().
+
+Warning: BMC: Assertion violation happens here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:198:17:
+    |
+198 |         if (hF) assert(finalized && minterVerifier == hV && minterStake == hSt && deployer == address(0)); // HARNESS P3 frozen
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+  amount = 0
+  balanceOf[to] = 2747
+  decimals = 0
+  deployer = 1
+  finalized = true
+  ghostSum = 1
+  hD = 1
+  hF = true
+  hS = 0
+  hSt = 14136
+  hV = 14137
+  hardCap = 0
+  minterStake = 14136
+  minterVerifier = 14137
+  to = 26929
+  totalSupply = 0
+
+Note: Callstack:
+Note:
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/TokenInstrumented.sol:120:56:
+    |
+120 |     function mint(address to, uint256 amount) external harnessGuard onlyMinter {
+    |                                                        ^^^^^^^^^^^^
+Note: 
+Note that array aliasing is not supported, therefore all mapping information is erased after a mapping local variable/parameter is assigned.
+You can re-introduce information using require().
+
