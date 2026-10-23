@@ -1,0 +1,636 @@
+Warning: Assertion checker does not yet implement this operator.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1018:74:
+     |
+1018 |         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+     |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:676:25:
+    |
+676 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:676:24:
+    |
+676 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:694:31:
+    |
+694 |             uint256 feeUsd = (creditUsd * fee) / gross;
+    |                               ^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:694:30:
+    |
+694 |             uint256 feeUsd = (creditUsd * fee) / gross;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:695:34:
+    |
+695 |             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:695:33:
+    |
+695 |             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:701:13:
+    |
+701 |             epochRewardBasis[epoch] += racCredit; // VF-RAC-004
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:786:17:
+    |
+786 |         require(gross - fee == principal, "VF-COM-012: principal != gross - fee");
+    |                 ^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:790:25:
+    |
+790 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:790:24:
+    |
+790 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:837:17:
+    |
+837 |                 eligibleAfter += CHONX_SOURCE_CLOCK_MARGIN_SECS - 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:859:63:
+    |
+859 |             uint256 remaining = issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:862:33:
+    |
+862 |             uint256 remaining = CHONX_HARD_CAP - cumulativeChonxIssued;
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:871:13:
+    |
+871 |             cumulativeVclmIssued += issuanceAmount;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:877:13:
+    |
+877 |             cumulativeChonxIssued += issuanceAmount;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:974:29:
+    |
+974 |         if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+    |                             ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:974:44:
+    |
+974 |         if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+    |                                            ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:974:59:
+    |
+974 |         if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+    |                                                           ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:975:13:
+    |
+975 |         if (b[3] != "C" && b[3] != "T") return false;
+    |             ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:975:28:
+    |
+975 |         if (b[3] != "C" && b[3] != "T") return false;
+    |                            ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:977:13:
+    |
+977 |         if (b[4] == "_") return b.length > 5;
+    |             ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:978:33:
+    |
+978 |         return b.length == 5 && b[3] == "T" && b[4] == "E";
+    |                                 ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:978:48:
+    |
+978 |         return b.length == 5 && b[3] == "T" && b[4] == "E";
+    |                                                ^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1018:33:
+     |
+1018 |         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1018:32:
+     |
+1018 |         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1019:17:
+     |
+1019 |         return (assetUnitsFp * priceUsd18) / SCALE;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1019:16:
+     |
+1019 |         return (assetUnitsFp * priceUsd18) / SCALE;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1028:17:
+     |
+1028 |         return (valuationTimestamp - launch) / 1 days;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1028:16:
+     |
+1028 |         return (valuationTimestamp - launch) / 1 days;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1046:25:
+     |
+1046 |         uint256 step = (verifiedGrossUsdMicro * emissionRate) / SCALE;
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1046:24:
+     |
+1046 |         uint256 step = (verifiedGrossUsdMicro * emissionRate) / SCALE;
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1052:32:
+     |
+1052 |         uint256 assetMultFp = (SCALE * assetBps) / 10000;
+     |                                ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1052:31:
+     |
+1052 |         uint256 assetMultFp = (SCALE * assetBps) / 10000;
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1053:17:
+     |
+1053 |         step = (step * assetMultFp) / SCALE;
+     |                 ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1053:16:
+     |
+1053 |         step = (step * assetMultFp) / SCALE;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1058:30:
+     |
+1058 |         uint256 durMultFp = (SCALE * durBps) / 10000;
+     |                              ^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1058:29:
+     |
+1058 |         uint256 durMultFp = (SCALE * durBps) / 10000;
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1059:17:
+     |
+1059 |         step = (step * durMultFp) / SCALE;
+     |                 ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1059:16:
+     |
+1059 |         step = (step * durMultFp) / SCALE;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1068:27:
+     |
+1068 |         uint256 periods = daysSinceLaunch / DECAY_PERIOD_DAYS;
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1071:21:
+     |
+1071 |             rate = (rate * DECAY_SURVIVAL_FP) / SCALE;
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1071:20:
+     |
+1071 |             rate = (rate * DECAY_SURVIVAL_FP) / SCALE;
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1070:42:
+     |
+1070 |         for (uint256 i = 0; i < periods; i++) {
+     |                                          ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1102:46:
+     |
+1102 |         return issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1118:16:
+     |
+1118 |         return cumulativeVclmIssued + stakeRewardVclmIssued();
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1142:18:
+     |
+1142 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+     |                  ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1142:17:
+     |
+1142 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1142:16:
+     |
+1142 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1146:16:
+     |
+1146 |         return CHONX_HARD_CAP - cumulativeChonxIssued;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:455:47:
+    |
+455 |         for (uint256 i = 0; i < items.length; i++) {
+    |                                               ^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:456:47:
+    |
+456 |             AssetPrecisionInput calldata it = items[i];
+    |                                               ^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:524:47:
+    |
+524 |         for (uint256 i = 0; i < items.length; i++) {
+    |                                               ^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:525:45:
+    |
+525 |             TokenAddressInput calldata it = items[i];
+    |                                             ^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:606:49:
+    |
+606 |         for (uint256 i = 0; i < updates.length; i++) {
+    |                                                 ^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:607:47:
+    |
+607 |             ScheduledPriceUpdate calldata u = updates[i];
+    |                                               ^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:672:17:
+    |
+672 |         require(gross - fee == principal, "VF-COM-012: principal != gross - fee");
+    |                 ^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:676:25:
+    |
+676 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:676:24:
+    |
+676 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:694:31:
+    |
+694 |             uint256 feeUsd = (creditUsd * fee) / gross;
+    |                               ^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:694:30:
+    |
+694 |             uint256 feeUsd = (creditUsd * fee) / gross;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:695:34:
+    |
+695 |             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:695:33:
+    |
+695 |             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:701:13:
+    |
+701 |             epochRewardBasis[epoch] += racCredit; // VF-RAC-004
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:786:17:
+    |
+786 |         require(gross - fee == principal, "VF-COM-012: principal != gross - fee");
+    |                 ^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:790:25:
+    |
+790 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:790:24:
+    |
+790 |         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:837:17:
+    |
+837 |                 eligibleAfter += CHONX_SOURCE_CLOCK_MARGIN_SECS - 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:859:63:
+    |
+859 |             uint256 remaining = issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:862:33:
+    |
+862 |             uint256 remaining = CHONX_HARD_CAP - cumulativeChonxIssued;
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:871:13:
+    |
+871 |             cumulativeVclmIssued += issuanceAmount;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:877:13:
+    |
+877 |             cumulativeChonxIssued += issuanceAmount;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:974:29:
+    |
+974 |         if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+    |                             ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:974:44:
+    |
+974 |         if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+    |                                            ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:974:59:
+    |
+974 |         if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
+    |                                                           ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:975:13:
+    |
+975 |         if (b[3] != "C" && b[3] != "T") return false;
+    |             ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:975:28:
+    |
+975 |         if (b[3] != "C" && b[3] != "T") return false;
+    |                            ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:977:13:
+    |
+977 |         if (b[4] == "_") return b.length > 5;
+    |             ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:978:33:
+    |
+978 |         return b.length == 5 && b[3] == "T" && b[4] == "E";
+    |                                 ^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:978:48:
+    |
+978 |         return b.length == 5 && b[3] == "T" && b[4] == "E";
+    |                                                ^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1018:33:
+     |
+1018 |         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1018:32:
+     |
+1018 |         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1019:17:
+     |
+1019 |         return (assetUnitsFp * priceUsd18) / SCALE;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1019:16:
+     |
+1019 |         return (assetUnitsFp * priceUsd18) / SCALE;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1028:17:
+     |
+1028 |         return (valuationTimestamp - launch) / 1 days;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1028:16:
+     |
+1028 |         return (valuationTimestamp - launch) / 1 days;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1046:25:
+     |
+1046 |         uint256 step = (verifiedGrossUsdMicro * emissionRate) / SCALE;
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1046:24:
+     |
+1046 |         uint256 step = (verifiedGrossUsdMicro * emissionRate) / SCALE;
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1052:32:
+     |
+1052 |         uint256 assetMultFp = (SCALE * assetBps) / 10000;
+     |                                ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1052:31:
+     |
+1052 |         uint256 assetMultFp = (SCALE * assetBps) / 10000;
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1053:17:
+     |
+1053 |         step = (step * assetMultFp) / SCALE;
+     |                 ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1053:16:
+     |
+1053 |         step = (step * assetMultFp) / SCALE;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1058:30:
+     |
+1058 |         uint256 durMultFp = (SCALE * durBps) / 10000;
+     |                              ^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1058:29:
+     |
+1058 |         uint256 durMultFp = (SCALE * durBps) / 10000;
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1059:17:
+     |
+1059 |         step = (step * durMultFp) / SCALE;
+     |                 ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1059:16:
+     |
+1059 |         step = (step * durMultFp) / SCALE;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1068:27:
+     |
+1068 |         uint256 periods = daysSinceLaunch / DECAY_PERIOD_DAYS;
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1070:42:
+     |
+1070 |         for (uint256 i = 0; i < periods; i++) {
+     |                                          ^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1071:21:
+     |
+1071 |             rate = (rate * DECAY_SURVIVAL_FP) / SCALE;
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1071:20:
+     |
+1071 |             rate = (rate * DECAY_SURVIVAL_FP) / SCALE;
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1102:46:
+     |
+1102 |         return issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1118:16:
+     |
+1118 |         return cumulativeVclmIssued + stakeRewardVclmIssued();
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1142:18:
+     |
+1142 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+     |                  ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1142:17:
+     |
+1142 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1142:16:
+     |
+1142 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+    --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisVerifier.sol:1146:16:
+     |
+1146 |         return CHONX_HARD_CAP - cumulativeChonxIssued;
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
