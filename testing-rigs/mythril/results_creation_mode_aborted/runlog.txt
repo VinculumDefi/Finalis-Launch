@@ -1,0 +1,8 @@
+BaseCommitmentVaultLock exit=0 seconds=6
+CommitmentVaultLock exit=0 seconds=6
+VinculumFinalisStake exit=143 seconds=165
+VinculumFinalisToken exit=143 seconds=177
+VinculumFinalisSynth exit=143 seconds=177
+VinculumFinalisVerifier exit=137 seconds=5
+EthereumLockReader exit=137 seconds=5
+BaseLockRecordVerifier exit=137 seconds=5
