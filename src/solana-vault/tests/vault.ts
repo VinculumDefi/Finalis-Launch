@@ -31,11 +31,11 @@ import assert from "assert";
 // Revision 6 constants (mirrored from on-chain constants.rs)
 const HANDSHAKE_DURATION = 3600;
 const STANDARD_DURATION = 7 * 86400; // 7 days
-const HANDSHAKE_FEE_BPS = 250;
+const HANDSHAKE_FEE_BPS = 500; // Rev 12: 5% on every duration
 const STANDARD_FEE_BPS = 500;
-const HANDSHAKE_USD_MIN = "950000000000000000"; // $0.95 (18dp)
-const HANDSHAKE_USD_MAX = "1050000000000000000"; // $1.05 (18dp)
-const STANDARD_USD_MIN = "10000000000000000000"; // $10.00 (18dp)
+const HANDSHAKE_USD_MIN = "10000000000000000"; // $0.01 (18dp, Rev 12)
+const HANDSHAKE_USD_MAX = "20000000000000000"; // $0.02 (18dp, Rev 12)
+const STANDARD_USD_MIN = "10000000000000000"; // $0.01 (18dp)
 const HANDSHAKE_ALLOWANCE = 3;
 
 const SEED_CONFIG = Buffer.from("vf_config");
@@ -194,7 +194,7 @@ describe("vf-solana-vault", () => {
     const [haPda] = deriveHandshakePda(programId, provider.wallet.publicKey);
 
     const gross = new BN(50_000_000); // 0.05 SOL
-    const usd = new BN("1000000000000000000"); // $1.00 (within $0.95–$1.05)
+    const usd = new BN("15000000000000000"); // $0.015 (within $0.01-$0.02)
 
     await program.methods
       .commitVaultLockNative({
@@ -224,10 +224,10 @@ describe("vf-solana-vault", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // T-04: Handshake allowance exhaustion — VF-COM-007
+  // T-04: Rev 12 removed the Handshake allowance (fix 2026-10-23, AG-20)
   // ---------------------------------------------------------------------------
-  it("T-04: exhausts the three-use Handshake allowance (VF-COM-007)", async () => {
-    // 2nd and 3rd Handshakes succeed; 4th fails
+  it("T-04: Rev 12: a 4th Handshake from the same account is not refused", async () => {
+    // 2nd and 3rd Handshakes succeed; the 4th also succeeds (no allowance limit)
     for (let i = 2; i <= 3; i++) {
       const lockId = `test-handshake-${i.toString().padStart(3, "0")}`;
       const lockIdHash = await hashLockId(lockId);
@@ -242,7 +242,7 @@ describe("vf-solana-vault", () => {
           baseRecipient: Buffer.alloc(20, 3),
           releaseDestination: provider.wallet.publicKey,
           outputToken: { vclm: {} },
-          verifiedGrossUsdMicro: new BN("1000000000000000000"),
+          verifiedGrossUsdMicro: new BN("15000000000000000"),
           chonxActivationReceipt: "not_applicable",
         })
         .accounts({
@@ -256,13 +256,12 @@ describe("vf-solana-vault", () => {
         .rpc();
     }
 
-    // 4th Handshake should fail
+    // 4th Handshake also succeeds: Rev 12 has no allowance limit
     const lockId = "test-handshake-004";
     const lockIdHash = await hashLockId(lockId);
     const [lockPda] = deriveLockPda(programId, lockIdHash);
 
-    await assert.rejects(
-      program.methods
+    await program.methods
         .commitVaultLockNative({
           lockId,
           lockIdHash: [...lockIdHash],
@@ -271,7 +270,7 @@ describe("vf-solana-vault", () => {
           baseRecipient: Buffer.alloc(20, 4),
           releaseDestination: provider.wallet.publicKey,
           outputToken: { vclm: {} },
-          verifiedGrossUsdMicro: new BN("1000000000000000000"),
+          verifiedGrossUsdMicro: new BN("15000000000000000"),
           chonxActivationReceipt: "not_applicable",
         })
         .accounts({
@@ -282,9 +281,11 @@ describe("vf-solana-vault", () => {
           devFund: devFund.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .rpc(),
-      /HandshakeAllowanceExhausted/,
+        .rpc();
+    const ha = await program.account.handshakeAllowance.fetch(
+      deriveHandshakePda(programId, provider.wallet.publicKey)[0],
     );
+    assert.equal(ha.used, 4);
   });
 
   // ---------------------------------------------------------------------------
@@ -406,7 +407,7 @@ describe("vf-solana-vault", () => {
   // ---------------------------------------------------------------------------
   // T-09: Handshake value out of range — VF-COM-003
   // ---------------------------------------------------------------------------
-  it("T-09: rejects a Handshake with USD value outside $0.95–$1.05 (VF-COM-003)", async () => {
+  it("T-09: rejects a Handshake with USD value outside $0.01-$0.02 (VF-COM-003)", async () => {
     const lockId = "test-handshake-bad-value";
     const lockIdHash = await hashLockId(lockId);
     const [lockPda] = deriveLockPda(programId, lockIdHash);
@@ -421,7 +422,7 @@ describe("vf-solana-vault", () => {
           baseRecipient: Buffer.alloc(20, 6),
           releaseDestination: provider.wallet.publicKey,
           outputToken: { vclm: {} },
-          verifiedGrossUsdMicro: new BN("5000000000000000000"), // $5.00 — outside range
+          verifiedGrossUsdMicro: new BN("1000000000000000000"), // $1.00 (Revision 6 band) is outside the Rev 12 range
           chonxActivationReceipt: "not_applicable",
         })
         .accounts({
