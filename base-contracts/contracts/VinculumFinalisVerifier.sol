@@ -25,7 +25,7 @@
 //   VF-XCH-013:     Replay protection (env + lock id)
 //   VF-COM-001/002: Permitted durations only
 //   VF-COM-003/009: USD value bounds
-//   VF-COM-006:     Handshake allowance mechanism lookup (no per-identity counter)
+//   VF-COM-006:     Rev 12: no Handshake allowance; handshakeAllowanceCount is ignored
 //   VF-COM-011-013: Fee math (floor, principal=gross-fee, zero rejection)
 //   VF-COM-017-020: Issuance calculation (fixed order, floor)
 //   VF-COM-025:     CHONX activation-at-creation (causal receipt)
@@ -44,7 +44,6 @@
 pragma solidity 0.8.19;
 
 import "./CommitmentDurations.sol";
-import "./HandshakeCapability.sol";
 
 // ---------------------------------------------------------------------------
 // Interfaces for per-environment finality verifiers (Section O)
@@ -146,7 +145,7 @@ struct ProofPackage {
     bytes32 commitmentVaultLockId;    // unique per environment
 
     // Handshake
-    uint8 handshakeAllowanceCount;   // 1 or 3
+    uint8 handshakeAllowanceCount;   // ignored: Rev 12 removed the Handshake allowance (kept for ABI compatibility)
 
     // Asset identity + quantity
     bytes32 canonicalAssetId;         // keccak256 of canonical asset identity
@@ -698,12 +697,8 @@ contract VinculumFinalisVerifier {
         AssetPrecisionEntry memory entry = assetPrecisionTable[assetKey];
         require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
 
-        // VF-COM-006: package allowance must match the registered mechanism lookup
-        uint256 expectedAllowance = _expectedHandshakeAllowance(pkg.sourceEnvironmentId);
-        require(
-            uint256(pkg.handshakeAllowanceCount) == expectedAllowance,
-            "VF-COM-006: handshake allowance mismatch"
-        );
+        // Rev 12 (fix 2026-10-23, AG-20): the Handshake has no allowance, so
+        // pkg.handshakeAllowanceCount is ignored and nothing is counted.
 
         // VF-COM-011/012/013: Fee math verification
         uint256 gross = pkg.grossAmountSmallestUnits;
@@ -888,15 +883,9 @@ contract VinculumFinalisVerifier {
             require(chonxActivated, "VF-COM-025: CHONX not activated");
         }
 
-        // Step 8: Handshake allowance lookup (VF-COM-006 / CL-11)
-        // Do not trust pkg.handshakeAllowanceCount as the rule. Look up the
-        // registered mechanism on Base for every environment. A package value
-        // that disagrees reverts. No per-identity use is counted.
-        uint256 expectedAllowance = _expectedHandshakeAllowance(pkg.sourceEnvironmentId);
-        require(
-            uint256(pkg.handshakeAllowanceCount) == expectedAllowance,
-            "VF-COM-006: handshake allowance mismatch"
-        );
+        // Step 8: removed by Rev 12 (fix 2026-10-23, AG-20). The Handshake has
+        // no allowance limit and no identity counter; handshakeAllowanceCount
+        // is ignored.
 
         // Step 9: Base recipient (VF-ARC-006)
         require(pkg.baseRecipient != address(0), "VF-ARC-006: zero base recipient");
@@ -1002,40 +991,6 @@ contract VinculumFinalisVerifier {
             require(verifiedGrossUsd >= STANDARD_USD_MIN, "VF-COM-009: standard USD below $0.01");
         }
         return verifiedGrossUsd;
-    }
-
-    // ===== Handshake mechanism lookup (VF-COM-006 / CL-11) =====
-    // 3: Base, Ethereum, Polygon, Optimism, Arbitrum, BNB Smart Chain, Avalanche, Solana
-    // 1: Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash, Stellar, XRP Ledger
-    // Cosmos is not invented here.
-
-    function _expectedHandshakeAllowance(string calldata envId) internal pure returns (uint256) {
-        bytes32 h = keccak256(bytes(envId));
-        if (
-            h == keccak256("Base") ||
-            h == keccak256("Ethereum") ||
-            h == keccak256("Polygon") ||
-            h == keccak256("Optimism") ||
-            h == keccak256("Arbitrum") ||
-            h == keccak256("BNB Smart Chain") ||
-            h == keccak256("Avalanche") ||
-            h == keccak256("Solana")
-        ) {
-            return HandshakeCapability.allowance(true);
-        }
-        if (
-            h == keccak256("Bitcoin") ||
-            h == keccak256("Bitcoin Cash") ||
-            h == keccak256("Litecoin") ||
-            h == keccak256("Dogecoin") ||
-            h == keccak256("DigiByte") ||
-            h == keccak256("Zcash") ||
-            h == keccak256("Stellar") ||
-            h == keccak256("XRP Ledger")
-        ) {
-            return HandshakeCapability.allowance(false);
-        }
-        revert("VF-COM-006: unknown environment");
     }
 
     // ===== USD resolution (VF-ORC / CL-01) =====
