@@ -1,0 +1,4 @@
+VinculumFinalisToken.sol -> harness/TokenInstrumented.sol: 7 functions guarded, strip-check OK
+VinculumFinalisSynth.sol -> harness/SynthInstrumented.sol: 5 functions guarded, strip-check OK
+wrote harness/IssuanceMath.sol
+FeeMath.sol: _quote lines 335-351, Verifier fee check lines [676, 790]
