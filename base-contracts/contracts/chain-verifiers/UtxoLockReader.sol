@@ -33,8 +33,9 @@ import "../checkers/Blake2b.sol";
 /// createdAt is the lock block's header time; maturity = createdAt + D (the
 /// on-chain release itself is by height).
 /// SCOPE: this reader proves the lock is in the block whose hash the package
-/// names. Whether that block is in the chain's settled history is the claim
-/// the package makes; this contract does not decide it.
+/// names. Whether that block is in the chain's settled history is not proven
+/// here, so verifyFinality refuses (fail closed, fix 2026-10-23, AG-02) and
+/// the six UTXO environments stay disabled.
 contract UtxoLockReader is IChainVerifier {
     uint256 public constant FEE_BPS = 500;
     uint256 public constant BPS = 10000;
@@ -93,17 +94,30 @@ contract UtxoLockReader is IChainVerifier {
 
     // ---------------------------------------------------------------- IChainVerifier
 
-    function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
+    /// @notice Fail closed (fix 2026-10-23, AG-02). This reader proves a lock
+    /// is in the block the package names, but nothing on-chain anchors that
+    /// block to the chain's settled history: the header is checked only against its own hash and coinbase height. There is no checkpoint, no work floor and no parent link to a known chain. Until an authoritative
+    /// anchor exists, finality is refused and the environment stays disabled.
+    /// headerClaimMatches keeps the block binding check available.
+    function verifyFinality(bytes calldata, bytes calldata)
         external
         view
         returns (bool, bytes32, uint256)
+    {
+        revert(string.concat("VF-XCH-006: ", environmentId, " settled-history anchor not enforced on-chain; environment disabled"));
+    }
+
+    function headerClaimMatches(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
+        external
+        view
+        returns (bytes32, uint256)
     {
         LockProof memory p = abi.decode(lockEventProof, (LockProof));
         (bytes32 hash, uint256 height,) = _openBlock(p);
         (bytes32 claimedHash, uint256 claimedHeight) = abi.decode(sourceFinalityProof, (bytes32, uint256));
         require(claimedHash == hash, "VF-XCH-006: block hash mismatch");
         require(claimedHeight == height, "VF-XCH-006: block height mismatch");
-        return (true, hash, height);
+        return (hash, height);
     }
 
     /// @notice A UTXO lock holds the chain's native coin. The full extractFacts
@@ -295,6 +309,9 @@ contract UtxoLockReader is IChainVerifier {
         (n, i) = _compact(tx, i);
         require(n > 0, "VF-XCH-011: no inputs");
         inStart = i;
+        // Each input is at least 41 bytes (36 outpoint, 1 script length, 4
+        // sequence). Bound n by the bytes left before any allocation (FZ-07).
+        require(i <= tx.length && n <= (tx.length - i) / 41, "VF-XCH-011: input count");
         bytes memory prevouts = new bytes(n * 36);
         bytes memory seqs = new bytes(n * 4);
         for (uint256 k = 0; k < n; k++) {
