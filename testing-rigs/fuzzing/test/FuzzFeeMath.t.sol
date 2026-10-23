@@ -83,8 +83,10 @@ contract FuzzFeeMath is Fixture {
         }
         verifier.recordFeeAndRac(p);
         uint256 feeUsd = (usd * p.actualFeeAmountSmallestUnits) / gross;
-        assertEq(verifier.racCredits(id), (feeUsd * 6000) / 10000);
-        assertLe(verifier.racCredits(id) * 10000, feeUsd * 6000);
+        // RAC credit is keyed per lock (AG-04 fix 2026-10-23): racKey(env, lockId).
+        bytes32 rk = verifier.racKey("Base", id);
+        assertEq(verifier.racCredits(rk), (feeUsd * 6000) / 10000);
+        assertLe(verifier.racCredits(rk) * 10000, feeUsd * 6000);
     }
 
     /// Tampered fee or principal in the package is refused by the
