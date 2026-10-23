@@ -98,6 +98,14 @@ interface IChainVerifier {
     function extractAssetId(bytes calldata lockEventProof) external view returns (bytes32 canonicalAssetId);
 }
 
+// VF-FEE-009 (fix 2026-10-23, AG-09): the reader reports the Dev Fund that
+// the proven lock actually paid its fee to. The Verifier requires it to equal
+// the Dev Fund configured for that environment. A reader that cannot prove it
+// is refused (fail closed).
+interface ILockDevFundSource {
+    function lockDevFund(string calldata environmentId, bytes calldata lockEventProof) external view returns (address);
+}
+
 // ---------------------------------------------------------------------------
 // ERC-20 interface for VCLM and CHONX token contracts (BASE-TOK)
 // ---------------------------------------------------------------------------
@@ -170,7 +178,9 @@ struct ProofPackage {
     // enforced from the chain reader's lock creation time (t271u).
     bytes chonxActivationReceipt;
 
-    // RAC identity (pre-computed by SRC-EVID from immutable facts)
+    // RAC identity. Kept only for ABI stability. Not read (fix 2026-10-23,
+    // AG-04): the Verifier keys every RAC by racKey(environment, proven lock
+    // id), so one proven lock earns exactly one RAC (VF-RAC-001 / VF-FEE-011).
     bytes32 racIdentity;
 
     // Price record (VF-ORC): optional encoding of the lock-creation reference
@@ -276,7 +286,7 @@ contract VinculumFinalisVerifier {
     // VF-XCH-013: replay protection — keccak256(env, lockId) => consumed
     mapping(bytes32 => bool) public consumedLocks;
 
-    // VF-RAC-001: RAC exact-once — racIdentity => recorded
+    // VF-RAC-001: RAC exact-once, keyed by racKey(environment, proven lock id)
     mapping(bytes32 => bool) public recordedRacs;
 
     // BASE-CAP: lifetime issuance
@@ -294,7 +304,7 @@ contract VinculumFinalisVerifier {
     uint256 public chonxActivationTimestamp;
     uint256 public constant CHONX_SOURCE_CLOCK_MARGIN_SECS = 1 days;
 
-    // BASE-RAC: RAC credits (indexed by racIdentity)
+    // BASE-RAC: RAC credits (indexed by racKey(environment, proven lock id))
     mapping(bytes32 => uint256) public racCredits;
     mapping(bytes32 => uint256) public racEpoch;
 
@@ -316,6 +326,20 @@ contract VinculumFinalisVerifier {
         bool usable;
     }
     mapping(bytes32 => ScheduledPriceEntry) public scheduledPrices;
+
+    // VF-ORC-008/009/010 (fix 2026-10-23, AG-06): every scheduled-run result
+    // per asset key, in posting order, with the Base block timestamp of the
+    // run. The price for a lock is the record in effect when the lock was
+    // created: the last record posted strictly before the proven creation
+    // time. priceUsd18 == 0 marks a failed run (asset unavailable). Records
+    // are append-only and postedAt never decreases, so the price for a lock
+    // does not depend on when or by whom the lock is submitted.
+    struct PricePoint {
+        uint128 priceUsd18;
+        uint64 postedAt;
+        uint64 runId;
+    }
+    mapping(bytes32 => PricePoint[]) private _priceHistory;
 
     // VF-ORC-009/010: lock-creation reference price retained per lock.
     // keccak256(env, lockId) => bound price (bound=true after first valuation).
@@ -366,7 +390,7 @@ contract VinculumFinalisVerifier {
     );
 
     event RacCreditRecorded(
-        bytes32 indexed racIdentity,
+        bytes32 indexed racKey,
         uint256 creditAmount,
         uint256 epoch
     );
@@ -600,7 +624,9 @@ contract VinculumFinalisVerifier {
         require(msg.sender == scheduledPricePoster, "VF-ORC-007: not price poster");
         // The poster may write before finalize (finalize requires a usable
         // Base ETH price) and after it. A failed asset is kept unusable.
-        require(runId > lastScheduledRunId, "VF-ORC-001: run id must advance");
+        // Fix 2026-10-23 (AG-07): run ids are sequential. A jump (for example
+        // to 2^64-1, which froze every later run) is refused.
+        require(runId == lastScheduledRunId + 1, "VF-ORC-001: run id must be the next in sequence");
         lastScheduledRunId = runId;
 
         for (uint256 i = 0; i < updates.length; i++) {
@@ -610,10 +636,16 @@ contract VinculumFinalisVerifier {
             require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
             if (u.success) {
                 require(u.priceUsd18 > 0, "VF-ORC-004: zero price");
+                require(u.priceUsd18 <= type(uint128).max, "VF-ORC-004: price out of range");
                 scheduledPrices[key] = ScheduledPriceEntry({
                     priceUsd18: u.priceUsd18,
                     usable: true
                 });
+                _priceHistory[key].push(PricePoint({
+                    priceUsd18: uint128(u.priceUsd18),
+                    postedAt: uint64(block.timestamp),
+                    runId: runId
+                }));
                 emit ScheduledPriceUpdated(key, u.environmentId, u.canonicalAssetId, u.priceUsd18, true, runId);
             } else {
                 // VF-ORC-005/008: no usable valuation until a later successful run.
@@ -621,6 +653,11 @@ contract VinculumFinalisVerifier {
                     priceUsd18: 0,
                     usable: false
                 });
+                _priceHistory[key].push(PricePoint({
+                    priceUsd18: 0,
+                    postedAt: uint64(block.timestamp),
+                    runId: runId
+                }));
                 emit ScheduledPriceUpdated(key, u.environmentId, u.canonicalAssetId, 0, false, runId);
             }
         }
@@ -648,10 +685,13 @@ contract VinculumFinalisVerifier {
     ) external onlyWhenFinalized {
         // The lock must exist: the source is proven, and the package checked
         // against it (including its asset), before any fee or RAC is recorded.
-        _verifySource(pkg);
+        uint256 createdAt = _verifySource(pkg);
 
-        // VF-RAC-001: RAC exact-once
-        require(!recordedRacs[pkg.racIdentity], "VF-RAC-001: RAC already recorded");
+        // VF-RAC-001 / VF-FEE-011: RAC exact-once per proven lock. The key is
+        // derived from the environment and the proven lock id; the package's
+        // racIdentity is not trusted (fix 2026-10-23, AG-04).
+        bytes32 rk = racKey(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId);
+        require(!recordedRacs[rk], "VF-RAC-001: RAC already recorded");
 
         // VF-REG-001: Asset must be in registry (validates asset identity)
         bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
@@ -669,17 +709,18 @@ contract VinculumFinalisVerifier {
         uint256 gross = pkg.grossAmountSmallestUnits;
         uint256 fee = pkg.actualFeeAmountSmallestUnits;
         uint256 principal = pkg.principalAmountSmallestUnits;
-        require(gross - fee == principal, "VF-COM-012: principal != gross - fee");
+        require(fee <= gross && gross - fee == principal, "VF-COM-012: principal != gross - fee");
         require(fee > 0 && principal > 0, "VF-COM-013: zero fee or principal");
 
         bool isHandshake = pkg.durationSecs == HANDSHAKE_DURATION_SECS;
+        _requireGrossInRange(gross);
         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
 
         // VF-COM-001/002: Duration must be permitted
         require(_isPermittedDuration(pkg.durationSecs), "VF-COM-002: duration not permitted");
 
         // CL-01: derive USD; never trust a caller-supplied verifiedGrossUsdMicro
-        uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry);
+        uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry, createdAt);
 
         // VF-COM-003/009: value bounds. Returns the USD used for RAC: equal to
         // verifiedGrossUsdMicro except for a BTC/BCH/LTC native Handshake, where
@@ -689,17 +730,17 @@ contract VinculumFinalisVerifier {
         // VF-FEE-011 / VF-RAC-002: Record RAC on fee verification, independent of issuance.
         // VF-RAC-008: No RAC after VCLM capacity = 0 (fee verification still proceeds).
         // VF-SUP-012: At zero VCLM capacity, fees still reach Dev Fund but no RAC.
-        recordedRacs[pkg.racIdentity] = true;
+        recordedRacs[rk] = true;
         if (lifetimeVclmIssued() < VCLM_HARD_CAP) {
             uint256 feeUsd = (creditUsd * fee) / gross;
             uint256 racCredit = (feeUsd * RAC_CREDIT_RATE_BPS) / 10000;
             // VF-RAC-003 / VF-STK-007: the epoch in which the credit is recorded
             // on Base, on the Section 10.2 launch-based epochs.
             uint256 epoch = currentEpoch();
-            racCredits[pkg.racIdentity] = racCredit;
-            racEpoch[pkg.racIdentity] = epoch;
+            racCredits[rk] = racCredit;
+            racEpoch[rk] = epoch;
             epochRewardBasis[epoch] += racCredit; // VF-RAC-004
-            emit RacCreditRecorded(pkg.racIdentity, racCredit, epoch);
+            emit RacCreditRecorded(rk, racCredit, epoch);
         }
     }
 
@@ -713,8 +754,11 @@ contract VinculumFinalisVerifier {
     function _verifySource(ProofPackage calldata pkg) internal view returns (uint256 extCreated) {
         IChainVerifier verifier = chainVerifiers[pkg.sourceEnvironmentId];
         require(address(verifier) != address(0), "VF-XCH-006: no verifier registered for environment");
-        (bool finalized, , ) = verifier.verifyFinality(pkg.lockEventProof, pkg.sourceFinalityProof);
+        (bool finalized, bytes32 sourceBlockHash, uint256 sourceBlockHeight) =
+            verifier.verifyFinality(pkg.lockEventProof, pkg.sourceFinalityProof);
         require(finalized, "VF-XCH-006: source not finalized");
+        // An empty block hash or height 0 is never finalized (VF-XCH-034).
+        require(sourceBlockHash != bytes32(0) && sourceBlockHeight != 0, "VF-XCH-006: empty finalized block");
 
         // VF-XCH-011: Independently extract immutable facts from the raw lock event
         // proof and cross-check against the normalized ProofPackage fields. This
@@ -742,6 +786,11 @@ contract VinculumFinalisVerifier {
         require(extRecipient == pkg.baseRecipient, "VF-XCH-011: recipient mismatch");
         require(extOutputToken == pkg.selectedOutputToken, "VF-XCH-011: output token mismatch");
         extCreated = extCreation;
+        // VF-ORC-011 (fix 2026-10-23, AG-05): the Valuation Timestamp is the
+        // proven lock creation time. A package that states another time is
+        // refused; the proven time is what the Verifier uses.
+        require(extCreation != 0, "VF-ORC-011: no proven lock creation time");
+        require(pkg.valuationTimestamp == extCreation, "VF-ORC-011: valuation timestamp != proven lock creation time");
         // Native locks: the reader reports the native canonical id. Token locks:
         // the reader reports tokenAddressKey(env, token), resolved here through
         // the ceremony-written index to the registry row for that address.
@@ -751,6 +800,29 @@ contract VinculumFinalisVerifier {
                 (provenAsset == pkg.canonicalAssetId || tokenAssetIndex[provenAsset] == pkg.canonicalAssetId),
             "VF-XCH-011: asset mismatch"
         );
+
+        // VF-FEE-009 (fix 2026-10-23, AG-09): a Dev Fund must be configured for
+        // the environment, and the proven lock must have paid its fee to it.
+        address configuredDevFund = devFundDestinations[pkg.sourceEnvironmentId];
+        require(configuredDevFund != address(0), "VF-FEE-009: Dev Fund not configured for environment");
+        address lockDevFund;
+        try ILockDevFundSource(address(verifier)).lockDevFund(pkg.sourceEnvironmentId, pkg.lockEventProof) returns (address d) {
+            lockDevFund = d;
+        } catch {
+            revert("VF-FEE-009: reader cannot prove the lock Dev Fund");
+        }
+        require(lockDevFund == configuredDevFund, "VF-FEE-009: lock Dev Fund != configured Dev Fund");
+    }
+
+    /// @notice RAC key for a proven lock (VF-RAC-001 / VF-FEE-011).
+    function racKey(string memory environmentId, bytes32 lockId) public pure returns (bytes32) {
+        return keccak256(abi.encode("VF-RAC", environmentId, lockId));
+    }
+
+    /// @dev FZ-04 (fix 2026-10-23): gross amounts that would overflow the fee
+    ///      or valuation arithmetic are refused with a coded error, not a panic.
+    function _requireGrossInRange(uint256 gross) internal pure {
+        require(gross <= type(uint256).max / SCALE, "VF-COM-011: gross out of range");
     }
 
     // ===== Canonical verification entry point =====
@@ -758,7 +830,8 @@ contract VinculumFinalisVerifier {
     /// @notice Phase 2: Verifies a normalized proof package and mints tokens if valid.
     /// @dev Call recordFeeAndRac() first to persist RAC independently of issuance outcome.
     /// @param pkg The normalized ProofPackage from any source environment.
-    /// @param daysSinceLaunch Days since protocol launch (for emission decay).
+    /// @param daysSinceLaunch Kept for ABI stability. Not read: emission uses the
+    ///        proven lock creation time (VF-ORC-011/013).
     /// @return success Whether verification succeeded and tokens were minted.
     function verifyAndMint(
         ProofPackage calldata pkg,
@@ -771,7 +844,10 @@ contract VinculumFinalisVerifier {
 
         // Step 2: RAC must already be recorded (VF-FEE-011 two-phase pattern).
         // If not yet recorded, the caller must call recordFeeAndRac() first.
-        require(recordedRacs[pkg.racIdentity], "VF-FEE-011: call recordFeeAndRac() first");
+        require(
+            recordedRacs[racKey(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId)],
+            "VF-FEE-011: call recordFeeAndRac() first"
+        );
 
         // Step 3: Asset registry + precision (VF-REG-001, VF-QNORM)
         bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
@@ -783,17 +859,23 @@ contract VinculumFinalisVerifier {
         uint256 gross = pkg.grossAmountSmallestUnits;
         uint256 fee = pkg.actualFeeAmountSmallestUnits;
         uint256 principal = pkg.principalAmountSmallestUnits;
-        require(gross - fee == principal, "VF-COM-012: principal != gross - fee");
+        require(fee <= gross && gross - fee == principal, "VF-COM-012: principal != gross - fee");
         require(fee > 0 && principal > 0, "VF-COM-013: zero fee or principal");
 
         bool isHandshake = pkg.durationSecs == HANDSHAKE_DURATION_SECS;
+        _requireGrossInRange(gross);
         require(fee == (gross * STANDARD_FEE_BPS) / 10000, "VF-COM-011: fee != floor(gross * bps / 10000)");
+
+        // Step 11 (moved first, fix 2026-10-23): source finality, fact
+        // cross-check and Dev Fund (VF-XCH-006/010/011, VF-FEE-009). The proven
+        // creation time drives valuation and emission below.
+        uint256 createdAt = _verifySource(pkg);
 
         // Step 5: Duration (VF-COM-001/002)
         require(_isPermittedDuration(pkg.durationSecs), "VF-COM-002: duration not permitted");
 
         // Step 6: USD value — derived, never caller-supplied (CL-01)
-        uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry);
+        uint256 verifiedGrossUsdMicro = _resolveVerifiedGrossUsd(pkg, entry, createdAt);
         // VF-COM-003/009: value bounds. issuanceUsd equals verifiedGrossUsdMicro
         // except for a BTC/BCH/LTC native Handshake, capped at HANDSHAKE_USD_MAX.
         uint256 issuanceUsd = _checkValueBounds(pkg, isHandshake, verifiedGrossUsdMicro);
@@ -818,12 +900,8 @@ contract VinculumFinalisVerifier {
         // Step 9: Base recipient (VF-ARC-006)
         require(pkg.baseRecipient != address(0), "VF-ARC-006: zero base recipient");
 
-        // Step 10: Dev Fund destination (VF-FEE-009)
-        // In production: require(devFundDestinations[pkg.sourceEnvironmentId] != address(0), "VF-FEE-009");
-        // In simulation: skip (deployment pending)
-
-        // Step 11: Source finality + fact cross-check (VF-XCH-006/010/011)
-        uint256 createdAt = _verifySource(pkg);
+        // Step 10: Dev Fund destination (VF-FEE-009): enforced in _verifySource
+        // above (configured, nonzero, and equal to the proven lock's Dev Fund).
 
         // Step 11b (t271u): VF-COM-025 causal order from trusted data. CHONX
         // must already be active when the lock is created; a later activation
@@ -841,7 +919,7 @@ contract VinculumFinalisVerifier {
 
         // Step 12: Issuance calculation (VF-COM-018/019)
         // VF-ORC-011/013: emission rate from Valuation Timestamp, not caller-supplied age.
-        uint256 emissionDays = _daysSinceLaunchFromValuation(pkg.valuationTimestamp);
+        uint256 emissionDays = _daysSinceLaunchFromValuation(createdAt);
         // daysSinceLaunch retained in the ABI for callers; valuation path is authoritative.
         daysSinceLaunch;
         uint256 issuanceAmount = _computeIssuance(
@@ -980,7 +1058,8 @@ contract VinculumFinalisVerifier {
 
     function _resolveVerifiedGrossUsd(
         ProofPackage calldata pkg,
-        AssetPrecisionEntry memory entry
+        AssetPrecisionEntry memory entry,
+        uint256 createdAt
     ) internal returns (uint256) {
         bytes32 lockIdHash = keccak256(
             abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId)
@@ -992,31 +1071,80 @@ contract VinculumFinalisVerifier {
             // VF-ORC-009/010: retain lock-creation reference; proof delay/retry does not reprice.
             priceUsd18 = binding.priceUsd18;
         } else {
+            // Fix 2026-10-23 (AG-06, COMB-01/02/03): the record in effect at the
+            // proven lock creation time, never the record current at
+            // submission. No record, or a failed run in effect, refuses the
+            // lock permanently (fail closed).
             bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
-            ScheduledPriceEntry memory sp = scheduledPrices[assetKey];
-            require(sp.usable && sp.priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
-            // USDC/USDT below $0.95: unavailable for every new valuation, at
-            // every duration, until a later run is at or above $0.95. Fail
-            // closed; never substitute $1.
+            priceUsd18 = _priceInEffectAt(assetKey, createdAt);
+            require(priceUsd18 > 0, "VF-ORC-005: no usable scheduled price at lock creation");
+            // USDC/USDT below $0.95 at lock creation: unavailable. Fail closed;
+            // never substitute $1.
             if (_isUsdStable(entry.symbol)) {
                 require(
-                    sp.priceUsd18 >= USD_STABLE_MIN_PRICE,
+                    priceUsd18 >= USD_STABLE_MIN_PRICE,
                     "VF-ORC-005: USDC/USDT scheduled price below $0.95"
                 );
             }
-            priceUsd18 = sp.priceUsd18;
             binding.priceUsd18 = priceUsd18;
             binding.bound = true;
         }
 
         // Optional package record must agree with the bound reference (VF-ORC-007/012).
         if (pkg.priceRecord.length > 0) {
+            require(pkg.priceRecord.length == 32, "VF-ORC-007: price record length");
             uint256 recorded = abi.decode(pkg.priceRecord, (uint256));
             require(recorded == priceUsd18, "VF-ORC-007: price record mismatch");
         }
 
         uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
+        require(
+            assetUnitsFp == 0 || priceUsd18 <= type(uint256).max / assetUnitsFp,
+            "VF-ORC-004: valuation out of range"
+        );
         return (assetUnitsFp * priceUsd18) / SCALE;
+    }
+
+    /// @dev Price (18-decimal USD) of the last record posted strictly before
+    ///      `timestamp`; 0 when there is none or that record is a failed run.
+    function _priceInEffectAt(bytes32 assetKey, uint256 timestamp) internal view returns (uint256) {
+        PricePoint[] storage h = _priceHistory[assetKey];
+        uint256 lo = 0;
+        uint256 hi = h.length;
+        // First index whose postedAt >= timestamp.
+        while (lo < hi) {
+            uint256 mid = (lo + hi) / 2;
+            if (uint256(h[mid].postedAt) < timestamp) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        if (lo == 0) return 0;
+        return uint256(h[lo - 1].priceUsd18);
+    }
+
+    /// @notice Scheduled price record in effect for a lock created at
+    ///         `timestamp` (0 means unavailable).
+    function priceInEffectAt(
+        string calldata environmentId,
+        bytes32 canonicalAssetId,
+        uint256 timestamp
+    ) external view returns (uint256) {
+        return _priceInEffectAt(_assetKey(environmentId, canonicalAssetId), timestamp);
+    }
+
+    function priceHistoryLength(bytes32 assetKey) external view returns (uint256) {
+        return _priceHistory[assetKey].length;
+    }
+
+    function priceHistoryAt(bytes32 assetKey, uint256 index)
+        external
+        view
+        returns (uint256 priceUsd18, uint64 postedAt, uint64 runId)
+    {
+        PricePoint memory p = _priceHistory[assetKey][index];
+        return (uint256(p.priceUsd18), p.postedAt, p.runId);
     }
 
     /// @dev VF-ORC-011/013: days since launch from Valuation Timestamp (source block time).
@@ -1093,8 +1221,13 @@ contract VinculumFinalisVerifier {
         return consumedLocks[keccak256(abi.encodePacked(envId, lockId))];
     }
 
-    function isRacRecorded(bytes32 racIdentity) external view returns (bool) {
-        return recordedRacs[racIdentity];
+    /// @notice True once the lock's RAC is recorded. Takes racKey(env, lockId).
+    function isRacRecorded(bytes32 key) external view returns (bool) {
+        return recordedRacs[key];
+    }
+
+    function isLockRacRecorded(string calldata envId, bytes32 lockId) external view returns (bool) {
+        return recordedRacs[racKey(envId, lockId)];
     }
 
     function getRemainingVclmCap() external view returns (uint256) {
