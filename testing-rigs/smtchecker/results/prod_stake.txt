@@ -1,0 +1,1134 @@
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:332:13:
+    |
+332 |         if (oldLast + 1 > from) from = oldLast + 1;
+    |             ^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:332:40:
+    |
+332 |         if (oldLast + 1 > from) from = oldLast + 1;
+    |                                        ^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:333:56:
+    |
+333 |         _applyWeight(positionId, from, _lastEligibleBy(pos.endTimestamp + durationSecs, t0), true, t0);
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:351:28:
+    |
+351 |         pos.endTimestamp = pos.startTimestamp + pos.queuedExtensionSecs;
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:379:17:
+    |
+379 |             if (keptLast + 1 > from) from = keptLast + 1;
+    |                 ^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:379:45:
+    |
+379 |             if (keptLast + 1 > from) from = keptLast + 1;
+    |                                             ^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:408:41:
+    |
+408 |         require(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS, "VF-STK-008: epoch not ended");
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:408:36:
+    |
+408 |         require(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS, "VF-STK-008: epoch not ended");
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:412:28:
+    |
+412 |             require(epochs[epochN - 1].closed, "VF-STK-010: chronological order");
+    |                            ^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:420:37:
+    |
+420 |         uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+    |                                     ^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:420:22:
+    |
+420 |         uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:420:21:
+    |
+420 |         uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:436:36:
+    |
+436 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                    ^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:436:35:
+    |
+436 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:436:29:
+    |
+436 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:443:27:
+    |
+443 |         require(epochN == lastAllocatedEpoch + 1, "VF-STK-010: allocate in epoch order (t270u)");
+    |                           ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:462:32:
+    |
+462 |         uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
+    |                                ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:462:31:
+    |
+462 |         uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:477:9:
+    |
+477 |         cumulativeRewardVclmMinted += totalReward;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:505:38:
+    |
+505 |         nextClaimEpoch[positionId] = toEpoch + 1;
+    |                                      ^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:517:32:
+    |
+517 |             if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+    |                                ^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:517:83:
+    |
+517 |             if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+    |                                                                                   ^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:517:60:
+    |
+517 |             if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+    |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:516:53:
+    |
+516 |         for (uint256 i = 0; i < positionIds.length; i++) {
+    |                                                     ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:537:54:
+    |
+537 |         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+    |                                                      ^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:537:53:
+    |
+537 |         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:537:48:
+    |
+537 |         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:546:26:
+    |
+546 |         uint256 nTerms = ts.length + (pos.queuedExtensionBps > 0 ? 1 : 0);
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:548:24:
+    |
+548 |         uint256 base = pos.amount * _getTokenMultiplier(pos.token);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:556:31:
+    |
+556 |             uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+    |                               ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:556:30:
+    |
+556 |             uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:556:25:
+    |
+556 |             uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:557:20:
+    |
+557 |             while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+    |                    ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:557:61:
+    |
+557 |             while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+    |                                                             ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:557:74:
+    |
+557 |             while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+    |                                                                          ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:558:31:
+    |
+558 |             uint256 weight = (base * _termMult(positionId, k)) / 1e8;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:558:30:
+    |
+558 |             uint256 weight = (base * _termMult(positionId, k)) / 1e8;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:559:24:
+    |
+559 |             amount += (ep.mintedVclm * weight) / ep.totalWeight;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:559:23:
+    |
+559 |             amount += (ep.mintedVclm * weight) / ep.totalWeight;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:559:13:
+    |
+559 |             amount += (ep.mintedVclm * weight) / ep.totalWeight;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:549:43:
+    |
+549 |         for (uint256 n = from; n <= last; n++) {
+    |                                           ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:565:32:
+    |
+565 |         return k < ts.length ? ts[k].start : positions[positionId].endTimestamp;
+    |                                ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:570:32:
+    |
+570 |         return k < ts.length ? ts[k].multiplierBps : positions[positionId].queuedExtensionBps;
+    |                                ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:17:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                 ^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:17:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:17:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:16:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:16:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:581:17:
+    |
+581 |         if (T < t0 + 2 * EPOCH_DURATION_SECS) return 0;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:582:17:
+    |
+582 |         return (T - t0) / EPOCH_DURATION_SECS - 1;
+    |                 ^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:582:16:
+    |
+582 |         return (T - t0) / EPOCH_DURATION_SECS - 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:582:16:
+    |
+582 |         return (T - t0) / EPOCH_DURATION_SECS - 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:592:24:
+    |
+592 |         uint256 base = pos.amount * _getTokenMultiplier(pos.token);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:593:21:
+    |
+593 |         uint256 k = _terms[positionId].length + (pos.queuedExtensionBps > 0 ? 1 : 0);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:596:13:
+    |
+596 |             k--;
+    |             ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:600:44:
+    |
+600 |                 _rangeWeight(segFrom, hi, (base * _termMult(positionId, k)) / 1e8, add);
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:600:43:
+    |
+600 |                 _rangeWeight(segFrom, hi, (base * _termMult(positionId, k)) / 1e8, add);
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:603:18:
+    |
+603 |             hi = lo - 1;
+    |                  ^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:617:43:
+    |
+617 |                 _runningWeight[i] = add ? _runningWeight[i] + w : _runningWeight[i] - w;
+    |                                           ^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:617:67:
+    |
+617 |                 _runningWeight[i] = add ? _runningWeight[i] + w : _runningWeight[i] - w;
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:616:47:
+    |
+616 |             for (uint256 i = from; i <= upTo; i++) {
+    |                                               ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:621:22:
+    |
+621 |             if (add) _weightAddAt[from] += w; else _weightSubAt[from] += w;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:621:52:
+    |
+621 |             if (add) _weightAddAt[from] += w; else _weightSubAt[from] += w;
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:31:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                               ^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:18:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:63:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                                                               ^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:50:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:26:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                          ^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:70:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                                                                      ^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:69:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:60:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                                                            ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:640:18:
+    |
+640 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+    |                  ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:640:17:
+    |
+640 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:640:16:
+    |
+640 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:678:16:
+    |
+678 |         return pos.endTimestamp + (pos.queuedExtensionBps > 0 ? pos.queuedExtensionSecs : 0);
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:20:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                    ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:17:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                 ^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:49:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                                                 ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:46:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                                              ^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:686:44:
+    |
+686 |         for (uint256 k = ts.length; k > 0; k--) {
+    |                                            ^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:700:37:
+    |
+700 |         uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+    |                                     ^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:700:36:
+    |
+700 |         uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:700:30:
+    |
+700 |         uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:701:36:
+    |
+701 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                    ^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:701:35:
+    |
+701 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:701:29:
+    |
+701 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:706:17:
+    |
+706 |         return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:706:17:
+    |
+706 |         return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:706:16:
+    |
+706 |         return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:722:17:
+    |
+722 |         return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:722:17:
+    |
+722 |         return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:722:16:
+    |
+722 |         return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:238:46:
+    |
+238 |         return issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:271:17:
+    |
+271 |         require(stakeToken.balanceOf(address(this)) - beforeBal == amount, "VFS: received amount mismatch");
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:273:22:
+    |
+273 |         uint256 id = nextPositionId++;
+    |                      ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:281:27:
+    |
+281 |             endTimestamp: start + durationSecs,
+    |                           ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:296:49:
+    |
+296 |         _applyWeight(id, first, _lastEligibleBy(start + durationSecs, t0), true, t0);
+    |                                                 ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:332:13:
+    |
+332 |         if (oldLast + 1 > from) from = oldLast + 1;
+    |             ^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:332:40:
+    |
+332 |         if (oldLast + 1 > from) from = oldLast + 1;
+    |                                        ^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:333:56:
+    |
+333 |         _applyWeight(positionId, from, _lastEligibleBy(pos.endTimestamp + durationSecs, t0), true, t0);
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:351:28:
+    |
+351 |         pos.endTimestamp = pos.startTimestamp + pos.queuedExtensionSecs;
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:379:17:
+    |
+379 |             if (keptLast + 1 > from) from = keptLast + 1;
+    |                 ^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:379:45:
+    |
+379 |             if (keptLast + 1 > from) from = keptLast + 1;
+    |                                             ^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:408:41:
+    |
+408 |         require(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS, "VF-STK-008: epoch not ended");
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:408:36:
+    |
+408 |         require(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS, "VF-STK-008: epoch not ended");
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:412:28:
+    |
+412 |             require(epochs[epochN - 1].closed, "VF-STK-010: chronological order");
+    |                            ^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:420:37:
+    |
+420 |         uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+    |                                     ^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:420:22:
+    |
+420 |         uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:420:21:
+    |
+420 |         uint256 w = (_runningWeight[epochN - 1] + _weightAddAt[epochN]) - _weightSubAt[epochN];
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:436:36:
+    |
+436 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                    ^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:436:35:
+    |
+436 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:436:29:
+    |
+436 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:443:27:
+    |
+443 |         require(epochN == lastAllocatedEpoch + 1, "VF-STK-010: allocate in epoch order (t270u)");
+    |                           ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:462:32:
+    |
+462 |         uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
+    |                                ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:462:31:
+    |
+462 |         uint256 totalReward = (ep.rewardBasis * 100) / REWARD_REFERENCE_CENTS;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:477:9:
+    |
+477 |         cumulativeRewardVclmMinted += totalReward;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:505:38:
+    |
+505 |         nextClaimEpoch[positionId] = toEpoch + 1;
+    |                                      ^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:516:53:
+    |
+516 |         for (uint256 i = 0; i < positionIds.length; i++) {
+    |                                                     ^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:517:32:
+    |
+517 |             if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+    |                                ^^^^^^^^^^^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:517:83:
+    |
+517 |             if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+    |                                                                                   ^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:517:60:
+    |
+517 |             if (nextClaimEpoch[positionIds[i]] <= toEpoch) total += claimPosition(positionIds[i], toEpoch);
+    |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:537:54:
+    |
+537 |         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+    |                                                      ^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:537:53:
+    |
+537 |         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:537:48:
+    |
+537 |         if (strict) require(block.timestamp >= t0 + (toEpoch + 1) * EPOCH_DURATION_SECS, "VF-STK-013: epoch not final");
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:546:26:
+    |
+546 |         uint256 nTerms = ts.length + (pos.queuedExtensionBps > 0 ? 1 : 0);
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:548:24:
+    |
+548 |         uint256 base = pos.amount * _getTokenMultiplier(pos.token);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:549:43:
+    |
+549 |         for (uint256 n = from; n <= last; n++) {
+    |                                           ^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:556:31:
+    |
+556 |             uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+    |                               ^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:556:30:
+    |
+556 |             uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:556:25:
+    |
+556 |             uint256 t = t0 + (n - 1) * EPOCH_DURATION_SECS;
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:557:20:
+    |
+557 |             while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+    |                    ^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:557:61:
+    |
+557 |             while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+    |                                                             ^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:557:74:
+    |
+557 |             while (k + 1 < nTerms && _termStart(positionId, k + 1) <= t) k++;
+    |                                                                          ^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:558:31:
+    |
+558 |             uint256 weight = (base * _termMult(positionId, k)) / 1e8;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:558:30:
+    |
+558 |             uint256 weight = (base * _termMult(positionId, k)) / 1e8;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:559:24:
+    |
+559 |             amount += (ep.mintedVclm * weight) / ep.totalWeight;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:559:23:
+    |
+559 |             amount += (ep.mintedVclm * weight) / ep.totalWeight;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:559:13:
+    |
+559 |             amount += (ep.mintedVclm * weight) / ep.totalWeight;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:565:32:
+    |
+565 |         return k < ts.length ? ts[k].start : positions[positionId].endTimestamp;
+    |                                ^^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:570:32:
+    |
+570 |         return k < ts.length ? ts[k].multiplierBps : positions[positionId].queuedExtensionBps;
+    |                                ^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:17:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                 ^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:17:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:17:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:16:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:576:16:
+    |
+576 |         return (t - t0 + EPOCH_DURATION_SECS - 1) / EPOCH_DURATION_SECS + 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:581:17:
+    |
+581 |         if (T < t0 + 2 * EPOCH_DURATION_SECS) return 0;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:582:17:
+    |
+582 |         return (T - t0) / EPOCH_DURATION_SECS - 1;
+    |                 ^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:582:16:
+    |
+582 |         return (T - t0) / EPOCH_DURATION_SECS - 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:582:16:
+    |
+582 |         return (T - t0) / EPOCH_DURATION_SECS - 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:592:24:
+    |
+592 |         uint256 base = pos.amount * _getTokenMultiplier(pos.token);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:593:21:
+    |
+593 |         uint256 k = _terms[positionId].length + (pos.queuedExtensionBps > 0 ? 1 : 0);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:596:13:
+    |
+596 |             k--;
+    |             ^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:600:44:
+    |
+600 |                 _rangeWeight(segFrom, hi, (base * _termMult(positionId, k)) / 1e8, add);
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:600:43:
+    |
+600 |                 _rangeWeight(segFrom, hi, (base * _termMult(positionId, k)) / 1e8, add);
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:603:18:
+    |
+603 |             hi = lo - 1;
+    |                  ^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:616:47:
+    |
+616 |             for (uint256 i = from; i <= upTo; i++) {
+    |                                               ^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:617:43:
+    |
+617 |                 _runningWeight[i] = add ? _runningWeight[i] + w : _runningWeight[i] - w;
+    |                                           ^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:617:67:
+    |
+617 |                 _runningWeight[i] = add ? _runningWeight[i] + w : _runningWeight[i] - w;
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:621:22:
+    |
+621 |             if (add) _weightAddAt[from] += w; else _weightSubAt[from] += w;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:621:52:
+    |
+621 |             if (add) _weightAddAt[from] += w; else _weightSubAt[from] += w;
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:31:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                               ^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:18:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:63:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                                                               ^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:623:50:
+    |
+623 |         if (add) _weightSubAt[to + 1] += w; else _weightAddAt[to + 1] += w;
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:26:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                          ^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:60:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                                                            ^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:70:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                                                                      ^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:632:69:
+    |
+632 |         for (uint256 n = lastClosedEpoch + 1; n <= epochN; n++) w = (w + _weightAddAt[n]) - _weightSubAt[n];
+    |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:640:18:
+    |
+640 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+    |                  ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:640:17:
+    |
+640 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:640:16:
+    |
+640 |         return ((block.timestamp - t0) / EPOCH_DURATION_SECS) + 1;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:678:16:
+    |
+678 |         return pos.endTimestamp + (pos.queuedExtensionBps > 0 ? pos.queuedExtensionSecs : 0);
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:686:44:
+    |
+686 |         for (uint256 k = ts.length; k > 0; k--) {
+    |                                            ^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:20:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                    ^^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:17:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                 ^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:49:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                                                 ^^^^^
+
+Warning: CHC: Out of bounds access might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:687:46:
+    |
+687 |             if (ts[k - 1].start <= t) return ts[k - 1].multiplierBps;
+    |                                              ^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:700:37:
+    |
+700 |         uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+    |                                     ^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:700:36:
+    |
+700 |         uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:700:30:
+    |
+700 |         uint256 epochStart = t0 + ((epochN - 1) * EPOCH_DURATION_SECS);
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:701:36:
+    |
+701 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                    ^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:701:35:
+    |
+701 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:701:29:
+    |
+701 |         uint256 nPlus1End = t0 + ((epochN + 1) * EPOCH_DURATION_SECS);
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:706:17:
+    |
+706 |         return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:706:17:
+    |
+706 |         return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:706:16:
+    |
+706 |         return (pos.amount * _getTokenMultiplier(pos.token) * durBps) / 1e8;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:722:17:
+    |
+722 |         return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:722:17:
+    |
+722 |         return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/base-contracts/contracts/VinculumFinalisStake.sol:722:16:
+    |
+722 |         return (pos.amount * _getTokenMultiplier(pos.token) * pos.multiplierBps) / 1e8;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
