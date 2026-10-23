@@ -84,7 +84,8 @@ def main():
         keep = rows[0]
         for o in rows[1:]:
             keep["ids"] += o["ids"]
-            keep["source"] += ", " + o["source"]
+            if o["source"] not in keep["source"].split(", "):
+                keep["source"] += ", " + o["source"]
             keep["file_line"] += [x for x in o["file_line"] if x not in keep["file_line"]]
             keep["evidence"] += o["evidence"]
             keep["spec"] += [x for x in o["spec"] if x not in keep["spec"]]
@@ -94,6 +95,20 @@ def main():
             if CLS[o["class"]] < CLS[keep["class"]]:
                 keep["class"] = o["class"]
             merged_away.add(id(o))
+        # grouped rows (e.g. mutation survivors per contract): one row, own label,
+        # description and scope, evidence = the member list
+        if m.get("member_evidence"):
+            keep["evidence"] = [m["member_evidence"]] + ["%s %s: %s" % (r["ids"][0], r["file_line"][0].split("/")[-1] if r["file_line"] else "", r["description"].split(". Blind class")[0].replace("SURVIVED mutant ", "").replace("PIN_ONLY mutant ", "")) for r in rows]
+        if m.get("label"):
+            keep["label"] = m["label"]
+        if m.get("description"):
+            keep["description"] = m["description"]
+        if m.get("damage_potential"):
+            keep["damage_potential"] = m["damage_potential"]
+        if m.get("scope"):
+            keep["scope"] = m["scope"]
+        if m.get("hide_rig_views"):
+            keep["rig_views_hidden"] = True
     rows = [r for r in raw if id(r) not in merged_away]
     for r in rows:
         if r["ids"][0] in st.get("related", {}):
@@ -147,15 +162,15 @@ def write_md(out):
           "| # | Id | Class | Severity | Live Base set or latent | File:line | Short description | Evidence path | Spec cross-ref |",
           "|---|---|---|---|---|---|---|---|---|"]
     for r in out["findings"]:
-        ids = " = ".join(r["ids"])
-        desc = short(r["description"])
-        if r.get("rig_views"):
+        ids = r.get("label") or " = ".join(r["ids"])
+        desc = short(r["description"], 650 if r.get("label") else 260)
+        if r.get("rig_views") and not r.get("rig_views_hidden"):
             desc += " (Also reported as " + ", ".join("%s: %s, %s" % (k, v["class"].lower(), v["severity"]) for k, v in r["rig_views"].items()) + ".)"
         if r.get("related"):
             desc += " Related: " + r["related"] + "."
         if r.get("note"):
             desc += " Recorder note: " + r["note"]
-        ev = "; ".join(short(e, 160) for e in r["evidence"] if e) + " [" + r["source"] + "]"
+        ev = "; ".join(short(e, 110 if r.get("label") else 160) for e in r["evidence"] if e) + " [" + r["source"] + "]"
         L.append("| %s |" % " | ".join(c(x) for x in [r["rank"], ids, r["class"], r["severity"], r["scope"], "; ".join(r["file_line"][:4]) + (" (+%d more)" % (len(r["file_line"]) - 4) if len(r["file_line"]) > 4 else ""), desc, ev, short("; ".join(r["spec"]), 220) or "-"]))
     L.append("")
     open(os.path.join(os.path.dirname(HERE), "MASTER_FINDINGS.md"), "w").write("\n".join(L))
