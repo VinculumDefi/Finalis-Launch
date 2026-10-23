@@ -1,0 +1,66 @@
+{
+ "rig": "price-fetch",
+ "branch": "test/solana-sampling-2026-10-23",
+ "readOnly": true,
+ "startedAt": "2026-10-23T14:35:18.274Z",
+ "fetchedAt": "2026-10-23T15:17:43.685Z",
+ "fetcher": "base-contracts/scripts/fetchPrices.cjs (Revision B rule), wrapped by testing-rigs/price-fetch/run.cjs",
+ "usdStableRule": "USDC/USDT rows below $0.95 are reported unavailable (reason usd_stable_below_0.95); no $1 substitute",
+ "inputs": {
+  "revB": {
+   "file": "base-contracts/deployment/assetRegistry.revB.json",
+   "sha256": "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9",
+   "rows": 487,
+   "headCommit": "46d8c8655f671d50d22a1eeb2fd2f961dd5fa363"
+  },
+  "candidate": {
+   "file": "base-contracts/deployment/assetRegistry.candidate-2026-10-23.json",
+   "ref": "origin/test/registry-candidate-2026-10-23",
+   "commit": "b142790bca8cf3a738087796dee7d4a36fa74909",
+   "sha256": "4f6cebc00d71496cafe06dc287a1410258634351bc4800b44649dc51cbfba623",
+   "rows": 811,
+   "merged": false
+  },
+  "distinctRowsFetched": 822
+ },
+ "fetcherRawSummary": {
+  "total": 822,
+  "CoinGecko": 460,
+  "DexScreener": 24,
+  "GeckoTerminal": 1,
+  "fail": 337,
+  "failByReason": {
+   "no_single_traded_pool_10k": 337
+  }
+ },
+ "revB": {
+  "total": 487,
+  "priced": 470,
+  "failed": 17,
+  "pricedBySource": {
+   "CoinGecko": 447,
+   "DexScreener": 22,
+   "GeckoTerminal": 1
+  },
+  "failByReason": {
+   "no_single_traded_pool_10k": 17
+  },
+  "usdStableRows": 14,
+  "usdStableBelow095": []
+ },
+ "candidate": {
+  "total": 811,
+  "priced": 474,
+  "failed": 337,
+  "pricedBySource": {
+   "CoinGecko": 449,
+   "DexScreener": 24,
+   "GeckoTerminal": 1
+  },
+  "failByReason": {
+   "no_single_traded_pool_10k": 337
+  },
+  "usdStableRows": 14,
+  "usdStableBelow095": []
+ }
+}
