@@ -17,8 +17,8 @@ ok 3 - a Revision B token is shown (Ethereum USDC row 1), matched by chain + add
   duration_ms: 0.48585
   type: 'test'
   ...
-# Subtest: BAR row 77 (symbol-failure), TigerOG row 138, LionOG 999, FrogOG 1000 are hidden
-ok 4 - BAR row 77 (symbol-failure), TigerOG row 138, LionOG 999, FrogOG 1000 are hidden
+# Subtest: BAR row 77 (symbol-failure), [name withheld] row 138, [name withheld] 999, [name withheld] 1000 are hidden
+ok 4 - BAR row 77 (symbol-failure), [name withheld] row 138, [name withheld] 999, [name withheld] 1000 are hidden
   ---
   duration_ms: 0.321855
   type: 'test'
