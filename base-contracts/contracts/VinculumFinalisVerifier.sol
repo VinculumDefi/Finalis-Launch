@@ -790,6 +790,7 @@ contract VinculumFinalisVerifier {
         // proven lock creation time. A package that states another time is
         // refused; the proven time is what the Verifier uses.
         require(extCreation != 0, "VF-ORC-011: no proven lock creation time");
+        require(extCreation <= block.timestamp, "VF-ORC-011: lock creation time in the future");
         require(pkg.valuationTimestamp == extCreation, "VF-ORC-011: valuation timestamp != proven lock creation time");
         // Native locks: the reader reports the native canonical id. Token locks:
         // the reader reports tokenAddressKey(env, token), resolved here through
@@ -1077,7 +1078,7 @@ contract VinculumFinalisVerifier {
             // lock permanently (fail closed).
             bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
             priceUsd18 = _priceInEffectAt(assetKey, createdAt);
-            require(priceUsd18 > 0, "VF-ORC-005: no usable scheduled price at lock creation");
+            require(priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
             // USDC/USDT below $0.95 at lock creation: unavailable. Fail closed;
             // never substitute $1.
             if (_isUsdStable(entry.symbol)) {
