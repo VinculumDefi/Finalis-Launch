@@ -64,7 +64,8 @@ fn validate_and_compute(params: &CommitVaultLockParams) -> Result<(u128, u128, b
         );
     }
 
-    // VF-COM-003/009: USD value bounds.
+    // VF-COM-003/009: USD value bounds (Rev 12: Handshake $0.01-$0.02; other
+    // durations at least $0.01).
     if is_handshake {
         require!(
             params.verified_gross_usd_micro >= HANDSHAKE_VALUE_USD_MIN_MICRO
@@ -106,8 +107,9 @@ fn validate_and_compute(params: &CommitVaultLockParams) -> Result<(u128, u128, b
     Ok((fee, principal, is_handshake))
 }
 
-/// Updates the Handshake allowance account (VF-COM-006/007).
-/// Called by both handlers when is_handshake is true.
+/// Updates the Handshake record account. Rev 12 (fix 2026-10-23, AG-20)
+/// removed the Handshake allowance, so this only records the count and never
+/// refuses a Handshake. Called by both handlers when is_handshake is true.
 fn consume_handshake(
     ha: &mut HandshakeAllowance,
     signer: &Pubkey,
@@ -120,10 +122,8 @@ fn consume_handshake(
         ha.bump = bump;
     }
 
-    // VF-COM-007: Check remaining allowance before consuming.
-    require!(ha.remaining > 0, ErrorCode::HandshakeAllowanceExhausted);
-
-    ha.used += 1;
+    // Rev 12: no allowance limit, so there is no remaining-allowance check.
+    ha.used = ha.used.saturating_add(1);
     ha.remaining = ha.allowance.saturating_sub(ha.used);
 
     emit!(HandshakeConsumed {
@@ -437,4 +437,85 @@ pub fn commit_spl(
     });
 
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Unit tests (fix 2026-10-23): Rev 12 Handshake band, 5% fee, $0.01 standard
+// minimum, and no Handshake allowance limit. Run with `cargo test --lib`.
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod rev12_tests {
+    use super::*;
+
+    const CENT: u128 = 10_000_000_000_000_000; // $0.01 x 10^18
+
+    fn params(duration_secs: u64, usd: u128, gross: u128) -> CommitVaultLockParams {
+        let lock_id = String::from("rev12-test-lock");
+        let lock_id_hash = anchor_lang::solana_program::hash::hashv(&[lock_id.as_bytes()]).to_bytes();
+        CommitVaultLockParams {
+            lock_id,
+            lock_id_hash,
+            gross_amount: gross,
+            duration_secs,
+            base_recipient: [7u8; 20],
+            release_destination: Pubkey::new_unique(),
+            output_token: OutputToken::Vclm,
+            verified_gross_usd_micro: usd,
+            chonx_activation_receipt: String::from("not_applicable"),
+        }
+    }
+
+    fn err_is(r: Result<(u128, u128, bool)>, code: ErrorCode) -> bool {
+        match r {
+            Err(e) => e == code.into(),
+            Ok(_) => false,
+        }
+    }
+
+    #[test]
+    fn handshake_band_is_one_to_two_cents_inclusive() {
+        assert!(validate_and_compute(&params(3600, CENT, 10_000)).is_ok());
+        assert!(validate_and_compute(&params(3600, 2 * CENT, 10_000)).is_ok());
+        assert!(validate_and_compute(&params(3600, CENT + CENT / 2, 10_000)).is_ok());
+        assert!(err_is(validate_and_compute(&params(3600, CENT - 1, 10_000)), ErrorCode::HandshakeValueOutOfRange));
+        assert!(err_is(validate_and_compute(&params(3600, 2 * CENT + 1, 10_000)), ErrorCode::HandshakeValueOutOfRange));
+        // The Revision 6 band ($0.95 to $1.05) is refused.
+        assert!(err_is(validate_and_compute(&params(3600, 95 * CENT, 10_000)), ErrorCode::HandshakeValueOutOfRange));
+        assert!(err_is(validate_and_compute(&params(3600, 100 * CENT, 10_000)), ErrorCode::HandshakeValueOutOfRange));
+    }
+
+    #[test]
+    fn other_durations_need_at_least_one_cent() {
+        for (secs, _) in PERMITTED_DURATIONS.iter().filter(|(s, _)| *s != 3600) {
+            assert!(validate_and_compute(&params(*secs, CENT, 10_000)).is_ok());
+            assert!(err_is(validate_and_compute(&params(*secs, CENT - 1, 10_000)), ErrorCode::StandardValueBelowMinimum));
+        }
+        // No upper bound and no $10.00 minimum on standard durations.
+        assert!(validate_and_compute(&params(604800, 5 * CENT, 10_000)).is_ok());
+        assert!(validate_and_compute(&params(604800, 1_000_000 * CENT, 10_000)).is_ok());
+    }
+
+    #[test]
+    fn handshake_fee_is_five_percent_like_every_duration() {
+        let (fee, principal, hs) = validate_and_compute(&params(3600, CENT, 10_000)).unwrap();
+        assert!(hs);
+        assert_eq!(fee, 500);
+        assert_eq!(principal, 9_500);
+        let (fee7, principal7, hs7) = validate_and_compute(&params(604800, CENT, 10_000)).unwrap();
+        assert!(!hs7);
+        assert_eq!((fee7, principal7), (500, 9_500));
+        assert_eq!(HANDSHAKE_FEE_BPS, STANDARD_FEE_BPS);
+    }
+
+    #[test]
+    fn handshake_record_never_refuses() {
+        let signer = Pubkey::new_unique();
+        let mut ha = HandshakeAllowance::default();
+        for i in 1..=10u32 {
+            assert!(consume_handshake(&mut ha, &signer, 254).is_ok());
+            assert_eq!(ha.used, i);
+        }
+        assert_eq!(ha.remaining, 0);
+        assert!(consume_handshake(&mut ha, &signer, 254).is_ok());
+    }
 }
