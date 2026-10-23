@@ -9,6 +9,19 @@
 // "ceremony would FAIL at step <n> <name>: <reason>" followed by the dump.
 // Progress goes to stderr.
 // Run: cd base-contracts && npm run ceremony:dryrun
+//
+// Simulate mode (npm run ceremony:dryrun:simulate, or dryrun.sh
+// --simulate-non-base-locks, which sets DRYRUN_SIMULATE_NON_BASE_LOCKS=1):
+// the live non-Base locks are old code, and the fixed CommitmentVaultLock can
+// only be put on the six chains by the operator. This mode starts a LOCAL
+// Hardhat fork of each of the six chains, deploys the fixed
+// CommitmentVaultLock from ceremony.json there (a throwaway random key, only
+// on the local forks), checks its masked runtime hash equals the pinned
+// CVL_RUNTIME_HASH, and then runs steps 3 to 15 against those simulated
+// locks. stdout then starts with a "mode: SIMULATED" line before the verdict.
+// It says what would happen after the operator redeploys; it is not a check
+// of the live locks. Live headers and receipts (steps 12 and 13) are still
+// read from the public RPCs. The default mode is unchanged.
 const path = require("path");
 const fs = require("fs");
 const hre = require("hardhat");
@@ -25,6 +38,7 @@ const TX_GAS_CAP = 16_777_216n; // Base Azul (May 28, 2026): EIP-7825 per-transa
 // The live 5% non-Base lock (same address on all six EVM chains), from
 // deployment/BASE44_LIVE_CONFIG_2026-10-22.md. The page has it typed in.
 const LIVE_NON_BASE_LOCK = process.env.DRYRUN_NON_BASE_LOCK || "0x115b2B47330cD1b7550D347f44df2e151D4A626E";
+const SIMULATE = process.env.DRYRUN_SIMULATE_NON_BASE_LOCKS === "1";
 const short = (a) => (typeof a === "string" && /^0x[0-9a-fA-F]{40}$/.test(a) ? a.slice(0, 6) + "..." + a.slice(-4) : a);
 const scrub = (s) => String(s).replace(/0x[0-9a-fA-F]{40}/g, (a) => short(a));
 const err = (...a) => process.stderr.write(scrub(a.join(" ")) + "\n");
@@ -33,7 +47,9 @@ const coder = ethers.AbiCoder.defaultAbiCoder();
 const STEPS = [
   "inputs and artifacts",
   "fork is Base mainnet",
-  "six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs",
+  SIMULATE
+    ? "SIMULATED non-Base locks: deploy the fixed CommitmentVaultLock on local forks of the six chains, masked hash, slot 0, devFund, 5% fee"
+    : "six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs",
   "deploy VCLM, CHONX, Verifier, Forge, Stake",
   "deploy Base lock",
   "initialize VCLM and CHONX, deploy and register 15 readers",
@@ -42,7 +58,7 @@ const STEPS = [
   "aliases, Dev Funds, price run 1, poster hand-over, finalize",
   "post-finalize state",
   "Base reader with a real lock on the fork",
-  "EVM readers bound to the live locks and real slot 0",
+  SIMULATE ? "EVM readers bound to the simulated locks and their slot 0" : "EVM readers bound to the live locks and real slot 0",
   "EVM readers on real mainnet receipts",
   "Ethereum reader on a real finalized header",
   "UTXO, Stellar and XRPL reader wiring",
@@ -52,6 +68,75 @@ let step = 0;
 const gasRows = [];
 const notes = [];
 function at(n) { step = n; err(`[step ${n}] ${STEPS[n]}`); }
+
+// ---- simulate mode: local forks of the six non-Base chains ----
+const { spawn } = require("child_process");
+const children = [];
+function stopForks() { for (const c of children) { try { c.kill("SIGKILL"); } catch (_) {} } children.length = 0; }
+process.on("exit", stopForks);
+async function waitRpc(url, chainId, ms) {
+  const t0 = Date.now();
+  for (;;) {
+    try {
+      const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] }) });
+      const j = await r.json();
+      if (BigInt(j.result) === BigInt(chainId)) return;
+      throw new Error(`fork answered chain id ${j.result}, expected ${chainId}`);
+    } catch (e) {
+      if (/expected/.test(e.message)) throw e;
+      if (Date.now() - t0 > ms) throw new Error(`local fork at ${url} did not start in ${ms / 1000}s`);
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+}
+async function simulateNonBaseLocks() {
+  const cli = path.join(BC, "node_modules/hardhat/internal/cli/cli.js");
+  const cfg = path.join(__dirname, "hardhat.simfork.config.cjs");
+  const basePort = Number(process.env.DRYRUN_SIM_PORT || 18700);
+  const provs = {};
+  const tail = {};
+  FLOW.EVM_ENVS.forEach((env, i) => {
+    const port = basePort + i;
+    const forkUrl = process.env[`DRYRUN_SIM_RPC_${i}`] || RPCS.URLS[env] || FLOW.EVM_RPC[env].url;
+    const c = spawn(process.execPath, [cli, "--config", cfg, "node", "--hostname", "127.0.0.1", "--port", String(port)], {
+      cwd: BC, env: { ...process.env, SIM_FORK_URL: forkUrl, SIM_CHAIN_ID: String(FLOW.EVM_RPC[env].chainId), NODE_OPTIONS: "--max-old-space-size=1536" }, stdio: ["ignore", "pipe", "pipe"],
+    });
+    tail[env] = "";
+    const keep = (d) => { tail[env] = (tail[env] + d.toString()).slice(-400); };
+    c.stdout.on("data", keep); c.stderr.on("data", keep);
+    children.push(c);
+    provs[env] = { url: `http://127.0.0.1:${port}`, port };
+  });
+  const out = {};
+  for (const env of FLOW.EVM_ENVS) {
+    const chainId = FLOW.EVM_RPC[env].chainId;
+    try { await waitRpc(provs[env].url, chainId, 120000); }
+    catch (e) { throw new Error(`${env}: ${e.message}; fork log: ${scrub(tail[env]).replace(/\s+/g, " ").slice(-200)}`); }
+    out[env] = new ethers.JsonRpcProvider(provs[env].url, chainId, { staticNetwork: true, batchMaxCount: 1 });
+  }
+  // One throwaway key, funded only on the local forks, so nonce 0 gives the
+  // same lock address on all six chains (as the operator's deployment does).
+  const key = ethers.Wallet.createRandom();
+  let addr = null;
+  const res = {};
+  for (const env of FLOW.EVM_ENVS) {
+    const p = out[env];
+    await p.send("hardhat_setBalance", [key.address, "0x3635C9ADC5DEA00000"]);
+    if ((await p.getTransactionCount(key.address)) !== 0) throw new Error(`${env}: throwaway key already has a nonce on the fork`);
+    const w = key.connect(p);
+    const dev = (DATA.evmDevFunds && DATA.evmDevFunds[env]) || DATA.devFund;
+    const f = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, w);
+    const c = await f.deploy(env, dev);
+    await c.waitForDeployment();
+    const a = ethers.getAddress(await c.getAddress());
+    if (addr && a !== addr) throw new Error(`${env}: simulated lock address differs from the other chains`);
+    addr = a;
+    const h = FLOW.maskedCodeHash(ethers, await p.getCode(a));
+    if (h.toLowerCase() !== FLOW.CVL_RUNTIME_HASH.toLowerCase()) throw new Error(`${env}: simulated lock masked hash ${h} != pinned ${FLOW.CVL_RUNTIME_HASH}`);
+    res[env] = h;
+  }
+  return { providers: out, lock: addr, hashes: res };
+}
 
 async function main() {
   at(0);
@@ -82,16 +167,28 @@ async function main() {
   };
 
   at(2);
+  // providers: the six public read-only RPCs (live headers, receipts).
+  // lockProviders / NB: where the non-Base lock is read. Default mode: the
+  // live lock over the public RPCs. Simulate mode: the fixed lock on local forks.
   const providers = FLOW.publicProviders(ethers);
-  const newLocks = Object.fromEntries(FLOW.EVM_ENVS.map((e) => [e, LIVE_NON_BASE_LOCK]));
+  let lockProviders = providers;
+  let NB = LIVE_NON_BASE_LOCK;
+  if (SIMULATE) {
+    err("  SIMULATED non-Base locks (local forks), not live: the operator must still redeploy the fixed CommitmentVaultLock on the six chains");
+    const sim = await simulateNonBaseLocks();
+    lockProviders = sim.providers;
+    NB = sim.lock;
+    err(`  simulated fixed lock ${short(NB)} on 6 local forks, masked runtime hash ${FLOW.CVL_RUNTIME_HASH.slice(0, 6)}...${FLOW.CVL_RUNTIME_HASH.slice(-4)} on every chain`);
+  }
+  const newLocks = Object.fromEntries(FLOW.EVM_ENVS.map((e) => [e, NB]));
   // The flow re-checks with the same providers; check here too so a refusal is
   // attributed to this step.
-  await FLOW.verifyAllNonBaseLocks(ethers, providers, newLocks, DATA);
-  err(`  live non-Base lock ${short(LIVE_NON_BASE_LOCK)} passes on all 6 chains`);
+  await FLOW.verifyAllNonBaseLocks(ethers, lockProviders, newLocks, DATA);
+  err(SIMULATE ? `  simulated non-Base lock ${short(NB)} passes on all 6 local forks` : `  live non-Base lock ${short(LIVE_NON_BASE_LOCK)} passes on all 6 chains`);
 
   at(3);
   const r = await FLOW.runBaseCeremony({
-    ethers, signer, art, data: DATA, newLocks, providersByEnv: providers,
+    ethers, signer, art, data: DATA, newLocks, providersByEnv: lockProviders,
     log: (s) => {
       for (const line of String(s).split("\n")) {
         if (/^Base lock/.test(line)) at(5);
@@ -147,12 +244,12 @@ async function main() {
   for (const env of FLOW.EVM_ENVS) {
     const rd = r.readers[env];
     const cfg = FLOW.EVM_RPC[env];
-    if (ethers.getAddress(await rd.lock()) !== ethers.getAddress(LIVE_NON_BASE_LOCK)) throw new Error(`${env} reader lock() is not the live lock`);
+    if (ethers.getAddress(await rd.lock()) !== ethers.getAddress(NB)) throw new Error(`${env} reader lock() is not the ${SIMULATE ? "simulated" : "live"} lock`);
     if ((await rd.chainId()) !== BigInt(cfg.chainId)) throw new Error(`${env} reader chain id ${await rd.chainId()} != ${cfg.chainId}`);
-    const word = await providers[env].getStorage(LIVE_NON_BASE_LOCK, 0);
-    if ((await rd.environmentWord()).toLowerCase() !== word.toLowerCase()) throw new Error(`${env} reader environment word does not match real slot 0 on ${env}`);
+    const word = await lockProviders[env].getStorage(NB, 0);
+    if ((await rd.environmentWord()).toLowerCase() !== word.toLowerCase()) throw new Error(`${env} reader environment word does not match ${SIMULATE ? "the simulated lock's" : "real"} slot 0 on ${env}`);
   }
-  err("  6 EVM readers: lock(), chainId() and environment word match the live locks' real slot 0");
+  err(SIMULATE ? "  6 EVM readers: lock(), chainId() and environment word match the simulated locks' slot 0" : "  6 EVM readers: lock(), chainId() and environment word match the live locks' real slot 0");
 
   at(12);
   const fx = { Ethereum: "ethereum", Arbitrum: "arbitrum", Optimism: "optimism", Polygon: "polygon", "BNB Smart Chain": "bnb_smart_chain", Avalanche: "avalanche" };
@@ -229,7 +326,7 @@ async function main() {
   };
   const tokP = { ...RPCS.providers(ethers, FLOW.EVM_ENVS), Base: ethers.provider };
   const recon = await RECON.reconcile({
-    hre, P: ethers.provider, set, DATA, art, FLOW, mode: "dryrun", nonBaseProviders: providers, nonBaseLock: LIVE_NON_BASE_LOCK,
+    hre, P: ethers.provider, set, DATA, art, FLOW, mode: "dryrun", nonBaseProviders: lockProviders, nonBaseLock: NB,
     operator: signer.address, txs: cerTxs, fromBlock: fb.number + 1, simFrom: signer.address, tokenProviders: tokP, receiptLogs: cerTxs.flatMap((t) => t.logs),
     txListComplete: { ok: cerTxs.every((t, i) => i === 0 || t.nonce === cerTxs[i - 1].nonce + 1), detail: `${cerTxs.length} txs, local fork blocks ${fb.number + 1}..${latest}` },
     log: err,
@@ -242,12 +339,16 @@ async function main() {
   err(`  ceremony transactions ${gasRows.filter((x) => x.step <= 8).length}, total gas used ${total}, largest gas limit ${maxTx.gasLimit} at step ${maxTx.step} (cap ${TX_GAS_CAP})`);
   for (const n of notes) err("  NOTE " + n);
   fs.writeFileSync(path.join(__dirname, "dryrun_gas.json"), JSON.stringify(gasRows.map((x) => ({ step: x.step, gasLimit: String(x.gasLimit), gasUsed: String(x.gasUsed), to: short(x.to), created: short(x.created) })), null, 1));
+  stopForks();
+  if (SIMULATE) process.stdout.write("mode: SIMULATED non-Base locks (fixed CommitmentVaultLock on local forks of the six chains, not the live locks)\n");
   process.stdout.write("ceremony would succeed\n");
   process.stdout.write(recon.verdict + "\n");
   if (recon.verdict !== "reconciliation PASS") process.exitCode = 2;
 }
 
 main().then(() => process.exit(process.exitCode || 0)).catch((e) => {
+  stopForks();
+  if (SIMULATE) process.stdout.write("mode: SIMULATED non-Base locks (fixed CommitmentVaultLock on local forks of the six chains, not the live locks)\n");
   process.stdout.write(`ceremony would FAIL at step ${step} ${STEPS[step]}: ${scrub(e.shortMessage || e.reason || e.message).slice(0, 400)}\n`);
   process.stdout.write("--- dump ---\n" + scrub((e.stack || String(e)).split("\n").slice(0, 12).join("\n")) + "\n");
   if (gasRows.length) {
