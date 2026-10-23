@@ -1,0 +1,14 @@
+dry-run: local Base fork at block 52992438, block gas limit 400000000
+[step 0] inputs and artifacts
+  registry rows 487, token addresses 475, registry sha256 1bdcb8346ab9
+[step 1] fork is Base mainnet
+  forked Base block 52992438, block gas limit 400000000
+[step 2] six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs
+ceremony would FAIL at step 2 six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs: eth_getCode masked runtime hash 0xc7db...c56c15ce6b35527a8ee73b0a7364 != main CommitmentVaultLock 0x7ee4...2a681a79aeaaf25b705ecd3db4b7
+--- dump ---
+Error: REFUSED non-Base lock on Ethereum: eth_getCode masked runtime hash 0xc7db...c56c15ce6b35527a8ee73b0a7364 != main CommitmentVaultLock 0x7ee4...2a681a79aeaaf25b705ecd3db4b7. Connect wallet / Run ceremony stays disabled.
+    at refuseLock (/workspace/fix/base-contracts/scripts/deploy-pages/baseCeremonyFlow.js:58:17)
+    at verifyNonBaseLock (/workspace/fix/base-contracts/scripts/deploy-pages/baseCeremonyFlow.js:94:13)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at Object.verifyAllNonBaseLocks (/workspace/fix/base-contracts/scripts/deploy-pages/baseCeremonyFlow.js:133:20)
+    at main (/workspace/fix/testing-rigs/ceremony-dryrun/ceremony_dryrun.cjs:89:3)
