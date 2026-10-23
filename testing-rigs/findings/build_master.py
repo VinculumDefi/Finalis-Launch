@@ -2,7 +2,8 @@
 """Build testing-rigs/findings/master.json and testing-rigs/MASTER_FINDINGS.md.
 
 Inputs (all in testing-rigs/findings/):
-  recorder_status.json  hand-maintained rig status, scope (live/latent), merges
+  recorder_status.json  hand-maintained rig status, scope (live/latent), merges,
+                        related cross-refs and per-row recorder notes
   <rig>.json            every per-rig findings file (anything else ending .json
                         that has a "findings" list)
 Run from anywhere: python3 testing-rigs/findings/build_master.py
@@ -86,6 +87,8 @@ def main():
     for r in rows:
         if r["ids"][0] in st.get("related", {}):
             r["related"] = st["related"][r["ids"][0]]
+        if r["ids"][0] in st.get("notes", {}):
+            r["note"] = st["notes"][r["ids"][0]]
     rows.sort(key=lambda r: (SEV[r["severity"]], CLS[r["class"]], 0 if r["scope"].startswith("LIVE") else 1, r["rank_hint"], r["ids"][0]))
     for i, r in enumerate(rows, 1):
         r["rank"] = i
@@ -137,6 +140,8 @@ def write_md(out):
             desc += " (Also reported as " + ", ".join("%s: %s, %s" % (k, v["class"].lower(), v["severity"]) for k, v in r["rig_views"].items()) + ".)"
         if r.get("related"):
             desc += " Related: " + r["related"] + "."
+        if r.get("note"):
+            desc += " Recorder note: " + r["note"]
         ev = "; ".join(short(e, 160) for e in r["evidence"] if e) + " [" + r["source"] + "]"
         L.append("| %s |" % " | ".join(c(x) for x in [r["rank"], ids, r["class"], r["severity"], r["scope"], "; ".join(r["file_line"][:4]) + (" (+%d more)" % (len(r["file_line"]) - 4) if len(r["file_line"]) > 4 else ""), desc, ev, short("; ".join(r["spec"]), 220) or "-"]))
     L.append("")
