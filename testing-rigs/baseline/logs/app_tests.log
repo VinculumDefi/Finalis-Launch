@@ -1,0 +1,336 @@
+TAP version 13
+# Subtest: allowlist equals Revision B exactly (487 entries: 475 tokens + 12 natives, 3 native links, nothing excluded)
+ok 1 - allowlist equals Revision B exactly (487 entries: 475 tokens + 12 natives, 3 native links, nothing excluded)
+  ---
+  duration_ms: 20.45261
+  ...
+# Subtest: the committed allowlist is exactly what the builder produces from revB.json + today's verification
+ok 2 - the committed allowlist is exactly what the builder produces from revB.json + today's verification
+  ---
+  duration_ms: 113.088366
+  ...
+# Subtest: a Revision B token is shown (Ethereum USDC row 1), matched by chain + address in any case
+ok 3 - a Revision B token is shown (Ethereum USDC row 1), matched by chain + address in any case
+  ---
+  duration_ms: 1.141033
+  ...
+# Subtest: BAR row 77 (symbol-failure), TigerOG row 138, LionOG 999, FrogOG 1000 are hidden
+ok 4 - BAR row 77 (symbol-failure), TigerOG row 138, LionOG 999, FrogOG 1000 are hidden
+  ---
+  duration_ms: 0.749587
+  ...
+# Subtest: mislabelled row 152 ACM on MKR's address is hidden; MKR row 32 itself is shown; an alias row on a shown address is hidden
+ok 5 - mislabelled row 152 ACM on MKR's address is hidden; MKR row 32 itself is shown; an alias row on a shown address is hidden
+  ---
+  duration_ms: 0.252808
+  ...
+# Subtest: Solana rows are hidden (token and native), and the Solana picker offers nothing
+ok 6 - Solana rows are hidden (token and native), and the Solana picker offers nothing
+  ---
+  duration_ms: 0.850448
+  ...
+# Subtest: a ticker-only match is hidden: no identifier, or a Revision B ticker on an address that is not its own
+ok 7 - a ticker-only match is hidden: no identifier, or a Revision B ticker on an address that is not its own
+  ---
+  duration_ms: 0.215494
+  ...
+# Subtest: natives on Revision B are shown; Cosmos ATOM (not on Revision B) is hidden
+ok 8 - natives on Revision B are shown; Cosmos ATOM (not on Revision B) is hidden
+  ---
+  duration_ms: 0.750764
+  ...
+# Subtest: other entry paths refuse non-allowlisted assets: lock preflight, proof packages, manual addresses, environment pickers
+ok 9 - other entry paths refuse non-allowlisted assets: lock preflight, proof packages, manual addresses, environment pickers
+  ---
+  duration_ms: 2.644429
+  ...
+# Subtest: latest claimable epoch and eligibility helpers match the contract rules
+ok 10 - latest claimable epoch and eligibility helpers match the contract rules
+  ---
+  duration_ms: 1.276073
+  ...
+# Subtest: claim all in batches under the limit, stop after transaction 1, resume, exact total, no double pay
+ok 11 - claim all in batches under the limit, stop after transaction 1, resume, exact total, no double pay
+  ---
+  duration_ms: 28.53955
+  ...
+# Subtest: a non-rejection failure stops with status error and leaves everything claimable
+ok 12 - a non-rejection failure stops with status error and leaves everything claimable
+  ---
+  duration_ms: 5.640168
+  ...
+# Subtest: t277u: displayed amount is computed per epoch, equals the view at every read group, and a mismatch blocks the claim
+ok 13 - t277u: displayed amount is computed per epoch, equals the view at every read group, and a mismatch blocks the claim
+  ---
+  duration_ms: 25.721576
+  ...
+# Subtest: 16 environments, none of them Cosmos
+ok 14 - 16 environments, none of them Cosmos
+  ---
+  duration_ms: 2.124839
+  ...
+# Subtest: no Cosmos normalizer or mock event builder
+ok 15 - no Cosmos normalizer or mock event builder
+  ---
+  duration_ms: 0.144734
+  ...
+# Subtest: Cosmos page, route, candidate data and proof adapter are removed
+ok 16 - Cosmos page, route, candidate data and proof adapter are removed
+  ---
+  duration_ms: 10.966576
+  ...
+# Subtest: no app source file references Cosmos, ATOM or uatom
+ok 17 - no app source file references Cosmos, ATOM or uatom
+  ---
+  duration_ms: 21.397996
+  ...
+# Subtest: LIVE_RULES equal the constants in CommitmentVaultLock.sol and VinculumFinalisVerifier.sol
+ok 18 - LIVE_RULES equal the constants in CommitmentVaultLock.sol and VinculumFinalisVerifier.sol
+  ---
+  duration_ms: 1.736401
+  ...
+# Subtest: the Revision 6 record is unchanged (historical)
+ok 19 - the Revision 6 record is unchanged (historical)
+  ---
+  duration_ms: 0.128871
+  ...
+# Subtest: no live code path reads the stale Revision 6 Handshake band, Handshake fee or $10 minimum
+ok 20 - no live code path reads the stale Revision 6 Handshake band, Handshake fee or $10 minimum
+  ---
+  duration_ms: 15.815319
+  ...
+# Subtest: verifier engine: 5% fee on the Handshake, 2.5% refused; $0.01 standard minimum
+ok 21 - verifier engine: 5% fee on the Handshake, 2.5% refused; $0.01 standard minimum
+  ---
+  duration_ms: 0.846248
+  ...
+# Subtest: XRPL practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
+ok 22 - XRPL practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
+  ---
+  duration_ms: 1.431585
+  ...
+# Subtest: Solana practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
+ok 23 - Solana practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
+  ---
+  duration_ms: 2.48954
+  ...
+# Subtest: XRPL practice engine accepts a $0.015 XRP Handshake end to end
+ok 24 - XRPL practice engine accepts a $0.015 XRP Handshake end to end
+  ---
+  duration_ms: 0.26247
+  ...
+# Subtest: simulator Dev Funds equal the live Dev Funds the contracts are deployed with
+ok 25 - simulator Dev Funds equal the live Dev Funds the contracts are deployed with
+  ---
+  duration_ms: 4.621164
+  ...
+# Subtest: scope: Solana is the one environment not in this deployment
+ok 26 - scope: Solana is the one environment not in this deployment
+  ---
+  duration_ms: 1.807892
+  ...
+# Subtest: Solana lock engine refuses every request (fail closed)
+ok 27 - Solana lock engine refuses every request (fail closed)
+  ---
+  duration_ms: 3.185981
+  ...
+# Subtest: Solana mock adapter refuses to submit and records nothing as pending
+ok 28 - Solana mock adapter refuses to submit and records nothing as pending
+  ---
+  duration_ms: 3.000454
+  ...
+# Subtest: Solana instruction builder refuses; program constants unchanged
+ok 29 - Solana instruction builder refuses; program constants unchanged
+  ---
+  duration_ms: 2.196843
+  ...
+# Subtest: Solana page says it is not part of this deployment and cannot submit
+ok 30 - Solana page says it is not part of this deployment and cannot submit
+  ---
+  duration_ms: 0.734521
+  ...
+# Subtest: no chain list for new locks offers Solana
+ok 31 - no chain list for new locks offers Solana
+  ---
+  duration_ms: 1.996531
+  ...
+# Subtest: multipliers: tokens 1x/2x/4x, durations 1.00x/1.40x/1.75x/2.10x
+ok 32 - multipliers: tokens 1x/2x/4x, durations 1.00x/1.40x/1.75x/2.10x
+  ---
+  duration_ms: 1.75498
+  ...
+# Subtest: per-position claim: floor(minted x weight / total) per epoch, 120 days = 2.10x
+ok 33 - per-position claim: floor(minted x weight / total) per epoch, 120 days = 2.10x
+  ---
+  duration_ms: 1.051452
+  ...
+# Subtest: refusals carry the contract revert text
+ok 34 - refusals carry the contract revert text
+  ---
+  duration_ms: 0.184305
+  ...
+# Subtest: t270u(g): allocation in strict epoch order; zero-RAC, zero-weight and cap-skipped epochs count, no deadlock
+ok 35 - t270u(g): allocation in strict epoch order; zero-RAC, zero-weight and cap-skipped epochs count, no deadlock
+  ---
+  duration_ms: 0.410291
+  ...
+# Subtest: band equals the Revision B verifier constants and lock.py HANDSHAKE_UNIT_BAND
+ok 36 - band equals the Revision B verifier constants and lock.py HANDSHAKE_UNIT_BAND
+  ---
+  duration_ms: 5.385843
+  ...
+# Subtest: min and max accepted with an exact 5% fee at or above dust; min-1 and max+1 refused; no price needed
+ok 37 - min and max accepted with an exact 5% fee at or above dust; min-1 and max+1 refused; no price needed
+  ---
+  duration_ms: 0.53178
+  ...
+# Subtest: isUtxoHandshake: only the three chains, only 3600 s, only the native asset
+ok 38 - isUtxoHandshake: only the three chains, only 3600 s, only the native asset
+  ---
+  duration_ms: 0.274108
+  ...
+# Subtest: practice Handshake amounts are mid-band; standard practice amounts unchanged
+ok 39 - practice Handshake amounts are mid-band; standard practice amounts unchanged
+  ---
+  duration_ms: 0.442288
+  ...
+# Subtest: engine: BTC/BCH/LTC Handshake uses the unit band and counts at most $0.02 for VCLM and RAC
+ok 40 - engine: BTC/BCH/LTC Handshake uses the unit band and counts at most $0.02 for VCLM and RAC
+  ---
+  duration_ms: 12.510461
+  ...
+# Subtest: engine: standard locks on these chains unchanged (USD path, uncapped)
+ok 41 - engine: standard locks on these chains unchanged (USD path, uncapped)
+  ---
+  duration_ms: 0.806824
+  ...
+# Subtest: engine: other chains keep the $0.01 to $0.02 Handshake USD band, uncapped (Ethereum, Dogecoin)
+ok 42 - engine: other chains keep the $0.01 to $0.02 Handshake USD band, uncapped (Ethereum, Dogecoin)
+  ---
+  duration_ms: 0.736759
+  ...
+# Subtest: user note: set coin amount, USD only from a fresh price, counted as $0.02
+ok 43 - user note: set coin amount, USD only from a fresh price, counted as $0.02
+  ---
+  duration_ms: 34.373845
+  ...
+# Subtest: pages: Handshakes on these chains are band-checked and show the note; no $0.95 band left in live paths
+ok 44 - pages: Handshakes on these chains are band-checked and show the note; no $0.95 band left in live paths
+  ---
+  duration_ms: 1.108184
+  ...
+# Subtest: minimums are $20 / $1 / $1 and apply to Bitcoin, Bitcoin Cash, Litecoin only
+ok 45 - minimums are $20 / $1 / $1 and apply to Bitcoin, Bitcoin Cash, Litecoin only
+  ---
+  duration_ms: 1.854183
+  ...
+# Subtest: same values as utxo-locks/lock.py (minimums, dust, 24-hour freshness)
+ok 46 - same values as utxo-locks/lock.py (minimums, dust, 24-hour freshness)
+  ---
+  duration_ms: 0.421121
+  ...
+# Subtest: accept exactly at the minimum, refuse one unit below; fee exactly 5%
+ok 47 - accept exactly at the minimum, refuse one unit below; fee exactly 5%
+  ---
+  duration_ms: 0.597902
+  ...
+# Subtest: fails closed without a fresh price
+ok 48 - fails closed without a fresh price
+  ---
+  duration_ms: 0.624014
+  ...
+# Subtest: a fetch-time stamp is not a price age; only last_updated_at / price_as_of count
+ok 49 - a fetch-time stamp is not a price age; only last_updated_at / price_as_of count
+  ---
+  duration_ms: 0.234073
+  ...
+# Subtest: native floors match lock.py and their derivation
+ok 50 - native floors match lock.py and their derivation
+  ---
+  duration_ms: 1.343519
+  ...
+# Subtest: effective minimum: USD minimum wins at today's price, the floor wins at high prices; at it accepted with exact 5%, one below refused
+ok 51 - effective minimum: USD minimum wins at today's price, the floor wins at high prices; at it accepted with exact 5%, one below refused
+  ---
+  duration_ms: 0.466042
+  ...
+# Subtest: never raises the fee: a price rise that would put 5% under dust is refused by the floor
+ok 52 - never raises the fee: a price rise that would put 5% under dust is refused by the floor
+  ---
+  duration_ms: 0.153466
+  ...
+# Subtest: other chains are refused by this check (no minimum recorded), not silently passed
+ok 53 - other chains are refused by this check (no minimum recorded), not silently passed
+  ---
+  duration_ms: 0.238373
+  ...
+# Subtest: both app pages that build Bitcoin, Bitcoin Cash, Litecoin lock events run the check
+ok 54 - both app pages that build Bitcoin, Bitcoin Cash, Litecoin lock events run the check
+  ---
+  duration_ms: 0.48711
+  ...
+# Subtest: practice lock amounts clear the minimum with margin (BCH and LTC about $5, BTC about $82)
+ok 55 - practice lock amounts clear the minimum with margin (BCH and LTC about $5, BTC about $82)
+  ---
+  duration_ms: 0.547414
+  ...
+# Subtest: the documented fetchAssetPrice response (price_as_of, integer Unix seconds) is read; null refuses
+ok 56 - the documented fetchAssetPrice response (price_as_of, integer Unix seconds) is read; null refuses
+  ---
+  duration_ms: 0.154621
+  ...
+# Subtest: page asset is Base ETH from the active list, with the Revision B Base ETH asset id
+ok 57 - page asset is Base ETH from the active list, with the Revision B Base ETH asset id
+  ---
+  duration_ms: 1.210095
+  ...
+# Subtest: no Cosmos anywhere on the page or its config; Cosmos-only libraries removed
+ok 58 - no Cosmos anywhere on the page or its config; Cosmos-only libraries removed
+  ---
+  duration_ms: 0.3669
+  ...
+# Subtest: durations equal CommitmentDurations.sol (16 rows)
+ok 59 - durations equal CommitmentDurations.sol (16 rows)
+  ---
+  duration_ms: 1.116852
+  ...
+# Subtest: fee is floor(5%) on every duration, Handshake included
+ok 60 - fee is floor(5%) on every duration, Handshake included
+  ---
+  duration_ms: 8.229893
+  ...
+# Subtest: calldata decodes with the compiled CommitmentVaultLock ABI to exactly the arguments built
+ok 61 - calldata decodes with the compiled CommitmentVaultLock ABI to exactly the arguments built
+  ---
+  duration_ms: 8.565461
+  ...
+# Subtest: fails closed: no price, zero price, bad addresses, bad id, bad duration, CHONX without receipt
+ok 62 - fails closed: no price, zero price, bad addresses, bad id, bad duration, CHONX without receipt
+  ---
+  duration_ms: 0.416692
+  ...
+# Subtest: USD bounds mirror CommitmentVaultLock.sol (Handshake $0.01 to $0.02; others at least $0.01)
+ok 63 - USD bounds mirror CommitmentVaultLock.sol (Handshake $0.01 to $0.02; others at least $0.01)
+  ---
+  duration_ms: 0.410061
+  ...
+# Subtest: nothing is sent: lock and release are blocked (pending lock, or preview never broadcasts)
+ok 64 - nothing is sent: lock and release are blocked (pending lock, or preview never broadcasts)
+  ---
+  duration_ms: 0.437871
+  ...
+# Subtest: addresses come from one generated file; retired 2.5% locks are never offered for a new lock
+ok 65 - addresses come from one generated file; retired 2.5% locks are never offered for a new lock
+  ---
+  duration_ms: 0.617001
+  ...
+1..65
+# tests 65
+# suites 0
+# pass 65
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 493.260474
+EXIT 0
