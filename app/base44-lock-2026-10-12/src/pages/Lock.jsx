@@ -166,8 +166,12 @@ export default function LockPage() {
       const valuationReference = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [context.price]));
       if (asset.kind !== "native") {
         const token = await getSignerContract(asset.address, ERC20_ABI, provider);
-        if (await token.allowance(account, CONTRACTS.lock) < amountWei) {
+        const currentAllowance = await token.allowance(account, CONTRACTS.lock);
+        if (currentAllowance < amountWei) {
           setStep("approving");
+          // HH-008: USDT refuses approve over a nonzero allowance. Reset to 0
+          // first, only when a smaller nonzero allowance is already set.
+          if (currentAllowance > 0n) await (await token.approve(CONTRACTS.lock, 0n)).wait();
           await (await token.approve(CONTRACTS.lock, amountWei)).wait();
         }
       }
