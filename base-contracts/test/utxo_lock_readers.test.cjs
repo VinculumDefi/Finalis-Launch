@@ -54,10 +54,13 @@ for (const [env, cfg] of Object.entries(FX.chains)) {
       expect(f[6]).to.equal(BigInt(S.time + 604800));
       expect(f[7].toLowerCase()).to.equal(S.baseRecipient);
       expect(f[8]).to.equal(BigInt(S.outputToken));
-      const [ok, hash, height] = await reader.verifyFinality(proof(S), claim(S.blockHash, S.height));
-      expect(ok).to.equal(true);
+      // AG-02 (fix 2026-10-23): no settled-history anchor exists on-chain, so
+      // production finality is refused; the block binding check still holds.
+      const [hash, height] = await reader.headerClaimMatches(proof(S), claim(S.blockHash, S.height));
       expect(hash).to.equal(S.blockHash);
       expect(height).to.equal(BigInt(S.height));
+      await expect(reader.verifyFinality(proof(S), claim(S.blockHash, S.height)))
+        .to.be.revertedWith(`VF-XCH-006: ${env} settled-history anchor not enforced on-chain; environment disabled`);
     });
 
     it("accepts a real Handshake (1-hour) lock at 5%", async function () {
@@ -101,9 +104,9 @@ for (const [env, cfg] of Object.entries(FX.chains)) {
     });
 
     it("rejects a wrong block hash or height, an edited header, and a forged coinbase", async function () {
-      await expect(reader.verifyFinality(proof(S), claim(ethers.keccak256("0x01"), S.height))).to.be.revertedWith("VF-XCH-006: block hash mismatch");
-      await expect(reader.verifyFinality(proof(S), claim(S.blockHash, S.height + 1))).to.be.revertedWith("VF-XCH-006: block height mismatch");
-      await expect(reader.verifyFinality(proof(S, { header: flip(S.header, 10) }), claim(S.blockHash, S.height))).to.be.revertedWith("VF-XCH-006: block hash mismatch");
+      await expect(reader.headerClaimMatches(proof(S), claim(ethers.keccak256("0x01"), S.height))).to.be.revertedWith("VF-XCH-006: block hash mismatch");
+      await expect(reader.headerClaimMatches(proof(S), claim(S.blockHash, S.height + 1))).to.be.revertedWith("VF-XCH-006: block height mismatch");
+      await expect(reader.headerClaimMatches(proof(S, { header: flip(S.header, 10) }), claim(S.blockHash, S.height))).to.be.revertedWith("VF-XCH-006: block hash mismatch");
       await expect(reader.extractFacts(proof(S, { header: flip(S.header, 40) }))).to.be.reverted;
       await expect(reader.extractFacts(proof(S, { coinbaseTx: flip(S.coinbaseTx, 44) }))).to.be.reverted;
       await expect(reader.extractFacts(proof(S, { coinbaseTx: S.lockTx, coinbaseBranch: S.lockBranch }))).to.be.revertedWith("VF-XCH-011: coinbase");
