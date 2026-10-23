@@ -1,0 +1,13 @@
+# Rig 3 Echidna config. Seed recorded for reproduction.
+testMode: property
+seed: 20261023
+testLimit: 20000
+seqLen: 60
+shrinkLimit: 2000
+balanceContract: 0xffffffffffffffffffffffffffff
+maxTimeDelay: 2592000
+maxBlockDelay: 60000
+corpusDir: corpus
+cryticArgs: ["--solc-remaps", "vf/=../../base-contracts/contracts/", "--solc-args", "--via-ir --optimize --optimize-runs 200 --evm-version paris --allow-paths ../..", "--compile-force-framework", "solc"]
+workers: 1
+format: text
