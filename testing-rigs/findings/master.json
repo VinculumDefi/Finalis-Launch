@@ -1,12 +1,14 @@
 {
- "as_of": "2026-10-23 09:12 EDT (America/New_York)",
+ "as_of": "2026-10-23 09:40 EDT (America/New_York)",
  "header_notes": [
+  "Discovery pass complete: 2026-10-23 09:40 EDT. All rigs (1 to 10, the ceremony dry-run, assumption-gap, combinatorial and metamorphic) are REPORTED and their findings are folded into this file. Next step is the fix phase.",
   "Rig 10 PASSED: the live Base set of Oct 22 is byte-identical to what was tested (live 350 of 350 checks PASS, dry-run 349 of 349, 0 mismatches, 0 incomplete). So every finding tagged LIVE and CONFIRMED below is present in the deployed contracts (HH-008 is app code, not a contract).",
   "Ceremony dry-run gas: every one of the 72 transactions was sent at the 16,777,216 gas cap (Base per-transaction maximum, EIP-7825). Actual use was 30,295 to 4,247,636 per transaction (109,844,802 total), so none came near the cap.",
-  "Fix-phase note: rigs/hardhat also adds an npm script 'ceremony:dryrun' to base-contracts/package.json. That is outside testing-rigs/ and was not brought to main."
+  "Fix-phase note: rigs/hardhat also adds an npm script 'ceremony:dryrun' to base-contracts/package.json. That is outside testing-rigs/ and was not brought to main.",
+  "Rigs 3 and 8 (fuzz_mutation.json) labelled live/latent against the Oct 21 build 7dee25d with no Stake or Synth. That was wrong: the live Oct 22 set is byte-identical to main b0e38a9 with Stake, Synth and the 15 readers deployed and registered. The recorder relabelled every FZ row by the scope rules below; the \"exposure\" text inside fuzz_mutation.json is superseded."
  ],
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
- "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A = tooling coverage, not a code path.",
+ "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A (tooling coverage) = tooling coverage, not a code path. N/A (test gap in a LIVE contract) = a mutant or path the test suite does not exercise, in a contract that is deployed in the live Oct 22 set; not a demonstrated exploit.",
  "rigs": [
   {
    "n": "1",
@@ -31,12 +33,12 @@
   {
    "n": "3",
    "name": "fuzzing (Foundry, Echidna)",
-   "status": "RUNNING",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/foundry",
-   "commit": "88315ea",
-   "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log (on rigs/foundry)",
-   "findings_file": null,
-   "note": "Logs pushed, no findings JSON yet."
+   "commit": "397a638",
+   "raw_output": "testing-rigs/fuzzing/results/forge_test_10k_runs.log, testing-rigs/echidna/results/echidna_run.log",
+   "findings_file": "fuzz_mutation.json",
+   "note": "Forge: 41 tests at 10,000 runs, 35 pass, 6 fail (FZ-01, FZ-01b, FZ-02 pinned on purpose; FZ-06, FZ-07 reader panics). Echidna: 20,000 calls, echidna_one_rac_per_lock FALSIFIED (FZ-01), 7 other properties pass; Stake epoch reward mint not reached (IT-ECH-01). The rig labelled live/latent against the Oct 21 build 7dee25d; the recorder relabels against the live Oct 22 set (byte-identical to main b0e38a9, rig 10), so the exposure text in fuzz_mutation.json is superseded by the scope column here."
   },
   {
    "n": "4",
@@ -79,13 +81,13 @@
   },
   {
    "n": "8",
-   "name": "mutation",
-   "status": "RUNNING",
+   "name": "mutation (Gambit plus ROR and targeted mutants)",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/foundry",
-   "commit": "88315ea",
-   "raw_output": "none committed yet (scripts: testing-rigs/mutation/ on rigs/foundry)",
-   "findings_file": null,
-   "note": "Runner and summarizer pushed, no results yet."
+   "commit": "397a638",
+   "raw_output": "testing-rigs/mutation/results/mutants_w0.jsonl, mutants_w1.jsonl, retry.jsonl, mutation_summary.json",
+   "findings_file": "fuzz_mutation.json",
+   "note": "Sample score 0.733: 110 killed, 40 survived, 10 pin_only, 23 stillborn. Survivors by contract: Verifier 22, Stake 6, Token 6, Synth 6; BaseCVL 10 pin_only; CVL and Durations 0. Three OOM records rerun one at a time (retry.jsonl), all survived. Survivors grouped into one row per contract."
   },
   {
    "n": "9",
@@ -146,10 +148,10 @@
   }
  ],
  "counts_by_class": {
-  "CONFIRMED VULNERABILITY": 12,
-  "UNVERIFIED ASSUMPTION": 23,
-  "SPEC CONFLICT": 4,
-  "INCOMPLETE TESTING": 10
+  "CONFIRMED VULNERABILITY": 15,
+  "UNVERIFIED ASSUMPTION": 24,
+  "INCOMPLETE TESTING": 17,
+  "SPEC CONFLICT": 4
  },
  "unscoped": [],
  "findings": [
@@ -165,7 +167,7 @@
     "ADV-10",
     "HH-003"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/hardhat.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/hardhat.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
@@ -242,27 +244,31 @@
    "ids": [
     "AG-02",
     "ADV-07",
-    "ADV-16"
+    "ADV-16",
+    "FZ-05"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/fuzz_mutation.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
    "file_line": [
-    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107"
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:156-172 (_openBlock), base-contracts/contracts/VinculumFinalisVerifier.sol:716 (_verifySource reads only `finalized`, ignores the returned hash)"
    ],
    "description": "Assumed: The header carries real proof of work, links to the best chain, and has enough confirmations Gap: Only double-SHA256(header) == claimed hash and claimed height == coinbase height. No target check, no parent link, no confirmations. BitcoinHeaderChecker and ZcashHeaderChecker exist but are not called. Exploit: Build an 80-byte header with any prev hash, bits 0x1d00ffff and any nonce over a merkle root that includes a self-made lock transaction to the Dev Fund script; no mining needed. PoC AG-02 shows verifyFinality and extractFacts accept it.",
    "damage_potential": "Unlimited VCLM/CHONX mint from fabricated Bitcoin-family locks, valued at the registry price of BTC, LTC, etc.",
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-02)",
     "ADVERSARIAL=1 FINDING ADV-07; recordedRacs true. AG-02.",
-    "ADVERSARIAL=1 FINDING ADV-16 for each chain. AG-02."
+    "ADVERSARIAL=1 FINDING ADV-16 for each chain. AG-02.",
+    "forge test_SHAPE_selfMadeBitcoinBlockPassesFinality PASS (the pass is the finding)."
    ],
    "spec": [
     "VF-XCH-006",
     "VF-XCH-007",
     "VF-XCH-008",
-    "Rev 6 VF-XCH-006/008."
+    "Rev 6 VF-XCH-006/008.",
+    "Rev 6 non-Base trust model: whether operator attestation closes this is a settled-spec question, noted not re-asked."
    ],
    "rank_hint": 2,
    "rig_views": {
@@ -273,9 +279,14 @@
     "ADV-16": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "critical"
+    },
+    "FZ-05": {
+     "class": "UNVERIFIED ASSUMPTION",
+     "severity": "high"
     }
    },
-   "note": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+   "related": "AG-01 and AG-03 (FZ-05 also covers self-consistent EVM blocks and XRPL/Stellar ledgers)",
+   "note": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced. Rig 3 (FZ-05): a self-made coinbase plus an 80-byte header with no proof of work passes BitcoinLockReader.verifyFinality (forge test_SHAPE_selfMadeBitcoinBlockPassesFinality; the pass is the finding). FZ-05 also notes _verifySource reads only `finalized` and ignores the returned hash (Verifier :716). The rig called it latent (readers not deployed); the readers are deployed and registered, so it takes this row's gated scope.",
    "rank": 2
   },
   {
@@ -284,7 +295,7 @@
     "ADV-08",
     "ADV-09"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
@@ -325,9 +336,11 @@
     "AG-04",
     "STATIC-C01",
     "ADV-11",
-    "HH-001"
+    "HH-001",
+    "FZ-01",
+    "FZ-01b"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/hardhat.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/fuzz_mutation.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (Base set)",
@@ -340,7 +353,9 @@
     "base-contracts/contracts/VinculumFinalisStake.sol:428-487",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:646-704",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:692-700",
-    "base-contracts/contracts/VinculumFinalisStake.sol:428-464"
+    "base-contracts/contracts/VinculumFinalisStake.sol:428-464",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654 (require(!recordedRacs[racIdentity])), 692; function recordFeeAndRac 646-703",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:646-703 (no consumedLocks check in recordFeeAndRac); verifyAndMint checks consumedLocks at base-contracts/contracts/VinculumFinalisVerifier.sol:770"
    ],
    "description": "Assumed: One RAC per real fee payment; racIdentity is derived from the lock's immutable facts Gap: The only check is !recordedRacs[racIdentity]. racIdentity is free caller input, so the same proven lock can record RAC any number of times, before or after it mints. Exploit: Create one real Base lock (about $2.39 in the PoC). Call recordFeeAndRac K times with K random racIdentity values. epochRewardBasis grows K times; allocateEpoch mints basis*10 VCLM to stakers. PoC: 50 records paid 358.8 VCLM of stake rewards versus 7.176 honest.",
    "damage_potential": "Stake reward VCLM inflated without bound (until the VCLM cap), diluting every holder; attacker who stakes captures it. Works today on the Base-only ceremony.",
@@ -348,7 +363,9 @@
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-04)",
     "PoC STATIC-C01: 5 racIdentity values for one lock, one credit 30e18, basis reached 150e18. PoC STATIC-C01b: 20 duplicate RACs for one 1000 USD lock; Stake minted 6000 VCLM for the epoch against an honest 300 VCLM (20x). testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
     "ADVERSARIAL=1 FINDING ADV-11. AG-04. LIVE on Base path (no non-Base price needed).",
-    "invariants/invariants.test.cjs FINDING HH-001 (run_show_findings.log); fork-integration/base_fork_stack.test.cjs and base_live_probe_results.json (live replay +358.83 USD over 5 replays, simulated only)"
+    "invariants/invariants.test.cjs FINDING HH-001 (run_show_findings.log); fork-integration/base_fork_stack.test.cjs and base_live_probe_results.json (live replay +358.83 USD over 5 replays, simulated only)",
+    "forge testFuzz_PROP_oneRacPerLock FAIL at seed 0x5646525a5a3230323631303233 (fuzzing/results/forge_test_10k_runs.log). Echidna echidna_one_rac_per_lock FALSIFIED, shrunk to openLock(0,0,false), recordRac(0,66420565), recordRac(0,0) (echidna/results/echidna_run.log).",
+    "forge testFuzz_PROP_noRacAfterMint FAIL: reward basis grew after the lock was consumed (27181302754420000821600 != 4530217125736666803600)."
    ],
    "spec": [
     "VF-RAC-001",
@@ -357,7 +374,9 @@
     "VF-SEC-005",
     "Rev 6 VF-FEE-011 note: RAC keyed by immutable-facts identity (Section D); VF-RAC-001 exact-once. Code keys RAC on a caller-chosen value.",
     "Rev 6 VF-RAC-001 (RAC exact-once): exact-once is enforced per caller-chosen id, not per lock or fee event.",
-    "Rev 6 VF-RAC-001 (one credit per verified lock) conflicts with the implemented repeatable path"
+    "Rev 6 VF-RAC-001 (one credit per verified lock) conflicts with the implemented repeatable path",
+    "Rev 6: one RAC per verified lock. Code allows more.",
+    "Rev 6 (same as FZ-01)."
    ],
    "rank_hint": 4,
    "rig_views": {
@@ -372,9 +391,17 @@
     "HH-001": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "critical"
+    },
+    "FZ-01": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
+    },
+    "FZ-01b": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "medium"
     }
    },
-   "note": "HH-001 replay amounts (rigs 2 and 4): on real Base state one stranger call moved a lock basis from 3312.80 to 3384.82 USD; a simulated replay on the live set (not sent) added 358.83 USD over 5 replays, about 3588 future VCLM; the invariant run minted 15,609.24 VCLM to Stake from 25 replays on one lock. HH-001 is live (same code deployed, rig 10).",
+   "note": "HH-001 replay amounts (rigs 2 and 4): on real Base state one stranger call moved a lock basis from 3312.80 to 3384.82 USD; a simulated replay on the live set (not sent) added 358.83 USD over 5 replays, about 3588 future VCLM; the invariant run minted 15,609.24 VCLM to Stake from 25 replays on one lock. HH-001 is live (same code deployed, rig 10). Rig 3 (FZ-01, FZ-01b): forge testFuzz_PROP_oneRacPerLock fails and Echidna echidna_one_rac_per_lock is FALSIFIED (shrunk to openLock, recordRac(seed A), recordRac(seed B) on one lock). FZ-01b (credit still accepted after verifyAndMint consumed the lock; basis 27,181.30 vs 4,530.22) is the same root cause: recordFeeAndRac keys only on racIdentity and never checks the lock or consumedLocks (:770), so it is merged here. The rig wrongly called this \"no Stake to pay it\" (Oct 21 build); Stake is live, so the reward path is open.",
    "rank": 4
   },
   {
@@ -425,9 +452,10 @@
     "STATIC-H02",
     "ADV-12",
     "META-01",
-    "HH-002"
+    "HH-002",
+    "FZ-02"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/metamorphic.json, testing-rigs/findings/hardhat.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/metamorphic.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/fuzz_mutation.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -439,7 +467,8 @@
     "base-contracts/contracts/VinculumFinalisVerifier.sol:826",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:839",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:1023-1027",
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023"
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:844 (_daysSinceLaunchFromValuation(pkg.valuationTimestamp)), 1023-1028"
    ],
    "description": "Assumed: Valuation Timestamp equals the finalized source block timestamp (lock creation time) Gap: valuationTimestamp is never compared with the reader's createdAt; any value <= launch gives day-0 emission. Exploit: Mint at day 400 with valuationTimestamp = 0. PoC: 310.96 VCLM instead of 249.92 for the same lock (24% more); the gap grows as decay continues.",
    "damage_potential": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
@@ -448,14 +477,16 @@
     "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
     "ADVERSARIAL=1 FINDING ADV-12. AG-05. LIVE on Base.",
     "VCLM lock at day 255: 162.5 vs 142.05 (x1.14). CHONX lock at day 500: 1625 vs 1241.77 (x1.31). VCLM and CHONX locks at day 4500: x10 (162.5 vs 16.25 VCLM; 1625 vs 162.5 CHONX).",
-    "invariants FINDING HH-002; base_live_probe_results.json valuationTimestamp=0 check"
+    "invariants FINDING HH-002; base_live_probe_results.json valuationTimestamp=0 check",
+    "forge testFuzz_PROP_issuanceIndependentOfCallerValuationTs FAIL: issuance follows caller-supplied valuationTimestamp, 393034748862721713670000 != 367475259334517385341795."
    ],
    "spec": [
     "VF-ORC-011",
     "VF-ORC-013",
     "Rev 6 VF-ORC-011/013. src/lib/vfComplianceData.js:156 marks VF-ORC-011 IMPLEMENTED.",
     "Rev 6 VF-ORC-011/013 (emission rate from the Valuation Timestamp, which is the source block time, not a caller value).",
-    "Rev 6 VF-ORC-011 and VF-ORC-013"
+    "Rev 6 VF-ORC-011 and VF-ORC-013",
+    "Rev 6 emission schedule is by day of the lock. Conflict candidate noted, not re-asked."
    ],
    "rank_hint": 5,
    "rig_views": {
@@ -474,9 +505,13 @@
     "HH-002": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
+    },
+    "FZ-02": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
-   "note": "Rig 2 (HH-002) labels this latent because launch was Oct 22, so valuationTimestamp=0 gives the same value today (31098.86). Recorder keeps LIVE (Base set) by the stronger view: the path is reachable on the live Base set now (rig 9), and the gain grows with each day of decay (day 840 model x1.601; metamorphic META-01 up to x10).",
+   "note": "Rig 2 (HH-002) labels this latent because launch was Oct 22, so valuationTimestamp=0 gives the same value today (31098.86). Recorder keeps LIVE (Base set) by the stronger view: the path is reachable on the live Base set now (rig 9), and the gain grows with each day of decay (day 840 model x1.601; metamorphic META-01 up to x10). Rig 3 (FZ-02): forge testFuzz_PROP_issuanceIndependentOfCallerValuationTs fails (issuance 393,034.75 vs 367,475.26 for the same lock).",
    "rank": 6
   },
   {
@@ -486,15 +521,17 @@
     "ADV-13",
     "COMB-01",
     "META-02",
-    "HH-004"
+    "HH-004",
+    "FZ-03"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/combinatorial.json, testing-rigs/findings/metamorphic.json, testing-rigs/findings/hardhat.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/combinatorial.json, testing-rigs/findings/metamorphic.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/fuzz_mutation.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
    "file_line": [
     "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1020",
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1010"
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1010",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:991-1009 (binding.bound reused at 991-993, set at 1008)"
    ],
    "description": "Assumed: The reference price is the last successful run at lock creation and is retained for that lock Gap: The price is bound at the first recordFeeAndRac/verifyAndMint, using whatever run is current then. Lock time is not consulted. The submitter picks the moment. Exploit: Lock when the asset is cheap, wait for a higher run, then submit. PoC: price up 10x between lock and submission gives 3109.6 VCLM instead of 310.96.",
    "damage_potential": "Free option on price: up to the full price move per lock; systematic over-issuance.",
@@ -504,14 +541,16 @@
     "ADVERSARIAL=1 FINDING ADV-13. AG-06. LIVE on Base.",
     "244 cells DEVIATION:mint_at_later_price (Base native 76, Base erc20 46, Ethereum native 76, Ethereum erc20 46). Example: Base ETH 1h lock at $0.01 minted 0.26 VCLM where the creation-time price gives 0.13.",
     "Ratio 2.0 for both VCLM (142.05 vs 284.10) and CHONX (1241.77 vs 2483.54).",
-    "invariants HH-004 test"
+    "invariants HH-004 test",
+    "Observed in FuzzMinting price paths; not a failing test."
    ],
    "spec": [
     "VF-ORC-009",
     "VF-ORC-010",
     "Rev 6 VF-ORC-009/010. vfComplianceData.js:154 marks VF-ORC-009 IMPLEMENTED with trace 'at verification time', which is the gap itself.",
     "Rev 6 VF-ORC-009/010 and the rule that existing locks keep their creation price.",
-    "Rev 6 ownership/claim rules"
+    "Rev 6 ownership/claim rules",
+    "Rev 6 price-at-valuation wording is a conflict candidate."
    ],
    "rank_hint": 6,
    "rig_views": {
@@ -534,9 +573,13 @@
     "HH-004": {
      "class": "SPEC CONFLICT",
      "severity": "medium"
+    },
+    "FZ-03": {
+     "class": "SPEC CONFLICT",
+     "severity": "info"
     }
    },
-   "note": "HH-004 is the same root cause (price bound at the first recordFeeAndRac, not at creation). It adds that the first submitter can be a stranger, so a third party can bind someone else's lock at a low run (test: half price bound). hardhat.json's line 'steering who receives the mint path' is not shown by the test; the recipient is checked against the reader.",
+   "note": "HH-004 is the same root cause (price bound at the first recordFeeAndRac, not at creation). It adds that the first submitter can be a stranger, so a third party can bind someone else's lock at a low run (test: half price bound). hardhat.json's line 'steering who receives the mint path' is not shown by the test; the recipient is checked against the reader. Rig 3 (FZ-03, spec conflict, no failing test) observes the same first-valuation price binding at :991-1009.",
    "rank": 7
   },
   {
@@ -546,7 +589,7 @@
     "HH-006",
     "HH-007"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/hardhat.json, testing-rigs/findings/hardhat.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/hardhat.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "medium",
    "scope": "LIVE (ERC-20 path)",
@@ -723,6 +766,354 @@
   },
   {
    "ids": [
+    "MUT-01",
+    "MUT-02",
+    "MUT-03",
+    "MUT-04",
+    "MUT-05",
+    "MUT-06"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "medium",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisStake.sol:306",
+    "base-contracts/contracts/VinculumFinalisStake.sol:343",
+    "base-contracts/contracts/VinculumFinalisStake.sol:346",
+    "base-contracts/contracts/VinculumFinalisStake.sol:350",
+    "base-contracts/contracts/VinculumFinalisStake.sol:598",
+    "base-contracts/contracts/VinculumFinalisStake.sol:686"
+   ],
+   "description": "6 mutants of VinculumFinalisStake survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. Includes the position owner check removed and msg.sender to tx.origin. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "evidence": [
+    "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):",
+    "MUT-01 VinculumFinalisStake.sol:306: T-ST-01 (Targeted): position owner msg.sender -> tx.origin (line 306)",
+    "MUT-02 VinculumFinalisStake.sol:343: T-ST-03 (Targeted): owner check removed (line 343)",
+    "MUT-03 VinculumFinalisStake.sol:346: R-Stake-346-32 (ROR): `>=` -> `>` in: require(block.timestamp >= pos.endTimestamp, \"VFS: not matured\");",
+    "MUT-04 VinculumFinalisStake.sol:350: G-Stake-325 (DeleteExpressionMutation): DeleteExpressionMutation(`pos.durationSecs = pos.queuedExtensionSecs` |==> `assert(true)`) of: `pos.durationSecs = pos.queuedExtensionSecs;`",
+    "MUT-05 VinculumFinalisStake.sol:598: G-Stake-1080 (IfStatementMutation): IfStatementMutation(`lo <= hi` |==> `true`) of: `if (lo <= hi) {`",
+    "MUT-06 VinculumFinalisStake.sol:686: R-Stake-686-38 (ROR): `>` -> `>=` in: for (uint256 k = ts.length; k > 0; k--) {"
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "rig_views": {
+    "MUT-02": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-03": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-04": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-05": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-06": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    }
+   },
+   "label": "MUT-STAKE (MUT-01..MUT-06, 6 survivors)",
+   "rig_views_hidden": true,
+   "rank": 14
+  },
+  {
+   "ids": [
+    "MUT-07",
+    "MUT-08",
+    "MUT-09",
+    "MUT-10",
+    "MUT-11",
+    "MUT-12"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "medium",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisSynth.sol:116",
+    "base-contracts/contracts/VinculumFinalisSynth.sol:129",
+    "base-contracts/contracts/VinculumFinalisSynth.sol:139",
+    "base-contracts/contracts/VinculumFinalisSynth.sol:171",
+    "base-contracts/contracts/VinculumFinalisSynth.sol:188"
+   ],
+   "description": "6 mutants of VinculumFinalisSynth survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "evidence": [
+    "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):",
+    "MUT-07 VinculumFinalisSynth.sol:116: G-Synth-67 (IfStatementMutation): IfStatementMutation(`synthActivated` |==> `false`) of: `if (synthActivated) return true;`",
+    "MUT-08 VinculumFinalisSynth.sol:129: G-Synth-91 (SwapArgumentsOperatorMutation): SwapArgumentsOperatorMutation(`verifier.cumulativeChonxIssued() >= SYNTH_ACTIVATION_THRESHOLD` |==> `SYNTH_ACTIVATION_THRESHOLD >= verifier.cumulativeChonxIssued()`) of: `return verifier.cumulativeChonxIssued() >= SYNTH_ACTIVATION_THRESHOLD;`",
+    "MUT-09 VinculumFinalisSynth.sol:129: T-SY-03 (Targeted): SYNTH activation >= -> > (view)",
+    "MUT-10 VinculumFinalisSynth.sol:139: R-Synth-139-22 (ROR): `>` -> `>=` in: require(count > 0, \"SYNTH: zero forge count\");",
+    "MUT-11 VinculumFinalisSynth.sol:171: G-Synth-150 (RequireMutation): RequireMutation(`to != address(0)` |==> `true`) of: `require(to != address(0), \"SYNTH: transfer to zero address\");`",
+    "MUT-12 VinculumFinalisSynth.sol:188: G-Synth-204 (DeleteExpressionMutation): DeleteExpressionMutation(`allowance[from][msg.sender] = currentAllowance - amount` |==> `assert(true)`) of: `allowance[from][msg.sender] = currentAllowance - amount;`"
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "rig_views": {
+    "MUT-08": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-09": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-10": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-11": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-12": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    }
+   },
+   "label": "MUT-SYNTH (MUT-07..MUT-12, 6 survivors)",
+   "rig_views_hidden": true,
+   "rank": 15
+  },
+  {
+   "ids": [
+    "MUT-13",
+    "MUT-14",
+    "MUT-15",
+    "MUT-16",
+    "MUT-17",
+    "MUT-18"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "medium",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisToken.sol:97",
+    "base-contracts/contracts/VinculumFinalisToken.sol:103",
+    "base-contracts/contracts/VinculumFinalisToken.sol:133",
+    "base-contracts/contracts/VinculumFinalisToken.sol:134",
+    "base-contracts/contracts/VinculumFinalisToken.sol:141",
+    "base-contracts/contracts/VinculumFinalisToken.sol:144"
+   ],
+   "description": "6 mutants of VinculumFinalisToken survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "evidence": [
+    "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):",
+    "MUT-13 VinculumFinalisToken.sol:97: T-TK-03 (Targeted): deployer msg.sender -> tx.origin",
+    "MUT-14 VinculumFinalisToken.sol:103: G-Token-71 (RequireMutation): RequireMutation(`_minterVerifier != _minterStake` |==> `true`) of: `require(_minterVerifier != _minterStake, \"VF-DEP-002: minters identical\");`",
+    "MUT-15 VinculumFinalisToken.sol:133: G-Token-144 (SwapArgumentsOperatorMutation): SwapArgumentsOperatorMutation(`balanceOf[msg.sender] >= amount` |==> `amount >= balanceOf[msg.sender]`) of: `require(balanceOf[msg.sender] >= amount, \"VFT: insufficient balance\");`",
+    "MUT-16 VinculumFinalisToken.sol:134: G-Token-145 (DeleteExpressionMutation): DeleteExpressionMutation(`_burn(msg.sender, amount)` |==> `assert(true)`) of: `_burn(msg.sender, amount);`",
+    "MUT-17 VinculumFinalisToken.sol:141: G-Token-155 (SwapArgumentsOperatorMutation): SwapArgumentsOperatorMutation(`currentAllowance >= amount` |==> `amount >= currentAllowance`) of: `require(currentAllowance >= amount, \"VFT: insufficient allowance\");`",
+    "MUT-18 VinculumFinalisToken.sol:144: G-Token-174 (BinaryOpMutation): BinaryOpMutation(`-` |==> `/`) of: `allowance[account][msg.sender] = currentAllowance - amount;`"
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "rig_views": {
+    "MUT-14": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-15": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-16": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-17": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-18": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    }
+   },
+   "label": "MUT-TOKEN (MUT-13..MUT-18, 6 survivors)",
+   "rig_views_hidden": true,
+   "rank": 16
+  },
+  {
+   "ids": [
+    "MUT-19",
+    "MUT-20",
+    "MUT-21",
+    "MUT-22",
+    "MUT-23",
+    "MUT-24",
+    "MUT-25",
+    "MUT-26",
+    "MUT-27",
+    "MUT-28",
+    "MUT-29",
+    "MUT-30",
+    "MUT-31",
+    "MUT-32",
+    "MUT-33",
+    "MUT-34",
+    "MUT-35",
+    "MUT-36",
+    "MUT-37",
+    "MUT-38",
+    "MUT-39",
+    "MUT-40"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "medium",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:199",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:200",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:203",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:243",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:396",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:600",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:805",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:819",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:839",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:846",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:863",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:916",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:977",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1025",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1077",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1102",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1130",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1133",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1141"
+   ],
+   "description": "22 mutants of VinculumFinalisVerifier survived every mapped fast and slow Hardhat test (sample run, see IT-MUT-00). Each is a line the suite does not pin: a mutated build would pass the tests. Includes CHONX activation and cap boundaries, price poster msg.sender to tx.origin, baseRecipient zero check and emission-day boundaries. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "evidence": [
+    "Survivors (mutation/results/mutation_summary.json; all mapped fast and slow tests passed):",
+    "MUT-19 VinculumFinalisVerifier.sol:199: T-VF-16 (Targeted): VCLM hard cap +1 token",
+    "MUT-20 VinculumFinalisVerifier.sol:200: T-VF-15 (Targeted): CHONX hard cap +1 token",
+    "MUT-21 VinculumFinalisVerifier.sol:203: T-VF-02 (Targeted): CHONX activation 10M -> 9,999,999",
+    "MUT-22 VinculumFinalisVerifier.sol:243: T-VF-06 (Targeted): decay 0.98333 -> 0.98334",
+    "MUT-23 VinculumFinalisVerifier.sol:396: T-VF-10 (Targeted): deployer msg.sender -> tx.origin",
+    "MUT-24 VinculumFinalisVerifier.sol:600: T-VF-09 (Targeted): price poster msg.sender -> tx.origin",
+    "MUT-25 VinculumFinalisVerifier.sol:805: G-Verifier-780 (RequireMutation): RequireMutation(`chonxActivated` |==> `true`) of: `require(chonxActivated, \"VF-COM-025: CHONX not activated\");`",
+    "MUT-26 VinculumFinalisVerifier.sol:819: G-Verifier-792 (RequireMutation): RequireMutation(`pkg.baseRecipient != address(0)` |==> `true`) of: `require(pkg.baseRecipient != address(0), \"VF-ARC-006: zero base recipient\");`",
+    "MUT-27 VinculumFinalisVerifier.sol:839: G-Verifier-830 (RequireMutation): RequireMutation(`createdAt > eligibleAfter` |==> `false`) of: `require(createdAt > eligibleAfter, \"VF-COM-025: lock created before CHONX activation\");`",
+    "MUT-28 VinculumFinalisVerifier.sol:839: R-Verifier-839-30 (ROR): `>` -> `>=` in: require(createdAt > eligibleAfter, \"VF-COM-025: lock created before CHONX activation\");",
+    "MUT-29 VinculumFinalisVerifier.sol:846: G-Verifier-838 (DeleteExpressionMutation): DeleteExpressionMutation(`daysSinceLaunch` |==> `assert(true)`) of: `daysSinceLaunch;`",
+    "MUT-30 VinculumFinalisVerifier.sol:863: R-Verifier-863-35 (ROR): `<=` -> `<` in: require(issuanceAmount <= remaining, \"VF-SUP-015: exceeds CHONX cap\");",
+    "MUT-31 VinculumFinalisVerifier.sol:863: G-Verifier-862 (SwapArgumentsOperatorMutation): SwapArgumentsOperatorMutation(`issuanceAmount <= remaining` |==> `remaining <= issuanceAmount`) of: `require(issuanceAmount <= remaining, \"VF-SUP-015: exceeds CHONX cap\");`",
+    "MUT-32 VinculumFinalisVerifier.sol:916: R-Verifier-916-40 (ROR): `>` -> `>=` in: return verifiedGrossUsd > HANDSHAKE_USD_MAX ? HANDSHAKE_USD_MAX : verifiedGrossUsd;",
+    "MUT-33 VinculumFinalisVerifier.sol:977: R-Verifier-977-41 (ROR): `>` -> `>=` in: if (b[4] == \"_\") return b.length > 5;",
+    "MUT-34 VinculumFinalisVerifier.sol:1025: R-Verifier-1025-46 (ROR): `<=` -> `<` in: if (launch == 0 || valuationTimestamp <= launch) {",
+    "MUT-35 VinculumFinalisVerifier.sol:1025: R-Verifier-1025-19 (ROR): `==` -> `!=` in: if (launch == 0 || valuationTimestamp <= launch) {",
+    "MUT-36 VinculumFinalisVerifier.sol:1077: R-Verifier-1077-17 (ROR): `<` -> `<=` in: if (rate < floorRate) rate = floorRate;",
+    "MUT-37 VinculumFinalisVerifier.sol:1102: R-Verifier-1102-22 (ROR): `>=` -> `>` in: return issued >= VCLM_HARD_CAP ? 0 : VCLM_HARD_CAP - issued;",
+    "MUT-38 VinculumFinalisVerifier.sol:1130: T-VF-03 (Targeted): CHONX activation >= -> >",
+    "MUT-39 VinculumFinalisVerifier.sol:1133: G-Verifier-1698 (AssignmentMutation): AssignmentMutation(`block.timestamp` |==> `1`) of: `chonxActivationTimestamp = block.timestamp;`",
+    "MUT-40 VinculumFinalisVerifier.sol:1141: R-Verifier-1141-15 (ROR): `==` -> `!=` in: if (t0 == 0 || block.timestamp < t0) return 0;"
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "rig_views": {
+    "MUT-20": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-21": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-22": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-23": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-24": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-25": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-26": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-27": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-28": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-29": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-30": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-31": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-32": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-33": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-34": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-35": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-36": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    },
+    "MUT-37": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-38": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-39": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "medium"
+    },
+    "MUT-40": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "low"
+    }
+   },
+   "label": "MUT-VERIFIER (MUT-19..MUT-40, 22 survivors)",
+   "rig_views_hidden": true,
+   "rank": 17
+  },
+  {
+   "ids": [
     "COMB-02"
    ],
    "source": "testing-rigs/findings/combinatorial.json",
@@ -747,7 +1138,49 @@
    ],
    "rank_hint": 99,
    "related": "AG-06 (price bound at first submission is the root cause); AG-16 (lock-side band gate)",
-   "rank": 14
+   "rank": 18
+  },
+  {
+   "ids": [
+    "FZ-06"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "low",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/checkers/ExecutionHeader.sol:68 (payloadLen), 102 (bounds), 110 (spanEnd), 119 (readLen)"
+   ],
+   "description": "RLP helpers index without bounds checks and do not validate declared lengths against the buffer.",
+   "damage_potential": "None, fails closed. Malformed EVM headers or receipts revert with Panic 0x32 instead of a coded error.",
+   "evidence": [
+    "FuzzReaders testFuzz_evmParsingHelpers and testFuzz_shapedStructAllReaders FAIL with Panic 0x32 on Ethereum, Arbitrum, Optimism, Polygon, BNB, Avalanche and the light-client EthereumLockReader."
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "note": "Fails closed (Panic 0x32). The rig called it latent; the EVM readers are deployed and registered on the live Verifier, so it takes the gated non-Base scope.",
+   "rank": 19
+  },
+  {
+   "ids": [
+    "FZ-07"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "low",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:298 (new bytes(n * 36))"
+   ],
+   "description": "The tx input count is used to allocate memory before it is checked against the tx length.",
+   "damage_potential": "None, fails closed. A large compactSize input count reverts with Panic 0x41 (memory) and burns the caller's gas.",
+   "evidence": [
+    "FuzzReaders testFuzz_utxoHeaderSized FAIL with Panic 0x41 on Bitcoin, BCH, LTC, DOGE and DGB."
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "note": "Fails closed (Panic 0x41) and burns the caller's gas. The rig called it latent; the UTXO readers are deployed and registered on the live Verifier, so it takes the gated non-Base scope.",
+   "rank": 20
   },
   {
    "ids": [
@@ -769,7 +1202,7 @@
     "VF-ORC-005"
    ],
    "rank_hint": 12,
-   "rank": 15
+   "rank": 21
   },
   {
    "ids": [
@@ -793,7 +1226,7 @@
     "Rev 6 VF-XCH-011 lists asset_precision as a bound field."
    ],
    "rank_hint": 13,
-   "rank": 16
+   "rank": 22
   },
   {
    "ids": [
@@ -816,7 +1249,7 @@
    ],
    "rank_hint": 14,
    "note": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). All six live UTXO readers report TOLERANCE_SECS = 86400 (1 day); Stellar and XRP Ledger report 3600.",
-   "rank": 17
+   "rank": 23
   },
   {
    "ids": [
@@ -838,7 +1271,7 @@
     "VF-COM-025"
    ],
    "rank_hint": 15,
-   "rank": 18
+   "rank": 24
   },
   {
    "ids": [
@@ -877,7 +1310,7 @@
     }
    },
    "note": "HH-009 (rig 2) is the same gap: the lock's band gate uses caller-supplied verifiedGrossUsd.",
-   "rank": 19
+   "rank": 25
   },
   {
    "ids": [
@@ -900,7 +1333,7 @@
     "VF-QNORM (code tag)"
    ],
    "rank_hint": 17,
-   "rank": 20
+   "rank": 26
   },
   {
    "ids": [
@@ -924,7 +1357,30 @@
    ],
    "rank_hint": 18,
    "note": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01.",
-   "rank": 21
+   "rank": 27
+  },
+  {
+   "ids": [
+    "FZ-LOCK-01"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "UNVERIFIED ASSUMPTION",
+   "severity": "low",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:341-350; CommitmentVaultLock.sol:363-370"
+   ],
+   "description": "The lock checks the Handshake band and the minimum on the USD figure stated at lock time. The Verifier re-checks against its own price and refuses (VF-COM-009 / VF-COM-003). The design assumes the user can always release at maturity.",
+   "damage_potential": "Funds sit in a lock that can never mint until maturity release; user annoyance, no loss.",
+   "evidence": [
+    "FuzzLocking passes across all 16 durations and the $0.01-$0.02 band at 10k runs."
+   ],
+   "spec": [
+    "Rev 12 governs the Handshake band; code matches Rev 12 bounds."
+   ],
+   "rank_hint": 99,
+   "note": "Both CommitmentVaultLock and BaseCommitmentVaultLock are in the live Oct 22 set, so LIVE (Base set), not latent for BaseCVL as the rig said.",
+   "rank": 28
   },
   {
    "ids": [
@@ -946,7 +1402,7 @@
     "Rev 6 (unclear)"
    ],
    "rank_hint": 99,
-   "rank": 22
+   "rank": 29
   },
   {
    "ids": [
@@ -968,7 +1424,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 23
+   "rank": 30
   },
   {
    "ids": [
@@ -991,7 +1447,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-08 (rebasing / balance-delta assumptions in the vault; HH-005 reproduces this on an Ethereum fork)",
-   "rank": 24
+   "rank": 31
   },
   {
    "ids": [
@@ -1014,7 +1470,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 25
+   "rank": 32
   },
   {
    "ids": [
@@ -1038,7 +1494,28 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 26
+   "rank": 33
+  },
+  {
+   "ids": [
+    "FZ-04"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "info",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:676 and base-contracts/contracts/VinculumFinalisVerifier.sol:790 (gross * STANDARD_FEE_BPS)"
+   ],
+   "description": "gross * 500 overflows for gross > max/500 and reverts with an arithmetic panic rather than a coded error.",
+   "damage_potential": "None, fails closed. Gross amounts near uint256 max revert with Panic 0x11 instead of a VF error code.",
+   "evidence": [
+    "FuzzFeeMath bounds at max (passes, asserting the revert)."
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "note": "Fails closed (Panic 0x11, no coded error). Rig called it LIVE (shape) against 7dee25d; the Verifier is live, so LIVE (Base set).",
+   "rank": 34
   },
   {
    "ids": [
@@ -1061,7 +1538,7 @@
     "Rev 12 removes the allowance; Verifier still enforces the Rev 6 constant."
    ],
    "rank_hint": 20,
-   "rank": 27
+   "rank": 35
   },
   {
    "ids": [
@@ -1084,7 +1561,7 @@
    ],
    "rank_hint": 99,
    "note": "Not exercised: the rig failed closed on the label mismatch. Whether the live path compares labels the same way is unverified.",
-   "rank": 28
+   "rank": 36
   },
   {
    "ids": [
@@ -1108,7 +1585,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-04 / HH-001 (recordFeeAndRac is an open user path after finalize)",
-   "rank": 29
+   "rank": 37
   },
   {
    "ids": [
@@ -1131,7 +1608,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
-   "rank": 30
+   "rank": 38
   },
   {
    "ids": [
@@ -1153,7 +1630,7 @@
     "VF-XCH-011"
    ],
    "rank_hint": 19,
-   "rank": 31
+   "rank": 39
   },
   {
    "ids": [
@@ -1175,7 +1652,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 32
+   "rank": 40
   },
   {
    "ids": [
@@ -1197,7 +1674,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 33
+   "rank": 41
   },
   {
    "ids": [
@@ -1219,7 +1696,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 34
+   "rank": 42
   },
   {
    "ids": [
@@ -1241,7 +1718,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 35
+   "rank": 43
   },
   {
    "ids": [
@@ -1263,7 +1740,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 36
+   "rank": 44
   },
   {
    "ids": [
@@ -1285,7 +1762,7 @@
     "none found"
    ],
    "rank_hint": 99,
-   "rank": 37
+   "rank": 45
   },
   {
    "ids": [
@@ -1310,7 +1787,7 @@
    ],
    "rank_hint": 99,
    "related": "AG-16 (vault trusts caller-supplied USD)",
-   "rank": 38
+   "rank": 46
   },
   {
    "ids": [
@@ -1333,7 +1810,7 @@
    ],
    "rank_hint": 99,
    "note": "Historical operator transactions; no live exposure found. N/A here means not a reachable code path.",
-   "rank": 39
+   "rank": 47
   },
   {
    "ids": [
@@ -1356,7 +1833,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 40
+   "rank": 48
   },
   {
    "ids": [
@@ -1378,7 +1855,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 41
+   "rank": 49
   },
   {
    "ids": [
@@ -1401,7 +1878,7 @@
    ],
    "rank_hint": 99,
    "note": "Recorder's live read (2026-10-23 08:20 EDT) also shows no Solana reader registered.",
-   "rank": 42
+   "rank": 50
   },
   {
    "ids": [
@@ -1423,7 +1900,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 43
+   "rank": 51
   },
   {
    "ids": [
@@ -1445,7 +1922,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 44
+   "rank": 52
   },
   {
    "ids": [
@@ -1467,7 +1944,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 45
+   "rank": 53
   },
   {
    "ids": [
@@ -1489,7 +1966,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 46
+   "rank": 54
   },
   {
    "ids": [
@@ -1523,7 +2000,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 47
+   "rank": 55
   },
   {
    "ids": [
@@ -1545,7 +2022,7 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 48
+   "rank": 56
   },
   {
    "ids": [
@@ -1568,7 +2045,138 @@
     "none"
    ],
    "rank_hint": 99,
-   "rank": 49
+   "rank": 57
+  },
+  {
+   "ids": [
+    "IT-ECH-01"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisStake.sol:479"
+   ],
+   "description": "Echidna never reached the Stake epoch reward mint in 20,000 calls, and the harness uses only Base ETH at $2000 with stand-in source proofs. stake_solvent passing is weak evidence for the reward path. Readers were not in the Echidna scope (covered by forge FuzzReaders).",
+   "damage_potential": "n/a",
+   "evidence": [
+    "echidna corpus coverage: Stake.sol:479 unmarked; :275 and :390 reached."
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "note": "Stake is deployed in the live Oct 22 set (the rig said it was not), so this is a gap in coverage of live code.",
+   "rank": 58
+  },
+  {
+   "ids": [
+    "IT-MUT-00"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/HandshakeCapability.sol"
+   ],
+   "description": "Gambit produced 0 mutants for HandshakeCapability, and gambit 0.2.1 has no relational-to-relational operator (Python ROR mutants added instead). Only a seeded sample of gambit mutants was run (Verifier 30 of 1744, Stake 20 of 1590, Token 12 of 270, Synth 8 of 228, BaseCVL 12 of 505, CVL 10 of 575, Durations 6 of 128). Scores are sample scores.",
+   "damage_potential": "n/a",
+   "evidence": [
+    "mutation/results/mutation_summary.json"
+   ],
+   "spec": [],
+   "rank_hint": 99,
+   "note": "Scores are sample scores; all sampled contracts are in the live Oct 22 set.",
+   "rank": 59
+  },
+  {
+   "ids": [
+    "MUT-41",
+    "MUT-42",
+    "MUT-43",
+    "MUT-44",
+    "MUT-45",
+    "MUT-46",
+    "MUT-47",
+    "MUT-48",
+    "MUT-49",
+    "MUT-50"
+   ],
+   "source": "testing-rigs/findings/fuzz_mutation.json",
+   "class": "INCOMPLETE TESTING",
+   "severity": "info",
+   "scope": "N/A (test gap in a LIVE contract)",
+   "file_line": [
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:343",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:213",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:217",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:227",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:255",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:365",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:55",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:56",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:257"
+   ],
+   "description": "10 mutants of BaseCommitmentVaultLock were caught only by the runtime code-hash pin (lock_5pct_native_erc20_7chains), not by any behaviour test, so they are not counted as killed. They cover the Handshake band (Rev 12) bounds and boundaries, zero fee or principal checks, the maturity boundary and release msg.sender to tx.origin. The contract is deployed in the live Oct 22 Base set (rig 10: byte-identical to main b0e38a9), so these are gaps in the tests of live code, not demonstrated exploits.",
+   "damage_potential": "None by itself. A future change at these lines (including a fix in the batch-fix phase) could regress without any test failing.",
+   "evidence": [
+    "Pin-only mutants (mutation/results/mutation_summary.json; killed only by the code-hash pin):",
+    "MUT-41 BaseCommitmentVaultLock.sol:343: G-BaseCVL-417 (IfStatementMutation): IfStatementMutation(`verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX` |==> `false`) of: `if (verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX) {`",
+    "MUT-42 BaseCommitmentVaultLock.sol:213: R-BaseCVL-213-23 (ROR): `>` -> `>=` in: require(amount > 0, \"CVL: zero gross\");",
+    "MUT-43 BaseCommitmentVaultLock.sol:217: R-BaseCVL-217-27 (ROR): `>` -> `>=` in: require(previewFee > 0 && previewPrincipal > 0, \"CVL: zero fee or principal\");",
+    "MUT-44 BaseCommitmentVaultLock.sol:227: R-BaseCVL-227-20 (ROR): `>` -> `>=` in: require(fee > 0 && principal > 0, \"CVL: zero fee or principal\");",
+    "MUT-45 BaseCommitmentVaultLock.sol:255: R-BaseCVL-255-32 (ROR): `>=` -> `>` in: require(block.timestamp >= record.maturity, \"CVL: immature\");",
+    "MUT-46 BaseCommitmentVaultLock.sol:365: R-BaseCVL-365-23 (ROR): `==` -> `!=` in: if (ret.length == 0) return true;",
+    "MUT-47 BaseCommitmentVaultLock.sol:55: T-BC-02 (Targeted): Base CVL Handshake min -> $0.009",
+    "MUT-48 BaseCommitmentVaultLock.sol:56: T-BC-03 (Targeted): Base CVL Handshake max -> $0.021",
+    "MUT-49 BaseCommitmentVaultLock.sol:343: T-BC-04 (Targeted): Base CVL Handshake min < -> <=",
+    "MUT-50 BaseCommitmentVaultLock.sol:257: T-BC-05 (Targeted): release msg.sender -> tx.origin"
+   ],
+   "spec": [
+    "Rev 12 Handshake"
+   ],
+   "rank_hint": 99,
+   "rig_views": {
+    "MUT-42": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-43": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-44": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-45": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-46": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-47": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-48": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-49": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    },
+    "MUT-50": {
+     "class": "INCOMPLETE TESTING",
+     "severity": "info"
+    }
+   },
+   "label": "MUT-BASECVL-PIN (MUT-41..MUT-50, 10 pin-only)",
+   "rig_views_hidden": true,
+   "rank": 60
   }
  ]
 }
