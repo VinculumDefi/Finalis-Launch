@@ -114,8 +114,11 @@ for (const c of CHAINS) {
       expect(f[6]).to.equal(rec.maturity);
       expect(f[7]).to.equal(recipient.address);
       expect(f[8]).to.equal(1n);
-      const [ok, hash, height] = await reader.verifyFinality(enc(c, ev), claim(c.chainId, ev.block.hash, ev.block.number));
-      expect(ok).to.equal(true);
+      // Fix 2026-10-23 (AG-01): finality is refused on-chain (no settled-history
+      // anchor); the block binding check is headerClaimMatches.
+      await expect(reader.verifyFinality(enc(c, ev), claim(c.chainId, ev.block.hash, ev.block.number)))
+        .to.be.revertedWith(`VF-XCH-006: ${c.env} settled-history anchor not enforced on-chain; environment disabled`);
+      const [hash, height] = await reader.headerClaimMatches(enc(c, ev), claim(c.chainId, ev.block.hash, ev.block.number));
       expect(hash).to.equal(ev.block.hash);
       expect(height).to.equal(BigInt(ev.block.number));
     });
@@ -158,11 +161,11 @@ for (const c of CHAINS) {
     });
 
     it("rejects a wrong block hash or height, an edited header, and a forged receiptsRoot", async function () {
-      await expect(reader.verifyFinality(enc(c, ev), claim(c.chainId, ethers.keccak256("0x01"), ev.block.number)))
+      await expect(reader.headerClaimMatches(enc(c, ev), claim(c.chainId, ethers.keccak256("0x01"), ev.block.number)))
         .to.be.revertedWith("VF-XCH-006: block hash mismatch");
-      await expect(reader.verifyFinality(enc(c, ev), claim(c.chainId, ev.block.hash, BigInt(ev.block.number) + 1n)))
+      await expect(reader.headerClaimMatches(enc(c, ev), claim(c.chainId, ev.block.hash, BigInt(ev.block.number) + 1n)))
         .to.be.revertedWith("VF-XCH-006: block height mismatch");
-      await expect(reader.verifyFinality(enc(c, { ...ev, headerRlp: flip(ev.headerRlp, 20) }), claim(c.chainId, ev.block.hash, ev.block.number)))
+      await expect(reader.headerClaimMatches(enc(c, { ...ev, headerRlp: flip(ev.headerRlp, 20) }), claim(c.chainId, ev.block.hash, ev.block.number)))
         .to.be.revertedWith("VF-XCH-006: block hash mismatch");
       await expect(reader.extractFacts(enc(c, { ...ev, headerRlp: swap(ev.headerRlp, ev.block.receiptsRoot, ethers.keccak256("0x02")) }))).to.be.reverted;
       const prev = await network.provider.send("eth_getBlockByNumber", [ethers.toQuantity(BigInt(ev.block.number) - 1n), false]);
@@ -170,7 +173,7 @@ for (const c of CHAINS) {
     });
 
     it("rejects a wrong chain: another chain id, or a lock set up for another environment", async function () {
-      await expect(reader.verifyFinality(enc(c, ev), claim(c.chainId === 1 ? 10 : 1, ev.block.hash, ev.block.number)))
+      await expect(reader.headerClaimMatches(enc(c, ev), claim(c.chainId === 1 ? 10 : 1, ev.block.hash, ev.block.number)))
         .to.be.revertedWith("VF-XCH-006: wrong chain");
       const baseLock = await CVL.deploy("Base", dest.address);
       const r = await R.deploy(await baseLock.getAddress());
@@ -208,10 +211,11 @@ for (const c of CHAINS) {
         await expect(prod.proveReceipt(swap(FX.headerRlp, FX.receiptsRoot, ethers.keccak256("0x02")), r.receipt, r.index, r.nodes)).to.be.reverted;
         const e = { headerRlp: FX.headerRlp, receipt: r.receipt, receiptIndex: r.index, receiptNodes: r.nodes, logIndex: 0, accountNodes: [], envSlotNodes: [], recipientSlotNodes: [] };
         await expect(prod.extractFacts(enc(c, e))).to.be.revertedWith("VF-XCH-011: log emitter");
-        const [ok, h] = await prod.verifyFinality(enc(c, e), claim(c.chainId, FX.blockHash, FX.blockNumber));
-        expect(ok).to.equal(true);
+        await expect(prod.verifyFinality(enc(c, e), claim(c.chainId, FX.blockHash, FX.blockNumber)))
+          .to.be.revertedWith(`VF-XCH-006: ${c.env} settled-history anchor not enforced on-chain; environment disabled`);
+        const [h] = await prod.headerClaimMatches(enc(c, e), claim(c.chainId, FX.blockHash, FX.blockNumber));
         expect(h).to.equal(FX.blockHash);
-        await expect(prod.verifyFinality(enc(c, e), claim(c.chainId, ethers.ZeroHash, FX.blockNumber)))
+        await expect(prod.headerClaimMatches(enc(c, e), claim(c.chainId, ethers.ZeroHash, FX.blockNumber)))
           .to.be.revertedWith("VF-XCH-006: block hash mismatch");
       });
 
