@@ -1,6 +1,7 @@
-// METAMORPHIC rig (discovery only, no fixes). Local hardhat chain only.
-// Skipped unless EXTRA_RIG=1. Run:
-//   cd base-contracts && EXTRA_RIG=1 npx hardhat test ../testing-rigs/metamorphic/metamorphic.test.cjs
+// METAMORPHIC rig. Local hardhat chain only.
+// Converted 2026-10-23: always active, and the test FAILS if any relation is
+// violated. Run:
+//   testing-rigs/run.sh none metamorphic/metamorphic.test.cjs
 // Relations checked on the Base path (BaseCommitmentVaultLock + BaseLockRecordVerifier):
 //   MR1 scale:  doubling a lock's gross doubles its mint (exact or within 2 wei rounding).
 //   MR2 split:  one lock of X mints the same total as two locks of X/2 (within rounding).
@@ -13,8 +14,10 @@
 //   MR5 decay:  same USD lock every 30 days from day 300 to day 4500: VCLM and CHONX
 //       mints never increase, each step equals the spec formula, and the floor holds.
 //   MR6 output token follows the lock record (control, expected PASS).
-// Every relation result is appended to results/relations.jsonl as soon as it finishes;
-// a restart skips keys already written. Lock ids are written truncated.
+// Every relation result is appended to rerun-2026-10-23/metamorphic/relations.jsonl as
+// soon as it finishes. Each run starts a fresh file. Lock ids are written truncated.
+// MR3b: a backdated package is now refused (VF-ORC-011); the relation then also
+// requires the honest resubmission of the same lock to mint exactly the honest amount.
 const path = require("path");
 const fs = require("fs");
 const { createRequire } = require("module");
@@ -22,8 +25,8 @@ const BC = path.resolve(__dirname, "../../base-contracts");
 const req = createRequire(path.join(BC, "package.json"));
 const { ethers, network } = req("hardhat");
 
-const run = process.env.EXTRA_RIG ? it : it.skip;
-const OUT = path.join(__dirname, "results");
+const run = it;
+const OUT = process.env.META_DIR || path.join(__dirname, "../rerun-2026-10-23/metamorphic");
 const REL = process.env.META_OUT || path.join(OUT, "relations.jsonl");
 const SCALE = 10n ** 18n;
 const coder = ethers.AbiCoder.defaultAbiCoder();
@@ -48,7 +51,7 @@ function issuance(u, token, durBps, days) {
 }
 const near = (a, b, tol) => (a > b ? a - b : b - a) <= tol;
 
-describe("METAMORPHIC rig (skipped unless EXTRA_RIG=1)", function () {
+describe("METAMORPHIC rig (active, fails on any violation)", function () {
   this.timeout(0);
   let S, runId = 1n, done = new Set();
   const write = (o) => { fs.appendFileSync(REL, JSON.stringify(o) + "\n"); done.add(o.key); return o; };
@@ -130,7 +133,7 @@ describe("METAMORPHIC rig (skipped unless EXTRA_RIG=1)", function () {
 
   run("relations", async () => {
     fs.mkdirSync(path.dirname(REL), { recursive: true });
-    if (fs.existsSync(REL)) for (const l of fs.readFileSync(REL, "utf8").split("\n")) if (l) done.add(JSON.parse(l).key);
+    if (fs.existsSync(REL)) fs.unlinkSync(REL); // always a fresh, complete run
     await deploy();
 
     // MR4 fee (random grosses, native and ERC-20)
@@ -208,9 +211,11 @@ describe("METAMORPHIC rig (skipped unless EXTRA_RIG=1)", function () {
         const A = await mkLock({ usdAmt: "5", out }), B = await mkLock({ usdAmt: "5", out });
         const a = await submit(A);
         const b = await submit(B, { valuationTimestamp: S.launch });
+        const h = b.ok ? null : await submit(B);
         write({ key, mr: "MR3b package valuationTimestamp set to launch", output: out, lock_day: await day(), mint_honest: s(a.minted), mint_backdated: s(b.minted), backdated_accepted: b.ok,
-          ratio: a.ok && b.ok && a.minted > 0n ? Number((b.minted * 10000n) / a.minted) / 10000 : null, errs: [a.err, b.err].filter(Boolean),
-          verdict: !b.ok ? "PASS" : a.ok && a.minted === b.minted ? "PASS" : "VIOLATION" });
+          backdated_err: b.err, honest_resubmit: h ? s(h.minted) : null,
+          ratio: a.ok && b.ok && a.minted > 0n ? Number((b.minted * 10000n) / a.minted) / 10000 : null, errs: [a.err, h && h.err].filter(Boolean),
+          verdict: !b.ok ? (/VF-ORC-011/.test(b.err || "") && a.ok && h.ok && h.minted === a.minted ? "PASS" : "VIOLATION") : a.ok && a.minted === b.minted ? "PASS" : "VIOLATION" });
       }
       key = "MR3c|" + out;
       if (!done.has(key)) {
@@ -247,9 +252,23 @@ describe("METAMORPHIC rig (skipped unless EXTRA_RIG=1)", function () {
       const key = "MR3b_late|" + out; if (done.has(key)) continue;
       const A = await mkLock({ usdAmt: "5", out }), B = await mkLock({ usdAmt: "5", out });
       const a = await submit(A), b = await submit(B, { valuationTimestamp: S.launch });
+      const h = b.ok ? null : await submit(B);
       write({ key, mr: "MR3b package valuationTimestamp set to launch (late)", output: out, lock_day: await day(), mint_honest: s(a.minted), mint_backdated: s(b.minted), backdated_accepted: b.ok,
-        ratio: a.ok && b.ok && a.minted > 0n ? Number((b.minted * 10000n) / a.minted) / 10000 : null, errs: [a.err, b.err].filter(Boolean),
-        verdict: !b.ok ? "PASS" : a.ok && a.minted === b.minted ? "PASS" : "VIOLATION" });
+        backdated_err: b.err, honest_resubmit: h ? s(h.minted) : null,
+        ratio: a.ok && b.ok && a.minted > 0n ? Number((b.minted * 10000n) / a.minted) / 10000 : null, errs: [a.err, h && h.err].filter(Boolean),
+        verdict: !b.ok ? (/VF-ORC-011/.test(b.err || "") && a.ok && h.ok && h.minted === a.minted ? "PASS" : "VIOLATION") : a.ok && a.minted === b.minted ? "PASS" : "VIOLATION" });
     }
+
+    const rows = fs.readFileSync(REL, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const setup = rows.filter((o) => o.mr === "setup");
+    const rel = rows.filter((o) => o.mr !== "setup");
+    const counts = {};
+    for (const o of rel) counts[o.verdict] = (counts[o.verdict] || 0) + 1;
+    fs.writeFileSync(path.join(path.dirname(REL), "summary.json"), JSON.stringify({ relations: rel.length, verdicts: counts, chonx_activated: setup.every((o) => o.chonx_activated) }, null, 2) + "\n");
+    console.log(`      ${rel.length} relations ${JSON.stringify(counts)}`);
+    const bad = rel.filter((o) => o.verdict !== "PASS");
+    if (bad.length) console.log(bad.slice(0, 10).map((o) => JSON.stringify(o)).join("\n"));
+    require("assert").ok(setup.length === 1 && setup[0].chonx_activated === true, "CHONX activation setup failed");
+    require("assert").strictEqual(bad.length, 0, `${bad.length} relations violated`);
   });
 });
