@@ -1,0 +1,44 @@
+fork eth at block 26255094
+
+
+  Rig 2: Ethereum mainnet fork, real tokens through the real ceremony stack
+      fork block 26255172 stack: Verifier 0x49BC...a552 Ethereum CVL 0x087d...0EB5
+      price USDT 0.99891 USD (Chainlink USDT / USD, updated 2026-10-22T14:43:59.000Z)
+      price USDC 0.99985668 USD (Chainlink USDC / USD, updated 2026-10-23T00:44:59.000Z)
+      price PAXG 4018.57 USD (Chainlink XAU / USD, updated 2026-10-23T05:31:23.000Z)
+      price stETH 2394.7367993 USD (Chainlink STETH / USD, updated 2026-10-23T10:58:11.000Z)
+      price LINK 12.0802841 USD (Chainlink LINK / USD, updated 2026-10-23T11:36:23.000Z)
+      price WBTC 81603.43 USD (Chainlink BTC / USD, updated 2026-10-23T10:53:35.000Z)
+      price AMPL 1.273801018443807054 USD (Ampleforth market oracle getData)
+      USDT approve(nonzero) over leftover nonzero allowance: reverted: Transaction reverted without a reason string
+      USDT: stated 5000.0 | user paid 5000.0 | gross recorded 5000.0 | fee 250.0 | Dev Fund got 250.0 | lock kept 4750.0 | principal 4750.0 | VCLM minted n/a (fork proof limit)
+      USDT release: ok, got 4750.0
+    ✔ USDT: approve nonzero-to-nonzero reverts (real USDT quirk); lock path works with the no-bool return; release (4307ms)
+      USDC: stated 5000.0 | user paid 5000.0 | gross recorded 5000.0 | fee 250.0 | Dev Fund got 250.0 | lock kept 4750.0 | principal 4750.0 | VCLM minted n/a (fork proof limit)
+    ✔ USDC: lock, exact 5% fee, release (11675ms)
+      PAXG: stated 2.0 | user paid 2.0 | gross recorded 2.0 | fee 0.1 | Dev Fund got 0.1 | lock kept 1.9 | principal 1.9 | VCLM minted n/a (fork proof limit)
+      PAXG transfer fee on the lock deposit: 0.0 PAXG; Dev Fund short by 0.0 PAXG
+      PAXG release: ok, destination got 1.9 of principal 1.9
+    ✔ PAXG (real fee-on-transfer): gross = received delta; Dev Fund and release are each short by the token's own transfer fee (9709ms)
+      RFOT: stated 2.0 | user paid 2.0 | gross recorded 1.98 | fee 0.099 | Dev Fund got 0.09801 | lock kept 1.881 | principal 1.881 | VCLM minted n/a (fork proof limit)
+      RFOT transfer fee on the deposit: 0.02 ; Dev Fund got 0.09801 of recorded fee 0.099 (short 0.00099)
+      RFOT release: ok, destination got 1.86219 of recorded principal 1.881
+    ✔ fee-on-transfer (rig RFOT, 1% per transfer, local only): gross = received delta; Dev Fund and release each lose the token's own fee (5009ms)
+      stETH: stated 3.0 | user paid 2.999999999999999998 | gross recorded 2.999999999999999998 | fee 0.149999999999999999 | Dev Fund got 0.149999999999999998 | lock kept 2.85 | principal 2.849999999999999999 | VCLM minted n/a (fork proof limit)
+      stETH: lock holds 2850000000000000000 wei; principal 2849999999999999999 wei; gap -1 wei
+      stETH release: ok, got 2849999999999999998 wei
+    ✔ stETH (real share rounding): delta accounting and whether a single lock can release its recorded principal (5900ms)
+      AMPL gons mapping slot 158
+      AMPL#1: stated 10000.0 | user paid 10000.0 | gross recorded 10000.0 | fee 500.0 | Dev Fund got 500.0 | lock kept 9500.0 | principal 9500.0 | VCLM minted n/a (fork proof limit)
+      AMPL#2: stated 10000.0 | user paid 10000.0 | gross recorded 10000.0 | fee 500.0 | Dev Fund got 500.0 | lock kept 9500.0 | principal 9500.0 | VCLM minted n/a (fork proof limit)
+      AMPL pool before rebase 19000.0 after -10% rebase 17100.0 recorded principals 19000.0
+      AMPL release #1: ok 9500.0 | release #2: FAILED VM Exception while processing transaction: reverted with reason string 'CVL: release'
+    ✔ AMPL (real rebasing): two locks share one pool; a real negative rebase leaves the second release short (38444ms)
+      LINK: stated 500.0 | user paid 500.0 | gross recorded 500.0 | fee 25.0 | Dev Fund got 25.0 | lock kept 475.0 | principal 475.0 | VCLM minted n/a (fork proof limit)
+      WBTC: stated 0.5 | user paid 0.5 | gross recorded 0.5 | fee 0.025 | Dev Fund got 0.025 | lock kept 0.475 | principal 0.475 | VCLM minted n/a (fork proof limit)
+    ✔ LINK and WBTC (standard ERC-20s): exact 5% fee, exact principal released (2055ms)
+
+
+  7 passing (6m)
+
+EXIT 0
