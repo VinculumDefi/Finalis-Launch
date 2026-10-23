@@ -9,6 +9,15 @@ src, out = sys.argv[1], sys.argv[2]
 rows = []
 for f in sorted(glob.glob(src + "/mutants_w*.jsonl")):
     rows += [json.loads(l) for l in open(f)]
+# results/retry.jsonl holds re-runs (one mutant at a time, split test files) of first-pass
+# "error" records; a retry record supersedes the first-pass record with the same id.
+import os
+rf = os.path.join(src, "retry.jsonl")
+if os.path.exists(rf):
+    rr = {}
+    for l in open(rf):
+        x = json.loads(l); x["retry"] = True; rr[x["id"]] = x
+    rows = [rr.pop(r["id"]) if r["id"] in rr else r for r in rows] + list(rr.values())
 for r in rows:
     if r["status"] == "killed" and str(r.get("killed_by", "")).startswith("timeout"):
         r["status"] = "timeout"
