@@ -78,8 +78,11 @@ describe("ArbitrumLockReader (receipt proof)", function () {
     expect(f[6]).to.equal(rec.maturity);
     expect(f[7]).to.equal(recipient.address);
     expect(f[8]).to.equal(1n);
-    const [ok, hash, height] = await reader.verifyFinality(encodeEvidence(ev), claim(42161, ev.block.hash, ev.block.number));
-    expect(ok).to.equal(true);
+    // Fix 2026-10-23 (AG-01): finality is refused on-chain (no settled-history
+    // anchor); the block binding check is headerClaimMatches.
+    await expect(reader.verifyFinality(encodeEvidence(ev), claim(42161, ev.block.hash, ev.block.number)))
+      .to.be.revertedWith("VF-XCH-006: Arbitrum settled-history anchor not enforced on-chain; environment disabled");
+    const [hash, height] = await reader.headerClaimMatches(encodeEvidence(ev), claim(42161, ev.block.hash, ev.block.number));
     expect(hash).to.equal(ev.block.hash);
     expect(height).to.equal(BigInt(ev.block.number));
   });
@@ -125,16 +128,16 @@ describe("ArbitrumLockReader (receipt proof)", function () {
   });
 
   it("rejects a wrong block hash or height", async function () {
-    await expect(reader.verifyFinality(encodeEvidence(ev), claim(42161, ethers.keccak256("0x01"), ev.block.number)))
+    await expect(reader.headerClaimMatches(encodeEvidence(ev), claim(42161, ethers.keccak256("0x01"), ev.block.number)))
       .to.be.revertedWith("VF-XCH-006: block hash mismatch");
-    await expect(reader.verifyFinality(encodeEvidence(ev), claim(42161, ev.block.hash, BigInt(ev.block.number) + 1n)))
+    await expect(reader.headerClaimMatches(encodeEvidence(ev), claim(42161, ev.block.hash, BigInt(ev.block.number) + 1n)))
       .to.be.revertedWith("VF-XCH-006: block height mismatch");
     // A header from a different block cannot carry this receipt.
     const prev = await network.provider.send("eth_getBlockByNumber", [ethers.toQuantity(BigInt(ev.block.number) - 1n), false]);
     await expect(reader.extractFacts(encodeEvidence({ ...ev, headerRlp: encodeBlockHeader(prev) }))).to.be.reverted;
     // Any edited header no longer hashes to the claimed block hash.
     const edited = { ...ev, headerRlp: flip(ev.headerRlp, 20) };
-    await expect(reader.verifyFinality(encodeEvidence(edited), claim(42161, ev.block.hash, ev.block.number)))
+    await expect(reader.headerClaimMatches(encodeEvidence(edited), claim(42161, ev.block.hash, ev.block.number)))
       .to.be.revertedWith("VF-XCH-006: block hash mismatch");
     // A header with a forged receiptsRoot cannot carry the real receipt proof.
     const rootForged = { ...ev, headerRlp: swap(ev.headerRlp, ev.block.receiptsRoot, ethers.keccak256("0x02")) };
@@ -142,7 +145,7 @@ describe("ArbitrumLockReader (receipt proof)", function () {
   });
 
   it("rejects a wrong chain: claim for another chain id, or a lock from another environment", async function () {
-    await expect(reader.verifyFinality(encodeEvidence(ev), claim(1, ev.block.hash, ev.block.number)))
+    await expect(reader.headerClaimMatches(encodeEvidence(ev), claim(1, ev.block.hash, ev.block.number)))
       .to.be.revertedWith("VF-XCH-006: wrong chain");
     const ethLock = await CVL.deploy("Ethereum", dest.address);
     const r = await R.deploy(await ethLock.getAddress());
@@ -193,10 +196,11 @@ describe("ArbitrumLockReader (receipt proof)", function () {
       await expect(prod.proveReceipt(swap(FX.headerRlp, FX.receiptsRoot, ethers.keccak256("0x02")), r.receipt, r.index, r.nodes)).to.be.reverted;
       const proofOnly = { headerRlp: FX.headerRlp, receipt: r.receipt, receiptIndex: r.index, receiptNodes: r.nodes, logIndex: 0, accountNodes: [], envSlotNodes: [], recipientSlotNodes: [] };
       await expect(prod.extractFacts(encodeEvidence(proofOnly))).to.be.revertedWith("VF-XCH-011: log emitter");
-      const [ok, h] = await prod.verifyFinality(encodeEvidence(proofOnly), claim(42161, FX.blockHash, FX.blockNumber));
-      expect(ok).to.equal(true);
+      await expect(prod.verifyFinality(encodeEvidence(proofOnly), claim(42161, FX.blockHash, FX.blockNumber)))
+        .to.be.revertedWith("VF-XCH-006: Arbitrum settled-history anchor not enforced on-chain; environment disabled");
+      const [h] = await prod.headerClaimMatches(encodeEvidence(proofOnly), claim(42161, FX.blockHash, FX.blockNumber));
       expect(h).to.equal(FX.blockHash);
-      await expect(prod.verifyFinality(encodeEvidence(proofOnly), claim(42161, ethers.ZeroHash, FX.blockNumber)))
+      await expect(prod.headerClaimMatches(encodeEvidence(proofOnly), claim(42161, ethers.ZeroHash, FX.blockNumber)))
         .to.be.revertedWith("VF-XCH-006: block hash mismatch");
     });
   });
