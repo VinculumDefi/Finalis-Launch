@@ -1,0 +1,406 @@
+{
+ "branch": "rigs/hardhat",
+ "main": "b0e38a9",
+ "generated": "2026-10-23 EDT",
+ "note": "Findings only. No contract or app code was changed.",
+ "findings": [
+  {
+   "id": "HH-001",
+   "rig": "2,4",
+   "severity": "CRITICAL",
+   "class": [
+    "CONFIRMED VULNERABILITY",
+    "SPEC CONFLICT"
+   ],
+   "damage_potential": "Unbounded VCLM inflation through Stake: any stranger can replay the RAC credit path on a single lock and raise its USD basis; on real Base state one stranger call moved the basis from 3312.80 to 3384.82 USD, and 5 live replays added 358.83 USD (about 3588 future VCLM). Invariant run minted 15,609.24 VCLM from replays.",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:692-700",
+    "base-contracts/contracts/VinculumFinalisStake.sol:428-464"
+   ],
+   "description": "The RAC (recorded asset credit) update is callable by anyone and is not idempotent per lock, so the same lock is credited more than once.",
+   "evidence": "invariants/invariants.test.cjs FINDING HH-001 (run_show_findings.log); fork-integration/base_fork_stack.test.cjs and base_live_probe_results.json (live replay +358.83 USD over 5 replays, simulated only)",
+   "rev_conflict": "Rev 6 VF-RAC-001 (one credit per verified lock) conflicts with the implemented repeatable path",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "Simulated on the live Base set: +358.83 USD basis from 5 stranger replays (not sent). Live bytecode equals the tested artifact, so the tested bug is the deployed bug.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": true,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-002",
+   "rig": "2,4",
+   "severity": "HIGH",
+   "class": [
+    "CONFIRMED VULNERABILITY"
+   ],
+   "damage_potential": "valuationTimestamp=0 is accepted and resolves to the launch price, so once the decay schedule moves the caller picks the higher historic valuation; day 840 model: 31,098 vs 19,423 VCLM (x1.601). Latent on live today (launch Oct 22, same result 31098.86).",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:844",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1023"
+   ],
+   "description": "The oracle lookup does not reject a zero or stale valuation timestamp.",
+   "evidence": "invariants FINDING HH-002; base_live_probe_results.json valuationTimestamp=0 check",
+   "rev_conflict": "Rev 6 VF-ORC-011 and VF-ORC-013",
+   "fixed": false,
+   "live_or_latent": "latent",
+   "live_note": "Same code live; launch Oct 22, so the zero timestamp gives the same value today. Becomes exploitable once the valuation decays.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-003",
+   "rig": "4",
+   "severity": "HIGH",
+   "class": [
+    "CONFIRMED VULNERABILITY"
+   ],
+   "damage_potential": "Non-Base mints do not trace to a real lock: a forged header/receipt is accepted, so VCLM can be minted with no lock behind it (Oct 22 forged-header finding reproduced). 5 Ethereum-labelled mints were produced on chain 31337.",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84"
+   ],
+   "description": "The EVM receipt reader trusts a caller-supplied header without binding it to a canonical chain.",
+   "evidence": "invariants FINDING HH-003 (INV-4 breaks for non-Base readers as expected)",
+   "rev_conflict": "Rev 6 (every mint traces to a real lock)",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "Live Ethereum reader (bytecode equal to artifact, bound to the live non-Base lock) accepts a made-up header in the dry-run step 13 note.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-004",
+   "rig": "4",
+   "severity": "MEDIUM",
+   "class": [
+    "SPEC CONFLICT"
+   ],
+   "damage_potential": "A stranger can bind or front-run the claim binding of someone else's lock record, steering who receives the mint path.",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1010"
+   ],
+   "description": "Stranger binding accepted for a lock record.",
+   "evidence": "invariants HH-004 test",
+   "rev_conflict": "Rev 6 ownership/claim rules",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "Same Verifier code is live.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": true,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-005",
+   "rig": "2",
+   "severity": "MEDIUM",
+   "class": [
+    "CONFIRMED VULNERABILITY"
+   ],
+   "damage_potential": "Rebasing tokens (AMPL): after a -10% rebase the pool held 17,100 vs recorded principals 19,000; first release paid 9,500 in full and the second reverted 'CVL: release'. Last user out loses principal.",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:273-294",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:252"
+   ],
+   "description": "Release pays recorded principal, not a pro-rata share, so negative rebases are socialised onto the last releaser.",
+   "evidence": "fork-integration/eth_fork_tokens.test.cjs AMPL, eth_fork_results.json",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "AMPL is a registered Ethereum asset (ceremony-data) and the live non-Base lock runtime equals the tested one.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-006",
+   "rig": "2",
+   "severity": "LOW",
+   "class": [
+    "CONFIRMED VULNERABILITY"
+   ],
+   "damage_potential": "stETH 1-wei transfer rounding: release can be 1 wei short or revert on exact-balance paths.",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:240-247"
+   ],
+   "description": "Share-based token rounding not accounted.",
+   "evidence": "eth_fork_tokens.test.cjs stETH",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "stETH is a registered Ethereum asset.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-007",
+   "rig": "2",
+   "severity": "LOW",
+   "class": [
+    "CONFIRMED VULNERABILITY"
+   ],
+   "damage_potential": "Fee-on-transfer (RFOT 1%): stated 2, recorded gross 1.98 (received delta), fee 0.099; Dev Fund got 0.09801 (short 0.00099); lock kept 1.881 = principal (solvent); release delivered 1.86219 of 1.881. Losses fall on the Dev Fund and the user, not the lock.",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:240-247",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:219-226"
+   ],
+   "description": "Received-delta accounting is correct for the lock; the outbound fee and release transfers lose the token's own fee.",
+   "evidence": "eth_fork_tokens.test.cjs RFOT, fot/RigFeeOnTransfer.sol",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "latent",
+   "live_note": "No registered token charges a transfer fee today; PAXG and USDT have fee switches set to zero. Live if either switch is turned on.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-008",
+   "rig": "2",
+   "severity": "LOW-MEDIUM",
+   "class": [
+    "CONFIRMED VULNERABILITY"
+   ],
+   "damage_potential": "USDT approve over a nonzero allowance reverts, so a second USDT lock from the app fails until the allowance is reset. Contract-side USDT (no-bool return) works: fee 250, release 4750.",
+   "file_line": [
+    "app/base44-lock-2026-10-13/src/pages/Lock.jsx:171",
+    "app/base44-lock-2026-10-12/src/pages/Lock.jsx:171"
+   ],
+   "description": "App calls approve(lock, amount) with no approve(0) reset.",
+   "evidence": "eth_fork_tokens.test.cjs USDT",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "Both Base44 lock app copies on main call approve without a reset (USDT is registered).",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": true,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-009",
+   "rig": "2",
+   "severity": "LOW",
+   "class": [
+    "UNVERIFIED ASSUMPTION"
+   ],
+   "damage_potential": "The lock prices the Handshake band and standard minimum from a caller-supplied verifiedGrossUsd; the lock itself does not verify it. Safe only if every mint path re-derives USD.",
+   "file_line": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:356",
+    "base-contracts/contracts/CommitmentVaultLock.sol:364",
+    "base-contracts/contracts/CommitmentVaultLock.sol:368",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:335",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:343",
+    "base-contracts/contracts/BaseCommitmentVaultLock.sol:347"
+   ],
+   "description": "verifiedGrossUsd is an input, not a verified value.",
+   "evidence": "reconciliation lock sims accept any band-conforming value",
+   "rev_conflict": "Rev 12 Handshake $0.01 to $0.02",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "Same lock code live.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": true,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-010",
+   "rig": "4",
+   "severity": "LOW",
+   "class": [
+    "UNVERIFIED ASSUMPTION"
+   ],
+   "damage_potential": "A mint is accepted after the lock was released; whether this is allowed by design is not stated in the code.",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol"
+   ],
+   "description": "Mint after release.",
+   "evidence": "invariants run",
+   "rev_conflict": "Rev 6 (unclear)",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "Same code live; whether allowed by design is unverified.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": true,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-011",
+   "rig": "1",
+   "severity": "INFO",
+   "class": [
+    "INCOMPLETE TESTING"
+   ],
+   "damage_potential": "All 61 files completed only across one per-file run plus three reruns of OOM-killed files (783 passing, 0 failing vs 779 expected, +4 untraced). No single-process full-suite run completed on the shared box.",
+   "file_line": [
+    "testing-rigs/baseline/logs/hardhat_files.log",
+    "testing-rigs/baseline/logs/rerun_killed.log"
+   ],
+   "description": "Baseline completeness caveat.",
+   "evidence": "EXIT 137",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "n/a",
+   "live_note": "Testing gap, not a contract state.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": true
+   }
+  },
+  {
+   "id": "HH-012",
+   "rig": "2",
+   "severity": "INFO",
+   "class": [
+    "INCOMPLETE TESTING"
+   ],
+   "damage_potential": "Ethereum lock to VCLM mint not exercised on the fork: EDR does not serve eth_getProof after local state changes.",
+   "file_line": [
+    "testing-rigs/fork-integration/eth_fork_tokens.test.cjs"
+   ],
+   "description": "Gated behind RIG_ETH_MINT.",
+   "evidence": "eth_fork_run.log",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "n/a",
+   "live_note": "Testing gap.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": true
+   }
+  },
+  {
+   "id": "HH-013",
+   "rig": "2",
+   "severity": "INFO",
+   "class": [
+    "INCOMPLETE TESTING",
+    "SPEC CONFLICT"
+   ],
+   "damage_potential": "cbETH on Base not exercised: the Chainlink feed label is 'CBETH / USD' while the registry expects 'cbETH / USD'. Rig fails closed. If the live path also compares labels exactly, cbETH locks cannot mint.",
+   "file_line": [
+    "testing-rigs/fork-integration/base_fork_stack.test.cjs"
+   ],
+   "description": "Feed label case mismatch.",
+   "evidence": "base_fork_run.log pending test",
+   "rev_conflict": "Rev 6 registry",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "CBETH is a registered Base asset; a fail-closed label check would block cbETH locks on live too (not exercised).",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": true,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": true
+   }
+  },
+  {
+   "id": "HH-014",
+   "rig": "2,10",
+   "severity": "INFO",
+   "class": [
+    "INCOMPLETE TESTING"
+   ],
+   "damage_potential": "Solana has no registered reader on the live Verifier (by design for this ceremony); Solana locks cannot mint and were not tested.",
+   "file_line": [
+    "base-contracts/scripts/deploy-pages/ceremony-data.json"
+   ],
+   "description": "chainVerifiers(Solana) = 0.",
+   "evidence": "reconciliation readers checks",
+   "rev_conflict": "none",
+   "fixed": false,
+   "live_or_latent": "live",
+   "live_note": "chainVerifiers(Solana) reads zero on the live Verifier.",
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": false,
+    "INCOMPLETE TESTING": true
+   }
+  },
+  {
+   "id": "HH-016",
+   "rig": "10",
+   "severity": "INFO",
+   "class": [
+    "UNVERIFIED ASSUMPTION"
+   ],
+   "live_or_latent": "n/a",
+   "damage_potential": "None found. Operator nonces 676 and 677 (Oct 22) ran a price run and finalize on the retired Oct 21 Verifier 0x3bce..9381 before the live ceremony (nonces 678 to 749). No live contract references the retired set (every reference reconciles to the intended address).",
+   "file_line": [
+    "deployment/BASE44_LIVE_CONFIG_2026-10-22.md:60"
+   ],
+   "description": "Pre-ceremony operator transactions to the retired Verifier.",
+   "evidence": "reconciliation_live.json preCeremonyTxs",
+   "rev_conflict": "none",
+   "fixed": false,
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": false,
+    "UNVERIFIED ASSUMPTION": true,
+    "INCOMPLETE TESTING": false
+   }
+  },
+  {
+   "id": "HH-015",
+   "rig": "10",
+   "severity": "INFO",
+   "class": [
+    "UNVERIFIED ASSUMPTION",
+    "SPEC CONFLICT"
+   ],
+   "live_or_latent": "live",
+   "damage_potential": "The addendum asks that after finalize every non-view function reverts or is the poster path. On live, user paths stay open by design (lock, release, verifyAndMint, recordFeeAndRac, Stake and Synth user calls, token transfers). recordFeeAndRac is the HH-001 path, so an open user path is where the critical bug lives. The user/config split in WRITE_CLASS is the rig's judgement, not a spec table.",
+   "file_line": [
+    "testing-rigs/reconciliation/reconcile.cjs (WRITE_CLASS)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654"
+   ],
+   "description": "Closed-path rule cannot hold literally; user paths classified open by design.",
+   "evidence": "reconciliation_live.json area closed (71 checks)",
+   "rev_conflict": "Rev 6 (no spec list of post-finalize open functions)",
+   "fixed": false,
+   "classes_all": {
+    "CONFIRMED VULNERABILITY": false,
+    "SPEC CONFLICT": true,
+    "UNVERIFIED ASSUMPTION": true,
+    "INCOMPLETE TESTING": false
+   }
+  }
+ ]
+}
