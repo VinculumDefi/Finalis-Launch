@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Rig 3 property tests that are EXPECTED TO FAIL on b0e38a9. Each one states
-// a property the Rev 6 text implies and lets the fuzzer find a breaking
-// input. A failure here is a finding, recorded with its counterexample in
-// testing-rigs/fuzzing/results. Nothing here fixes production code.
+// Rig 3 property tests for findings FZ-01, FZ-01b, FZ-02 and FZ-05. These
+// failed on b0e38a9 (each pinned a finding). Converted 2026-10-23 after the
+// batch fix: each now asserts the fixed, safe behavior and must pass.
 pragma solidity 0.8.19;
 
 import {Fixture} from "./Fixture.sol";
@@ -15,9 +14,9 @@ contract FuzzFindings is Fixture {
         _deployStack(true);
     }
 
-    /// FZ-01. One real lock must yield at most one RAC credit (VF-RAC-001
-    /// "exact-once" per lock). Property: after one recordFeeAndRac for a lock,
-    /// a second call for the SAME lock with any other racIdentity reverts.
+    /// FZ-01 SAFE (AG-04). One real lock yields at most one RAC credit. A
+    /// second call for the SAME lock with any other racIdentity is refused
+    /// and the epoch reward basis does not change.
     function testFuzz_PROP_oneRacPerLock(uint256 gross, bytes32 rac2) public {
         gross = bound(gross, 0.001 ether, 100 ether);
         bytes32 rac1 = keccak256("rac-1");
@@ -26,16 +25,14 @@ contract FuzzFindings is Fixture {
         _openNative(id, gross, 31536000, 0);
         verifier.recordFeeAndRac(_pkg(id, gross, 31536000, 0, rac1, block.timestamp));
         uint256 basisAfterOne = verifier.epochRewardBasis(verifier.currentEpoch());
-        try verifier.recordFeeAndRac(_pkg(id, gross, 31536000, 0, rac2, block.timestamp)) {
-            uint256 basisAfterTwo = verifier.epochRewardBasis(verifier.currentEpoch());
-            emit log_named_uint("basis after first credit", basisAfterOne);
-            emit log_named_uint("basis after second credit, same lock", basisAfterTwo);
-            fail();
-        } catch {}
+        ProofPackage memory p2 = _pkg(id, gross, 31536000, 0, rac2, block.timestamp);
+        vm.expectRevert(bytes("VF-RAC-001: RAC already recorded"));
+        verifier.recordFeeAndRac(p2);
+        assertEq(verifier.epochRewardBasis(verifier.currentEpoch()), basisAfterOne);
     }
 
-    /// FZ-01b. Same class after the lock has already minted: the RAC path
-    /// never checks consumedLocks, so credit keeps growing after the mint.
+    /// FZ-01b SAFE (AG-04). After the lock has minted, every further RAC
+    /// attempt is refused and the reward basis stays the same.
     function testFuzz_PROP_noRacAfterMint(uint256 gross, uint8 extra) public {
         gross = bound(gross, 0.001 ether, 100 ether);
         uint256 n = bound(extra, 1, 20);
@@ -46,14 +43,17 @@ contract FuzzFindings is Fixture {
         uint256 e = verifier.currentEpoch();
         uint256 basis1 = verifier.epochRewardBasis(e);
         for (uint256 i = 0; i < n; i++) {
-            try verifier.recordFeeAndRac(_pkg(id, gross, 31536000, 0, bytes32(uint256(100 + i)), block.timestamp)) {} catch {}
+            ProofPackage memory q = _pkg(id, gross, 31536000, 0, bytes32(uint256(100 + i)), block.timestamp);
+            vm.expectRevert(bytes("VF-RAC-001: RAC already recorded"));
+            verifier.recordFeeAndRac(q);
         }
         assertEq(verifier.epochRewardBasis(e), basis1, "reward basis grew after the lock was consumed");
     }
 
-    /// FZ-02. Emission decay must follow the lock's own creation time (Rev 6:
-    /// the Valuation Timestamp is the source block time). Property: the
-    /// minted amount does not depend on the caller-chosen valuationTimestamp.
+    /// FZ-02 SAFE (AG-05). Emission decay follows the lock's own creation
+    /// time. A package whose valuationTimestamp differs from the proven
+    /// creation time is refused (VF-ORC-011); the honest package mints
+    /// exactly the reference amount for the lock's own age.
     function testFuzz_PROP_issuanceIndependentOfCallerValuationTs(uint256 gross, uint256 ageDays, uint256 claimedTs)
         public
     {
@@ -65,30 +65,35 @@ contract FuzzFindings is Fixture {
         bytes32 id = keccak256(abi.encode("lock-FZ02", gross, ageDays));
         _openNative(id, gross, 31536000, 0);
         claimedTs = bound(claimedTs, 0, block.timestamp);
-        ProofPackage memory p = _pkg(id, gross, 31536000, 0, id, claimedTs);
+        if (claimedTs != block.timestamp) {
+            ProofPackage memory bad = _pkg(id, gross, 31536000, 0, id, claimedTs);
+            vm.expectRevert(bytes("VF-ORC-011: valuation timestamp != proven lock creation time"));
+            verifier.recordFeeAndRac(bad);
+        }
+        ProofPackage memory p = _pkg(id, gross, 31536000, 0, id, block.timestamp);
         verifier.recordFeeAndRac(p);
         uint256 before = vclm.balanceOf(recipient);
         verifier.verifyAndMint(p, 0);
         uint256 minted = vclm.balanceOf(recipient) - before;
         uint256 usd = (gross * ETH_PRICE) / 1e18;
-        uint256 honest = _refIssuance(usd, 0, 2, 25000, ageDays);
-        assertEq(minted, honest, "issuance follows caller-supplied valuationTimestamp, not lock creation");
+        uint256 ageNow = (block.timestamp - launch) / 1 days;
+        uint256 honest = _refIssuance(usd, 0, 2, 25000, ageNow);
+        assertEq(minted, honest, "issuance must follow the lock creation time");
     }
 
-    /// FZ-05 (shape only, not a fuzz-found bug). Demonstrates the class fuzzing
-    /// cannot reach: a self-made, well-formed 20-field post-merge header with its own
-    /// hash claimed passes SimpleEthereumLockReader.verifyFinality. Random
-    /// bytes never get here; a crafted input does at once. Recorded so the
-    /// limit of this rig is explicit. Belongs to the adversarial tier.
-    function testFuzz_SHAPE_selfMadeHeaderPassesFinality(bytes32 stateRoot, bytes32 receiptsRoot, uint64 number)
+    /// FZ-05 SAFE (AG-01). A self-made, well-formed 20-field post-merge
+    /// header is refused: the production Ethereum reader has no on-chain
+    /// settled-history anchor, so it fails closed for every input.
+    function testFuzz_SAFE_selfMadeHeaderRefused(bytes32 stateRoot, bytes32 receiptsRoot, uint64 number)
         public
     {
         vm.assume(stateRoot != 0 && receiptsRoot != 0 && number != 0);
         SimpleEthereumLockReader r = new SimpleEthereumLockReader(address(lock));
         bytes memory h = _header(stateRoot, receiptsRoot, number);
-        (bool ok,, uint256 height) = r.verifyFinality(_evmProof(h), abi.encode(uint256(1), keccak256(h), uint256(number)));
-        assertTrue(ok);
-        assertEq(height, number);
+        bytes memory lep = _evmProof(h);
+        bytes memory fin = abi.encode(uint256(1), keccak256(h), uint256(number));
+        vm.expectRevert(bytes("VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled"));
+        r.verifyFinality(lep, fin);
     }
 
     // ---- minimal RLP builder for the shape test ----
