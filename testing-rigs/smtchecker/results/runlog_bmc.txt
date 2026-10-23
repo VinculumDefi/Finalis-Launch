@@ -1,0 +1,2 @@
+bmc_token exit=0 seconds=0 happens=4 might=0 solver_errors=0
+bmc_synth exit=0 seconds=1 happens=5 might=0 solver_errors=0
