@@ -37,7 +37,9 @@ describe("Rig 2: Ethereum mainnet fork, real tokens through the real ceremony st
   this.timeout(3600000);
   let S, user, user2, dest, dest2, recipient, lock, price = {};
   const env = "Ethereum";
-  const row = (sym) => C.entry(env, sym);
+  // RFOT (rig-only fee-on-transfer token) borrows the PAXG row for the lock's
+  // asset identity and USD band; it is never minted against.
+  const row = (sym) => C.entry(env, sym === "RFOT" ? "PAXG" : sym);
 
   before(async () => {
     const net = await ethers.provider.getNetwork();
@@ -184,12 +186,38 @@ describe("Rig 2: Ethereum mainnet fork, real tokens through the real ceremony st
     const tax = r.out.stated - r.out.gross;
     console.log("      PAXG transfer fee on the lock deposit:", fmt(tax), "PAXG; Dev Fund short by", fmt(r.out.fee - r.out.devGot), "PAXG");
     expect(r.out.gross).to.equal(r.out.lockGot + r.out.fee); // lock kept received - fee
-    expect(r.out.gross).to.be.lt(r.out.stated); // the real token fee was taken
+    // Real PAXG at this fork block took no transfer fee (its fee getters
+    // revert on the current implementation). Recorded as observed; the
+    // fee-on-transfer accounting itself is measured with RFOT below.
+    results.PAXG_fee_observed = String(tax);
+    expect(r.out.userPaid).to.equal(r.out.gross + tax);
     expect(r.out.fee).to.equal((r.out.gross * 500n) / 10000n);
     await C.advance(Number(DAY7) + 1);
     const rel = await release("PAXG", r.lockId, dest);
     console.log("      PAXG release:", rel.ok ? "ok, destination got " + fmt(rel.got) + " of principal " + fmt(r.out.principal) : rel.reason);
     results.PAXG = { tax, devShort: r.out.fee - r.out.devGot, ...r.out, release: rel };
+  });
+
+  it("fee-on-transfer (rig RFOT, 1% per transfer, local only): gross = received delta; Dev Fund and release each lose the token's own fee", async () => {
+    const A = require("./fot/RigFeeOnTransfer.json");
+    const F = await new ethers.ContractFactory(A.abi, A.bytecode, user).deploy();
+    T.RFOT = await F.getAddress();
+    price.RFOT = price.PAXG;
+    if (!price.RFOT) return; // no PAXG price: fail closed, no USD band
+    await (await F.mint(user.address, 10n * SCALE)).wait();
+    await (await F.approve(await lock.getAddress(), 2n * SCALE)).wait();
+    const r = await lockAndMint("RFOT", user, dest, 2n * SCALE);
+    show("RFOT", r.out, 18);
+    const tax = r.out.stated - r.out.gross;
+    const devShort = r.out.fee - r.out.devGot;
+    console.log("      RFOT transfer fee on the deposit:", fmt(tax), "; Dev Fund got", fmt(r.out.devGot), "of recorded fee", fmt(r.out.fee), "(short", fmt(devShort) + ")");
+    expect(r.out.userPaid).to.equal(r.out.stated);
+    expect(r.out.gross).to.equal((r.out.stated * 9900n) / 10000n); // gross = what the lock received
+    expect(r.out.fee).to.equal((r.out.gross * 500n) / 10000n);
+    await C.advance(Number(DAY7) + 1);
+    const rel = await release("RFOT", r.lockId, dest);
+    console.log("      RFOT release:", rel.ok ? "ok, destination got " + fmt(rel.got) + " of recorded principal " + fmt(r.out.principal) : rel.reason);
+    results.RFOT = { tax, devShort, ...r.out, release: rel };
   });
 
   it("stETH (real share rounding): delta accounting and whether a single lock can release its recorded principal", async () => {
