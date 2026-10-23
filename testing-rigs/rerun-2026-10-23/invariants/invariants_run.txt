@@ -1,0 +1,28 @@
+
+
+  Rig 4: invariants on the real ceremony stack (property tests)
+      seed 20261023 steps 60; Verifier 0x2279...eBe6, Base lock 0xB7f8...4F5e
+      action counts {"crossEnv":6,"baseEth":7,"ethEnv":5,"replay":5,"chonxEarly":6,"unauthMint":4,"transfer":4,"forge":8,"whale":4,"baseUsdc":5,"burn":6}
+      lifetime VCLM 35207018.3893 CHONX 112367920.0 SYNTH 5.0 CHONX active true
+    ✔ random sequence: INV-1, INV-2, INV-3, INV-5, INV-6 hold after every step (1154ms)
+    ✔ INV-5: CHONX opens exactly at the 10M lifetime VCLM threshold; SYNTH opens at 100M lifetime CHONX
+      0 CHONX locks to reach 112367920.0 lifetime CHONX; forged 3 SYNTH for 3,000 VCLM + 30,000 CHONX
+    ✔ INV-5: SYNTH stays closed below 100M lifetime CHONX, then forge burns exactly 1,000 VCLM + 10,000 CHONX per SYNTH
+      USDC_BASE 4762.0 at $0.95 minted 45239.0 VCLM (USD basis 4523.9)
+    ✔ INV-7: $0.95 USDC rule. Below 0.95 refused for a new valuation at every duration; 0.95 accepted; never $1 substituted (471ms)
+    ✔ INV-3: replay across the same lock, chains and readers is refused (Base lock as Ethereum, Ethereum lock as Base)
+      5 Ethereum-environment locks, all refused; 0 Ethereum mints
+    ✔ HH-003 SAFE: INV-4 no VCLM mint rests on an unanchored non-Base header; every Ethereum-environment lock is refused
+    ✔ HH-001 SAFE: INV-8 at most one Reward-Accounting Credit per lock (fresh racIdentity refused)
+    ✔ HH-002 SAFE: INV-9 emission rate follows the lock's own creation time (backdated package refused) (46ms)
+      lock 0x611a86e0: 25 extra RAC attempts refused; epoch 42 basis stays 88.473285 USD
+    ✔ HH-001 SAFE: one real settled lock, 25 fresh racIdentity values from a stranger, all refused; reward basis unchanged (156ms)
+      1 ETH 7d: honest 19797.481414676935762183 VCLM; backdated refused; honest resubmission 19797.481414676935762183 VCLM
+    ✔ HH-002 SAFE: valuationTimestamp 0 is refused after decay; the honest package for the same lock mints the honest amount (40ms)
+      RAC credit 71.9295 USD vs 71.9295 at the creation-time price
+    ✔ HH-004 SAFE: price binds at lock creation; a later price run and a stranger's first RAC do not change it
+      mints: 17 (Base 17, Ethereum 0)
+
+
+  11 passing (3s)
+
