@@ -1,0 +1,30 @@
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/IssuanceMath.sol:41:25:
+   |
+41 |         uint256 step = (verifiedGrossUsdMicro * emissionRate) / SCALE;
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/IssuanceMath.sol:48:17:
+   |
+48 |         step = (step * assetMultFp) / SCALE;
+   |                 ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/IssuanceMath.sol:54:17:
+   |
+54 |         step = (step * durMultFp) / SCALE;
+   |                 ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/IssuanceMath.sol:84:9:
+   |
+84 |         assert(_computeIssuance(u1, out, cls, dur, 0) <= _computeIssuance(u2, out, cls, dur, 0));
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+  --> workspace/rigs/static/testing-rigs/smtchecker/harness/IssuanceMath.sol:91:9:
+   |
+91 |         assert(_computeIssuance(usd, out, cls, dur, 0) <= (usd * rate / SCALE) * 12);
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
