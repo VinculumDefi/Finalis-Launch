@@ -15,7 +15,7 @@
       "filename": "baseCeremonyFlow.js",
       "path": "scripts/deploy-pages/baseCeremonyFlow.js",
       "revisionLabel": "Revision B ceremony flow",
-      "sha256": "6bdfdc8053cd3260b1a9b14c7057923cf87936e0d93d3e7a197c350559e02f3d",
+      "sha256": "a0feb3920b6ede50afb646896bf73d51840ff6ecba0befa25553e0c01f00b6c2",
       "rowCount": null
     },
     {
@@ -76,18 +76,18 @@
   "nonBaseLock": {
     "contract": "CommitmentVaultLock",
     "note": "Main 5% lock expected on the six non-Base EVM chains. The retired f9e4d8c bytecode at 0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A (HANDSHAKE_FEE_BPS=250) and 0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a must be refused.",
-    "expectedRuntimeHash": "0x07b599f652faf1dc71881209566f73e8fff4762486e6dbe9ff95060fe49c8594",
+    "expectedRuntimeHash": "0x7ee4878767cfdea969c49e503eea1e82ff0d2a681a79aeaaf25b705ecd3db4b7",
     "immutableRanges": [
       [
-        2483,
+        2626,
         32
       ],
       [
-        4258,
+        4780,
         32
       ],
       [
-        5105,
+        5192,
         32
       ]
     ],
