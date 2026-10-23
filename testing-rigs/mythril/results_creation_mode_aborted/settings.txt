@@ -1,0 +1,5 @@
+mythril: Mythril version v0.24.8
+solc: Version: 0.8.19+commit.7dd6d404.Linux.g++
+solc settings: {"optimizer":{"enabled":true,"runs":200},"viaIR":true,"evmVersion":"paris"}
+execution-timeout=300s create-timeout=60s transaction-count=2 max-depth=128 solver-timeout=20000ms parallel=3
+started: 2026-10-23T06:21:02-04:00
