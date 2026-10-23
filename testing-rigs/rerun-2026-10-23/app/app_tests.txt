@@ -2,436 +2,461 @@ TAP version 13
 # Subtest: allowlist equals Revision B exactly (487 entries: 475 tokens + 12 natives, 3 native links, nothing excluded)
 ok 1 - allowlist equals Revision B exactly (487 entries: 475 tokens + 12 natives, 3 native links, nothing excluded)
   ---
-  duration_ms: 26.620542
+  duration_ms: 26.267288
   type: 'test'
   ...
 # Subtest: the committed allowlist is exactly what the builder produces from revB.json + today's verification
 ok 2 - the committed allowlist is exactly what the builder produces from revB.json + today's verification
   ---
-  duration_ms: 60.998412
+  duration_ms: 58.105908
   type: 'test'
   ...
 # Subtest: a Revision B token is shown (Ethereum USDC row 1), matched by chain + address in any case
 ok 3 - a Revision B token is shown (Ethereum USDC row 1), matched by chain + address in any case
   ---
-  duration_ms: 0.48585
+  duration_ms: 0.579294
   type: 'test'
   ...
 # Subtest: BAR row 77 (symbol-failure), [name withheld] row 138, [name withheld] 999, [name withheld] 1000 are hidden
 ok 4 - BAR row 77 (symbol-failure), [name withheld] row 138, [name withheld] 999, [name withheld] 1000 are hidden
   ---
-  duration_ms: 0.321855
+  duration_ms: 0.349559
   type: 'test'
   ...
 # Subtest: mislabelled row 152 ACM on MKR's address is hidden; MKR row 32 itself is shown; an alias row on a shown address is hidden
 ok 5 - mislabelled row 152 ACM on MKR's address is hidden; MKR row 32 itself is shown; an alias row on a shown address is hidden
   ---
-  duration_ms: 0.209393
+  duration_ms: 0.170337
   type: 'test'
   ...
 # Subtest: Solana rows are hidden (token and native), and the Solana picker offers nothing
 ok 6 - Solana rows are hidden (token and native), and the Solana picker offers nothing
   ---
-  duration_ms: 0.349813
+  duration_ms: 0.250047
   type: 'test'
   ...
 # Subtest: a ticker-only match is hidden: no identifier, or a Revision B ticker on an address that is not its own
 ok 7 - a ticker-only match is hidden: no identifier, or a Revision B ticker on an address that is not its own
   ---
-  duration_ms: 0.265821
+  duration_ms: 0.200523
   type: 'test'
   ...
 # Subtest: natives on Revision B are shown; Cosmos ATOM (not on Revision B) is hidden
 ok 8 - natives on Revision B are shown; Cosmos ATOM (not on Revision B) is hidden
   ---
-  duration_ms: 0.388769
+  duration_ms: 0.265042
   type: 'test'
   ...
 # Subtest: other entry paths refuse non-allowlisted assets: lock preflight, proof packages, manual addresses, environment pickers
 ok 9 - other entry paths refuse non-allowlisted assets: lock preflight, proof packages, manual addresses, environment pickers
   ---
-  duration_ms: 1.693025
+  duration_ms: 1.610982
   type: 'test'
   ...
 # Subtest: latest claimable epoch and eligibility helpers match the contract rules
 ok 10 - latest claimable epoch and eligibility helpers match the contract rules
   ---
-  duration_ms: 1.933136
+  duration_ms: 1.892026
   type: 'test'
   ...
 # Subtest: claim all in batches under the limit, stop after transaction 1, resume, exact total, no double pay
 ok 11 - claim all in batches under the limit, stop after transaction 1, resume, exact total, no double pay
   ---
-  duration_ms: 34.752269
+  duration_ms: 23.639819
   type: 'test'
   ...
 # Subtest: a non-rejection failure stops with status error and leaves everything claimable
 ok 12 - a non-rejection failure stops with status error and leaves everything claimable
   ---
-  duration_ms: 4.066456
+  duration_ms: 3.878781
   type: 'test'
   ...
 # Subtest: t277u: displayed amount is computed per epoch, equals the view at every read group, and a mismatch blocks the claim
 ok 13 - t277u: displayed amount is computed per epoch, equals the view at every read group, and a mismatch blocks the claim
   ---
-  duration_ms: 18.427565
+  duration_ms: 12.475974
   type: 'test'
   ...
 # Subtest: 16 environments, none of them Cosmos
 ok 14 - 16 environments, none of them Cosmos
   ---
-  duration_ms: 2.122793
+  duration_ms: 2.309051
   type: 'test'
   ...
 # Subtest: no Cosmos normalizer or mock event builder
 ok 15 - no Cosmos normalizer or mock event builder
   ---
-  duration_ms: 0.292387
+  duration_ms: 0.124867
   type: 'test'
   ...
 # Subtest: Cosmos page, route, candidate data and proof adapter are removed
 ok 16 - Cosmos page, route, candidate data and proof adapter are removed
   ---
-  duration_ms: 1.886892
+  duration_ms: 0.321062
   type: 'test'
   ...
 # Subtest: no app source file references Cosmos, ATOM or uatom
 ok 17 - no app source file references Cosmos, ATOM or uatom
   ---
-  duration_ms: 24.677798
+  duration_ms: 9.364357
   type: 'test'
   ...
 # Subtest: app/base44-lock-2026-10-12: smaller nonzero allowance is reset to 0, then approved (HH-008 safe)
 ok 18 - app/base44-lock-2026-10-12: smaller nonzero allowance is reset to 0, then approved (HH-008 safe)
   ---
-  duration_ms: 5.552823
+  duration_ms: 3.485623
   type: 'test'
   ...
 # Subtest: app/base44-lock-2026-10-12: zero allowance approves once, no reset
 ok 19 - app/base44-lock-2026-10-12: zero allowance approves once, no reset
   ---
-  duration_ms: 0.403292
+  duration_ms: 0.35983
   type: 'test'
   ...
 # Subtest: app/base44-lock-2026-10-12: enough allowance sends no approve
 ok 20 - app/base44-lock-2026-10-12: enough allowance sends no approve
   ---
-  duration_ms: 0.315699
+  duration_ms: 0.281064
   type: 'test'
   ...
 # Subtest: app/base44-lock-2026-10-13: smaller nonzero allowance is reset to 0, then approved (HH-008 safe)
 ok 21 - app/base44-lock-2026-10-13: smaller nonzero allowance is reset to 0, then approved (HH-008 safe)
   ---
-  duration_ms: 3.83119
+  duration_ms: 0.243555
   type: 'test'
   ...
 # Subtest: app/base44-lock-2026-10-13: zero allowance approves once, no reset
 ok 22 - app/base44-lock-2026-10-13: zero allowance approves once, no reset
   ---
-  duration_ms: 0.379945
+  duration_ms: 0.264516
   type: 'test'
   ...
 # Subtest: app/base44-lock-2026-10-13: enough allowance sends no approve
 ok 23 - app/base44-lock-2026-10-13: enough allowance sends no approve
   ---
-  duration_ms: 0.245535
+  duration_ms: 0.157133
   type: 'test'
   ...
 # Subtest: LIVE_RULES equal the constants in CommitmentVaultLock.sol and VinculumFinalisVerifier.sol
 ok 24 - LIVE_RULES equal the constants in CommitmentVaultLock.sol and VinculumFinalisVerifier.sol
   ---
-  duration_ms: 6.495935
+  duration_ms: 7.127074
   type: 'test'
   ...
 # Subtest: the Revision 6 record is unchanged (historical)
 ok 25 - the Revision 6 record is unchanged (historical)
   ---
-  duration_ms: 0.140531
+  duration_ms: 0.130151
   type: 'test'
   ...
 # Subtest: no live code path reads the stale Revision 6 Handshake band, Handshake fee or $10 minimum
 ok 26 - no live code path reads the stale Revision 6 Handshake band, Handshake fee or $10 minimum
   ---
-  duration_ms: 8.268393
+  duration_ms: 6.053935
   type: 'test'
   ...
 # Subtest: verifier engine: 5% fee on the Handshake, 2.5% refused; $0.01 standard minimum
 ok 27 - verifier engine: 5% fee on the Handshake, 2.5% refused; $0.01 standard minimum
   ---
-  duration_ms: 0.95711
+  duration_ms: 0.840142
   type: 'test'
   ...
 # Subtest: XRPL practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
 ok 28 - XRPL practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
   ---
-  duration_ms: 1.308495
+  duration_ms: 1.427243
   type: 'test'
   ...
 # Subtest: Solana practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
 ok 29 - Solana practice engine: Handshake $0.01 to $0.02 and fee 5%; standard minimum $0.01
   ---
-  duration_ms: 1.192299
+  duration_ms: 0.878363
   type: 'test'
   ...
 # Subtest: XRPL practice engine accepts a $0.015 XRP Handshake end to end
 ok 30 - XRPL practice engine accepts a $0.015 XRP Handshake end to end
   ---
-  duration_ms: 0.339557
+  duration_ms: 0.335228
   type: 'test'
   ...
 # Subtest: simulator Dev Funds equal the live Dev Funds the contracts are deployed with
 ok 31 - simulator Dev Funds equal the live Dev Funds the contracts are deployed with
   ---
-  duration_ms: 2.455494
+  duration_ms: 3.326285
   type: 'test'
   ...
 # Subtest: scope: Solana is the one environment not in this deployment
 ok 32 - scope: Solana is the one environment not in this deployment
   ---
-  duration_ms: 1.356577
+  duration_ms: 1.567757
   type: 'test'
   ...
 # Subtest: Solana lock engine refuses every request (fail closed)
 ok 33 - Solana lock engine refuses every request (fail closed)
   ---
-  duration_ms: 1.163164
+  duration_ms: 0.817784
   type: 'test'
   ...
 # Subtest: Solana mock adapter refuses to submit and records nothing as pending
 ok 34 - Solana mock adapter refuses to submit and records nothing as pending
   ---
-  duration_ms: 13.286972
+  duration_ms: 0.590995
   type: 'test'
   ...
-# Subtest: Solana instruction builder refuses; program constants unchanged
-ok 35 - Solana instruction builder refuses; program constants unchanged
+# Subtest: Solana instruction builder refuses; program id and seeds unchanged
+ok 35 - Solana instruction builder refuses; program id and seeds unchanged
   ---
-  duration_ms: 0.390695
+  duration_ms: 0.273061
   type: 'test'
   ...
 # Subtest: Solana page says it is not part of this deployment and cannot submit
 ok 36 - Solana page says it is not part of this deployment and cannot submit
   ---
-  duration_ms: 0.215374
+  duration_ms: 0.150222
   type: 'test'
   ...
 # Subtest: no chain list for new locks offers Solana
 ok 37 - no chain list for new locks offers Solana
   ---
-  duration_ms: 0.433136
+  duration_ms: 0.325528
+  type: 'test'
+  ...
+# bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+# Subtest: constants.rs carries the Rev 12 Handshake values
+ok 38 - constants.rs carries the Rev 12 Handshake values
+  ---
+  duration_ms: 0.950915
+  type: 'test'
+  ...
+# Subtest: vfSolanaProgram.js mirrors constants.rs (no Revision 6 band, fee or minimum)
+ok 39 - vfSolanaProgram.js mirrors constants.rs (no Revision 6 band, fee or minimum)
+  ---
+  duration_ms: 0.210557
+  type: 'test'
+  ...
+# Subtest: off-chain fee: the Handshake pays 5%, the same as every other duration
+ok 40 - off-chain fee: the Handshake pays 5%, the same as every other duration
+  ---
+  duration_ms: 0.181616
+  type: 'test'
+  ...
+# Subtest: the program no longer refuses a Handshake for an exhausted allowance
+ok 41 - the program no longer refuses a Handshake for an exhausted allowance
+  ---
+  duration_ms: 0.469829
   type: 'test'
   ...
 # Subtest: multipliers: tokens 1x/2x/4x, durations 1.00x/1.40x/1.75x/2.10x
-ok 38 - multipliers: tokens 1x/2x/4x, durations 1.00x/1.40x/1.75x/2.10x
+ok 42 - multipliers: tokens 1x/2x/4x, durations 1.00x/1.40x/1.75x/2.10x
   ---
-  duration_ms: 1.512985
+  duration_ms: 1.551539
   type: 'test'
   ...
 # Subtest: per-position claim: floor(minted x weight / total) per epoch, 120 days = 2.10x
-ok 39 - per-position claim: floor(minted x weight / total) per epoch, 120 days = 2.10x
+ok 43 - per-position claim: floor(minted x weight / total) per epoch, 120 days = 2.10x
   ---
-  duration_ms: 2.160235
+  duration_ms: 1.812954
   type: 'test'
   ...
 # Subtest: refusals carry the contract revert text
-ok 40 - refusals carry the contract revert text
+ok 44 - refusals carry the contract revert text
   ---
-  duration_ms: 0.261425
+  duration_ms: 0.235256
   type: 'test'
   ...
 # Subtest: t270u(g): allocation in strict epoch order; zero-RAC, zero-weight and cap-skipped epochs count, no deadlock
-ok 41 - t270u(g): allocation in strict epoch order; zero-RAC, zero-weight and cap-skipped epochs count, no deadlock
+ok 45 - t270u(g): allocation in strict epoch order; zero-RAC, zero-weight and cap-skipped epochs count, no deadlock
   ---
-  duration_ms: 0.349792
+  duration_ms: 0.291375
   type: 'test'
   ...
 # Subtest: band equals the Revision B verifier constants and lock.py HANDSHAKE_UNIT_BAND
-ok 42 - band equals the Revision B verifier constants and lock.py HANDSHAKE_UNIT_BAND
+ok 46 - band equals the Revision B verifier constants and lock.py HANDSHAKE_UNIT_BAND
   ---
-  duration_ms: 2.633976
+  duration_ms: 4.230595
   type: 'test'
   ...
 # Subtest: min and max accepted with an exact 5% fee at or above dust; min-1 and max+1 refused; no price needed
-ok 43 - min and max accepted with an exact 5% fee at or above dust; min-1 and max+1 refused; no price needed
+ok 47 - min and max accepted with an exact 5% fee at or above dust; min-1 and max+1 refused; no price needed
   ---
-  duration_ms: 0.588055
+  duration_ms: 0.549837
   type: 'test'
   ...
 # Subtest: isUtxoHandshake: only the three chains, only 3600 s, only the native asset
-ok 44 - isUtxoHandshake: only the three chains, only 3600 s, only the native asset
+ok 48 - isUtxoHandshake: only the three chains, only 3600 s, only the native asset
   ---
-  duration_ms: 0.150834
+  duration_ms: 0.148536
   type: 'test'
   ...
 # Subtest: practice Handshake amounts are mid-band; standard practice amounts unchanged
-ok 45 - practice Handshake amounts are mid-band; standard practice amounts unchanged
+ok 49 - practice Handshake amounts are mid-band; standard practice amounts unchanged
   ---
-  duration_ms: 0.335872
+  duration_ms: 0.311327
   type: 'test'
   ...
 # Subtest: engine: BTC/BCH/LTC Handshake uses the unit band and counts at most $0.02 for VCLM and RAC
-ok 46 - engine: BTC/BCH/LTC Handshake uses the unit band and counts at most $0.02 for VCLM and RAC
+ok 50 - engine: BTC/BCH/LTC Handshake uses the unit band and counts at most $0.02 for VCLM and RAC
   ---
-  duration_ms: 2.669759
+  duration_ms: 2.499636
   type: 'test'
   ...
 # Subtest: engine: standard locks on these chains unchanged (USD path, uncapped)
-ok 47 - engine: standard locks on these chains unchanged (USD path, uncapped)
+ok 51 - engine: standard locks on these chains unchanged (USD path, uncapped)
   ---
-  duration_ms: 0.70841
+  duration_ms: 0.640094
   type: 'test'
   ...
 # Subtest: engine: other chains keep the $0.01 to $0.02 Handshake USD band, uncapped (Ethereum, Dogecoin)
-ok 48 - engine: other chains keep the $0.01 to $0.02 Handshake USD band, uncapped (Ethereum, Dogecoin)
+ok 52 - engine: other chains keep the $0.01 to $0.02 Handshake USD band, uncapped (Ethereum, Dogecoin)
   ---
-  duration_ms: 0.590704
+  duration_ms: 0.541839
   type: 'test'
   ...
 # Subtest: user note: set coin amount, USD only from a fresh price, counted as $0.02
-ok 49 - user note: set coin amount, USD only from a fresh price, counted as $0.02
+ok 53 - user note: set coin amount, USD only from a fresh price, counted as $0.02
   ---
-  duration_ms: 16.134498
+  duration_ms: 16.645424
   type: 'test'
   ...
 # Subtest: pages: Handshakes on these chains are band-checked and show the note; no $0.95 band left in live paths
-ok 50 - pages: Handshakes on these chains are band-checked and show the note; no $0.95 band left in live paths
+ok 54 - pages: Handshakes on these chains are band-checked and show the note; no $0.95 band left in live paths
   ---
-  duration_ms: 0.96251
+  duration_ms: 1.485192
   type: 'test'
   ...
 # Subtest: minimums are $20 / $1 / $1 and apply to Bitcoin, Bitcoin Cash, Litecoin only
-ok 51 - minimums are $20 / $1 / $1 and apply to Bitcoin, Bitcoin Cash, Litecoin only
+ok 55 - minimums are $20 / $1 / $1 and apply to Bitcoin, Bitcoin Cash, Litecoin only
   ---
-  duration_ms: 1.421276
+  duration_ms: 2.070393
   type: 'test'
   ...
 # Subtest: same values as utxo-locks/lock.py (minimums, dust, 24-hour freshness)
-ok 52 - same values as utxo-locks/lock.py (minimums, dust, 24-hour freshness)
+ok 56 - same values as utxo-locks/lock.py (minimums, dust, 24-hour freshness)
   ---
-  duration_ms: 0.345139
+  duration_ms: 0.339621
   type: 'test'
   ...
 # Subtest: accept exactly at the minimum, refuse one unit below; fee exactly 5%
-ok 53 - accept exactly at the minimum, refuse one unit below; fee exactly 5%
+ok 57 - accept exactly at the minimum, refuse one unit below; fee exactly 5%
   ---
-  duration_ms: 0.520762
+  duration_ms: 0.550774
   type: 'test'
   ...
 # Subtest: fails closed without a fresh price
-ok 54 - fails closed without a fresh price
+ok 58 - fails closed without a fresh price
   ---
-  duration_ms: 0.419326
+  duration_ms: 0.402546
   type: 'test'
   ...
 # Subtest: a fetch-time stamp is not a price age; only last_updated_at / price_as_of count
-ok 55 - a fetch-time stamp is not a price age; only last_updated_at / price_as_of count
+ok 59 - a fetch-time stamp is not a price age; only last_updated_at / price_as_of count
   ---
-  duration_ms: 1.106608
+  duration_ms: 1.213497
   type: 'test'
   ...
 # Subtest: native floors match lock.py and their derivation
-ok 56 - native floors match lock.py and their derivation
+ok 60 - native floors match lock.py and their derivation
   ---
-  duration_ms: 0.424122
+  duration_ms: 0.451927
   type: 'test'
   ...
 # Subtest: effective minimum: USD minimum wins at today's price, the floor wins at high prices; at it accepted with exact 5%, one below refused
-ok 57 - effective minimum: USD minimum wins at today's price, the floor wins at high prices; at it accepted with exact 5%, one below refused
+ok 61 - effective minimum: USD minimum wins at today's price, the floor wins at high prices; at it accepted with exact 5%, one below refused
   ---
-  duration_ms: 0.382854
+  duration_ms: 0.393378
   type: 'test'
   ...
 # Subtest: never raises the fee: a price rise that would put 5% under dust is refused by the floor
-ok 58 - never raises the fee: a price rise that would put 5% under dust is refused by the floor
+ok 62 - never raises the fee: a price rise that would put 5% under dust is refused by the floor
   ---
-  duration_ms: 0.122352
+  duration_ms: 0.141611
   type: 'test'
   ...
 # Subtest: other chains are refused by this check (no minimum recorded), not silently passed
-ok 59 - other chains are refused by this check (no minimum recorded), not silently passed
+ok 63 - other chains are refused by this check (no minimum recorded), not silently passed
   ---
-  duration_ms: 0.268272
+  duration_ms: 0.27474
   type: 'test'
   ...
 # Subtest: both app pages that build Bitcoin, Bitcoin Cash, Litecoin lock events run the check
-ok 60 - both app pages that build Bitcoin, Bitcoin Cash, Litecoin lock events run the check
+ok 64 - both app pages that build Bitcoin, Bitcoin Cash, Litecoin lock events run the check
   ---
-  duration_ms: 0.5562
+  duration_ms: 0.538399
   type: 'test'
   ...
 # Subtest: practice lock amounts clear the minimum with margin (BCH and LTC about $5, BTC about $82)
-ok 61 - practice lock amounts clear the minimum with margin (BCH and LTC about $5, BTC about $82)
+ok 65 - practice lock amounts clear the minimum with margin (BCH and LTC about $5, BTC about $82)
   ---
-  duration_ms: 0.522227
+  duration_ms: 0.475883
   type: 'test'
   ...
 # Subtest: the documented fetchAssetPrice response (price_as_of, integer Unix seconds) is read; null refuses
-ok 62 - the documented fetchAssetPrice response (price_as_of, integer Unix seconds) is read; null refuses
+ok 66 - the documented fetchAssetPrice response (price_as_of, integer Unix seconds) is read; null refuses
   ---
-  duration_ms: 0.125743
+  duration_ms: 0.114943
   type: 'test'
   ...
 # Subtest: page asset is Base ETH from the active list, with the Revision B Base ETH asset id
-ok 63 - page asset is Base ETH from the active list, with the Revision B Base ETH asset id
+ok 67 - page asset is Base ETH from the active list, with the Revision B Base ETH asset id
   ---
-  duration_ms: 1.095691
+  duration_ms: 0.928661
   type: 'test'
   ...
 # Subtest: no Cosmos anywhere on the page or its config; Cosmos-only libraries removed
-ok 64 - no Cosmos anywhere on the page or its config; Cosmos-only libraries removed
+ok 68 - no Cosmos anywhere on the page or its config; Cosmos-only libraries removed
   ---
-  duration_ms: 0.392673
+  duration_ms: 0.413
   type: 'test'
   ...
 # Subtest: durations equal CommitmentDurations.sol (16 rows)
-ok 65 - durations equal CommitmentDurations.sol (16 rows)
+ok 69 - durations equal CommitmentDurations.sol (16 rows)
   ---
-  duration_ms: 0.93861
+  duration_ms: 1.889852
   type: 'test'
   ...
 # Subtest: fee is floor(5%) on every duration, Handshake included
-ok 66 - fee is floor(5%) on every duration, Handshake included
+ok 70 - fee is floor(5%) on every duration, Handshake included
   ---
-  duration_ms: 7.992967
+  duration_ms: 7.43469
   type: 'test'
   ...
 # Subtest: calldata decodes with the compiled CommitmentVaultLock ABI to exactly the arguments built
-ok 67 - calldata decodes with the compiled CommitmentVaultLock ABI to exactly the arguments built
+ok 71 - calldata decodes with the compiled CommitmentVaultLock ABI to exactly the arguments built
   ---
-  duration_ms: 6.928961
+  duration_ms: 5.119173
   type: 'test'
   ...
 # Subtest: fails closed: no price, zero price, bad addresses, bad id, bad duration, CHONX without receipt
-ok 68 - fails closed: no price, zero price, bad addresses, bad id, bad duration, CHONX without receipt
+ok 72 - fails closed: no price, zero price, bad addresses, bad id, bad duration, CHONX without receipt
   ---
-  duration_ms: 0.470835
+  duration_ms: 0.371245
   type: 'test'
   ...
 # Subtest: USD bounds mirror CommitmentVaultLock.sol (Handshake $0.01 to $0.02; others at least $0.01)
-ok 69 - USD bounds mirror CommitmentVaultLock.sol (Handshake $0.01 to $0.02; others at least $0.01)
+ok 73 - USD bounds mirror CommitmentVaultLock.sol (Handshake $0.01 to $0.02; others at least $0.01)
   ---
-  duration_ms: 0.53613
+  duration_ms: 0.385048
   type: 'test'
   ...
 # Subtest: nothing is sent: lock and release are blocked (pending lock, or preview never broadcasts)
-ok 70 - nothing is sent: lock and release are blocked (pending lock, or preview never broadcasts)
+ok 74 - nothing is sent: lock and release are blocked (pending lock, or preview never broadcasts)
   ---
-  duration_ms: 0.333195
+  duration_ms: 0.301626
   type: 'test'
   ...
 # Subtest: addresses come from one generated file; retired 2.5% locks are never offered for a new lock
-ok 71 - addresses come from one generated file; retired 2.5% locks are never offered for a new lock
+ok 75 - addresses come from one generated file; retired 2.5% locks are never offered for a new lock
   ---
-  duration_ms: 0.734293
+  duration_ms: 0.718519
   type: 'test'
   ...
-1..71
-# tests 71
+1..75
+# tests 75
 # suites 0
-# pass 71
+# pass 75
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 262.287681
+# duration_ms 404.57068
 EXIT 0
