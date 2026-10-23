@@ -63,11 +63,13 @@ contract FuzzAccessControl is Fixture {
         verifier.applyScheduledPriceRun(rid, u);
     }
 
+    /// AG-07 (fix 2026-10-23): run ids are sequential. Any id other than
+    /// lastScheduledRunId() + 1 is refused (stale, repeated, or a jump ahead).
     function testFuzz_priceRunMustAdvance(uint64 rid) public {
-        rid = uint64(bound(rid, 0, runId));
+        vm.assume(rid != runId + 1);
         VinculumFinalisVerifier.ScheduledPriceUpdate[] memory u = new VinculumFinalisVerifier.ScheduledPriceUpdate[](0);
         vm.prank(poster);
-        vm.expectRevert(bytes("VF-ORC-001: run id must advance"));
+        vm.expectRevert(bytes("VF-ORC-001: run id must be the next in sequence"));
         verifier.applyScheduledPriceRun(rid, u);
     }
 
