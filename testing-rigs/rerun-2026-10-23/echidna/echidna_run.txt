@@ -1,0 +1,80 @@
+[2026-10-23 11:01:07.53] Compiling `EchidnaVF.sol`... Done! (28.795508964s)
+Analyzing contract: /workspace/fix/testing-rigs/echidna/EchidnaVF.sol:EchidnaVF
+[2026-10-23 11:01:36.72] Running slither on `EchidnaVF.sol`... Done! (30.23164063s)
+Loaded 0 transaction sequences from /tmp/echcorpus/reproducers
+Loaded 0 transaction sequences from /tmp/echcorpus/coverage
+[2026-10-23 11:02:07.46] [Worker 0] New coverage: 16139 instr, 7 contracts, 1 seqs in corpus
+[2026-10-23 11:02:07.46]  Saved reproducer to /tmp/echcorpus/coverage/8856156337667648938.txt
+[2026-10-23 11:02:07.95] [Worker 0] New coverage: 18773 instr, 7 contracts, 2 seqs in corpus
+[2026-10-23 11:02:07.95]  Saved reproducer to /tmp/echcorpus/coverage/6396533252534680091.txt
+[2026-10-23 11:02:08.08] [Worker 0] New coverage: 18835 instr, 7 contracts, 3 seqs in corpus
+[2026-10-23 11:02:08.08]  Saved reproducer to /tmp/echcorpus/coverage/28780969551879506.txt
+[2026-10-23 11:02:08.18] [Worker 0] New coverage: 18870 instr, 7 contracts, 4 seqs in corpus
+[2026-10-23 11:02:08.19]  Saved reproducer to /tmp/echcorpus/coverage/4104231211222167096.txt
+[2026-10-23 11:02:08.41] [Worker 0] New coverage: 18874 instr, 7 contracts, 5 seqs in corpus
+[2026-10-23 11:02:08.42]  Saved reproducer to /tmp/echcorpus/coverage/5228537223875676043.txt
+[2026-10-23 11:02:08.55] [Worker 0] New coverage: 18879 instr, 7 contracts, 6 seqs in corpus
+[2026-10-23 11:02:08.55]  Saved reproducer to /tmp/echcorpus/coverage/4741446543599714002.txt
+[2026-10-23 11:02:08.76] [Worker 0] New coverage: 18895 instr, 7 contracts, 7 seqs in corpus
+[2026-10-23 11:02:08.77]  Saved reproducer to /tmp/echcorpus/coverage/3488782305483926267.txt
+[2026-10-23 11:02:08.85] [Worker 0] New coverage: 18905 instr, 7 contracts, 8 seqs in corpus
+[2026-10-23 11:02:08.85]  Saved reproducer to /tmp/echcorpus/coverage/6226896920475647188.txt
+[2026-10-23 11:02:09.73] [Worker 0] New coverage: 18910 instr, 7 contracts, 9 seqs in corpus
+[2026-10-23 11:02:09.73]  Saved reproducer to /tmp/echcorpus/coverage/7385257145882615978.txt
+[2026-10-23 11:02:09.80] [Worker 0] New coverage: 19122 instr, 7 contracts, 10 seqs in corpus
+[2026-10-23 11:02:09.81]  Saved reproducer to /tmp/echcorpus/coverage/7730423259953535703.txt
+[2026-10-23 11:02:10.00] [status] tests: 0/8, fuzzing: 1420/20000, values: [], cov: 19122, corpus: 10, gas/s: 90179468
+[2026-10-23 11:02:10.05] [Worker 0] New coverage: 19150 instr, 7 contracts, 11 seqs in corpus
+[2026-10-23 11:02:10.05]  Saved reproducer to /tmp/echcorpus/coverage/6329053613468539670.txt
+[2026-10-23 11:02:10.18] [Worker 0] New coverage: 19705 instr, 7 contracts, 12 seqs in corpus
+[2026-10-23 11:02:10.18]  Saved reproducer to /tmp/echcorpus/coverage/754050453651587786.txt
+[2026-10-23 11:02:10.40] [Worker 0] New coverage: 19877 instr, 7 contracts, 13 seqs in corpus
+[2026-10-23 11:02:10.41]  Saved reproducer to /tmp/echcorpus/coverage/1635795267132387865.txt
+[2026-10-23 11:02:10.54] [Worker 0] New coverage: 19882 instr, 7 contracts, 14 seqs in corpus
+[2026-10-23 11:02:10.54]  Saved reproducer to /tmp/echcorpus/coverage/8216595620788217375.txt
+[2026-10-23 11:02:10.99] [Worker 0] New coverage: 19910 instr, 7 contracts, 15 seqs in corpus
+[2026-10-23 11:02:10.99]  Saved reproducer to /tmp/echcorpus/coverage/1858221223573159629.txt
+[2026-10-23 11:02:11.29] [Worker 0] New coverage: 19917 instr, 7 contracts, 16 seqs in corpus
+[2026-10-23 11:02:11.30]  Saved reproducer to /tmp/echcorpus/coverage/3073559965444935872.txt
+[2026-10-23 11:02:12.03] [Worker 0] New coverage: 19945 instr, 7 contracts, 17 seqs in corpus
+[2026-10-23 11:02:12.03]  Saved reproducer to /tmp/echcorpus/coverage/4021635178577482882.txt
+[2026-10-23 11:02:13.00] [status] tests: 0/8, fuzzing: 2885/20000, values: [], cov: 19945, corpus: 17, gas/s: 114431938
+[2026-10-23 11:02:15.26] [Worker 0] New coverage: 19950 instr, 7 contracts, 18 seqs in corpus
+[2026-10-23 11:02:15.26]  Saved reproducer to /tmp/echcorpus/coverage/3874809307421902399.txt
+[2026-10-23 11:02:15.44] [Worker 0] New coverage: 20229 instr, 7 contracts, 19 seqs in corpus
+[2026-10-23 11:02:15.44]  Saved reproducer to /tmp/echcorpus/coverage/2114055511257323633.txt
+[2026-10-23 11:02:16.00] [Worker 0] New coverage: 20234 instr, 7 contracts, 20 seqs in corpus
+[2026-10-23 11:02:16.00]  Saved reproducer to /tmp/echcorpus/coverage/5369770922871818323.txt
+[2026-10-23 11:02:16.01] [status] tests: 0/8, fuzzing: 4378/20000, values: [], cov: 20234, corpus: 20, gas/s: 109680492
+[2026-10-23 11:02:19.01] [status] tests: 0/8, fuzzing: 5925/20000, values: [], cov: 20234, corpus: 20, gas/s: 111697263
+[2026-10-23 11:02:22.01] [status] tests: 0/8, fuzzing: 7511/20000, values: [], cov: 20234, corpus: 20, gas/s: 116347203
+[2026-10-23 11:02:25.02] [status] tests: 0/8, fuzzing: 9157/20000, values: [], cov: 20234, corpus: 20, gas/s: 113140228
+[2026-10-23 11:02:28.02] [status] tests: 0/8, fuzzing: 10716/20000, values: [], cov: 20234, corpus: 20, gas/s: 109568327
+[2026-10-23 11:02:31.02] [status] tests: 0/8, fuzzing: 12255/20000, values: [], cov: 20234, corpus: 20, gas/s: 100566809
+[2026-10-23 11:02:34.03] [status] tests: 0/8, fuzzing: 13694/20000, values: [], cov: 20234, corpus: 20, gas/s: 103075184
+[2026-10-23 11:02:37.04] [status] tests: 0/8, fuzzing: 14815/20000, values: [], cov: 20234, corpus: 20, gas/s: 83102360
+[2026-10-23 11:02:40.04] [status] tests: 0/8, fuzzing: 16218/20000, values: [], cov: 20234, corpus: 20, gas/s: 104980497
+[2026-10-23 11:02:43.04] [status] tests: 0/8, fuzzing: 17911/20000, values: [], cov: 20234, corpus: 20, gas/s: 115120416
+[2026-10-23 11:02:46.05] [status] tests: 0/8, fuzzing: 19375/20000, values: [], cov: 20234, corpus: 20, gas/s: 96013012
+[2026-10-23 11:02:47.62] [Worker 0] Test limit reached. Stopping.
+[2026-10-23 11:02:47.62] [status] tests: 0/8, fuzzing: 20032/20000, values: [], cov: 20234, corpus: 20, gas/s: 63385618
+echidna_lifetime_le_cap: passing
+echidna_chonx_within_cap: passing
+echidna_vclm_within_cap: passing
+echidna_one_rac_per_lock: passing
+echidna_synth_within_cap: passing
+echidna_stake_solvent: passing
+echidna_no_synth_before_activation: passing
+echidna_one_mint_per_lock: passing
+
+Unique instructions: 20234
+Unique codehashes: 7
+Corpus size: 20
+Seed: 20261023
+Total calls: 20032
+
+[2026-10-23 11:02:47.62] Saving test reproducers... Done! (0.000004572s)
+[2026-10-23 11:02:47.62] Saving corpus... Done! (0.000992137s)
+[2026-10-23 11:02:47.62] Saving foundry reproducers... Done! (0.000118889s)
+[2026-10-23 11:02:47.62] Saving coverage... Done! (3.888366121s)
+EXIT 0
