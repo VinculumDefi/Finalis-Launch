@@ -1,27 +1,27 @@
 {
- "as_of": "2026-10-23 09:40 EDT (America/New_York)",
+ "as_of": "2026-10-23 09:12 EDT (America/New_York)",
  "main_base": "2465817",
  "note": "Hand-maintained by the findings recorder. A rig is REPORTED only when its findings JSON is on main; everything else is the recorder's view of the rig branches at as_of. build_master.py reads this file plus every per-rig findings JSON in this folder.",
  "rigs": [
   {
    "n": "1",
-   "name": "unit (Hardhat baseline, 779 tests)",
-   "status": "RUNNING",
+   "name": "unit (Hardhat baseline, 779 tests expected)",
+   "status": "REPORTED (PASS)",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (scripts: testing-rigs/baseline/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/baseline/results.md, logs/ (hardhat_files.log, rerun_killed*.log, app_tests.log, lint.log, build.log)",
+   "findings_file": "hardhat.json",
+   "note": "PASS, run file by file due to memory; 783 vs 779 count untraced (HH-011). 61 of 61 files, 783 passing, 0 failing; no single-process full-suite run completed on the shared box. App tests 65 of 65, lint and build EXIT 0."
   },
   {
    "n": "2",
    "name": "mainnet-fork integration",
-   "status": "RUNNING",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (tests: testing-rigs/fork-integration/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/fork-integration/results.md, eth_fork_results.json, base_fork_results.json, base_live_probe_results.json, *_run.log",
+   "findings_file": "hardhat.json",
+   "note": "Local Ethereum and Base forks plus a read-only live probe; nothing broadcast. Findings HH-001, HH-002, HH-005..HH-009, HH-012, HH-013 in hardhat.json."
   },
   {
    "n": "3",
@@ -36,12 +36,12 @@
   {
    "n": "4",
    "name": "invariants",
-   "status": "RUNNING",
+   "status": "REPORTED WITH FINDINGS",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (tests: testing-rigs/invariants/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/invariants/results.md, run_default.log, run_show_findings.log, sequence.log",
+   "findings_file": "hardhat.json",
+   "note": "INV-1..3 and INV-5..7 hold; INV-4 breaks for non-Base readers (HH-003). Findings HH-001..HH-004, HH-010."
   },
   {
    "n": "5",
@@ -94,13 +94,23 @@
   },
   {
    "n": "10",
-   "name": "ceremony dry-run and reconciliation",
-   "status": "RUNNING",
+   "name": "reconciliation (deployment artifacts vs live Oct 22 set)",
+   "status": "REPORTED (PASS)",
    "branch": "rigs/hardhat",
-   "commit": "77a332a",
-   "raw_output": "none committed yet (scripts: testing-rigs/ceremony-dryrun/ on rigs/hardhat)",
-   "findings_file": null,
-   "note": "Not on main yet."
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/reconciliation/results.md, reconciliation_live.json, reconciliation_dryrun.json, live_progress.log",
+   "findings_file": "hardhat.json",
+   "note": "PASS: live Base set of Oct 22 byte-identical to the tested artifacts and ceremony-data; live 350 PASS, dry-run 349 PASS, 0 MISMATCH, 0 INCOMPLETE. Findings HH-014..HH-016."
+  },
+  {
+   "n": "DR",
+   "name": "ceremony dry-run (local Base fork)",
+   "status": "REPORTED (PASS)",
+   "branch": "rigs/hardhat",
+   "commit": "4ee53cb",
+   "raw_output": "testing-rigs/ceremony-dryrun/dryrun_output.txt, dryrun_progress.log, dryrun_gas.json",
+   "findings_file": "hardhat.json",
+   "note": "Forked Base block 52985059: 'ceremony would succeed', reconciliation PASS (349 checks). 72 transactions, every one sent with gasLimit 16,777,216, the Base per-transaction cap (EIP-7825); gas used 30,295 to 4,247,636 per tx, 109,844,802 total. The rig branch also adds an npm script 'ceremony:dryrun' to base-contracts/package.json; that file is outside testing-rigs/ and was NOT brought to main (fix phase)."
   },
   {
    "n": "AG",
@@ -187,14 +197,23 @@
   "COMB-02": "LIVE (Base set)",
   "META-01": "LIVE (Base set)",
   "META-02": "LIVE (Base set)",
-  "COMB-03": "LIVE (ERC-20 path)"
+  "COMB-03": "LIVE (ERC-20 path)",
+  "HH-008": "LIVE (ERC-20 path)",
+  "HH-010": "LIVE (Base set)",
+  "HH-013": "LIVE (ERC-20 path)",
+  "HH-015": "LIVE (Base set)",
+  "HH-011": "N/A (tooling coverage)",
+  "HH-012": "N/A (tooling coverage)",
+  "HH-014": "N/A (tooling coverage)",
+  "HH-016": "N/A (tooling coverage)"
  },
  "merge": [
   {
    "ids": [
     "AG-04",
     "STATIC-C01",
-    "ADV-11"
+    "ADV-11",
+    "HH-001"
    ]
   },
   {
@@ -202,7 +221,8 @@
     "AG-05",
     "STATIC-H02",
     "ADV-12",
-    "META-01"
+    "META-01",
+    "HH-002"
    ]
   },
   {
@@ -211,7 +231,8 @@
     "STATIC-M01",
     "ADV-13",
     "COMB-01",
-    "META-02"
+    "META-02",
+    "HH-004"
    ]
   },
   {
@@ -236,7 +257,8 @@
     "ADV-04",
     "ADV-05",
     "ADV-06",
-    "ADV-10"
+    "ADV-10",
+    "HH-003"
    ]
   },
   {
@@ -252,14 +274,29 @@
     "ADV-08",
     "ADV-09"
    ]
+  },
+  {
+   "ids": [
+    "AG-08",
+    "HH-005",
+    "HH-006",
+    "HH-007"
+   ]
+  },
+  {
+   "ids": [
+    "AG-16",
+    "HH-009"
+   ]
   }
  ],
  "related": {
-  "STATIC-L04": "AG-08 (rebasing / balance-delta assumptions in the vault)",
+  "STATIC-L04": "AG-08 (rebasing / balance-delta assumptions in the vault; HH-005 reproduces this on an Ethereum fork)",
   "STATIC-I02": "AG-16 (vault trusts caller-supplied USD)",
   "STATIC-I03": "AG-05 (extCreated not bound to valuationTimestamp is the root of AG-05)",
   "COMB-02": "AG-06 (price bound at first submission is the root cause); AG-16 (lock-side band gate)",
-  "COMB-03": "AG-06 (price bound at first submission); AG-11 (which rows the $0.95 rule catches)"
+  "COMB-03": "AG-06 (price bound at first submission); AG-11 (which rows the $0.95 rule catches)",
+  "HH-015": "AG-04 / HH-001 (recordFeeAndRac is an open user path after finalize)"
  },
  "notes": {
   "AG-01": "EVM readers (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche) confirmed by ADV-01..06, ADV-10. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
@@ -267,6 +304,20 @@
   "AG-03": "Stellar and XRP Ledger readers confirmed by ADV-08, ADV-09. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
   "AG-10": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). The Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash, Stellar and XRP Ledger readers that take lockId from the payload are all registered, so the lockId front-run is reachable by direct contract calls once that asset is priced.",
   "AG-14": "Relabeled from LATENT. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). All six live UTXO readers report TOLERANCE_SECS = 86400 (1 day); Stellar and XRP Ledger report 3600.",
-  "AG-19": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01."
- }
+  "AG-19": "Relabeled from LATENT, split view. Recorder's own read-only check of the live Base Verifier at block 52984350 (2026-10-23 08:20 EDT, testing-rigs/live_read/live_verifier_read_2026-10-23.json): finalized, deployer zero, 15 readers registered, every non-Base native row has no usable price (Arbitrum, Optimism and Polygon rows are aliased, also unpriced). Misregistration half: not present live. Each registered reader reports an environment id equal to the name it is registered under, the six EVM readers report mainnet chain ids (1, 42161, 10, 137, 56, 43114), and registration is closed by finalize. Testnet-replay half: rides on AG-01 (the chain id is only claimed in the package), so it is live on-chain gated by a posted price, like AG-01.",
+  "AG-04": "HH-001 replay amounts (rigs 2 and 4): on real Base state one stranger call moved a lock basis from 3312.80 to 3384.82 USD; a simulated replay on the live set (not sent) added 358.83 USD over 5 replays, about 3588 future VCLM; the invariant run minted 15,609.24 VCLM to Stake from 25 replays on one lock. HH-001 is live (same code deployed, rig 10).",
+  "AG-05": "Rig 2 (HH-002) labels this latent because launch was Oct 22, so valuationTimestamp=0 gives the same value today (31098.86). Recorder keeps LIVE (Base set) by the stronger view: the path is reachable on the live Base set now (rig 9), and the gain grows with each day of decay (day 840 model x1.601; metamorphic META-01 up to x10).",
+  "AG-06": "HH-004 is the same root cause (price bound at the first recordFeeAndRac, not at creation). It adds that the first submitter can be a stranger, so a third party can bind someone else's lock at a low run (test: half price bound). hardhat.json's line 'steering who receives the mint path' is not shown by the test; the recipient is checked against the reader.",
+  "AG-08": "Merged by root cause (the vault assumes the token moves exactly the recorded amount): HH-005 AMPL -10% rebase, pool 17,100 vs principals 19,000, second release reverted 'CVL: release' (Ethereum fork, live non-Base lock); HH-006 stETH 1-wei rounding on release; HH-007 1% fee-on-transfer token: Dev Fund short 0.00099 of 0.099, release 1.86219 of 1.881. HH-007 is latent: no registered token charges a transfer fee today (PAXG and USDT fee switches are zero).",
+  "AG-16": "HH-009 (rig 2) is the same gap: the lock's band gate uses caller-supplied verifiedGrossUsd.",
+  "HH-008": "App copies on main (app/base44-lock-2026-10-12 and -13, Lock.jsx:171). The live Base44 app was not checked.",
+  "HH-013": "Not exercised: the rig failed closed on the label mismatch. Whether the live path compares labels the same way is unverified.",
+  "HH-014": "Recorder's live read (2026-10-23 08:20 EDT) also shows no Solana reader registered.",
+  "HH-016": "Historical operator transactions; no live exposure found. N/A here means not a reachable code path."
+ },
+ "header_notes": [
+  "Rig 10 PASSED: the live Base set of Oct 22 is byte-identical to what was tested (live 350 of 350 checks PASS, dry-run 349 of 349, 0 mismatches, 0 incomplete). So every finding tagged LIVE and CONFIRMED below is present in the deployed contracts (HH-008 is app code, not a contract).",
+  "Ceremony dry-run gas: every one of the 72 transactions was sent at the 16,777,216 gas cap (Base per-transaction maximum, EIP-7825). Actual use was 30,295 to 4,247,636 per transaction (109,844,802 total), so none came near the cap.",
+  "Fix-phase note: rigs/hardhat also adds an npm script 'ceremony:dryrun' to base-contracts/package.json. That is outside testing-rigs/ and was not brought to main."
+ ]
 }
