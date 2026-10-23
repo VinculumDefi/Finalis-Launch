@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ceremony:dryrun": "bash ../testing-rigs/ceremony-dryrun/dryrun.sh",
+    "ceremony:dryrun:simulate": "bash ../testing-rigs/ceremony-dryrun/dryrun.sh --simulate-non-base-locks"
   },
   "keywords": [],
   "author": "",
