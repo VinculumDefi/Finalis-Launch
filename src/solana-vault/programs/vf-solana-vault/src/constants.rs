@@ -12,15 +12,21 @@ pub const SOURCE_ENVIRONMENT: &str = "Solana";
 /// VF-COM-003/026: The one-hour duration is the only qualifying Trust-Building Handshake.
 pub const HANDSHAKE_DURATION_SECS: u64 = 3600;
 
-/// VF-COM-003: Handshake USD value range $0.95–$1.05 inclusive (18-decimal fixed-point).
-pub const HANDSHAKE_VALUE_USD_MIN_MICRO: u128 = 950_000_000_000_000_000;       // $0.95 × 10^18
-pub const HANDSHAKE_VALUE_USD_MAX_MICRO: u128 = 1_050_000_000_000_000_000;     // $1.05 × 10^18
+/// VF-COM-003 (Rev 12 governs the Handshake): Handshake USD value range
+/// $0.01 to $0.02 inclusive (18-decimal fixed-point). Revision 6 said
+/// $0.95 to $1.05; Rev 12 keeps $0.01 to $0.02 as deployment constants, the
+/// same values as HANDSHAKE_USD_MIN/MAX in the Base and EVM contracts.
+pub const HANDSHAKE_VALUE_USD_MIN_MICRO: u128 = 10_000_000_000_000_000;        // $0.01 x 10^18
+pub const HANDSHAKE_VALUE_USD_MAX_MICRO: u128 = 20_000_000_000_000_000;        // $0.02 x 10^18
 
-/// VF-COM-004: Handshake fee 2.50% (250 basis points).
-pub const HANDSHAKE_FEE_BPS: u64 = 250;
+/// VF-COM-004 (Rev 12): the Handshake pays the same 5% fee as every other
+/// duration (Revision 6 said 2.50%).
+pub const HANDSHAKE_FEE_BPS: u64 = 500;
 
-/// VF-COM-009: Standard lock minimum USD value $10.00 (18-decimal fixed-point).
-pub const STANDARD_MINIMUM_VALUE_USD_MICRO: u128 = 10_000_000_000_000_000_000; // $10.00 × 10^18
+/// VF-COM-009: Standard lock minimum USD value $0.01 (18-decimal fixed-point),
+/// the same value as STANDARD_USD_MIN in the Base and EVM contracts
+/// (Revision 6 said $10.00).
+pub const STANDARD_MINIMUM_VALUE_USD_MICRO: u128 = 10_000_000_000_000_000;     // $0.01 x 10^18
 
 /// VF-COM-009: Standard lock fee 5.00% (500 basis points).
 pub const STANDARD_FEE_BPS: u64 = 500;
@@ -39,10 +45,13 @@ pub const CHONX_ACTIVATION_THRESHOLD: u128 = 10_000_000u128 * SCALE;
 pub const VCLM_HARD_CAP: u128 = 10_000_000_000u128 * SCALE;
 pub const CHONX_HARD_CAP: u128 = 100_000_000_000u128 * SCALE;
 
-/// This program keeps a HandshakeAllowance PDA per source account.
+/// This program keeps a HandshakeAllowance PDA per source account. Rev 12
+/// removed the Handshake allowance, so the PDA is only a record kept for
+/// account-layout compatibility and never refuses a Handshake.
 pub const COUNTS_PER_IDENTITY: bool = true;
 
-/// VF-COM-006: capable mechanisms get 3. Mechanisms that cannot count get 1.
+/// Revision 6 VF-COM-006 value (3 or 1). Rev 12 removed the limit; the value
+/// is stored in the record for layout compatibility and is not enforced.
 pub fn handshake_allowance(counts_per_identity: bool) -> u32 {
     if counts_per_identity { 3 } else { 1 }
 }
