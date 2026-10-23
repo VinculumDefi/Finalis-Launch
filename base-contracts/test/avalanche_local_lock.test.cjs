@@ -29,11 +29,12 @@ describe("AvalancheLockReader (production) against a real local Avalanche lock",
     expect(fx.headerFieldCount).to.be.at.least(16);
   });
 
-  it("verifyFinality accepts the settling header", async () => {
-    const r = await reader.verifyFinality(encode(fx.evidence), claim(43114, fx.settlingHash, fx.settlingBlock));
-    expect(r[0]).to.equal(true);
-    expect(r[1]).to.equal(fx.settlingHash);
-    expect(r[2]).to.equal(BigInt(fx.settlingBlock));
+  it("verifyFinality refuses (AG-01, no settled-history anchor); headerClaimMatches binds the settling header", async () => {
+    await expect(reader.verifyFinality(encode(fx.evidence), claim(43114, fx.settlingHash, fx.settlingBlock)))
+      .to.be.revertedWith("VF-XCH-006: Avalanche settled-history anchor not enforced on-chain; environment disabled");
+    const r = await reader.headerClaimMatches(encode(fx.evidence), claim(43114, fx.settlingHash, fx.settlingBlock));
+    expect(r[0]).to.equal(fx.settlingHash);
+    expect(r[1]).to.equal(BigInt(fx.settlingBlock));
   });
 
   it("extractFacts proves the lock: id, amounts, 5% fee, 7-day duration, recipient, output token", async () => {
@@ -51,10 +52,10 @@ describe("AvalancheLockReader (production) against a real local Avalanche lock",
 
   it("rejects a tampered header, receipt, storage proof, or a reader bound to another lock", async () => {
     const e = fx.evidence;
-    await expect(reader.verifyFinality(encode(e), claim(43114, fx.settlingHash, fx.lockBlock))).to.be.reverted;
-    await expect(reader.verifyFinality(encode(e), claim(1, fx.settlingHash, fx.settlingBlock))).to.be.revertedWith("VF-XCH-006: wrong chain");
+    await expect(reader.headerClaimMatches(encode(e), claim(43114, fx.settlingHash, fx.lockBlock))).to.be.reverted;
+    await expect(reader.headerClaimMatches(encode(e), claim(1, fx.settlingHash, fx.settlingBlock))).to.be.revertedWith("VF-XCH-006: wrong chain");
     // Any changed header byte breaks the hash the finality claim names.
-    await expect(reader.verifyFinality(encode({ ...e, headerRlp: flip(e.headerRlp, 200) }), claim(43114, fx.settlingHash, fx.settlingBlock)))
+    await expect(reader.headerClaimMatches(encode({ ...e, headerRlp: flip(e.headerRlp, 200) }), claim(43114, fx.settlingHash, fx.settlingBlock)))
       .to.be.revertedWith("VF-XCH-006: block hash mismatch");
     // A changed stateRoot byte (header offset 100) breaks the storage proofs.
     await expect(reader.extractFacts(encode({ ...e, headerRlp: flip(e.headerRlp, 100) }))).to.be.reverted;
