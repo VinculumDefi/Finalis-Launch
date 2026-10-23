@@ -1,0 +1,105 @@
+{
+ "relations": 344,
+ "by_relation": {
+  "MR1 scale x2": {
+   "PASS": 6
+  },
+  "MR2 split in two": {
+   "PASS": 6
+  },
+  "MR3a same price, submitted 45 days later": {
+   "PASS": 2
+  },
+  "MR3b package valuationTimestamp set to launch": {
+   "VIOLATION": 2
+  },
+  "MR3b package valuationTimestamp set to launch (late)": {
+   "VIOLATION": 2
+  },
+  "MR3c next price run doubles the price before the second submission": {
+   "VIOLATION": 2
+  },
+  "MR4 fee": {
+   "PASS": 40
+  },
+  "MR5 decay": {
+   "PASS": 282
+  },
+  "MR6 output token follows lock record": {
+   "PASS": 1
+  },
+  "setup": {
+   "n/a": 1
+  }
+ },
+ "violations": [
+  {
+   "key": "MR3b|0",
+   "mr": "MR3b package valuationTimestamp set to launch",
+   "output": 0,
+   "lock_day": 255,
+   "mint_honest": "142052106368318202662",
+   "mint_backdated": "162500000000000000000",
+   "backdated_accepted": true,
+   "ratio": 1.1439,
+   "errs": [],
+   "verdict": "VIOLATION"
+  },
+  {
+   "key": "MR3c|0",
+   "mr": "MR3c next price run doubles the price before the second submission",
+   "output": 0,
+   "mint_first": "142052106368318202662",
+   "mint_after_price_run": "284104212736636405327",
+   "ratio": 2,
+   "errs": [],
+   "verdict": "VIOLATION"
+  },
+  {
+   "key": "MR3b|1",
+   "mr": "MR3b package valuationTimestamp set to launch",
+   "output": 1,
+   "lock_day": 500,
+   "mint_honest": "1241772364533907008042",
+   "mint_backdated": "1625000000000000000000",
+   "backdated_accepted": true,
+   "ratio": 1.3086,
+   "errs": [],
+   "verdict": "VIOLATION"
+  },
+  {
+   "key": "MR3c|1",
+   "mr": "MR3c next price run doubles the price before the second submission",
+   "output": 1,
+   "mint_first": "1241772364533907008042",
+   "mint_after_price_run": "2483544729067814016085",
+   "ratio": 2,
+   "errs": [],
+   "verdict": "VIOLATION"
+  },
+  {
+   "key": "MR3b_late|0",
+   "mr": "MR3b package valuationTimestamp set to launch (late)",
+   "output": 0,
+   "lock_day": 4500,
+   "mint_honest": "16250000000000000000",
+   "mint_backdated": "162500000000000000000",
+   "backdated_accepted": true,
+   "ratio": 10,
+   "errs": [],
+   "verdict": "VIOLATION"
+  },
+  {
+   "key": "MR3b_late|1",
+   "mr": "MR3b package valuationTimestamp set to launch (late)",
+   "output": 1,
+   "lock_day": 4500,
+   "mint_honest": "162500000000000000000",
+   "mint_backdated": "1625000000000000000000",
+   "backdated_accepted": true,
+   "ratio": 10,
+   "errs": [],
+   "verdict": "VIOLATION"
+  }
+ ]
+}
