@@ -63,6 +63,7 @@ interface ICommitmentVaultLockReader {
     }
 
     function lockRecord(bytes32 lockId) external view returns (LockRecord memory);
+    function devFund() external view returns (address);
 }
 
 contract BaseLockRecordVerifier is IBaseLockRecordVerifier {
@@ -131,6 +132,17 @@ contract BaseLockRecordVerifier is IBaseLockRecordVerifier {
         // Token lock: the proven token address, keyed to Base, for the
         // Verifier's token address index.
         return keccak256(abi.encode("Base", r.asset));
+    }
+
+    /// @notice VF-FEE-009: the Dev Fund the proven Base lock paid its fee to.
+    /// The Base lock routes every fee to its immutable devFund at creation.
+    /// Reverts when the lock record is absent or unbound.
+    function lockDevFund(string calldata, bytes calldata lockEventProof) external view returns (address) {
+        bytes32 id = _lockIdOf(lockEventProof);
+        ICommitmentVaultLockReader.LockRecord memory r = vault.lockRecord(id);
+        if (!r.exists) revert LockNotFound(id);
+        _requireBinding(id, r.bindingPayload);
+        return vault.devFund();
     }
 
     function _lockIdOf(bytes calldata lockEventProof) private pure returns (bytes32) {
