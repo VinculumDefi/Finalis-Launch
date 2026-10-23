@@ -1,0 +1,9 @@
+
+
+  METAMORPHIC rig (active, fails on any violation)
+      343 relations {"PASS":343}
+    ✔ relations (5263ms)
+
+
+  1 passing (5s)
+
