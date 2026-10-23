@@ -1,11 +1,13 @@
-// Documents the current non-Base reader trust model on main (5996ba1 / live
-// ceremony): SimpleEthereumLockReader (and the same EvmReceiptLockReader base
-// used by Arb/OP/Polygon/BNB/Avalanche) accepts a self-consistent local block
-// as "finalized". verifyFinality checks that the claimed hash equals keccak of
-// the supplied header RLP; it does not check that the header is part of that
-// chain's settled history. The Verifier then mints. Base is different: the
-// Base reader reads live Base storage. This test pins the current behaviour so
-// a settled-history checker, when added, is a deliberate change.
+// Non-Base reader trust model, after fix 2026-10-23 (AG-01, t301u).
+// Before the fix, SimpleEthereumLockReader (and the same EvmReceiptLockReader
+// base used by Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche)
+// accepted a self-consistent local block as "finalized": it checked only that
+// the claimed hash equals keccak of the supplied header, never that the header
+// is part of the chain's settled history, and the Verifier minted.
+// Safe behavior now: the reader refuses finality (VF-XCH-006, environment
+// disabled), the Verifier records no fee or RAC and mints nothing. The block
+// binding check is still available as headerClaimMatches. Base is different:
+// the Base reader reads live Base storage and still mints (checked below).
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { ethLockEvidence, encodeEvidence } = require("./lib/ethProof.cjs");
@@ -13,8 +15,8 @@ const SCALE = 10n ** 18n, DAY7 = 604800n;
 const ETH_ID = "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b";
 const coder = ethers.AbiCoder.defaultAbiCoder();
 
-describe("non-Base finality trust model (t301u)", function () {
-  it("SimpleEthereumLockReader accepts a self-consistent local block and the Verifier mints", async () => {
+describe("non-Base finality trust model (t301u), fixed 2026-10-23", function () {
+  it("SimpleEthereumLockReader refuses a self-consistent local block; the Verifier records and mints nothing", async () => {
     const [deployer, recipient, other, dest, devFund] = await ethers.getSigners();
     const T = await ethers.getContractFactory("VinculumFinalisToken");
     const vclm = await T.deploy("Vinculum", "VCLM", 10_000_000_000n * SCALE);
@@ -65,8 +67,35 @@ describe("non-Base finality trust model (t301u)", function () {
       sourceFinalityProof: coder.encode(["uint256", "bytes32", "uint256"], [1, ev.block.hash, ev.block.number]),
       lockEventProof: encodeEvidence(ev),
     };
-    await verifier.recordFeeAndRac(p);
-    await verifier.verifyAndMint(p, 0);
+    const REFUSED = "VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled";
+    // The block binding itself still checks out...
+    const [h, n] = await reader.headerClaimMatches(p.lockEventProof, p.sourceFinalityProof);
+    expect(h).to.equal(ev.block.hash);
+    expect(n).to.equal(BigInt(ev.block.number));
+    // ...but finality is refused, in both phases.
+    await expect(reader.verifyFinality(p.lockEventProof, p.sourceFinalityProof)).to.be.revertedWith(REFUSED);
+    await expect(verifier.recordFeeAndRac(p)).to.be.revertedWith(REFUSED);
+    await expect(verifier.verifyAndMint(p, 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
+    expect(await verifier.isLockRacRecorded("Ethereum", lockId)).to.equal(false);
+    expect(await vclm.balanceOf(recipient.address)).to.equal(0n);
+
+    // Base still works: a real Base lock record is proven and mints.
+    const baseId = ethers.hexlify(ethers.randomBytes(32));
+    await baseLock.connect(other).createNativeLock(
+      baseId, recipient.address, 0, ETH_ID, ethers.ZeroHash, dest.address, DAY7, 2392n * SCALE / 100n,
+      { value: SCALE / 100n }
+    );
+    const br = await baseLock.lockRecord(baseId);
+    const bp = {
+      ...p, sourceEnvironmentId: "Base", commitmentVaultLockId: baseId,
+      grossAmountSmallestUnits: br.gross, actualFeeAmountSmallestUnits: br.fee, principalAmountSmallestUnits: br.principal,
+      valuationTimestamp: br.createdAt, maturityTimestamp: br.maturity, durationSecs: br.duration,
+      sourceFinalityProof: "0x",
+      lockEventProof: coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
+        [baseId, br.gross, br.fee, br.principal, br.duration, br.createdAt, br.maturity]),
+    };
+    await verifier.recordFeeAndRac(bp);
+    await verifier.verifyAndMint(bp, 0);
     expect(await vclm.balanceOf(recipient.address)).to.be.gt(0n);
   });
 });
