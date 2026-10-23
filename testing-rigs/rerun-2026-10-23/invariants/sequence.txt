@@ -1,0 +1,60 @@
+0 crossEnv: 
+1 baseEth: Base ETH 5184000s out=0 -> minted
+2 ethEnv: Ethereum ETH 189216000s out=0 -> refused: VM Exception while processing transaction: reverted with reason string 'VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled'
+3 replay: replay of a settled lock refused
+4 replay: replay of a settled lock refused
+5 chonxEarly: CHONX request before 10M lifetime VCLM refused
+6 ethEnv: Ethereum ETH 220752000s out=0 -> refused: VM Exception while processing transaction: reverted with reason string 'VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled'
+7 unauthMint: direct mint by a non-minter refused
+8 replay: replay of a settled lock refused
+9 transfer: transfer 11750.88265 VCLM
+10 forge: forge before 100M lifetime CHONX refused
+11 replay: replay of a settled lock refused
+12 forge: forge before 100M lifetime CHONX refused
+13 whale: whale 45 ETH 10y out=0 -> minted
+14 transfer: transfer 3748167.921766666666666666 VCLM
+15 replay: replay of a settled lock refused
+16 chonxEarly: 
+17 baseUsdc: Base USDC 252288000s out=0 -> minted
+18 unauthMint: direct mint by a non-minter refused
+19 baseUsdc: Base USDC 604800s out=1 -> minted
+20 crossEnv: Ethereum lock replayed as the 5 other EVM environments: refused
+21 whale: whale 45 ETH 10y out=0 -> minted
+22 burn: burn 2368147.980441666666666666 VCLM
+23 baseEth: Base ETH 157680000s out=0 -> minted
+24 forge: forge before 100M lifetime CHONX refused
+25 burn: burn 1875434.665149074074074074 VCLM
+26 crossEnv: Ethereum lock replayed as the 5 other EVM environments: refused
+27 unauthMint: direct mint by a non-minter refused
+28 whale: whale 45 ETH 10y out=1 -> minted
+29 crossEnv: Ethereum lock replayed as the 5 other EVM environments: refused
+30 forge: forged 1 SYNTH for 1,000 VCLM + 10,000 CHONX
+31 baseEth: Base ETH 252288000s out=0 -> minted
+32 transfer: transfer 1930666.608349074074074074 VCLM
+33 baseEth: Base ETH 126144000s out=0 -> minted
+34 burn: burn 1720697.541367939814814815 VCLM
+35 crossEnv: Ethereum lock replayed as the 5 other EVM environments: refused
+36 forge: forged 1 SYNTH for 1,000 VCLM + 10,000 CHONX
+37 ethEnv: Ethereum ETH 7776000s out=1 -> refused: VM Exception while processing transaction: reverted with reason string 'VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled'
+38 baseUsdc: Base USDC 63072000s out=1 -> left unsettled
+39 baseUsdc: Base USDC 189216000s out=0 -> minted
+40 crossEnv: Ethereum lock replayed as the 5 other EVM environments: refused
+41 forge: forged 1 SYNTH for 1,000 VCLM + 10,000 CHONX
+42 baseUsdc: Base USDC 283824000s out=0 -> minted
+43 transfer: transfer 3082037.697393894675925926 VCLM
+44 forge: forged 1 SYNTH for 1,000 VCLM + 10,000 CHONX
+45 whale: whale 45 ETH 10y out=0 -> minted
+46 ethEnv: Ethereum ETH 283824000s out=0 -> refused: VM Exception while processing transaction: reverted with reason string 'VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled'
+47 forge: forged 1 SYNTH for 1,000 VCLM + 10,000 CHONX
+48 chonxEarly: 
+49 baseEth: Base ETH 7776000s out=0 -> left unsettled
+50 baseEth: Base ETH 315360000s out=0 -> left unsettled
+51 unauthMint: direct mint by a non-minter refused
+52 baseEth: skipped (handshake ETH)
+53 chonxEarly: 
+54 burn: burn 10232557.546090842013888889 VCLM
+55 burn: burn 2558139.386522710503472222 VCLM
+56 chonxEarly: 
+57 burn: burn 1096345.451366875930059524 VCLM
+58 chonxEarly: 
+59 ethEnv: Ethereum ETH 283824000s out=0 -> refused: VM Exception while processing transaction: reverted with reason string 'VF-XCH-006: Ethereum settled-history anchor not enforced on-chain; environment disabled'
