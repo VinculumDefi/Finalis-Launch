@@ -87,7 +87,7 @@ ANNOTATIONS = {
 }
 FINDINGS = [
     {"id": "SMT-01", "rig": "6-smtchecker", "severity": "info", "damage": "none; the call reverts with Panic 0x11",
-     "file_line": "base-contracts/contracts/VinculumFinalisSynth.sol forge(): CHONX_BURN_PER_SYNTH * count (harness SynthInstrumented.sol:145)",
+     "file_line": "base-contracts/contracts/VinculumFinalisSynth.sol:145 (also :144)",
      "description": "CHC found a real overflow trace in forge() for a huge count. Solidity 0.8 checked math turns it into a revert, so no wrap and no free mint.",
      "evidence": "testing-rigs/smtchecker/results/harness_synth.txt", "rev_conflict": "none"},
     {"id": "SMT-02", "rig": "6-smtchecker", "severity": "info", "damage": "none; reverts",
@@ -106,6 +106,15 @@ FINDINGS = [
      "file_line": "base-contracts/contracts/VinculumFinalisToken.sol:122 (hardCap set at :84 with no range check)",
      "description": "CHC overflow trace for totalSupply + amount. It needs a deployment with hardCap near 2^256, which the constructor accepts without a check. Checked math reverts. Deployment script must pass the Rev 6 cap.",
      "evidence": "testing-rigs/smtchecker/results/prod_token.txt", "rev_conflict": "none"},
+]
+
+NOTES = [
+    "prod_synth (production VinculumFinalisSynth.sol): FAIL-TO-RUN. solc/libz3 crashes with SIGSEGV after about 25 s, three times, with a 5 GB cap, a 6.5 GB cap and no cap. The Synth properties are covered by the instrumented copy (harness_synth), which ran to completion.",
+    "prod_stake and prod_verifier ran to exit 0 but almost every target came back 'Error trying to invoke SMT solver' (92 of 97 and 49 of 56). Those targets are inconclusive, not proven.",
+    "harness_feemath first run inherited the whole BaseCommitmentVaultLock and was OOM-killed (exit 247). It was replaced by FeeMath.sol, a verbatim extract of _quote (extract_feemath.py), which ran in 26 s.",
+    "A second token run with only the assert target was OOM-killed after 639 s (results/harness_token_assert_only.txt).",
+    "The box rebooted about 07:18 EDT on Oct 23 and /workspace was restored from a snapshot. prod_verifier and prod_synth were rerun after that; all other outputs survived.",
+    "Supplementary BMC runs (run_bmc_supplement.sh) are labelled as such and are not counted as CHC verdicts.",
 ]
 
 def main():
@@ -150,7 +159,7 @@ def main():
     out = {"formal_layer": "solc 0.8.19 SMTChecker, CHC engine, z3 4.11.2. Certora not available (CERTORAKEY not set in env), so SMTChecker is the only formal layer.",
            "targets": "assert, overflow, underflow, divByZero, outOfBounds",
            "note_checked_math": "Solidity 0.8 checked arithmetic: an overflow or underflow 'happens' result means the call reverts with Panic 0x11, not a silent wrap.",
-           "jobs": jobs, "properties": props, "production_contracts": prod, "findings": FINDINGS,
+           "notes": NOTES, "jobs": jobs, "properties": props, "production_contracts": prod, "findings": FINDINGS,
            "verdict_counts": dict(collections.Counter(p["verdict"] for p in props))}
     json.dump(out, open(os.path.join(RES, "properties.json"), "w"), indent=2)
     md = ["# Rig 6 SMTChecker results", "", out["formal_layer"], "", out["note_checked_math"], "",
@@ -166,6 +175,7 @@ def main():
     md += ["", "## Production contracts (overflow, underflow, divByZero, outOfBounds, assert)", ""]
     for k, v in sorted(prod.items()):
         md.append("- %s: exit %s, %s s, %s, counterexample lines %s" % (k, v["exit"], v["seconds"], v["counts"], v["counterexample_lines"] or "none"))
+    md += ["", "## Notes", ""] + ["- " + n for n in NOTES]
     md += ["", "## SMT findings", ""] + ["- %s (%s) %s: %s" % (f["id"], f["severity"], f["file_line"], f["description"]) for f in FINDINGS]
     open(os.path.join(RES, "summary.md"), "w").write("\n".join(md) + "\n")
     print(out["verdict_counts"])
