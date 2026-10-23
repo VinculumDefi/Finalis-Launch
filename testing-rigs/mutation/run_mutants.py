@@ -77,6 +77,9 @@ FAST = {
     "Durations": T("cl01_cl11_verifier", "lock_5pct_native_erc20_7chains", "CommitmentVaultLock",
                    "utxo_handshake_unit_band", "token_locks", "representativeRules"),
 }
+# 2026-10-23 batch fix: the new behaviour tests run first for every contract.
+for _c in FAST:
+    FAST[_c] = T("batch_fix_2026_10_23", "mutant_kills_2026_10_23") + FAST[_c]
 SLOW = {
     "Stake": T("stake_scheduled_weight_eval", "stake_scheduled_weight_gas", "stake_t272_long_claims",
                "stake_t272_allocation_scale", "stake_t276_claim_planner", "stake_t277_claim_display"),
@@ -274,10 +277,30 @@ def main():
     ap.add_argument("--only", default="", help="comma-separated mutant ids to (re)run")
     ap.add_argument("--resfile", default="", help="result file name (default mutants_w<N>.jsonl)")
     ap.add_argument("--split", action="store_true", help="run each test file on its own (lower peak memory)")
+    ap.add_argument("--contracts", default="", help="comma-separated contracts to sample (default all)")
+    ap.add_argument("--replay", default="", help="old mutation_summary.json: re-run its records (with --only) on unchanged contracts")
     a = ap.parse_args()
     work = os.path.abspath(a.workdir)
     os.makedirs(a.out, exist_ok=True)
-    allm = targeted() + ror(work) + sample_gambit(a.gambit)
+    if a.contracts:
+        keep = set(a.contracts.split(","))
+        for d in (FILES, GAMBIT_DIR, SAMPLE, ROR_SAMPLE):
+            for k in list(d):
+                if k not in keep:
+                    del d[k]
+    if a.replay:
+        allm = []
+        for r in json.load(open(a.replay))["all"]:
+            r = {k: v for k, v in r.items() if k not in ("status", "killed_by", "note", "compile_s", "retried_rc", "retry")
+                 and not k.startswith("test_")}
+            if r["id"].startswith("G-"):
+                gid = r["id"].rsplit("-", 1)[1]
+                d = os.path.join(a.gambit, GAMBIT_DIR[r["contract"]])
+                g = [x for x in json.load(open(os.path.join(d, "gambit_results.json"))) if str(x["id"]) == gid][0]
+                r["src"] = os.path.join(d, g["name"])
+            allm.append(r)
+    else:
+        allm = targeted() + ror(work) + sample_gambit(a.gambit)
     mine = [m for i, m in enumerate(allm) if i % a.workers == a.worker]
     if a.only:
         ids = a.only.split(",")
@@ -287,7 +310,7 @@ def main():
     if os.path.exists(resf):
         done = {json.loads(l)["id"] for l in open(resf)}
     env = dict(os.environ)
-    env.setdefault("NODE_OPTIONS", "--max-old-space-size=6144")
+    env.setdefault("NODE_OPTIONS", "--max-old-space-size=4096")
     base_hash = {}
     for m in mine:
         if m["id"] in done:
@@ -302,6 +325,12 @@ def main():
         try:
             if m["kind"] in ("Targeted", "ROR"):
                 L = orig.split("\n")
+                if m["kind"] == "Targeted" and m["old"] not in L[m["line"] - 1]:
+                    # The 2026-10-23 fixes moved lines: use the nearest line holding the same text.
+                    hits = [i + 1 for i, l in enumerate(L) if m["old"] in l]
+                    if hits:
+                        m["line"] = min(hits, key=lambda n: abs(n - m["line"]))
+                        rec["line"] = m["line"]
                 if m["old"] not in L[m["line"] - 1]:
                     rec.update(status="not_applied", note="pattern not on line")
                     raise StopIteration
