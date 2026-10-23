@@ -271,12 +271,18 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--worker", type=int, default=0)
     ap.add_argument("--workers", type=int, default=1)
+    ap.add_argument("--only", default="", help="comma-separated mutant ids to (re)run")
+    ap.add_argument("--resfile", default="", help="result file name (default mutants_w<N>.jsonl)")
+    ap.add_argument("--split", action="store_true", help="run each test file on its own (lower peak memory)")
     a = ap.parse_args()
     work = os.path.abspath(a.workdir)
     os.makedirs(a.out, exist_ok=True)
     allm = targeted() + ror(work) + sample_gambit(a.gambit)
     mine = [m for i, m in enumerate(allm) if i % a.workers == a.worker]
-    resf = os.path.join(a.out, "mutants_w%d.jsonl" % a.worker)
+    if a.only:
+        ids = a.only.split(",")
+        mine = [m for m in allm if m["id"] in ids]
+    resf = os.path.join(a.out, a.resfile or "mutants_w%d.jsonl" % a.worker)
     done = set()
     if os.path.exists(resf):
         done = {json.loads(l)["id"] for l in open(resf)}
@@ -314,7 +320,10 @@ def main():
             status = None
             fast = [x for x in FAST[c] if x not in PIN_PRONE]
             pinned = [x for x in FAST[c] if x in PIN_PRONE]
-            for phase, files in (("fast", fast), ("slow", SLOW.get(c, [])), ("pinned", pinned)):
+            phases = (("fast", fast), ("slow", SLOW.get(c, [])), ("pinned", pinned))
+            if a.split:
+                phases = [(ph, [x]) for ph, fs in phases for x in fs]
+            for phase, files in phases:
                 if not files:
                     continue
                 rc, out, dt = run(["npx", "hardhat", "test", "--no-compile", "--bail"] + files, work, TIMEOUT)
