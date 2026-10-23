@@ -95,7 +95,7 @@ describe("mint path ceremony", function () {
     // The source is checked before any fee is recorded, so recordFeeAndRac
     // already refuses the package, and no RAC exists for verifyAndMint.
     await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: recipient mismatch");
-    expect(await verifier.recordedRacs(pkg.racIdentity)).to.equal(false);
+    expect(await verifier.isLockRacRecorded(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId)).to.equal(false);
     await expect(verifier.verifyAndMint(pkg, 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
   });
 });
