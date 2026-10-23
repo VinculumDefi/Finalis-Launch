@@ -1,0 +1,36 @@
+mythril.mythril.mythril_analyzer [CRITICAL]: Exception occurred, aborting analysis. Please report this issue to the Mythril GitHub page.
+Traceback (most recent call last):
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/mythril/mythril_analyzer.py", line 153, in fire_lasers
+    sym = SymExecWrapper(
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/analysis/symbolic.py", line 242, in __init__
+    self.laser.sym_exec(world_state=world_state, target_address=address.value)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/svm.py", line 185, in sym_exec
+    self.execute_transactions(symbol_factory.BitVecVal(target_address, 256))
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/svm.py", line 232, in execute_transactions
+    self._execute_transactions_incremental(
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/svm.py", line 302, in _execute_transactions_incremental
+    execute_message_call(self, address, func_hashes=func_hashes)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/transaction/symbolic.py", line 151, in execute_message_call
+    laser_evm.exec()
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/svm.py", line 344, in exec
+    new_states, op_code = self.execute_state(global_state)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/svm.py", line 445, in execute_state
+    ).evaluate(global_state)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/instructions.py", line 265, in evaluate
+    result = instruction_mutator(global_state)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/instructions.py", line 196, in wrapper
+    new_global_states = self.call_on_state_copy(func, func_obj, global_state)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/instructions.py", line 131, in call_on_state_copy
+    return func(func_obj, global_state_copy)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/instructions.py", line 794, in calldataload_
+    value = environment.calldata.get_word_at(op0)
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/ethereum/state/calldata.py", line 55, in get_word_at
+    return simplify(Concat(parts))
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/mythril/laser/smt/bitvec_helper.py", line 137, in Concat
+    nraw = z3.Concat([a.raw for a in bvs])
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/z3/z3.py", line 4142, in Concat
+    _z3_assert(sz >= 2, "At least two arguments expected.")
+  File "/workspace/rigs/venv-myth310/lib/python3.10/site-packages/z3/z3.py", line 107, in _z3_assert
+    raise Z3Exception(msg)
+z3.z3types.Z3Exception: At least two arguments expected.
+
