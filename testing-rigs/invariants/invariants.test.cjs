@@ -15,15 +15,14 @@
 //   INV-8 at most one Reward-Accounting Credit per lock (Rev 6 VF-RAC-001 "exact once")
 //   INV-9 emission rate follows the lock's own creation time (VF-ORC-011/013)
 //
-// A property that breaks because of a real bug is kept and marked skip with its
-// FINDING id. RIG_SHOW_FINDINGS=1 runs those too, so the break can be seen.
+// Converted 2026-10-23: the former FINDING properties (HH-001..004) are now
+// active tests that assert the fixed, safe behavior. Nothing is skipped.
 // Run: testing-rigs/run.sh none invariants/invariants.test.cjs
 const path = require("path");
 const C = require("../lib/common.cjs");
 const { expect } = require(path.join(C.BC, "node_modules/chai"));
 const { ethers, network, art, DATA, SCALE, DAY7, YEAR10, ETH_ID, ETH_PRICE, short, fmt, reason } = C;
 
-const findingIt = (id, title, fn) => (process.env.RIG_SHOW_FINDINGS ? it : it.skip)(`${id}: ${title}`, fn);
 const SEED = BigInt(process.env.RIG_SEED || "20261023");
 const STEPS = Number(process.env.RIG_STEPS || "60");
 let rng = SEED;
@@ -32,7 +31,6 @@ const pick = (a) => a[rand(a.length)];
 const DURATIONS = [3600n, 604800n, 2592000n, 5184000n, 7776000n, 15552000n, 31536000n, 63072000n, 94608000n, 126144000n,
   157680000n, 189216000n, 220752000n, 252288000n, 283824000n, 315360000n];
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const ETH_RPC = "https://ethereum-rpc.publicnode.com";
 
 describe("Rig 4: invariants on the real ceremony stack (property tests)", function () {
   this.timeout(3600000);
@@ -249,7 +247,9 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
     }
     console.log("      action counts", JSON.stringify(counts));
     console.log("      lifetime VCLM", fmt(await S.verifier.lifetimeVclmIssued()), "CHONX", fmt(await S.verifier.cumulativeChonxIssued()), "SYNTH", fmt(await S.forge.totalSupply()), "CHONX active", await S.verifier.chonxActivated());
-    require("fs").writeFileSync(path.join(__dirname, "sequence.log"), log.join("\n") + "\n");
+    const outDir = process.env.INV_OUT || path.join(__dirname, "../rerun-2026-10-23/invariants");
+    require("fs").mkdirSync(outDir, { recursive: true });
+    require("fs").writeFileSync(path.join(outDir, "sequence.log"), log.join("\n") + "\n");
   });
 
   it("INV-5: CHONX opens exactly at the 10M lifetime VCLM threshold; SYNTH opens at 100M lifetime CHONX", async () => {
@@ -327,100 +327,73 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
     for (const o of locks.filter((x) => x.settled)) await expect(S.verifier.verifyAndMint(o.p, 0)).to.be.revertedWith("VF-XCH-013: replay");
   });
 
-  // ---- properties that break on a real bug (kept, skipped with FINDING id) ----
+  // ---- former FINDING properties, now active safe-behavior tests (fixed 2026-10-23) ----
 
-  findingIt("FINDING-HH-003", "INV-4 every VCLM mint traces to a real lock on a header in real chain history (non-Base readers)", async () => {
-    // Each Ethereum-environment mint above was proven with a header from this
-    // test chain (chain id 31337). Ask real Ethereum whether that block exists.
-    const eth = new ethers.JsonRpcProvider(ETH_RPC, 1, { staticNetwork: true });
-    const nb = mints.filter((m) => m.env === "Ethereum");
-    expect(nb.length, "no Ethereum-environment mint happened in the sequence").to.be.gt(0);
-    for (const m of nb) {
-      let real = null;
-      try { real = await eth.send("eth_getBlockByHash", [m.blockHash, false]); } catch (e) { real = "rpc error " + reason(e); }
-      expect(real, `mint for lock ${m.lockId.slice(0, 10)} rests on header ${m.blockHash.slice(0, 10)} that real Ethereum does not have`).to.not.equal(null);
+  const REFUSED = (env) => `VF-XCH-006: ${env} settled-history anchor not enforced on-chain; environment disabled`;
+
+  it("HH-003 SAFE: INV-4 no VCLM mint rests on an unanchored non-Base header; every Ethereum-environment lock is refused", async () => {
+    // The production non-Base readers refuse (AG-01..03 fail-closed), so a lock
+    // proven only with headers from this test chain can never mint.
+    let eth = locks.filter((x) => x.env === "Ethereum");
+    if (!eth.length) eth = [await ethEnvLock(actors[0], DAY7, 0)];
+    for (const o of eth) {
+      expect(o.settled, `Ethereum lock ${o.lockId.slice(0, 10)} settled`).to.equal(false);
+      await expect(S.verifier.recordFeeAndRac(o.p)).to.be.revertedWith(REFUSED("Ethereum"));
+      expect(await S.verifier.isLockRacRecorded("Ethereum", o.lockId)).to.equal(false);
     }
+    expect(mints.filter((m) => m.env === "Ethereum").length, "Ethereum-environment mints").to.equal(0);
+    console.log(`      ${eth.length} Ethereum-environment locks, all refused; 0 Ethereum mints`);
   });
 
-  findingIt("FINDING-HH-001", "INV-8 at most one Reward-Accounting Credit per lock", async () => {
+  it("HH-001 SAFE: INV-8 at most one Reward-Accounting Credit per lock (fresh racIdentity refused)", async () => {
     const o = locks.find((x) => x.settled && x.env === "Base");
-    const b0 = await S.verifier.epochRewardBasis(await S.verifier.currentEpoch());
+    const ep = await S.verifier.currentEpoch();
+    const b0 = await S.verifier.epochRewardBasis(ep);
     for (let i = 0; i < 3; i++) {
-      await S.verifier.recordFeeAndRac({ ...o.p, racIdentity: ethers.hexlify(ethers.randomBytes(32)) }).catch(() => {});
+      await expect(S.verifier.recordFeeAndRac({ ...o.p, racIdentity: ethers.hexlify(ethers.randomBytes(32)) }))
+        .to.be.revertedWith("VF-RAC-001: RAC already recorded");
     }
-    expect(await S.verifier.epochRewardBasis(await S.verifier.currentEpoch()), "epoch reward basis grew from one settled lock").to.equal(b0);
+    expect(await S.verifier.epochRewardBasis(ep), "epoch reward basis grew from one settled lock").to.equal(b0);
   });
 
-  findingIt("FINDING-HH-002", "INV-9 emission rate follows the lock's own creation time", async () => {
+  it("HH-002 SAFE: INV-9 emission rate follows the lock's own creation time (backdated package refused)", async () => {
     await C.advance(400 * 86400); // well past several 30-day decay periods
     const a = actors[1];
     const honest = await baseLock(a, "ETH", DAY7, 0);
     const forged = await baseLock(a, "ETH", DAY7, 0);
     const v0 = await S.vclm.balanceOf(recipient.address);
-    await settle(honest);
+    expect(await settle(honest)).to.equal("minted");
     const v1 = await S.vclm.balanceOf(recipient.address);
-    forged.p = { ...forged.p, valuationTimestamp: 0 };
-    await settle(forged);
+    const realP = forged.p;
+    forged.p = { ...realP, valuationTimestamp: 0 };
+    expect(await settle(forged)).to.match(/VF-ORC-011: valuation timestamp != proven lock creation time/);
+    expect(await S.vclm.balanceOf(recipient.address)).to.equal(v1);
+    forged.p = realP;
+    expect(await settle(forged)).to.equal("minted");
     const v2 = await S.vclm.balanceOf(recipient.address);
     const gh = honest.rec.gross, gf = forged.rec.gross;
-    // normalise per wei
-    expect(((v2 - v1) * gh) / gf, "valuationTimestamp=0 must not mint more than the honest same-day lock").to.be.lte((v1 - v0) * 1001n / 1000n);
+    // per wei the honest resubmission mints the same as the honest same-day lock
+    expect(((v2 - v1) * gh) / gf).to.be.closeTo(v1 - v0, (v1 - v0) / 1000n + 2n);
   });
 
-  // ---- direct evidence for the findings (these pass and print the numbers) ----
-
-  it("EVIDENCE FINDING-HH-001: one real settled lock, fresh racIdentity values, Stake mints reward VCLM for each", async () => {
-    const T0 = await S.verifier.protocolLaunchTimestamp();
-    const EPOCH = 864000n;
-    // Attacker: an actor who stakes a little VCLM (from a small lock of their own).
+  it("HH-001 SAFE: one real settled lock, 25 fresh racIdentity values from a stranger, all refused; reward basis unchanged", async () => {
     const att = actors[5];
-    const own = await baseLock(att, "ETH", DAY7, 0);
-    own.p = { ...own.p, baseRecipient: own.rec.baseRecipient };
-    await settle(own);
-    const amt = (await S.vclm.balanceOf(recipient.address)) / 100n;
-    await (await S.vclm.connect(recipient).transfer(att.address, amt)).wait();
-    await (await S.vclm.connect(att).approve(await S.stake.getAddress(), amt)).wait();
-    const pid = await S.stake.nextPositionId();
-    await (await S.stake.connect(att).createPosition(0, amt, 2592000n)).wait();
-    // Move to the epoch after the position is active.
-    const nowT = await C.now();
-    const curEp = (nowT - T0) / EPOCH + 1n;
-    await network.provider.send("evm_setNextBlockTimestamp", [Number(T0 + curEp * EPOCH + 60n)]);
-    await network.provider.send("evm_mine");
     const ep = await S.verifier.currentEpoch();
-    const victim = locks.find((x) => x.settled && x.env === "Base" && x.lockId !== own.lockId);
+    const victim = locks.find((x) => x.settled && x.env === "Base");
     const basis0 = await S.verifier.epochRewardBasis(ep);
-    const N = 25;
-    let gasSum = 0n;
-    for (let i = 0; i < N; i++) {
-      const rc = await (await S.verifier.connect(att).recordFeeAndRac({ ...victim.p, racIdentity: ethers.hexlify(ethers.randomBytes(32)) })).wait();
-      gasSum += rc.gasUsed;
+    for (let i = 0; i < 25; i++) {
+      await expect(S.verifier.connect(att).recordFeeAndRac({ ...victim.p, racIdentity: ethers.hexlify(ethers.randomBytes(32)) }))
+        .to.be.revertedWith("VF-RAC-001: RAC already recorded");
     }
-    const basis1 = await S.verifier.epochRewardBasis(ep);
-    const perCall = (basis1 - basis0) / BigInt(N);
-    console.log(`      lock ${victim.lockId.slice(0, 10)} (already minted): ${N} extra recordFeeAndRac calls by a stranger, avg gas ${gasSum / BigInt(N)}`);
-    console.log(`      epoch ${ep} reward basis ${fmt(basis0)} -> ${fmt(basis1)} USD; +${fmt(perCall)} per call = +${fmt(perCall * 10n)} reward VCLM per call`);
-    // Close and allocate all epochs up to ep, then claim.
-    await network.provider.send("evm_setNextBlockTimestamp", [Number(T0 + (ep + 1n) * EPOCH + 60n)]);
-    await network.provider.send("evm_mine");
-    for (let n = 1n; n <= ep; n++) {
-      if (!(await S.stake.epochs(n)).closed) await (await S.stake.closeEpoch(n)).wait();
-    }
-    for (let n = (await S.stake.lastAllocatedEpoch()) + 1n; n <= ep; n++) await (await S.stake.allocateEpoch(n)).wait();
-    const e = await S.stake.epochs(ep);
-    const claim = await S.stake.claimableVclm(pid, ep);
-    console.log(`      epoch ${ep} minted ${fmt(e.mintedVclm)} VCLM to Stake (basis ${fmt(e.rewardBasis)}); attacker position claimable ${fmt(claim)} VCLM`);
-    expect(basis1 - basis0).to.be.gt(0n);
-    expect(e.mintedVclm).to.be.gte(((basis1 - basis0) * 100n) / 10n);
-    expect(claim).to.be.gt(0n);
+    expect(await S.verifier.epochRewardBasis(ep)).to.equal(basis0);
+    expect(await S.verifier.isLockRacRecorded("Base", victim.lockId)).to.equal(true);
+    console.log(`      lock ${victim.lockId.slice(0, 10)}: 25 extra RAC attempts refused; epoch ${ep} basis stays ${fmt(basis0)} USD`);
   });
 
-  it("EVIDENCE FINDING-HH-002: valuationTimestamp is caller-chosen; 0 gives the day-0 emission rate after decay", async () => {
-    const T0 = await S.verifier.protocolLaunchTimestamp();
+  it("HH-002 SAFE: valuationTimestamp 0 is refused after decay; the honest package for the same lock mints the honest amount", async () => {
     await network.provider.send("evm_setNextBlockTimestamp", [Number((await C.now()) + 400n * 86400n)]);
     await network.provider.send("evm_mine");
     const a = actors[2];
-    // same gross for both: fixed 1 ETH
     const mk = async () => {
       const lockId = ethers.hexlify(ethers.randomBytes(32));
       await (await S.lock.connect(a).createNativeLock(lockId, recipient.address, 0, ETH_ID, ethers.ZeroHash, dest.address, DAY7, ETH_PRICE, { value: SCALE })).wait();
@@ -428,38 +401,34 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
       return { env: "Base", lockId, rec, p: C.basePkg(lockId, rec, ETH_ID, 2, 18), kind: "ETH" };
     };
     const h = await mk(), f = await mk();
-    const days = ((await C.now()) - T0) / 86400n;
     const v0 = await S.vclm.balanceOf(recipient.address);
     expect(await settle(h)).to.equal("minted");
     const v1 = await S.vclm.balanceOf(recipient.address);
-    f.p = { ...f.p, valuationTimestamp: 0 };
+    const realP = f.p;
+    f.p = { ...realP, valuationTimestamp: 0 };
+    expect(await settle(f)).to.match(/VF-ORC-011/);
+    f.p = realP;
     expect(await settle(f)).to.equal("minted");
     const v2 = await S.vclm.balanceOf(recipient.address);
-    console.log(`      day ${days} since launch, 1 ETH 7d: honest package minted ${fmt(v1 - v0)} VCLM; valuationTimestamp=0 minted ${fmt(v2 - v1)} VCLM (x${Number(((v2 - v1) * 1000n) / (v1 - v0)) / 1000})`);
-    expect(v2 - v1).to.be.gt(v1 - v0);
+    console.log(`      1 ETH 7d: honest ${fmt(v1 - v0)} VCLM; backdated refused; honest resubmission ${fmt(v2 - v1)} VCLM`);
+    expect(v2 - v1).to.equal(v1 - v0);
   });
 
-  it("EVIDENCE FINDING-HH-003: Ethereum-environment mints in the sequence rest on headers from this test chain", async () => {
-    const nb = mints.filter((m) => m.env === "Ethereum");
-    console.log(`      ${nb.length} Ethereum-environment mints; proving chain id ${ethReaderChain} (not 1); first header ${nb[0] ? nb[0].blockHash.slice(0, 10) : "none"}`);
-    expect(nb.length).to.be.gt(0);
-  });
-
-  it("EVIDENCE FINDING-HH-004: price binds at the first recordFeeAndRac, not at lock creation; a stranger can bind it", async () => {
+  it("HH-004 SAFE: price binds at lock creation; a later price run and a stranger's first RAC do not change it", async () => {
     const a = actors[3];
     await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE }]);
     const lockId = ethers.hexlify(ethers.randomBytes(32));
     await (await S.lock.connect(a).createNativeLock(lockId, recipient.address, 0, ETH_ID, ethers.ZeroHash, dest.address, DAY7, ETH_PRICE, { value: SCALE })).wait();
     const rec = await S.lock.lockRecord(lockId);
-    // Price run after creation: half the price.
+    // Price run after creation: half the price. It must not apply to this lock.
     await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE / 2n }]);
     const p = C.basePkg(lockId, rec, ETH_ID, 2, 18);
-    await (await S.verifier.connect(other).recordFeeAndRac(p)).wait(); // stranger binds it
+    await (await S.verifier.connect(other).recordFeeAndRac(p)).wait(); // a stranger records it
     await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE }]);
-    const credit = await S.verifier.racCredits(p.racIdentity);
+    const credit = await S.verifier.racCredits(await S.verifier.racKey("Base", lockId));
     const expectAtCreation = ((rec.gross * ETH_PRICE) / SCALE * rec.fee / rec.gross * 6000n) / 10000n;
-    console.log(`      RAC credit bound ${fmt(credit)} USD vs ${fmt(expectAtCreation)} at the creation-time price`);
-    expect(credit * 2n).to.be.closeTo(expectAtCreation, 10n);
+    console.log(`      RAC credit ${fmt(credit)} USD vs ${fmt(expectAtCreation)} at the creation-time price`);
+    expect(credit).to.be.closeTo(expectAtCreation, 10n);
   });
 
   after(async () => {
