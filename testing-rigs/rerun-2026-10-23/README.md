@@ -6,7 +6,7 @@ Outputs for branch fix/batch-2026-10-23 (see testing-rigs/FIX_LOG_2026-10-23.md 
 
 | Output | Result |
 |---|---|
-| hardhat/full_suite.txt | Full Hardhat suite, run once and alone with NODE_OPTIONS=--max-old-space-size=12288, 14 GB available at start, 13:39 to 14:09 EDT: 849 passing, 0 failing. |
+| hardhat/full_suite.txt | Full Hardhat suite, run once and alone with NODE_OPTIONS=--max-old-space-size=12288, at least 13 GB available, 13:39 to 14:09 EDT: 849 passing, 0 failing. |
 | app/app_tests.txt | node --test src/tests/*.test.js: 75 of 75 pass (includes the new solana-program-rev12.test.js). |
 | app/lint.txt | npm run lint: clean. |
 | app/build.txt | npm run build: built OK (chunk-size warning only). |
