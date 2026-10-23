@@ -1,0 +1,89 @@
+Warning: CHC: Underflow (resulting value less than 0) happens here.
+Counterexample:
+STANDARD_FEE_BPS = 500, BPS_DENOMINATOR = 10000, HANDSHAKE_DURATION = 3600, HANDSHAKE_USD_MIN = 10000000000000000, HANDSHAKE_USD_MAX = 20000000000000000, STANDARD_USD_MIN = 10000000000000000, countsPerIdentity = true, devFund = 0x01, vclmToken = 0x01, chonxToken = 0x01, synthToken = 0x01, _entered = 1
+lockId = 0x0
+baseRecipient = 0x0
+outputToken = 0
+assetIdentity = 0x0
+valuationReference = 0x0
+releaseDestination = 0x0
+duration = 3600
+token = 0x02
+amount = 40
+verifiedGrossUsd = 10000000000000000
+fee = 0
+principal = 0
+previewFee = 2
+previewPrincipal = 38
+beforeBal = 7720
+received = 0
+multiplierBps = 0
+
+Transaction trace:
+BaseCommitmentVaultLock.constructor(environmentId_, 0x01, 0x01, 0x01, 0x01)
+State: STANDARD_FEE_BPS = 500, BPS_DENOMINATOR = 10000, HANDSHAKE_DURATION = 3600, HANDSHAKE_USD_MIN = 10000000000000000, HANDSHAKE_USD_MAX = 20000000000000000, STANDARD_USD_MIN = 10000000000000000, countsPerIdentity = true, devFund = 0x01, vclmToken = 0x01, chonxToken = 0x01, synthToken = 0x01, _entered = 0
+BaseCommitmentVaultLock.createErc20Lock(0x0, 0x0, 0, 0x0, 0x0, 0x0, 3600, 0x02, 40, 10000000000000000){ msg.sender: 0x52f6 }
+    BaseCommitmentVaultLock.isProtocolToken(0x02) -- internal call
+    BaseCommitmentVaultLock._quote(40, 3600, 10000000000000000) -- internal call
+        CommitmentDurations.multiplierBps(3600) -- internal call
+    BaseCommitmentVaultLock._balanceOf(0x02, 0x26) -- internal call
+        token.staticcall(
+            abi.encodeWithSelector(IERC20MinimalBaseLock.balanceOf.selector, account)
+        ) -- untrusted external call
+    BaseCommitmentVaultLock._erc20(0x02, data) -- internal call
+        token.call(data) -- untrusted external call
+    BaseCommitmentVaultLock._balanceOf(0x02, 0x26) -- internal call
+        token.staticcall(
+            abi.encodeWithSelector(IERC20MinimalBaseLock.balanceOf.selector, account)
+        ) -- untrusted external call
+   --> workspace/rigs/static/base-contracts/contracts/BaseCommitmentVaultLock.sol:224:28:
+    |
+224 |         uint256 received = _balanceOf(token, address(this)) - beforeBal;
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+   --> workspace/rigs/static/base-contracts/contracts/BaseCommitmentVaultLock.sol:317:23:
+    |
+317 |             maturity: createdAt + duration,
+    |                       ^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+Counterexample:
+STANDARD_FEE_BPS = 500, BPS_DENOMINATOR = 10000, HANDSHAKE_DURATION = 3600, HANDSHAKE_USD_MIN = 10000000000000000, HANDSHAKE_USD_MAX = 20000000000000000, STANDARD_USD_MIN = 10000000000000000, countsPerIdentity = true, devFund = 0x01, vclmToken = 0x01, chonxToken = 0x03, synthToken = 0x01, _entered = 1
+lockId = 0x0
+baseRecipient = 0x0
+outputToken = 0
+assetIdentity = 0x0
+valuationReference = 0x0
+releaseDestination = 0x0
+duration = 3600
+token = 0x02
+amount = 20
+verifiedGrossUsd = 10000000000000000
+fee = 0
+principal = 0
+
+Transaction trace:
+BaseCommitmentVaultLock.constructor(environmentId_, 0x01, 0x01, 0x03, 0x01)
+State: STANDARD_FEE_BPS = 500, BPS_DENOMINATOR = 10000, HANDSHAKE_DURATION = 3600, HANDSHAKE_USD_MIN = 10000000000000000, HANDSHAKE_USD_MAX = 20000000000000000, STANDARD_USD_MIN = 10000000000000000, countsPerIdentity = true, devFund = 0x01, vclmToken = 0x01, chonxToken = 0x03, synthToken = 0x01, _entered = 0
+BaseCommitmentVaultLock.createErc20Lock(0x0, 0x0, 0, 0x0, 0x0, 0x0, 3600, 0x02, 20, 10000000000000000){ msg.sender: 0x52f6 }
+    BaseCommitmentVaultLock.isProtocolToken(0x02) -- internal call
+    BaseCommitmentVaultLock._quote(20, 3600, 10000000000000000) -- internal call
+        CommitmentDurations.multiplierBps(3600) -- internal call
+    BaseCommitmentVaultLock._balanceOf(0x02, 0x26) -- internal call
+        token.staticcall(
+            abi.encodeWithSelector(IERC20MinimalBaseLock.balanceOf.selector, account)
+        ) -- untrusted external call
+    BaseCommitmentVaultLock._erc20(0x02, data) -- internal call
+        token.call(data) -- untrusted external call
+    BaseCommitmentVaultLock._balanceOf(0x02, 0x26) -- internal call
+        token.staticcall(
+            abi.encodeWithSelector(IERC20MinimalBaseLock.balanceOf.selector, account)
+        ) -- untrusted external call
+    BaseCommitmentVaultLock._quote(231584178474632390847141970017375815706539969331281128078915168015826259280, 3600, 10000000000000000) -- internal call
+        CommitmentDurations.multiplierBps(3600) -- internal call
+   --> workspace/rigs/static/base-contracts/contracts/BaseCommitmentVaultLock.sol:349:16:
+    |
+349 |         fee = (gross * STANDARD_FEE_BPS) / BPS_DENOMINATOR;
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+
