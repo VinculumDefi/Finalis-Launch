@@ -1,0 +1,385 @@
+{
+ "note": "TEST ONLY. Recorded from a local solana-test-validator running the vault program built from src/solana-vault at the declared program id. Keys were generated in memory and discarded.",
+ "recordedAt": "2026-10-23T13:54:56.362Z",
+ "validator": "solana-test-validator 1.18.18",
+ "cfg": {
+  "expectedGenesisHash": "52ThtMrFW1igsNnLUYxxDJ7f9Uqww8amW5UEYgumgHRJ",
+  "programId": "E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s"
+ },
+ "pkg": {
+  "programId": "E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s",
+  "signature": "5cFWsRDN8DqAGkhytVAFSe4u3akUEHhLxKaq2KszATXqa3CYMUNX8KpQzTfXZkCNcUiD5YyotnaRfJR2QzhyZspY",
+  "slot": 425,
+  "blockhash": "8DyQdLxLk3XuMFm1NBxfXYSmFTTpyzKmfEZAuo35xKiq",
+  "depositor": "2xUxdXVD6xaP9bY9ZtFwbts4W2181QNqip5H2p6T9jqN",
+  "asset": "SOL",
+  "grossAmount": "2000000000",
+  "durationSecs": "2592000",
+  "baseRecipient": "0xf1567a8b049a720a310eabc0c74113710c13043d",
+  "lockId": "solsamp-561d4739857e"
+ },
+ "calls": [
+  {
+   "key": "getGenesisHash []",
+   "result": "52ThtMrFW1igsNnLUYxxDJ7f9Uqww8amW5UEYgumgHRJ"
+  },
+  {
+   "key": "getTransaction [\"5cFWsRDN8DqAGkhytVAFSe4u3akUEHhLxKaq2KszATXqa3CYMUNX8KpQzTfXZkCNcUiD5YyotnaRfJR2QzhyZspY\",{\"commitment\":\"finalized\",\"encoding\":\"base64\",\"maxSupportedTransactionVersion\":0}]",
+   "result": {
+    "blockTime": 1792763681,
+    "meta": {
+     "computeUnitsConsumed": 29786,
+     "err": null,
+     "fee": 5000,
+     "innerInstructions": [
+      {
+       "index": 0,
+       "instructions": [
+        {
+         "accounts": [
+          0,
+          1
+         ],
+         "data": "11116HyuEUVyQ23LoJGYxvMDr7ru1bN3wSHWt3H5HqHtKr6wR6RCVZJYvyRbrX3Z4kfozM",
+         "programIdIndex": 5,
+         "stackHeight": 2
+        },
+        {
+         "accounts": [
+          0,
+          2
+         ],
+         "data": "11112mkQ5ZPc9nwkXJsDetox1fZsekmwrriEt2VNGoDmzU6LDx4D725XbHz6FKbiZvaXmF",
+         "programIdIndex": 5,
+         "stackHeight": 2
+        },
+        {
+         "accounts": [
+          0,
+          1
+         ],
+         "data": "3Bxs3zxH1DZVrsVy",
+         "programIdIndex": 5,
+         "stackHeight": 2
+        }
+       ]
+      }
+     ],
+     "loadedAddresses": {
+      "readonly": [],
+      "writable": []
+     },
+     "logMessages": [
+      "Program E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s invoke [1]",
+      "Program log: Instruction: CommitVaultLockNative",
+      "Program 11111111111111111111111111111111 invoke [2]",
+      "Program 11111111111111111111111111111111 success",
+      "Program 11111111111111111111111111111111 invoke [2]",
+      "Program 11111111111111111111111111111111 success",
+      "Program 11111111111111111111111111111111 invoke [2]",
+      "Program 11111111111111111111111111111111 success",
+      "Program data: 9Ng7TVMvPcQUAAAAc29sc2FtcC01NjFkNDczOTg1N2UdEj6y/c8Q2C7T35x0tfI3WysGDaSiyHbskfhxGcmwHQMAAABTT0wAlDV3AAAAAAAAAAAAAAAAAOH1BQAAAAAAAAAAAAAAAACzP3EAAAAAAAAAAAAAAAAAADApiBpWQxAAAAAAAAAAAI0nAAAAAAAh9AJrAAAAAPFWeosEmnIKMQ6rwMdBE3EMEwQ909d9ogTfHaX0B739at1zTKmYvCPcr8qGNeCob1agtGoAAA==",
+      "Program data: vUb4LpQMlkcUAAAAc29sc2FtcC01NjFkNDczOTg1N2UBCqSY+zjl9IHzFhn8+p/jMVXEZnNdwb2Se1qZbUPVIgDh9QUAAAAAAAAAAAAAAAADAAAAU09M",
+      "Program E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s consumed 29786 of 200000 compute units",
+      "Program E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s success"
+     ],
+     "postBalances": [
+      17991972080,
+      1904475280,
+      1788720,
+      100000000,
+      1753920,
+      1,
+      1141440
+     ],
+     "postTokenBalances": [],
+     "preBalances": [
+      19998241080,
+      0,
+      0,
+      0,
+      1753920,
+      1,
+      1141440
+     ],
+     "preTokenBalances": [],
+     "rewards": [],
+     "status": {
+      "Ok": null
+     }
+    },
+    "slot": 425,
+    "transaction": [
+     "AeZ3ax+JXKqL196+VKyxqsfPGfTwQd/mb3it557kohv89MPivPpmybcSU8G/YK+D0GSjZIVUeqnC2oygKodXuA0BAAMHHRI+sv3PENgu09+cdLXyN1srBg2kosh27JH4cRnJsB0UpBITDo/orT8jmZVQJ9NdOFtEwT9FAMZCq6ztGpdpLgu1csxLNIm9H1XJouUracuxpozgzy24DDTsdWUXolyeAQqkmPs45fSB8xYZ/Pqf4zFVxGZzXcG9kntamW1D1SJ5sqfYp4vnq4a8UOLTfd+CneWaVjfDZw+tzaig5JAWPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwzsXkfptf45uhmSWSQOkBWSc4oZUVc4nlBrvBr0P+vbSyrQBa5OFI/nc0bmyDTFYnlYDm3BKK+5iF4KeZ4TTFAEGBgAEAQIDBaEBPQqy5GTKTM8UAAAAc29sc2FtcC01NjFkNDczOTg1N2Wh053CyJqTw/9xwk1+cHOi4KRSPXdCYoToFnESWqfaOwCUNXcAAAAAAAAAAAAAAAAAjScAAAAAAPFWeosEmnIKMQ6rwMdBE3EMEwQ909d9ogTfHaX0B739at1zTKmYvCPcr8qGNeCob1agtGoAAAAwKYgaVkMQAAAAAAAAAAAAAAA=",
+     "base64"
+    ],
+    "version": "legacy"
+   }
+  },
+  {
+   "key": "getBlock [425,{\"commitment\":\"finalized\",\"transactionDetails\":\"signatures\",\"rewards\":false,\"maxSupportedTransactionVersion\":0}]",
+   "result": {
+    "blockHeight": 425,
+    "blockTime": 1792763681,
+    "blockhash": "8DyQdLxLk3XuMFm1NBxfXYSmFTTpyzKmfEZAuo35xKiq",
+    "parentSlot": 424,
+    "previousBlockhash": "FBqtWyT7qVCppD6FuWtS1JYBMmxFEHtWKw4gvjokdcPV",
+    "signatures": [
+     "di9dNfYCN1SEYvcbYx2oJss2uxggvKDvYQZhZyw5GHVizjcPBL6TA7wt6XStBEJbQkh2A3PXW16Rx4LqQ1dXQPW",
+     "5cFWsRDN8DqAGkhytVAFSe4u3akUEHhLxKaq2KszATXqa3CYMUNX8KpQzTfXZkCNcUiD5YyotnaRfJR2QzhyZspY"
+    ]
+   }
+  },
+  {
+   "key": "getSignatureStatuses [[\"5cFWsRDN8DqAGkhytVAFSe4u3akUEHhLxKaq2KszATXqa3CYMUNX8KpQzTfXZkCNcUiD5YyotnaRfJR2QzhyZspY\"],{\"searchTransactionHistory\":true}]",
+   "result": {
+    "context": {
+     "apiVersion": "1.18.18",
+     "slot": 458
+    },
+    "value": [
+     {
+      "confirmationStatus": "finalized",
+      "confirmations": null,
+      "err": null,
+      "slot": 425,
+      "status": {
+       "Ok": null
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "earlyCalls": [
+  {
+   "key": "getTransaction [\"5cFWsRDN8DqAGkhytVAFSe4u3akUEHhLxKaq2KszATXqa3CYMUNX8KpQzTfXZkCNcUiD5YyotnaRfJR2QzhyZspY\",{\"commitment\":\"finalized\",\"encoding\":\"base64\",\"maxSupportedTransactionVersion\":0}]",
+   "result": null
+  }
+ ],
+ "confirmedTx": {
+  "blockTime": 1792763681,
+  "meta": {
+   "computeUnitsConsumed": 29786,
+   "err": null,
+   "fee": 5000,
+   "innerInstructions": [
+    {
+     "index": 0,
+     "instructions": [
+      {
+       "accounts": [
+        0,
+        1
+       ],
+       "data": "11116HyuEUVyQ23LoJGYxvMDr7ru1bN3wSHWt3H5HqHtKr6wR6RCVZJYvyRbrX3Z4kfozM",
+       "programIdIndex": 5,
+       "stackHeight": 2
+      },
+      {
+       "accounts": [
+        0,
+        2
+       ],
+       "data": "11112mkQ5ZPc9nwkXJsDetox1fZsekmwrriEt2VNGoDmzU6LDx4D725XbHz6FKbiZvaXmF",
+       "programIdIndex": 5,
+       "stackHeight": 2
+      },
+      {
+       "accounts": [
+        0,
+        1
+       ],
+       "data": "3Bxs3zxH1DZVrsVy",
+       "programIdIndex": 5,
+       "stackHeight": 2
+      }
+     ]
+    }
+   ],
+   "loadedAddresses": {
+    "readonly": [],
+    "writable": []
+   },
+   "logMessages": [
+    "Program E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s invoke [1]",
+    "Program log: Instruction: CommitVaultLockNative",
+    "Program 11111111111111111111111111111111 invoke [2]",
+    "Program 11111111111111111111111111111111 success",
+    "Program 11111111111111111111111111111111 invoke [2]",
+    "Program 11111111111111111111111111111111 success",
+    "Program 11111111111111111111111111111111 invoke [2]",
+    "Program 11111111111111111111111111111111 success",
+    "Program data: 9Ng7TVMvPcQUAAAAc29sc2FtcC01NjFkNDczOTg1N2UdEj6y/c8Q2C7T35x0tfI3WysGDaSiyHbskfhxGcmwHQMAAABTT0wAlDV3AAAAAAAAAAAAAAAAAOH1BQAAAAAAAAAAAAAAAACzP3EAAAAAAAAAAAAAAAAAADApiBpWQxAAAAAAAAAAAI0nAAAAAAAh9AJrAAAAAPFWeosEmnIKMQ6rwMdBE3EMEwQ909d9ogTfHaX0B739at1zTKmYvCPcr8qGNeCob1agtGoAAA==",
+    "Program data: vUb4LpQMlkcUAAAAc29sc2FtcC01NjFkNDczOTg1N2UBCqSY+zjl9IHzFhn8+p/jMVXEZnNdwb2Se1qZbUPVIgDh9QUAAAAAAAAAAAAAAAADAAAAU09M",
+    "Program E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s consumed 29786 of 200000 compute units",
+    "Program E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s success"
+   ],
+   "postBalances": [
+    17991972080,
+    1904475280,
+    1788720,
+    100000000,
+    1753920,
+    1,
+    1141440
+   ],
+   "postTokenBalances": [],
+   "preBalances": [
+    19998241080,
+    0,
+    0,
+    0,
+    1753920,
+    1,
+    1141440
+   ],
+   "preTokenBalances": [],
+   "rewards": [],
+   "status": {
+    "Ok": null
+   }
+  },
+  "slot": 425,
+  "transaction": [
+   "AeZ3ax+JXKqL196+VKyxqsfPGfTwQd/mb3it557kohv89MPivPpmybcSU8G/YK+D0GSjZIVUeqnC2oygKodXuA0BAAMHHRI+sv3PENgu09+cdLXyN1srBg2kosh27JH4cRnJsB0UpBITDo/orT8jmZVQJ9NdOFtEwT9FAMZCq6ztGpdpLgu1csxLNIm9H1XJouUracuxpozgzy24DDTsdWUXolyeAQqkmPs45fSB8xYZ/Pqf4zFVxGZzXcG9kntamW1D1SJ5sqfYp4vnq4a8UOLTfd+CneWaVjfDZw+tzaig5JAWPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwzsXkfptf45uhmSWSQOkBWSc4oZUVc4nlBrvBr0P+vbSyrQBa5OFI/nc0bmyDTFYnlYDm3BKK+5iF4KeZ4TTFAEGBgAEAQIDBaEBPQqy5GTKTM8UAAAAc29sc2FtcC01NjFkNDczOTg1N2Wh053CyJqTw/9xwk1+cHOi4KRSPXdCYoToFnESWqfaOwCUNXcAAAAAAAAAAAAAAAAAjScAAAAAAPFWeosEmnIKMQ6rwMdBE3EMEwQ909d9ogTfHaX0B739at1zTKmYvCPcr8qGNeCob1agtGoAAAAwKYgaVkMQAAAAAAAAAAAAAAA=",
+   "base64"
+  ],
+  "version": "legacy"
+ },
+ "earlyStatus": {
+  "context": {
+   "apiVersion": "1.18.18",
+   "slot": 425
+  },
+  "value": [
+   {
+    "confirmationStatus": "confirmed",
+    "confirmations": 0,
+    "err": null,
+    "slot": 425,
+    "status": {
+     "Ok": null
+    }
+   }
+  ]
+ },
+ "confirmedAtSlot": 425,
+ "transfer": {
+  "pkg": {
+   "programId": "E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s",
+   "signature": "4VoJsK3FmbJwUhumpxkX4iynSPeaqjFY3YFHWdHFNumEte1PBXyHDmzcAt5Fc2S74EUsiEvY68TMC8WTPyPh1zN7",
+   "slot": 426,
+   "blockhash": "3uDZc1sBEyrFpsubD1VpMd1qV6dVLFR95AXmq5BV1P81",
+   "depositor": "2xUxdXVD6xaP9bY9ZtFwbts4W2181QNqip5H2p6T9jqN",
+   "asset": "SOL",
+   "grossAmount": "2000000000",
+   "durationSecs": "2592000",
+   "baseRecipient": "0xf1567a8b049a720a310eabc0c74113710c13043d",
+   "lockId": "solsamp-561d4739857e"
+  },
+  "calls": [
+   {
+    "key": "getGenesisHash []",
+    "result": "52ThtMrFW1igsNnLUYxxDJ7f9Uqww8amW5UEYgumgHRJ"
+   },
+   {
+    "key": "getTransaction [\"4VoJsK3FmbJwUhumpxkX4iynSPeaqjFY3YFHWdHFNumEte1PBXyHDmzcAt5Fc2S74EUsiEvY68TMC8WTPyPh1zN7\",{\"commitment\":\"finalized\",\"encoding\":\"base64\",\"maxSupportedTransactionVersion\":0}]",
+    "result": {
+     "blockTime": 1792763682,
+     "meta": {
+      "computeUnitsConsumed": 150,
+      "err": null,
+      "fee": 5000,
+      "innerInstructions": [],
+      "loadedAddresses": {
+       "readonly": [],
+       "writable": []
+      },
+      "logMessages": [
+       "Program 11111111111111111111111111111111 invoke [1]",
+       "Program 11111111111111111111111111111111 success"
+      ],
+      "postBalances": [
+       16991967080,
+       1000000000,
+       1
+      ],
+      "postTokenBalances": [],
+      "preBalances": [
+       17991972080,
+       0,
+       1
+      ],
+      "preTokenBalances": [],
+      "rewards": [],
+      "status": {
+       "Ok": null
+      }
+     },
+     "slot": 426,
+     "transaction": [
+      "Aa7iukgOk8QXw6rAYPIyt3pJbAnAWdZ9aFaFAJ2QmgB2+tbdqTgWQhSaV08uNS+9yKOXrwmGG+j0zzub25gGvQwBAAEDHRI+sv3PENgu09+cdLXyN1srBg2kosh27JH4cRnJsB1ROzQMWubqGmrxx/fJHS7kDc8QJjxDRFPAwDyYMZW4rAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa1SO5cbFHNUbmJfSXigngRxpfuOkbIEhxf37BO60wpoBAgIAAQwCAAAAAMqaOwAAAAA=",
+      "base64"
+     ],
+     "version": "legacy"
+    }
+   },
+   {
+    "key": "getBlock [426,{\"commitment\":\"finalized\",\"transactionDetails\":\"signatures\",\"rewards\":false,\"maxSupportedTransactionVersion\":0}]",
+    "result": {
+     "blockHeight": 426,
+     "blockTime": 1792763682,
+     "blockhash": "3uDZc1sBEyrFpsubD1VpMd1qV6dVLFR95AXmq5BV1P81",
+     "parentSlot": 425,
+     "previousBlockhash": "8DyQdLxLk3XuMFm1NBxfXYSmFTTpyzKmfEZAuo35xKiq",
+     "signatures": [
+      "5Z83FwLCidYGfPHFNjvNPUqPc4wJWGyohav4pJ5jexn1PSL1mCFaBHFtjauRPV1ddANGvU8QPdgsmNYWU7RYxKkt",
+      "4VoJsK3FmbJwUhumpxkX4iynSPeaqjFY3YFHWdHFNumEte1PBXyHDmzcAt5Fc2S74EUsiEvY68TMC8WTPyPh1zN7"
+     ]
+    }
+   },
+   {
+    "key": "getSignatureStatuses [[\"4VoJsK3FmbJwUhumpxkX4iynSPeaqjFY3YFHWdHFNumEte1PBXyHDmzcAt5Fc2S74EUsiEvY68TMC8WTPyPh1zN7\"],{\"searchTransactionHistory\":true}]",
+    "result": {
+     "context": {
+      "apiVersion": "1.18.18",
+      "slot": 458
+     },
+     "value": [
+      {
+       "confirmationStatus": "finalized",
+       "confirmations": null,
+       "err": null,
+       "slot": 426,
+       "status": {
+        "Ok": null
+       }
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "facts": {
+  "genesisHash": "52ThtMrFW1igsNnLUYxxDJ7f9Uqww8amW5UEYgumgHRJ",
+  "programId": "E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s",
+  "signature": "5cFWsRDN8DqAGkhytVAFSe4u3akUEHhLxKaq2KszATXqa3CYMUNX8KpQzTfXZkCNcUiD5YyotnaRfJR2QzhyZspY",
+  "slot": "425",
+  "blockhash": "8DyQdLxLk3XuMFm1NBxfXYSmFTTpyzKmfEZAuo35xKiq",
+  "blockTime": "1792763681",
+  "lockId": "solsamp-561d4739857e",
+  "lockIdHash": "0xa1d39dc2c89a93c3ff71c24d7e7073a2e0a4523d77426284e81671125aa7da3b",
+  "depositor": "2xUxdXVD6xaP9bY9ZtFwbts4W2181QNqip5H2p6T9jqN",
+  "asset": "SOL",
+  "grossAmount": "2000000000",
+  "feeAmount": "100000000",
+  "principalAmount": "1900000000",
+  "durationSecs": "2592000",
+  "maturity": "1795355681",
+  "baseRecipient": "0xf1567a8b049a720a310eabc0c74113710c13043d",
+  "releaseDestination": "FFwc7NZkggZFxqDmUiLn3fFw4toDapXkRRmVqpNsFpad",
+  "outputToken": 0,
+  "verifiedGrossUsd18": "300000000000000000000"
+ }
+}
