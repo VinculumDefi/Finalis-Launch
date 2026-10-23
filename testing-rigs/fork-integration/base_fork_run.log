@@ -1,0 +1,33 @@
+fork base at block 52983372
+
+
+  Rig 2: Base mainnet fork, full ceremony stack, real Base tokens
+      fork block 52983450 Verifier 0xD9da...6517 Base lock 0x88B7...31BB
+      price ETH 2400.58 USD (Chainlink ETH / USD, 2026-10-23T11:43:07.000Z)
+      price USDC_BASE 0.99983572 USD (Chainlink USDC / USD, 2026-10-22T12:52:19.000Z)
+      CBETH: feed reports "CBETH / USD", expected "cbETH / USD". Skipped (fail closed).
+      price AERO 0.78544194 USD (Chainlink AERO / USD, 2026-10-23T11:14:43.000Z)
+      price cbBTC 81539.48778476 USD (Chainlink cbBTC / USD, 2026-10-23T11:41:19.000Z)
+      ETH: gross 1.0 fee 0.05 minted 31207.54 VCLM, released 0.95
+    ✔ native ETH: lock, verify/mint, release (Base reader reads real fork state) (3004ms)
+      USDC_BASE: gross 2000.0 fee 100.0 minted 19996.7144 VCLM, released 1900.0
+    ✔ USDC_BASE (real token code): exact 5% fee to the Dev Fund, mint, exact principal back (12300ms)
+    - CBETH (real token code): exact 5% fee to the Dev Fund, mint, exact principal back
+      AERO: gross 500.0 fee 25.0 minted 3927.2097 VCLM, released 475.0
+    ✔ AERO (real token code): exact 5% fee to the Dev Fund, mint, exact principal back (3249ms)
+      cbBTC: gross 0.01 fee 0.0005 minted 8153.948778476 VCLM, released 0.0095
+    ✔ cbBTC (real token code): exact 5% fee to the Dev Fund, mint, exact principal back (12335ms)
+    ✔ $0.95 rule on real USDC_BASE: a run below 0.95 makes new valuations fail closed; >= 0.95 accepted; earlier bound valuation unaffected (6391ms)
+      ETH: gross 45.0 fee 2.25 minted 11234714.4 VCLM
+      ETH: gross 45.0 fee 2.25 minted 110474317.10952 CHONX
+      lifetime VCLM 11317498.170078476, lifetime CHONX 110474317.10952, 1 SYNTH forged
+    ✔ CHONX opens at 10M lifetime VCLM; SYNTH needs 100M lifetime CHONX; forge burns 1,000 VCLM + 10,000 CHONX (6325ms)
+      ETH: gross 1.0 fee 0.05 minted 30687.3103082 VCLM
+      epoch 4 basis 3312.8004 -> 3384.8178 USD from one extra call by a stranger
+    ✔ FINDING-HH-001 on real Base state: a settled lock's RAC can be recorded again with a fresh racIdentity (2635ms)
+
+
+  7 passing (4m)
+  1 pending
+
+EXIT 0
