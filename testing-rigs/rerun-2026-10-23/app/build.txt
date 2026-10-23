@@ -19,5 +19,5 @@ dist/assets/index-CmM5_IuQ.js   1,111.54 kB │ gzip: 336.07 kB
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 5.35s
+✓ built in 5.05s
 EXIT 0
