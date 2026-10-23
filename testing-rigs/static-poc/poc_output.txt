@@ -1,0 +1,15 @@
+
+
+  static rig PoC: Verifier input gaps (findings only, no fix)
+      honest mint 106.251439146811315591 VCLM, valuationTimestamp=0 mint 130.0 VCLM
+    ✔ STATIC-H02: caller-chosen valuationTimestamp skips emission decay (3330ms)
+      one credit 30000000000000000000, epoch reward basis after 5 calls 150000000000000000000
+    ✔ STATIC-C01: one lock records many RAC credits under different racIdentity values (169ms)
+      price at lock creation 1000, bound price 2000.0
+    ✔ STATIC-M01: price is bound at first proof submission, not at lock creation (120ms)
+      one fee should give 300.0 reward VCLM; Stake minted 6000.0 VCLM for epoch 2
+    ✔ STATIC-C01b: Stake.allocateEpoch mints VCLM on the inflated basis (277ms)
+
+
+  4 passing (4s)
+
