@@ -40,3 +40,13 @@ proof of work passes BitcoinLockReader.verifyFinality. Whether that is safe depe
 binds the header to the real chain (PoW, checkpoints, a light client, an operator attestation).
 That question belongs to the adversarial / assumption-gap tier, not to this rig. See FZ-05 in
 ../findings/fuzz_mutation.json.
+
+## Not committed (recreated locally)
+These folders are third-party code or build output. They are listed in fuzzing/.gitignore and
+echidna/.gitignore and are not on main.
+- fuzzing/lib/forge-std (about 1.4 MB, third-party): `./setup.sh` clones forge-std at the pinned
+  tag v1.9.7 into lib/forge-std if it is missing, and installs Foundry (foundryup) if `forge` is
+  not on PATH.
+- fuzzing/cache/ and fuzzing/out/: written by `forge build` or `forge test`.
+- echidna/corpus/ and echidna/crytic-export/: written by the echidna command above. Rerun with
+  the same seed (20261023) and config to recreate the corpus.
