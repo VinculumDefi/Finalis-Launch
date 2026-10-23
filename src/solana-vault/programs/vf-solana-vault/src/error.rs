@@ -11,11 +11,11 @@ pub enum ErrorCode {
     DurationNotPermitted,
 
     // VF-COM-003: Handshake USD value bounds
-    #[msg("VF-COM-003: Handshake USD value outside $0.95–$1.05 inclusive")]
+    #[msg("VF-COM-003: Handshake USD value outside $0.01-$0.02 inclusive")]
     HandshakeValueOutOfRange,
 
     // VF-COM-009: Standard lock minimum USD value
-    #[msg("VF-COM-009: Standard lock USD value below $10.00 minimum")]
+    #[msg("VF-COM-009: Standard lock USD value below $0.01 minimum")]
     StandardValueBelowMinimum,
 
     // VF-COM-010: Zero gross amount
@@ -26,7 +26,8 @@ pub enum ErrorCode {
     #[msg("VF-COM-013: Rounding produced zero fee or zero principal")]
     ZeroFeeOrPrincipal,
 
-    // VF-COM-006/007: Handshake allowance exceeded
+    // VF-COM-006/007: Revision 6 allowance. Rev 12 removed the limit, so this
+    // code is no longer returned; kept so the error numbers do not shift.
     #[msg("VF-COM-007: Identity has used all qualifying Handshake allowance")]
     HandshakeAllowanceExhausted,
 
