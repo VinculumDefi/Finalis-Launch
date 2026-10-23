@@ -1,0 +1,1198 @@
+{
+ "summary": {
+  "extractor_engine": "slither",
+  "entry_points": 177,
+  "inputs_mapped": 541,
+  "inputs_with_no_check": 189,
+  "assumptions": 26,
+  "gaps_flagged": 20,
+  "forged_header_gap_AG01_flagged": true,
+  "problems": []
+ },
+ "rows": [
+  {
+   "assumption": "A-01",
+   "finding": "AG-01",
+   "domain": "block headers and finality",
+   "input": "EVM block header + sourceFinalityProof (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche)",
+   "entry_point": "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84; AvalancheLockReader.sol:43-57",
+   "assumed_property": "The header is part of the source chain's settled (finalized) history, on the named chain",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/SimpleEthereumLockReader.sol:18  require(bool,string)(f.length >= 20,VF-XCH-011: Ethereum header fields)",
+    "base-contracts/contracts/chain-verifiers/SimpleEthereumLockReader.sol:19  require(bool,string)(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH,VF-XCH-011: Ethereum uncles)",
+    "base-contracts/contracts/chain-verifiers/SimpleEthereumLockReader.sol:20  require(bool,string)(RlpReader.toUint(f[7]) == 0,VF-XCH-011: Ethereum difficulty)",
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:81  require(bool,string)(claimedHash == h.hash,VF-XCH-006: block hash mismatch)",
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:82  require(bool,string)(claimedHeight == h.number,VF-XCH-006: block height mismatch)",
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:80  require(bool,string)(claimedChain == chainId,VF-XCH-006: wrong chain)",
+    "base-contracts/contracts/chain-verifiers/ArbitrumLockReader.sol:28  require(bool,string)(f.length == 16,VF-XCH-011: Arbitrum header fields)",
+    "base-contracts/contracts/chain-verifiers/ArbitrumLockReader.sol:29  require(bool,string)(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH,VF-XCH-011: Arbitrum uncles)",
+    "base-contracts/contracts/chain-verifiers/ArbitrumLockReader.sol:30  require(bool,string)(RlpReader.toUint(f[7]) == 1,VF-XCH-011: Arbitrum difficulty)",
+    "base-contracts/contracts/chain-verifiers/ArbitrumLockReader.sol:31  require(bool,string)(RlpReader.stringPayload(f[12]).length == 32,VF-XCH-011: Arbitrum sendRoot)",
+    "base-contracts/contracts/chain-verifiers/OptimismLockReader.sol:21  require(bool,string)(f.length >= 20,VF-XCH-011: Optimism header fields)",
+    "base-contracts/contracts/chain-verifiers/OptimismLockReader.sol:22  require(bool,string)(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH,VF-XCH-011: Optimism uncles)",
+    "base-contracts/contracts/chain-verifiers/OptimismLockReader.sol:23  require(bool,string)(RlpReader.toUint(f[7]) == 0,VF-XCH-011: Optimism difficulty)",
+    "base-contracts/contracts/chain-verifiers/PolygonLockReader.sol:28  require(bool,string)(f.length >= 16,VF-XCH-011: Polygon header fields)",
+    "base-contracts/contracts/chain-verifiers/PolygonLockReader.sol:29  require(bool,string)(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH,VF-XCH-011: Polygon uncles)",
+    "base-contracts/contracts/chain-verifiers/PolygonLockReader.sol:30  require(bool,string)(RlpReader.toUint(f[7]) >= 1,VF-XCH-011: Polygon difficulty)",
+    "base-contracts/contracts/chain-verifiers/PolygonLockReader.sol:31  require(bool,string)(RlpReader.stringPayload(f[12]).length >= 97,VF-XCH-011: Polygon extraData)",
+    "base-contracts/contracts/chain-verifiers/BnbSmartChainLockReader.sol:19  require(bool,string)(f.length >= 20,VF-XCH-011: BNB header fields)",
+    "base-contracts/contracts/chain-verifiers/BnbSmartChainLockReader.sol:20  require(bool,string)(RlpReader.toBytes32(f[1]) == EMPTY_UNCLE_HASH,VF-XCH-011: BNB uncles)",
+    "base-contracts/contracts/chain-verifiers/BnbSmartChainLockReader.sol:22  require(bool,string)(d == 1 || d == 2,VF-XCH-011: BNB difficulty)",
+    "base-contracts/contracts/chain-verifiers/BnbSmartChainLockReader.sol:23  require(bool,string)(RlpReader.stringPayload(f[12]).length >= 97,VF-XCH-011: BNB extraData)",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol:54  require(bool,string)(claimedHash == h.hash,VF-XCH-006: block hash mismatch)",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol:55  require(bool,string)(claimedHeight == h.number,VF-XCH-006: block height mismatch)",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol:31  require(bool,string)(f.length >= 16,VF-XCH-011: Avalanche header fields)",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol:32  require(bool,string)(RlpReader.toUint(f[7]) == 1,VF-XCH-011: Avalanche difficulty)",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol:33  require(bool,string)(f[15].length == 33 && uint8(f[15][0]) == 0xa0,VF-XCH-011: Avalanche extDataHash)",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol:53  require(bool,string)(claimedChain == chainId,VF-XCH-006: wrong chain)"
+   ],
+   "required_properties": [
+    {
+     "property": "header anchored to settled history (light client, checkpoint, validator signatures or confirmations)",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "chain id read from chain data, not from the caller's claim",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Only keccak(header) == claimed hash, claimed height == header number, and claimed chain id == the reader's own constant. The claimed chain id is the caller's word; an Ethereum header carries no chain id. Nothing ties the header to any real chain. EthereumLockReader (beacon light client) exists but the ceremony registers SimpleEthereumLockReader; the checkers/ finality contracts are never called by any reader.",
+   "exploit_sketch": "Run a local fork, create a real-looking lock, then rewrite header fields (mixHash, parentHash) so the header exists on no chain; the receipt proof still matches its receiptsRoot. Submit with claimed chain id 1. Known Oct 22 finding (non_base_finality_trust_model.test.cjs): about 311 VCLM per forged lock.",
+   "damage_potential": "Unlimited VCLM mint up to the 500,000,000 hard cap, and CHONX after activation, with no real asset locked. Inflated supply also inflates RAC and stake rewards.",
+   "severity": "critical",
+   "rank": 1,
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "VF-SEC-005"
+   ],
+   "rev_conflict": "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers.",
+   "poc": "AG-01"
+  },
+  {
+   "assumption": "A-02",
+   "finding": "AG-02",
+   "domain": "block headers and finality",
+   "input": "UTXO block header + sourceFinalityProof (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash)",
+   "entry_point": "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107",
+   "assumed_property": "The header carries real proof of work, links to the best chain, and has enough confirmations",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:288  require(bool,string)(tx.length > 23 && _u32le(tx,0) == ZEC_V5_HEADER && _u32le(tx,4) == ZEC_V5_GROUP,VF-XCH-011: Zcash v5 transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:291  require(bool,string)(tx.length > 10,VF-XCH-011: transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:292  require(bool,string)(uint8(tx[4]) != 0x00,VF-XCH-011: witness serialization)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:296  require(bool,string)(n > 0,VF-XCH-011: no inputs)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:301  require(bool,string)(i + 36 <= tx.length,VF-XCH-011: input)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:318  require(bool,string)(i + sl + 4 <= tx.length,VF-XCH-011: input script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:324  require(bool,string)(n > 0,VF-XCH-011: no outputs)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:328  require(bool,string)(i + 9 <= tx.length,VF-XCH-011: output)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:334  require(bool,string)(i + sl_scope_3 <= tx.length,VF-XCH-011: output script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:341  require(bool,string)(i + 3 == tx.length && tx[i] == 0 && tx[i + 1] == 0 && tx[i + 2] == 0,VF-XCH-011: Zcash shielded data)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:344  require(bool,string)(i + 4 == tx.length,VF-XCH-011: transaction length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:382  require(bool,string)(i < d.length,VF-XCH-011: compact size)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:386  require(bool,string)(i + 1 + w <= d.length,VF-XCH-011: compact size)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0xfd,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0x10000,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0x100000000,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:192  require(bool,string)(n > 0,VF-XCH-011: coinbase height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:195  require(bool,string)(op >= 1 && op <= 8 && op < n,VF-XCH-011: coinbase height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:197  require(bool,string)(uint8(tx[s + op]) & 0x80 == 0,VF-XCH-011: coinbase height sign)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:160  require(bool,string)(h.length == 1487 && uint8(h[140]) == 0xfd && uint8(h[141]) == 0x40 && uint8(h[142]) == 0x05,VF-XCH-011: Zcash header)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:163  require(bool,string)(h.length == 80,VF-XCH-011: header length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:168  require(bool,string)(cb.firstPrevTxid == bytes32(0) && cb.firstPrevVout == 0xffffffff,VF-XCH-011: coinbase)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:169  require(bool,string)(p.coinbaseTx.length != 64,VF-XCH-011: 64-byte transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:170  require(bool,string)(_merkle(cb.txid,p.coinbaseBranch,0) == _merkleRoot(h),VF-XCH-011: coinbase not in block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:104  require(bool,string)(claimedHash == hash,VF-XCH-006: block hash mismatch)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:105  require(bool,string)(claimedHeight == height,VF-XCH-006: block height mismatch)"
+   ],
+   "required_properties": [
+    {
+     "property": "proof of work meets the header's target",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "linked to a known chain (prev hash / checkpoint)",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "confirmation depth",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Only double-SHA256(header) == claimed hash and claimed height == coinbase height. No target check, no parent link, no confirmations. BitcoinHeaderChecker and ZcashHeaderChecker exist but are not called.",
+   "exploit_sketch": "Build an 80-byte header with any prev hash, bits 0x1d00ffff and any nonce over a merkle root that includes a self-made lock transaction to the Dev Fund script; no mining needed. PoC AG-02 shows verifyFinality and extractFacts accept it.",
+   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated Bitcoin-family locks, valued at the registry price of BTC, LTC, etc.",
+   "severity": "critical",
+   "rank": 2,
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008"
+   ],
+   "rev_conflict": "Rev 6 VF-XCH-006/008.",
+   "poc": "AG-02"
+  },
+  {
+   "assumption": "A-03",
+   "finding": "AG-03",
+   "domain": "block headers and finality",
+   "input": "Stellar ledger header and XRPL ledger header",
+   "entry_point": "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:66-77; XrplLockReader.sol:84-95",
+   "assumed_property": "The ledger was closed by the network (SCP quorum for Stellar, UNL validator signatures for XRPL)",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:126  require(bool,string)(i + 4 <= b.length,VF-XCH-011: truncated XDR)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:158  require(bool,string)(nUp <= 6,VF-XCH-006: upgrades)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:164  require(bool,string)(_u32(h,i) == 0,VF-XCH-006: node id type)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:167  require(bool,string)(extType == 0,VF-XCH-006: scp value ext)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:74  require(bool,string)(claimedHash == hash,VF-XCH-006: ledger hash mismatch)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:75  require(bool,string)(claimedSeq == seq,VF-XCH-006: ledger sequence mismatch)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:136  require(bool,string)(i + 32 <= b.length,VF-XCH-011: truncated XDR)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:131  require(bool,string)(i + 8 <= b.length,VF-XCH-011: truncated XDR)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:92  require(bool,string)(claimedHash == hash,VF-XCH-006: ledger hash mismatch)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:93  require(bool,string)(claimedIndex == index,VF-XCH-006: ledger index mismatch)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:167  require(bool,string)(hdr.length == HEADER_LEN,VF-XCH-006: header length)"
+   ],
+   "required_properties": [
+    {
+     "property": "quorum or validator signatures over the ledger",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "linked to a trusted ledger",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Only hash(header) == claimed hash and claimed sequence/index == header field. Any self-built ledger header is accepted.",
+   "exploit_sketch": "Build a ledger header whose tx-set or account-state hash commits to a fabricated payment to the Dev Fund account with a chosen memo; any previous-ledger/parent hash. PoC AG-03a/03b.",
+   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated XLM/XRP locks.",
+   "severity": "critical",
+   "rank": 3,
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008"
+   ],
+   "rev_conflict": "Rev 6 VF-XCH-006/008.",
+   "poc": "AG-03a, AG-03b"
+  },
+  {
+   "assumption": "A-06",
+   "finding": "AG-04",
+   "domain": "lock records and RAC identity",
+   "input": "pkg.racIdentity",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:654,686-701",
+   "assumed_property": "One RAC per real fee payment; racIdentity is derived from the lock's immutable facts",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654  require(bool,string)(! recordedRacs[pkg.racIdentity],VF-RAC-001: RAC already recorded)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1015  require(bool,string)(recorded == priceUsd18,VF-ORC-007: price record mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:914  require(bool,string)(g >= minUnits,VF-COM-003: handshake gross below unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:915  require(bool,string)(g <= maxUnits,VF-COM-003: handshake gross above unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:918  require(bool,string)(verifiedGrossUsd >= HANDSHAKE_USD_MIN && verifiedGrossUsd <= HANDSHAKE_USD_MAX,VF-COM-003: handshake USD outside $0.01-$0.02)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:923  require(bool,string)(verifiedGrossUsd >= STANDARD_USD_MIN,VF-COM-009: standard USD below $0.01)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:717  require(bool,string)(finalized,VF-XCH-006: source not finalized)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:734  require(bool,string)(keccak256(bytes)(abi.encodePacked(extLockId)) == keccak256(bytes)(abi.encodePacked(pkg.commitmentVaultLockId)),VF-XCH-011: lockId mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:738  require(bool,string)(extGross == pkg.grossAmountSmallestUnits,VF-XCH-011: gross mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:739  require(bool,string)(extFee == pkg.actualFeeAmountSmallestUnits,VF-XCH-011: fee mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:740  require(bool,string)(extPrincipal == pkg.principalAmountSmallestUnits,VF-XCH-011: principal mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:741  require(bool,string)(extDuration == pkg.durationSecs,VF-XCH-011: duration mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:742  require(bool,string)(extRecipient == pkg.baseRecipient,VF-XCH-011: recipient mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:743  require(bool,string)(extOutputToken == pkg.selectedOutputToken,VF-XCH-011: output token mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:749  require(bool,string)(pkg.canonicalAssetId != bytes32(0) && (provenAsset == pkg.canonicalAssetId || tokenAssetIndex[provenAsset] == pkg.canonicalAssetId),VF-XCH-011: asset mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:663  require(bool,string)(uint256(pkg.handshakeAllowanceCount) == expectedAllowance,VF-COM-006: handshake allowance mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:672  require(bool,string)(gross - fee == principal,VF-COM-012: principal != gross - fee)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:673  require(bool,string)(fee > 0 && principal > 0,VF-COM-013: zero fee or principal)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:676  require(bool,string)(fee == (gross * STANDARD_FEE_BPS) / 10000,VF-COM-011: fee != floor(gross * bps / 10000))",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:679  require(bool,string)(_isPermittedDuration(pkg.durationSecs),VF-COM-002: duration not permitted)"
+   ],
+   "required_properties": [
+    {
+     "property": "racIdentity derived from proven lock facts",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "at most one RAC per lock",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The only check is !recordedRacs[racIdentity]. racIdentity is free caller input, so the same proven lock can record RAC any number of times, before or after it mints.",
+   "exploit_sketch": "Create one real Base lock (about $2.39 in the PoC). Call recordFeeAndRac K times with K random racIdentity values. epochRewardBasis grows K times; allocateEpoch mints basis*10 VCLM to stakers. PoC: 50 records paid 358.8 VCLM of stake rewards versus 7.176 honest.",
+   "damage_potential": "Stake reward VCLM inflated without bound (until the VCLM cap), diluting every holder; attacker who stakes captures it. Works today on the Base-only ceremony.",
+   "severity": "critical",
+   "rank": 4,
+   "spec": [
+    "VF-RAC-001",
+    "VF-FEE-011",
+    "VF-RAC-004",
+    "VF-SEC-005"
+   ],
+   "rev_conflict": "Rev 6 VF-FEE-011 note: RAC keyed by immutable-facts identity (Section D); VF-RAC-001 exact-once. Code keys RAC on a caller-chosen value.",
+   "poc": "AG-04"
+  },
+  {
+   "assumption": "A-07",
+   "finding": "AG-05",
+   "domain": "epoch, time and block.timestamp",
+   "input": "pkg.valuationTimestamp",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:844,1023-1029",
+   "assumed_property": "Valuation Timestamp equals the finalized source block timestamp (lock creation time)",
+   "checked_properties": [],
+   "required_properties": [
+    {
+     "property": "equal to the proven creation time",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "valuationTimestamp is never compared with the reader's createdAt; any value <= launch gives day-0 emission.",
+   "exploit_sketch": "Mint at day 400 with valuationTimestamp = 0. PoC: 310.96 VCLM instead of 249.92 for the same lock (24% more); the gap grows as decay continues.",
+   "damage_potential": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
+   "severity": "high",
+   "rank": 5,
+   "spec": [
+    "VF-ORC-011",
+    "VF-ORC-013"
+   ],
+   "rev_conflict": "Rev 6 VF-ORC-011/013. src/lib/vfComplianceData.js:156 marks VF-ORC-011 IMPLEMENTED.",
+   "poc": "AG-05"
+  },
+  {
+   "assumption": "A-08",
+   "finding": "AG-06",
+   "domain": "prices and price-run timestamps",
+   "input": "lock reference price (scheduledPrices at first submission)",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:981-1020",
+   "assumed_property": "The reference price is the last successful run at lock creation and is retained for that lock",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1015  require(bool,string)(recorded == priceUsd18,VF-ORC-007: price record mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:914  require(bool,string)(g >= minUnits,VF-COM-003: handshake gross below unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:915  require(bool,string)(g <= maxUnits,VF-COM-003: handshake gross above unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:918  require(bool,string)(verifiedGrossUsd >= HANDSHAKE_USD_MIN && verifiedGrossUsd <= HANDSHAKE_USD_MAX,VF-COM-003: handshake USD outside $0.01-$0.02)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:923  require(bool,string)(verifiedGrossUsd >= STANDARD_USD_MIN,VF-COM-009: standard USD below $0.01)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:717  require(bool,string)(finalized,VF-XCH-006: source not finalized)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:734  require(bool,string)(keccak256(bytes)(abi.encodePacked(extLockId)) == keccak256(bytes)(abi.encodePacked(pkg.commitmentVaultLockId)),VF-XCH-011: lockId mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:738  require(bool,string)(extGross == pkg.grossAmountSmallestUnits,VF-XCH-011: gross mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:739  require(bool,string)(extFee == pkg.actualFeeAmountSmallestUnits,VF-XCH-011: fee mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:740  require(bool,string)(extPrincipal == pkg.principalAmountSmallestUnits,VF-XCH-011: principal mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:741  require(bool,string)(extDuration == pkg.durationSecs,VF-XCH-011: duration mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:742  require(bool,string)(extRecipient == pkg.baseRecipient,VF-XCH-011: recipient mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:743  require(bool,string)(extOutputToken == pkg.selectedOutputToken,VF-XCH-011: output token mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:749  require(bool,string)(pkg.canonicalAssetId != bytes32(0) && (provenAsset == pkg.canonicalAssetId || tokenAssetIndex[provenAsset] == pkg.canonicalAssetId),VF-XCH-011: asset mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654  require(bool,string)(! recordedRacs[pkg.racIdentity],VF-RAC-001: RAC already recorded)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:663  require(bool,string)(uint256(pkg.handshakeAllowanceCount) == expectedAllowance,VF-COM-006: handshake allowance mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:672  require(bool,string)(gross - fee == principal,VF-COM-012: principal != gross - fee)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:673  require(bool,string)(fee > 0 && principal > 0,VF-COM-013: zero fee or principal)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:676  require(bool,string)(fee == (gross * STANDARD_FEE_BPS) / 10000,VF-COM-011: fee != floor(gross * bps / 10000))",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:679  require(bool,string)(_isPermittedDuration(pkg.durationSecs),VF-COM-002: duration not permitted)"
+   ],
+   "required_properties": [
+    {
+     "property": "price selected by lock creation time",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The price is bound at the first recordFeeAndRac/verifyAndMint, using whatever run is current then. Lock time is not consulted. The submitter picks the moment.",
+   "exploit_sketch": "Lock when the asset is cheap, wait for a higher run, then submit. PoC: price up 10x between lock and submission gives 3109.6 VCLM instead of 310.96.",
+   "damage_potential": "Free option on price: up to the full price move per lock; systematic over-issuance.",
+   "severity": "high",
+   "rank": 6,
+   "spec": [
+    "VF-ORC-009",
+    "VF-ORC-010"
+   ],
+   "rev_conflict": "Rev 6 VF-ORC-009/010. vfComplianceData.js:154 marks VF-ORC-009 IMPLEMENTED with trace 'at verification time', which is the gap itself.",
+   "poc": "AG-06"
+  },
+  {
+   "assumption": "A-09",
+   "finding": "AG-07",
+   "domain": "prices and price-run timestamps",
+   "input": "applyScheduledPriceRun(runId, updates[].priceUsd18)",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:596-628",
+   "assumed_property": "Prices come from the twice-daily scheduled run; a record is valid until the next run; the poster has no value authority",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:603  require(bool,string)(runId > lastScheduledRunId,VF-ORC-001: run id must advance)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:612  require(bool,string)(u.priceUsd18 > 0,VF-ORC-004: zero price)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:600  require(bool,string)(msg.sender == scheduledPricePoster,VF-ORC-007: not price poster)"
+   ],
+   "required_properties": [
+    {
+     "property": "bounded price change or second source",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "run timestamp / staleness",
+     "met": false,
+     "by": []
+    },
+    {
+     "property": "runId advances by a bounded step",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Only poster identity, runId > last, price > 0. No bound, no timestamp, no staleness. runId = 2^64-1 freezes all later runs forever (prices can never update or be marked failed).",
+   "exploit_sketch": "A compromised or mistaken poster posts 1000x price and mints from a tiny lock; or posts runId 2^64-1 to freeze prices. PoC: a 0.001 ETH lock minted 31,096 VCLM.",
+   "damage_potential": "Unlimited mint via price; permanent price freeze (stale prices used forever, VF-ORC-008 violated).",
+   "severity": "high",
+   "rank": 7,
+   "spec": [
+    "VF-ORC-001",
+    "VF-ORC-008",
+    "VF-SEC-005"
+   ],
+   "rev_conflict": "Rev 6 VF-ORC-008 (stale record used), VF-SEC-005 (poster gets value authority).",
+   "poc": "AG-07"
+  },
+  {
+   "assumption": "A-11",
+   "finding": "AG-08",
+   "domain": "balances and amounts received",
+   "input": "ERC20 lock token balance over time (rebasing)",
+   "entry_point": "base-contracts/contracts/CommitmentVaultLock.sol:219-269,273-294",
+   "assumed_property": "Token balances held by the lock do not change on their own",
+   "checked_properties": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:312  require(bool,string)(! _locks[lockId].exists,CVL: lock exists)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:321  require(bool,string)(payload.length == 117,CVL: payload)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:310  require(bool,string)(baseRecipient != address(0),CVL: recipient)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:311  require(bool,string)(releaseDestination != address(0),CVL: destination)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:362  multiplierBps == 0",
+    "base-contracts/contracts/CommitmentVaultLock.sol:238  require(bool,string)(previewFee > 0 && previewPrincipal > 0,CVL: zero fee or principal)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:248  require(bool,string)(fee > 0 && principal > 0,CVL: zero fee or principal)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:264  require(bool,string)(_erc20(token,abi.encodeWithSelector(IERC20Minimal.transfer.selector,devFund,fee)),CVL: fee)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:231  require(bool,string)(token != address(0),CVL: token)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:233  require(bool,string)(! isProtocolToken(token),VF-TOK-007: protocol token is not a lock input)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:241  require(bool,string)(_erc20(token,abi.encodeWithSelector(IERC20Minimal.transferFrom.selector,msg.sender,address(this),amount)),CVL: transferFrom)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:378  require(bool,string)(ok && ret.length >= 32,CVL: balanceOf)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:234  require(bool,string)(amount > 0,CVL: zero gross)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:364  verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX",
+    "base-contracts/contracts/CommitmentVaultLock.sol:368  verifiedGrossUsd < STANDARD_USD_MIN",
+    "base-contracts/contracts/CommitmentVaultLock.sol:275  require(bool,string)(record.exists,CVL: unknown lock)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:276  require(bool,string)(block.timestamp >= record.maturity,CVL: immature)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:277  require(bool,string)(! record.released,CVL: already released)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:278  require(bool,string)(msg.sender == record.releaseDestination,CVL: destination)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:286  require(bool,string)(ok,CVL: release)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:288  require(bool,string)(_erc20(asset,abi.encodeWithSelector(IERC20Minimal.transfer.selector,msg.sender,principal)),CVL: release)"
+   ],
+   "required_properties": [
+    {
+     "property": "rebasing token rejected or share accounting",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Inbound fee-on-transfer is handled (balance delta). Rebasing is not: one shared pool, fixed principal per lock. Negative rebase makes the last releasers insolvent; positive rebase is stuck. Fee to Dev Fund uses transfer(fee) with no received check. No on-chain rebasing reject in the registry.",
+   "exploit_sketch": "If any rebasing token is registered on a non-Base chain, a negative rebase shifts the loss to whoever releases last.",
+   "damage_potential": "Loss of principal for late releasers of that token; depends on registry content.",
+   "severity": "medium",
+   "rank": 8,
+   "spec": [
+    "VF-SEC-001"
+   ],
+   "rev_conflict": "Rev 6 VF-SEC-001 requires rejection of rebasing assets unless handled.",
+   "poc": ""
+  },
+  {
+   "assumption": "A-10",
+   "finding": "AG-09",
+   "domain": "Dev Fund",
+   "input": "pkg.devFundDestination, pkg.feeTransferEvidence, pkg.maturityTimestamp",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:821-823",
+   "assumed_property": "The fee went to the configured Dev Fund for that environment",
+   "checked_properties": [],
+   "required_properties": [
+    {
+     "property": "fee destination equals devFundDestinations[env]",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The Dev Fund check is commented out ('In simulation: skip'). devFundDestinations is written by configureDevFund but never read at mint; the reader/lock Dev Fund is never compared with it.",
+   "exploit_sketch": "Register (or point at) a lock whose devFund is the attacker; fee goes back to the attacker, mint still succeeds. PoC AG-09: verifier Dev Fund set to one address, lock fee to another, mint succeeds with junk devFundDestination and zero evidence.",
+   "damage_potential": "Fees can bypass the Dev Fund while still earning issuance and RAC; makes the fee cost of an attack zero when combined with a misconfigured or forged source.",
+   "severity": "medium",
+   "rank": 9,
+   "spec": [
+    "VF-FEE-009",
+    "VF-XCH-011"
+   ],
+   "rev_conflict": "Rev 6 VF-FEE-009.",
+   "poc": "AG-09"
+  },
+  {
+   "assumption": "A-13",
+   "finding": "AG-10",
+   "domain": "lock records, proofs and recipients",
+   "input": "lockId in UTXO / Stellar / XRPL payload",
+   "entry_point": "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:140-151; StellarLockReader.sol:79-115; XrplLockReader.sol:97-150",
+   "assumed_property": "A lockId names exactly one lock and only its creator can use it",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:188  require(bool,string)(index == 0,VF-XCH-011: merkle index)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:124  require(bool,string)(p.lockTx.length != 64,VF-XCH-011: 64-byte transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:125  require(bool,string)(p.lockBranch.length == p.coinbaseBranch.length && p.lockIndex != 0,VF-XCH-011: lock branch)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:126  require(bool,string)(_merkle(t.txid,p.lockBranch,p.lockIndex) == _merkleRoot(p.header),VF-XCH-011: lock not in block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:130  require(bool,string)(fee != 0 && principal != 0 && fee == (gross * FEE_BPS) / BPS,VF-XCH-011: fee is not 5%)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:133  require(bool,string)(CommitmentDurations.multiplierBps(d) != 0,VF-XCH-011: duration not permitted)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:135  require(bool,string)(maturityHeight > height,VF-XCH-011: maturity not after lock block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:137  require(bool,string)(remaining <= blocks && blocks - remaining <= TOLERANCE_SECS / blockSpacing,VF-XCH-011: maturity does not match duration)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:148  require(bool,string)(lockId != bytes32(0),VF-XCH-011: lock id)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:149  require(bool,string)(recipient != address(0),VF-XCH-011: recipient missing)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:150  require(bool,string)(outputToken <= 1,VF-XCH-011: output token)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:288  require(bool,string)(tx.length > 23 && _u32le(tx,0) == ZEC_V5_HEADER && _u32le(tx,4) == ZEC_V5_GROUP,VF-XCH-011: Zcash v5 transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:291  require(bool,string)(tx.length > 10,VF-XCH-011: transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:292  require(bool,string)(uint8(tx[4]) != 0x00,VF-XCH-011: witness serialization)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:296  require(bool,string)(n > 0,VF-XCH-011: no inputs)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:301  require(bool,string)(i + 36 <= tx.length,VF-XCH-011: input)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:318  require(bool,string)(i + sl + 4 <= tx.length,VF-XCH-011: input script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:324  require(bool,string)(n > 0,VF-XCH-011: no outputs)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:328  require(bool,string)(i + 9 <= tx.length,VF-XCH-011: output)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:334  require(bool,string)(i + sl_scope_3 <= tx.length,VF-XCH-011: output script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:341  require(bool,string)(i + 3 == tx.length && tx[i] == 0 && tx[i + 1] == 0 && tx[i + 2] == 0,VF-XCH-011: Zcash shielded data)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:344  require(bool,string)(i + 4 == tx.length,VF-XCH-011: transaction length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:207  require(bool,string)(payload.length == PAYLOAD_LEN,VF-XCH-011: payload length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:227  require(bool,string)(o.value == 0,VF-XCH-011: binding value)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:382  require(bool,string)(i < d.length,VF-XCH-011: compact size)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:386  require(bool,string)(i + 1 + w <= d.length,VF-XCH-011: compact size)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0xfd,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0x10000,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0x100000000,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:160  require(bool,string)(h.length == 1487 && uint8(h[140]) == 0xfd && uint8(h[141]) == 0x40 && uint8(h[142]) == 0x05,VF-XCH-011: Zcash header)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:163  require(bool,string)(h.length == 80,VF-XCH-011: header length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:168  require(bool,string)(cb.firstPrevTxid == bytes32(0) && cb.firstPrevVout == 0xffffffff,VF-XCH-011: coinbase)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:169  require(bool,string)(p.coinbaseTx.length != 64,VF-XCH-011: 64-byte transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:170  require(bool,string)(_merkle(cb.txid,p.coinbaseBranch,0) == _merkleRoot(h),VF-XCH-011: coinbase not in block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:192  require(bool,string)(n > 0,VF-XCH-011: coinbase height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:195  require(bool,string)(op >= 1 && op <= 8 && op < n,VF-XCH-011: coinbase height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:197  require(bool,string)(uint8(tx[s + op]) & 0x80 == 0,VF-XCH-011: coinbase height sign)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:240  require(bool,string)(r.length > 0,VF-XCH-011: redeem script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:247  require(bool,string)(op >= 1 && op <= 5,VF-XCH-011: redeem height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:248  require(bool,string)(uint8(r[op]) & 0x80 == 0,VF-XCH-011: redeem height sign)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:252  require(bool,string)(h < 500000000,VF-XCH-011: maturity must be a height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:253  require(bool,string)(r.length == i + 2 + 1 + 33 + 1,VF-XCH-011: redeem script shape)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:254  require(bool,string)(uint8(r[i]) == 0xb1 && uint8(r[i + 1]) == 0x75,VF-XCH-011: redeem CLTV)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:255  require(bool,string)(uint8(r[i + 2]) == 0x21,VF-XCH-011: redeem key)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:257  require(bool,string)(prefix == 0x02 || prefix == 0x03,VF-XCH-011: redeem key form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:258  require(bool,string)(uint8(r[i + 36]) == 0xac,VF-XCH-011: redeem CHECKSIG)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:86  require(bool,string)(sha256(bytes)(p.resultSet) == resultHash,VF-XCH-011: result set hash)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:88  require(bool,string)(_succeeded(p.resultSet,txHash),VF-XCH-011: transaction not applied successfully in this ledger)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:91  require(bool,string)(p.payload.length == 117,VF-XCH-011: payload length)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:92  require(bool,string)(l.memo == sha256(bytes)(p.payload),VF-XCH-011: memo binding)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:94  require(bool,string)(l.fee != 0 && l.principal != 0 && l.fee == (gross * FEE_BPS) / BPS,VF-XCH-011: fee is not 5%)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:97  require(bool,string)(CommitmentDurations.multiplierBps(d) != 0,VF-XCH-011: duration not permitted)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:98  require(bool,string)(l.maturity > closeTime,VF-XCH-011: maturity not after lock ledger)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:100  require(bool,string)(remaining <= d && d - remaining <= TOLERANCE_SECS,VF-XCH-011: maturity does not match duration)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:111  require(bool,string)(lockId != bytes32(0),VF-XCH-011: lock id)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:112  require(bool,string)(recipient != address(0),VF-XCH-011: recipient missing)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:113  require(bool,string)(outputToken <= 1,VF-XCH-011: output token)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:192  require(bool,string)(_u32(r,i) == 0,VF-XCH-011: inner ext)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:199  require(bool,string)(_u32(r,i) == 0,VF-XCH-011: result ext)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:202  require(bool,string)(i == r.length,VF-XCH-011: result set length)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:300  require(bool,string)(cond == 0,VF-XCH-011: preconditions)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:301  require(bool,string)(_u32(b,i) == 3,VF-XCH-011: memo is not a hash)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:304  require(bool,string)(_u32(b,i) == 2,VF-XCH-011: operation count)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:308  require(bool,string)(_u32(b,i) == 0,VF-XCH-011: operation source)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:309  require(bool,string)(_u32(b,i + 4) == 1,VF-XCH-011: first operation is not a Payment)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:312  require(bool,string)(dest == devFundKey,VF-XCH-011: fee not paid to the Dev Fund)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:313  require(bool,string)(_u32(b,i) == 0,VF-XCH-011: fee asset is not native)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:318  require(bool,string)(_u32(b,i) == 0,VF-XCH-011: operation source)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:319  require(bool,string)(_u32(b,i + 4) == 14,VF-XCH-011: second operation is not CreateClaimableBalance)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:320  require(bool,string)(_u32(b,i + 8) == 0,VF-XCH-011: principal asset is not native)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:323  require(bool,string)(_u32(b,i) == 1,VF-XCH-011: claimant count)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:324  require(bool,string)(_u32(b,i + 4) == 0 && _u32(b,i + 8) == 0,VF-XCH-011: claimant type)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:326  require(bool,string)(_u32(b,i) == 3 && _u32(b,i + 4) == 1 && _u32(b,i + 8) == 4,VF-XCH-011: claim predicate)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:329  require(bool,string)(_u32(b,i) == 0,VF-XCH-011: transaction ext)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:330  require(bool,string)(i + 4 == b.length,VF-XCH-011: trailing bytes)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:126  require(bool,string)(i + 4 <= b.length,VF-XCH-011: truncated XDR)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:271  require(bool,string)(t == 2,VF-XCH-011: asset type)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:158  require(bool,string)(nUp <= 6,VF-XCH-006: upgrades)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:164  require(bool,string)(_u32(h,i) == 0,VF-XCH-006: node id type)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:167  require(bool,string)(extType == 0,VF-XCH-006: scp value ext)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:136  require(bool,string)(i + 32 <= b.length,VF-XCH-011: truncated XDR)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:290  require(bool,string)(t == 0x100,VF-XCH-011: account type)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:207  require(bool,string)(n <= 100,VF-XCH-011: op results)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:239  require(bool,string)(_u32(r,i) == 0,VF-XCH-011: offer ext)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:242  require(bool,string)(effect == 2,VF-XCH-011: offer effect)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:250  require(bool,string)(m_scope_2 <= 1000,VF-XCH-011: payouts)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:255  require(bool,string)(_u32(r,i) == 0,VF-XCH-011: balance id type)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:261  require(bool,string)(opType <= 26,VF-XCH-011: unknown operation result)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:131  require(bool,string)(i + 8 <= b.length,VF-XCH-011: truncated XDR)",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:280  require(bool,string)(t == 2,VF-XCH-011: claim atom)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:255  require(bool,string)(i < b.length,VF-XCH-011: truncated object)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:215  require(bool,string)(t.memoData.length == 32 && bytes32(t.memoData) == binding,VF-XCH-011: memo binding)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:296  require(bool,string)(len == 20,VF-XCH-011: account length)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:310  require(bool,string)(i == b.length,VF-XCH-011: trailing bytes)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:207  require(bool,string)(n <= 918744,VF-XCH-011: blob too long)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:234  require(bool,string)(b1 <= 254,VF-XCH-011: bad length)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:167  require(bool,string)(hdr.length == HEADER_LEN,VF-XCH-006: header length)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:118  require(bool,string)(p.payload.length == 117,VF-XCH-011: payload length)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:120  require(bool,string)(pay.invoiceId == binding,VF-XCH-011: InvoiceID binding)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:132  require(bool,string)(CommitmentDurations.multiplierBps(d) != 0,VF-XCH-011: duration not permitted)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:133  require(bool,string)(maturity > createdAt,VF-XCH-011: maturity not after lock ledger)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:135  require(bool,string)(remaining <= d && d - remaining <= TOLERANCE_SECS,VF-XCH-011: maturity does not match duration)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:146  require(bool,string)(lockId != bytes32(0),VF-XCH-011: lock id)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:147  require(bool,string)(recipient != address(0),VF-XCH-011: recipient missing)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:148  require(bool,string)(outputToken <= 1,VF-XCH-011: output token)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:183  require(bool,string)(_result(meta) == 0,VF-XCH-011: transaction did not succeed)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:187  require(bool,string)(depth != 0 && depth <= 64,VF-XCH-011: tree depth)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:190  require(bool,string)(node.length == 512,VF-XCH-011: inner node)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:195  require(bool,string)(slot == h,VF-XCH-011: not in transaction tree)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:198  require(bool,string)(h == root,VF-XCH-011: transaction tree root)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:315  require(bool,string)(i < b.length,VF-XCH-011: truncated memos)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:318  require(bool,string)(typ == 14 && fld == 10,VF-XCH-011: memo shape)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:323  require(bool,string)(t2 == 7,VF-XCH-011: memo field)",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol:221  require(bool,string)(i < b.length,VF-XCH-011: truncated)"
+   ],
+   "required_properties": [
+    {
+     "property": "lockId derived from the transaction (txid, sender)",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "lockId is read from the payload the creator writes. Anyone can make a real (small) lock with a victim's announced lockId and mint first; consumedLocks then blocks the victim.",
+   "exploit_sketch": "Watch the mempool for a lock payload, make a cheap lock with the same lockId, submit first.",
+   "damage_potential": "Victim's lock can never mint (griefing); principal still releases.",
+   "severity": "medium",
+   "rank": 10,
+   "spec": [
+    "VF-XCH-011",
+    "VF-XCH-013"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-15",
+   "finding": "AG-12",
+   "domain": "app-side src/ trusted inputs",
+   "input": "app finality proof fields (finalityStatus, l1Finalized, challengePeriodPassed, confirmations)",
+   "entry_point": "src/lib/vfEvmChainVerifier.js:38-100; src/pages/BaseVerifier.jsx:55,187; src/components/base/ChainVerifierPanel.jsx:62; src/lib/vfComplianceData.js:154,156,226; src/lib/vfPriceService.js:25,45",
+   "assumed_property": "The app only shows 'verified' when the chain says so",
+   "checked_properties": [
+    "src/lib/vfEvmChainVerifier.js:35  this.sameChain = config.sameChain || false;",
+    "src/lib/vfEvmChainVerifier.js:43  const status = Number(proof.finalityStatus ?? proof.status ?? -1);",
+    "src/lib/vfEvmChainVerifier.js:46  if (this.sameChain) {",
+    "src/lib/vfEvmChainVerifier.js:64  const confs = Number(proof.confirmations || 0);",
+    "src/lib/vfEvmChainVerifier.js:86  const l1Finalized = status === FINALITY_STATUS.L1_FINALIZED || proof.l1Finalized === true;",
+    "src/lib/vfEvmChainVerifier.js:87  const challengePassed = status === FINALITY_STATUS.CHALLENGE_PERIOD_PASSED || proof.challengePeriodPassed === true;",
+    "src/lib/vfEvmChainVerifier.js:89  const confs = Number(proof.confirmations || 0);"
+   ],
+   "required_properties": [
+    {
+     "property": "independent chain query (RPC/light client)",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The app verifier trusts self-reported status fields in the proof object; BaseVerifier page builds mock events and takes a typed 'Verified Gross USD'; ChainVerifierPanel says finality is verified by the chain verifier (false per AG-01..03); vfComplianceData marks VF-XCH-008, VF-ORC-009, VF-ORC-011 IMPLEMENTED; 'verified' USD is an off-chain quote.",
+   "exploit_sketch": "Not an on-chain loss by itself; misleads users and reviewers about what is proven.",
+   "damage_potential": "Wrong status shown to users; compliance table hides AG-01, AG-05, AG-06.",
+   "severity": "medium",
+   "rank": 11,
+   "spec": [
+    "VF-XCH-008",
+    "VF-SEC-005"
+   ],
+   "rev_conflict": "Rev 13 section 5 already flags vfComplianceData as wrong for ITS rows (those rows are now fixed); other rows remain wrong.",
+   "poc": ""
+  },
+  {
+   "assumption": "A-14",
+   "finding": "AG-11",
+   "domain": "token identity",
+   "input": "registry symbol used by _isUsdStable",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:972-979,1001-1006",
+   "assumed_property": "Every USDC/USDT row is caught by the $0.95 rule",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1015  require(bool,string)(recorded == priceUsd18,VF-ORC-007: price record mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:914  require(bool,string)(g >= minUnits,VF-COM-003: handshake gross below unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:915  require(bool,string)(g <= maxUnits,VF-COM-003: handshake gross above unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:918  require(bool,string)(verifiedGrossUsd >= HANDSHAKE_USD_MIN && verifiedGrossUsd <= HANDSHAKE_USD_MAX,VF-COM-003: handshake USD outside $0.01-$0.02)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:923  require(bool,string)(verifiedGrossUsd >= STANDARD_USD_MIN,VF-COM-009: standard USD below $0.01)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:717  require(bool,string)(finalized,VF-XCH-006: source not finalized)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:734  require(bool,string)(keccak256(bytes)(abi.encodePacked(extLockId)) == keccak256(bytes)(abi.encodePacked(pkg.commitmentVaultLockId)),VF-XCH-011: lockId mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:738  require(bool,string)(extGross == pkg.grossAmountSmallestUnits,VF-XCH-011: gross mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:739  require(bool,string)(extFee == pkg.actualFeeAmountSmallestUnits,VF-XCH-011: fee mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:740  require(bool,string)(extPrincipal == pkg.principalAmountSmallestUnits,VF-XCH-011: principal mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:741  require(bool,string)(extDuration == pkg.durationSecs,VF-XCH-011: duration mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:742  require(bool,string)(extRecipient == pkg.baseRecipient,VF-XCH-011: recipient mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:743  require(bool,string)(extOutputToken == pkg.selectedOutputToken,VF-XCH-011: output token mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:749  require(bool,string)(pkg.canonicalAssetId != bytes32(0) && (provenAsset == pkg.canonicalAssetId || tokenAssetIndex[provenAsset] == pkg.canonicalAssetId),VF-XCH-011: asset mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:654  require(bool,string)(! recordedRacs[pkg.racIdentity],VF-RAC-001: RAC already recorded)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:663  require(bool,string)(uint256(pkg.handshakeAllowanceCount) == expectedAllowance,VF-COM-006: handshake allowance mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:672  require(bool,string)(gross - fee == principal,VF-COM-012: principal != gross - fee)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:673  require(bool,string)(fee > 0 && principal > 0,VF-COM-013: zero fee or principal)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:676  require(bool,string)(fee == (gross * STANDARD_FEE_BPS) / 10000,VF-COM-011: fee != floor(gross * bps / 10000))",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:679  require(bool,string)(_isPermittedDuration(pkg.durationSecs),VF-COM-002: duration not permitted)"
+   ],
+   "required_properties": [
+    {
+     "property": "stablecoin flag stored per registry row",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Detection is by symbol shape (USDC, USDT, USDC_x, USDT_x, USDTE). A row named USDbC, USDC.e or USDT.e is not caught, so the $0.95 floor does not apply to it.",
+   "exploit_sketch": "During a depeg, a lock of an unmatched stablecoin row is valued at the depegged run without the floor rule (the floor exists to block that).",
+   "damage_potential": "Limited to the depeg size on those rows.",
+   "severity": "low",
+   "rank": 12,
+   "spec": [
+    "VF-ORC-005"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-16",
+   "finding": "AG-13",
+   "domain": "token identity",
+   "input": "pkg.assetPrecision at recordFeeAndRac",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:656-659",
+   "assumed_property": "Package precision matches the registry before RAC is credited",
+   "checked_properties": [],
+   "required_properties": [
+    {
+     "property": "precision equals registry decimals",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Only verifyAndMint checks precision. RAC uses entry.decimals so the value is right, but VF-XCH-011 binding of asset_precision is not enforced on the RAC path.",
+   "exploit_sketch": "None with value impact found.",
+   "damage_potential": "none found (binding gap only)",
+   "severity": "low",
+   "rank": 13,
+   "spec": [
+    "VF-XCH-011",
+    "VF-RAC-001"
+   ],
+   "rev_conflict": "Rev 6 VF-XCH-011 lists asset_precision as a bound field.",
+   "poc": ""
+  },
+  {
+   "assumption": "A-17",
+   "finding": "AG-14",
+   "domain": "epoch, time and block.timestamp",
+   "input": "UTXO lock time and maturity (miner-set time)",
+   "entry_point": "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:41,137",
+   "assumed_property": "Duration on a UTXO chain equals the chosen duration",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:188  require(bool,string)(index == 0,VF-XCH-011: merkle index)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:124  require(bool,string)(p.lockTx.length != 64,VF-XCH-011: 64-byte transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:125  require(bool,string)(p.lockBranch.length == p.coinbaseBranch.length && p.lockIndex != 0,VF-XCH-011: lock branch)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:126  require(bool,string)(_merkle(t.txid,p.lockBranch,p.lockIndex) == _merkleRoot(p.header),VF-XCH-011: lock not in block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:130  require(bool,string)(fee != 0 && principal != 0 && fee == (gross * FEE_BPS) / BPS,VF-XCH-011: fee is not 5%)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:133  require(bool,string)(CommitmentDurations.multiplierBps(d) != 0,VF-XCH-011: duration not permitted)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:135  require(bool,string)(maturityHeight > height,VF-XCH-011: maturity not after lock block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:137  require(bool,string)(remaining <= blocks && blocks - remaining <= TOLERANCE_SECS / blockSpacing,VF-XCH-011: maturity does not match duration)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:148  require(bool,string)(lockId != bytes32(0),VF-XCH-011: lock id)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:149  require(bool,string)(recipient != address(0),VF-XCH-011: recipient missing)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:150  require(bool,string)(outputToken <= 1,VF-XCH-011: output token)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:288  require(bool,string)(tx.length > 23 && _u32le(tx,0) == ZEC_V5_HEADER && _u32le(tx,4) == ZEC_V5_GROUP,VF-XCH-011: Zcash v5 transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:291  require(bool,string)(tx.length > 10,VF-XCH-011: transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:292  require(bool,string)(uint8(tx[4]) != 0x00,VF-XCH-011: witness serialization)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:296  require(bool,string)(n > 0,VF-XCH-011: no inputs)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:301  require(bool,string)(i + 36 <= tx.length,VF-XCH-011: input)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:318  require(bool,string)(i + sl + 4 <= tx.length,VF-XCH-011: input script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:324  require(bool,string)(n > 0,VF-XCH-011: no outputs)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:328  require(bool,string)(i + 9 <= tx.length,VF-XCH-011: output)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:334  require(bool,string)(i + sl_scope_3 <= tx.length,VF-XCH-011: output script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:341  require(bool,string)(i + 3 == tx.length && tx[i] == 0 && tx[i + 1] == 0 && tx[i + 2] == 0,VF-XCH-011: Zcash shielded data)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:344  require(bool,string)(i + 4 == tx.length,VF-XCH-011: transaction length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:207  require(bool,string)(payload.length == PAYLOAD_LEN,VF-XCH-011: payload length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:227  require(bool,string)(o.value == 0,VF-XCH-011: binding value)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:382  require(bool,string)(i < d.length,VF-XCH-011: compact size)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:386  require(bool,string)(i + 1 + w <= d.length,VF-XCH-011: compact size)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0xfd,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0x10000,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:388  require(bool,string)(n >= 0x100000000,VF-XCH-011: compact size form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:160  require(bool,string)(h.length == 1487 && uint8(h[140]) == 0xfd && uint8(h[141]) == 0x40 && uint8(h[142]) == 0x05,VF-XCH-011: Zcash header)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:163  require(bool,string)(h.length == 80,VF-XCH-011: header length)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:168  require(bool,string)(cb.firstPrevTxid == bytes32(0) && cb.firstPrevVout == 0xffffffff,VF-XCH-011: coinbase)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:169  require(bool,string)(p.coinbaseTx.length != 64,VF-XCH-011: 64-byte transaction)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:170  require(bool,string)(_merkle(cb.txid,p.coinbaseBranch,0) == _merkleRoot(h),VF-XCH-011: coinbase not in block)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:192  require(bool,string)(n > 0,VF-XCH-011: coinbase height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:195  require(bool,string)(op >= 1 && op <= 8 && op < n,VF-XCH-011: coinbase height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:197  require(bool,string)(uint8(tx[s + op]) & 0x80 == 0,VF-XCH-011: coinbase height sign)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:240  require(bool,string)(r.length > 0,VF-XCH-011: redeem script)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:247  require(bool,string)(op >= 1 && op <= 5,VF-XCH-011: redeem height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:248  require(bool,string)(uint8(r[op]) & 0x80 == 0,VF-XCH-011: redeem height sign)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:252  require(bool,string)(h < 500000000,VF-XCH-011: maturity must be a height)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:253  require(bool,string)(r.length == i + 2 + 1 + 33 + 1,VF-XCH-011: redeem script shape)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:254  require(bool,string)(uint8(r[i]) == 0xb1 && uint8(r[i + 1]) == 0x75,VF-XCH-011: redeem CLTV)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:255  require(bool,string)(uint8(r[i + 2]) == 0x21,VF-XCH-011: redeem key)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:257  require(bool,string)(prefix == 0x02 || prefix == 0x03,VF-XCH-011: redeem key form)",
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:258  require(bool,string)(uint8(r[i + 36]) == 0xac,VF-XCH-011: redeem CHECKSIG)"
+   ],
+   "required_properties": [
+    {
+     "property": "exact duration",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Maturity may differ from duration by up to TOLERANCE_SECS (1 day) of blocks; createdAt is the miner-set header time.",
+   "exploit_sketch": "Lock slightly shorter than the multiplier tier implies.",
+   "damage_potential": "Up to 1 day less commitment per lock.",
+   "severity": "low",
+   "rank": 14,
+   "spec": [
+    "VF-COM-002"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-18",
+   "finding": "AG-15",
+   "domain": "epoch, time and block.timestamp",
+   "input": "createdAt from non-Base readers for the CHONX causal check",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:295,832-839",
+   "assumed_property": "Source creation time is real chain time",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:770  require(bool,string)(! consumedLocks[lockIdHash],VF-XCH-013: replay)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:774  require(bool,string)(recordedRacs[pkg.racIdentity],VF-FEE-011: call recordFeeAndRac() first)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:780  require(bool,string)(entry.decimals == pkg.assetPrecision,VF-QNORM: precision mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:786  require(bool,string)(gross - fee == principal,VF-COM-012: principal != gross - fee)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:787  require(bool,string)(fee > 0 && principal > 0,VF-COM-013: zero fee or principal)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:790  require(bool,string)(fee == (gross * STANDARD_FEE_BPS) / 10000,VF-COM-011: fee != floor(gross * bps / 10000))",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:793  require(bool,string)(_isPermittedDuration(pkg.durationSecs),VF-COM-002: duration not permitted)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:802  require(bool,string)(pkg.selectedOutputToken <= 1,VF-COM-020: invalid output token)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:813  require(bool,string)(uint256(pkg.handshakeAllowanceCount) == expectedAllowance,VF-COM-006: handshake allowance mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:819  require(bool,string)(pkg.baseRecipient != address(0),VF-ARC-006: zero base recipient)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:839  require(bool,string)(createdAt > eligibleAfter,VF-COM-025: lock created before CHONX activation)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:860  require(bool,string)(issuanceAmount <= remaining,VF-SUP-015: exceeds VCLM cap)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:863  require(bool,string)(issuanceAmount <= remaining_scope_0,VF-SUP-015: exceeds CHONX cap)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1057  require(bool,string)(durBps > 0,VF-COM-002: duration not permitted)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:1015  require(bool,string)(recorded == priceUsd18,VF-ORC-007: price record mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:914  require(bool,string)(g >= minUnits,VF-COM-003: handshake gross below unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:915  require(bool,string)(g <= maxUnits,VF-COM-003: handshake gross above unit band)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:918  require(bool,string)(verifiedGrossUsd >= HANDSHAKE_USD_MIN && verifiedGrossUsd <= HANDSHAKE_USD_MAX,VF-COM-003: handshake USD outside $0.01-$0.02)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:923  require(bool,string)(verifiedGrossUsd >= STANDARD_USD_MIN,VF-COM-009: standard USD below $0.01)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:717  require(bool,string)(finalized,VF-XCH-006: source not finalized)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:734  require(bool,string)(keccak256(bytes)(abi.encodePacked(extLockId)) == keccak256(bytes)(abi.encodePacked(pkg.commitmentVaultLockId)),VF-XCH-011: lockId mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:738  require(bool,string)(extGross == pkg.grossAmountSmallestUnits,VF-XCH-011: gross mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:739  require(bool,string)(extFee == pkg.actualFeeAmountSmallestUnits,VF-XCH-011: fee mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:740  require(bool,string)(extPrincipal == pkg.principalAmountSmallestUnits,VF-XCH-011: principal mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:741  require(bool,string)(extDuration == pkg.durationSecs,VF-XCH-011: duration mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:742  require(bool,string)(extRecipient == pkg.baseRecipient,VF-XCH-011: recipient mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:743  require(bool,string)(extOutputToken == pkg.selectedOutputToken,VF-XCH-011: output token mismatch)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:749  require(bool,string)(pkg.canonicalAssetId != bytes32(0) && (provenAsset == pkg.canonicalAssetId || tokenAssetIndex[provenAsset] == pkg.canonicalAssetId),VF-XCH-011: asset mismatch)"
+   ],
+   "required_properties": [
+    {
+     "property": "source time anchored",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "createdAt comes from the header the caller supplies (miner/validator-set time, unanchored per AG-01..03); the 1-day margin only covers honest clock skew.",
+   "exploit_sketch": "With AG-01..03, set the header time after activation; without them, a source-chain clock skew under 1 day.",
+   "damage_potential": "CHONX eligibility for a lock made before activation.",
+   "severity": "low",
+   "rank": 15,
+   "spec": [
+    "VF-COM-025"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-19",
+   "finding": "AG-16",
+   "domain": "prices and price-run timestamps",
+   "input": "verifiedGrossUsd on the lock contract",
+   "entry_point": "base-contracts/contracts/CommitmentVaultLock.sol:183-195,356",
+   "assumed_property": "USD value used for the lock band gate is real",
+   "checked_properties": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:364  verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX",
+    "base-contracts/contracts/CommitmentVaultLock.sol:368  verifiedGrossUsd < STANDARD_USD_MIN"
+   ],
+   "required_properties": [
+    {
+     "property": "USD derived from a price source",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The lock trusts the caller's USD for its band gate. The Verifier recomputes USD for issuance, so this only affects which band the lock lets through.",
+   "exploit_sketch": "Pass a USD inside the band for an out-of-band lock; Verifier then rejects issuance, user pays fee for nothing (self-harm).",
+   "damage_potential": "Low; user self-harm.",
+   "severity": "low",
+   "rank": 16,
+   "spec": [
+    "VF-COM-003",
+    "VF-SEC-005"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-20",
+   "finding": "AG-18",
+   "domain": "registry rows",
+   "input": "registry rows and token address index",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:453,522",
+   "assumed_property": "Each row's decimals and token address are the real token's",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:454  require(bool,string)(items.length <= 50,VF-REG: batch exceeds 50)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:396  require(bool,string)(msg.sender == deployer,VF: not deployer)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:523  require(bool,string)(items.length <= 50,VF-REG: batch exceeds 50)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:526  require(bool,string)(it.token != address(0),VF-REG: zero token address)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:529  require(bool,string)(! _isProtocolToken(it.token),VF-REG-008: protocol token is not a lock input)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:530  require(bool,string)(assetPrecisionTable[keccak256(bytes)(abi.encodePacked(it.environmentId,it.canonicalAssetId))].canonicalAssetId != bytes32(0),VF-REG: row not registered in this environment)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:535  require(bool,string)(tokenAssetIndex[k] == bytes32(0),VF-REG: address already indexed)"
+   ],
+   "required_properties": [
+    {
+     "property": "on-chain identity check (decimals/code) or signed registry hash",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Rows are written by the deployer before finalize from the off-chain build; nothing checks them on chain. A wrong decimals value mis-values every lock of that asset.",
+   "exploit_sketch": "Operator error or a tampered registry build (deployer-only, pre-finalize).",
+   "damage_potential": "Mis-valuation of one asset for the protocol's lifetime (immutable).",
+   "severity": "low",
+   "rank": 17,
+   "spec": [
+    "VF-REG-001",
+    "VF-QNORM (code tag)"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-21",
+   "finding": "AG-19",
+   "domain": "chain IDs and names",
+   "input": "environment name to reader mapping",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:549-554",
+   "assumed_property": "The reader registered for 'Ethereum' reads Ethereum",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:551  require(bool,string)(verifier != address(0),VF-DEP-002: zero chain verifier)",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:396  require(bool,string)(msg.sender == deployer,VF: not deployer)"
+   ],
+   "required_properties": [
+    {
+     "property": "reader ENVIRONMENT_ID equals the name",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "Any non-zero address is accepted for any name. With AG-01, an EVM reader also accepts a testnet lock at the same CREATE address (same deployer key and nonce) because the chain id is only claimed.",
+   "exploit_sketch": "Deploy the lock on a testnet with the mainnet deployer nonce, lock test ETH, mint as mainnet.",
+   "damage_potential": "Mint from worthless testnet assets (same root cause as AG-01).",
+   "severity": "low",
+   "rank": 18,
+   "spec": [
+    "VF-DEP-001",
+    "VF-XCH-006"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-24",
+   "finding": "AG-17",
+   "domain": "token identity",
+   "input": "Base token lock asset id",
+   "entry_point": "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:121-134",
+   "assumed_property": "(comment) token locks revert",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:128  ! r.exists",
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:147  bindingPayload.length != 117",
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:152  boundId != lockId"
+   ],
+   "required_properties": [
+    {
+     "property": "behaviour matches comment",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The comment says token locks revert; code returns keccak(abi.encode('Base', token)), resolved through tokenAssetIndex. Stale comment; the code path is the intended one.",
+   "exploit_sketch": "",
+   "damage_potential": "none (documentation)",
+   "severity": "info",
+   "rank": 19,
+   "spec": [
+    "VF-XCH-011"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-25",
+   "finding": "AG-20",
+   "domain": "lock records, proofs and recipients",
+   "input": "pkg.handshakeAllowanceCount",
+   "entry_point": "base-contracts/contracts/VinculumFinalisVerifier.sol:811-816,933-963",
+   "assumed_property": "(Rev 12) no Handshake allowance limit; no identity counter",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:813  require(bool,string)(uint256(pkg.handshakeAllowanceCount) == expectedAllowance,VF-COM-006: handshake allowance mismatch)"
+   ],
+   "required_properties": [
+    {
+     "property": "field removed or ignored",
+     "met": false,
+     "by": []
+    }
+   ],
+   "gap_flagged": true,
+   "gap": "The Verifier still requires the package to state 3 (EVM/Base) or 1 (UTXO/Stellar/XRPL) from the Rev 6 allowance rule. It counts nothing, so no limit applies, but the Rev 6 field is still a required input.",
+   "exploit_sketch": "",
+   "damage_potential": "none (vestige; a wrong value only makes a mint revert)",
+   "severity": "info",
+   "rank": 20,
+   "spec": [
+    "Rev 12"
+   ],
+   "rev_conflict": "Rev 12 removes the allowance; Verifier still enforces the Rev 6 constant.",
+   "poc": ""
+  },
+  {
+   "assumption": "A-04",
+   "finding": null,
+   "domain": "block headers and finality",
+   "input": "Solana lock proof",
+   "entry_point": "base-contracts/contracts/chain-verifiers/SolanaLockReader.sol:29-31",
+   "assumed_property": "Fail closed until a Solana proof exists",
+   "checked_properties": [],
+   "required_properties": [
+    {
+     "property": "always reverts (fail closed)",
+     "met": true,
+     "by": []
+    }
+   ],
+   "gap_flagged": false,
+   "gap": "none",
+   "exploit_sketch": "",
+   "damage_potential": "none",
+   "severity": "none",
+   "rank": null,
+   "spec": [
+    "VF-XCH-006"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-05",
+   "finding": null,
+   "domain": "block headers and finality",
+   "input": "Base lock record (same chain)",
+   "entry_point": "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:82-95",
+   "assumed_property": "The lock exists in the Base lock contract and its binding payload matches",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:92  ! r.exists",
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:147  bindingPayload.length != 117",
+    "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:152  boundId != lockId"
+   ],
+   "required_properties": [
+    {
+     "property": "lock record exists",
+     "met": true,
+     "by": [
+      "base-contracts/contracts/chain-verifiers/BaseLockRecordVerifier.sol:92"
+     ]
+    }
+   ],
+   "gap_flagged": false,
+   "gap": "none",
+   "exploit_sketch": "",
+   "damage_potential": "none",
+   "severity": "none",
+   "rank": null,
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-011"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-12",
+   "finding": null,
+   "domain": "balances and amounts received",
+   "input": "ERC20 amount received (fee-on-transfer inbound)",
+   "entry_point": "base-contracts/contracts/CommitmentVaultLock.sol:240-248",
+   "assumed_property": "Fee and principal are computed on the amount actually received",
+   "checked_properties": [
+    "base-contracts/contracts/CommitmentVaultLock.sol:312  require(bool,string)(! _locks[lockId].exists,CVL: lock exists)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:321  require(bool,string)(payload.length == 117,CVL: payload)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:310  require(bool,string)(baseRecipient != address(0),CVL: recipient)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:311  require(bool,string)(releaseDestination != address(0),CVL: destination)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:362  multiplierBps == 0",
+    "base-contracts/contracts/CommitmentVaultLock.sol:238  require(bool,string)(previewFee > 0 && previewPrincipal > 0,CVL: zero fee or principal)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:248  require(bool,string)(fee > 0 && principal > 0,CVL: zero fee or principal)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:264  require(bool,string)(_erc20(token,abi.encodeWithSelector(IERC20Minimal.transfer.selector,devFund,fee)),CVL: fee)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:231  require(bool,string)(token != address(0),CVL: token)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:233  require(bool,string)(! isProtocolToken(token),VF-TOK-007: protocol token is not a lock input)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:241  require(bool,string)(_erc20(token,abi.encodeWithSelector(IERC20Minimal.transferFrom.selector,msg.sender,address(this),amount)),CVL: transferFrom)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:378  require(bool,string)(ok && ret.length >= 32,CVL: balanceOf)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:234  require(bool,string)(amount > 0,CVL: zero gross)",
+    "base-contracts/contracts/CommitmentVaultLock.sol:364  verifiedGrossUsd < HANDSHAKE_USD_MIN || verifiedGrossUsd > HANDSHAKE_USD_MAX",
+    "base-contracts/contracts/CommitmentVaultLock.sol:368  verifiedGrossUsd < STANDARD_USD_MIN"
+   ],
+   "required_properties": [
+    {
+     "property": "received amount measured as a balance delta (not a guard, so matched in the function body)",
+     "met": true,
+     "by": [
+      "base-contracts/contracts/CommitmentVaultLock.sol:245"
+     ]
+    }
+   ],
+   "gap_flagged": false,
+   "gap": "none",
+   "exploit_sketch": "",
+   "damage_potential": "none",
+   "severity": "none",
+   "rank": null,
+   "spec": [
+    "VF-SEC-001"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-22",
+   "finding": null,
+   "domain": "msg.sender and minter roles",
+   "input": "msg.sender on VCLM/CHONX mint and initialize",
+   "entry_point": "base-contracts/contracts/VinculumFinalisToken.sol:65-70,95-120",
+   "assumed_property": "Only the Verifier and the Stake mint; set once; no new minter (Rev 13)",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisToken.sol:66  require(bool,string)(msg.sender == minterVerifier || msg.sender == minterStake,VFT: not minter)",
+    "base-contracts/contracts/VinculumFinalisToken.sol:97  require(bool,string)(msg.sender == deployer,VFT: not deployer)"
+   ],
+   "required_properties": [
+    {
+     "property": "minter gate",
+     "met": true,
+     "by": [
+      "base-contracts/contracts/VinculumFinalisToken.sol:66",
+      "base-contracts/contracts/VinculumFinalisToken.sol:97"
+     ]
+    }
+   ],
+   "gap_flagged": false,
+   "gap": "none",
+   "exploit_sketch": "",
+   "damage_potential": "none",
+   "severity": "none",
+   "rank": null,
+   "spec": [
+    "VF-SUP-013",
+    "Rev 13 s3"
+   ],
+   "rev_conflict": "Rev 13: no new minter; code agrees.",
+   "poc": ""
+  },
+  {
+   "assumption": "A-23",
+   "finding": null,
+   "domain": "epoch, time and block.timestamp",
+   "input": "block.timestamp in Stake epoch close",
+   "entry_point": "base-contracts/contracts/VinculumFinalisStake.sol:399-427",
+   "assumed_property": "An epoch closes only after it ends",
+   "checked_properties": [
+    "base-contracts/contracts/VinculumFinalisStake.sol:402  require(bool,string)(! ep.closed,VFS: already closed)",
+    "base-contracts/contracts/VinculumFinalisStake.sol:405  require(bool,string)(epochN >= 1,VF-STK-010: epoch numbering begins at 1)",
+    "base-contracts/contracts/VinculumFinalisStake.sol:408  require(bool,string)(block.timestamp >= t0 + epochN * EPOCH_DURATION_SECS,VF-STK-008: epoch not ended)",
+    "base-contracts/contracts/VinculumFinalisStake.sol:412  require(bool,string)(epochs[epochN - 1].closed,VF-STK-010: chronological order)",
+    "base-contracts/contracts/VinculumFinalisStake.sol:233  require(bool,string)(t0 > 0,VF-STK-001: protocol not launched)"
+   ],
+   "required_properties": [
+    {
+     "property": "epoch end reached",
+     "met": true,
+     "by": [
+      "base-contracts/contracts/VinculumFinalisStake.sol:402",
+      "base-contracts/contracts/VinculumFinalisStake.sol:408",
+      "base-contracts/contracts/VinculumFinalisStake.sol:412"
+     ]
+    }
+   ],
+   "gap_flagged": false,
+   "gap": "none",
+   "exploit_sketch": "",
+   "damage_potential": "none",
+   "severity": "none",
+   "rank": null,
+   "spec": [
+    "VF-STK-007",
+    "VF-RAC-004"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  },
+  {
+   "assumption": "A-26",
+   "finding": null,
+   "domain": "block headers and finality",
+   "input": "Ethereum header via beacon light client (EthereumLockReader, control row)",
+   "entry_point": "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:82-112",
+   "assumed_property": "The header is in finalized Ethereum history",
+   "checked_properties": [
+    "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:107  require(bool,string)(BeaconSsz.branchRoot(header.hash,f.payloadBranch,BLOCK_HASH_GINDEX) == f.lockBeacon.bodyRoot,VF-XCH-006: Ethereum payload not in beacon body)",
+    "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:91  require(bool,string)(lightClient.isFinalized(finRoot),VF-XCH-006: Ethereum beacon header not finalized)",
+    "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:94  require(bool,string)(f.lockBeacon.slot < f.finalized.slot && f.finalized.slot - f.lockBeacon.slot <= SLOTS_PER_HISTORICAL_ROOT,VF-XCH-006: Ethereum block not under finalized header)",
+    "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:100  require(bool,string)(BeaconSsz.branchRoot(lockRoot,f.blockRootsBranch,g) == f.finalized.stateRoot,VF-XCH-006: Ethereum block not under finalized header)",
+    "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:105  require(bool,string)(f.blockRootsBranch.length == 0,VF-XCH-006: Ethereum block roots branch)"
+   ],
+   "required_properties": [
+    {
+     "property": "header anchored to settled history (light client, checkpoint, validator signatures or confirmations)",
+     "met": true,
+     "by": [
+      "base-contracts/contracts/chain-verifiers/EthereumLockReader.sol:91"
+     ]
+    }
+   ],
+   "gap_flagged": false,
+   "gap": "none",
+   "exploit_sketch": "",
+   "damage_potential": "none",
+   "severity": "none",
+   "rank": null,
+   "spec": [
+    "VF-XCH-006"
+   ],
+   "rev_conflict": "",
+   "poc": ""
+  }
+ ]
+}
