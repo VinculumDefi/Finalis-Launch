@@ -11,7 +11,7 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // unless these constants are changed in this file (reviewed commit).
 const EXPECTED_REGISTRY_SHA256 = "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9";
 const EXPECTED_REGISTRY_ROWS = 487;
-const EXPECTED_MANIFEST_SHA256 = "302123d113b144d372ec56200bb3ab97520d712f45e6ed2d7febd0d06e6ab98c";
+const EXPECTED_MANIFEST_SHA256 = "27e23e5c7eafc77043709642151ed70c7928af247da8cb9a6ff8a61b83b8a693";
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
 
@@ -407,8 +407,8 @@ async function buildCeremonyArtifacts() {
     ],
     nonBaseLock: {
       contract: "CommitmentVaultLock",
-      expectedRuntimeHash: "0x07b599f652faf1dc71881209566f73e8fff4762486e6dbe9ff95060fe49c8594",
-      immutableRanges: [[2483, 32], [4258, 32], [5105, 32]],
+      expectedRuntimeHash: "0x7ee4878767cfdea969c49e503eea1e82ff0d2a681a79aeaaf25b705ecd3db4b7",
+      immutableRanges: [[2626, 32], [4780, 32], [5192, 32]],
       feeBps: 500,
       feeLanguage: "5.00% of gross on every duration",
       noHandshakeFeeBpsSelector: true,
