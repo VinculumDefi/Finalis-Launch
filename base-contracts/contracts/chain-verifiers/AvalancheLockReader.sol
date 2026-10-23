@@ -40,11 +40,13 @@ contract AvalancheLockReader is EvmReceiptLockReader {
         require(a.length == 4 || a.length == 5, "VF-XCH-011: account");
     }
 
-    function verifyFinality(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
+    /// @dev Header claim check for the Avalanche proof layout. Finality itself
+    /// is refused by EvmReceiptLockReader.verifyFinality (fail closed, AG-01).
+    function headerClaimMatches(bytes calldata lockEventProof, bytes calldata sourceFinalityProof)
         external
         view
         override
-        returns (bool, bytes32, uint256)
+        returns (bytes32, uint256)
     {
         AvalancheLockEventProof memory a = abi.decode(lockEventProof, (AvalancheLockEventProof));
         ExecutionHeader.View memory h = _openHeader(a.base.headerRlp);
@@ -53,7 +55,7 @@ contract AvalancheLockReader is EvmReceiptLockReader {
         require(claimedChain == chainId, "VF-XCH-006: wrong chain");
         require(claimedHash == h.hash, "VF-XCH-006: block hash mismatch");
         require(claimedHeight == h.number, "VF-XCH-006: block height mismatch");
-        return (true, h.hash, h.number);
+        return (h.hash, h.number);
     }
 
     function _baseProof(bytes calldata lockEventProof) internal pure override returns (LockEventProof memory) {
