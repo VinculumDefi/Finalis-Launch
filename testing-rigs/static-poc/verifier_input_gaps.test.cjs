@@ -1,5 +1,7 @@
-// Rig 7 follow-up: proofs of concept for three Verifier findings (C01, H02, M01) found by
-// manual triage next to Slither. Read-only demonstration on a local Hardhat
+// Rig 7 follow-up: three Verifier findings (C01, H02, M01) found by manual
+// triage next to Slither. Converted 2026-10-23 from proofs of concept to
+// safe-behavior tests: each test now asserts the fixed behavior (AG-04, AG-05,
+// AG-06). Local Hardhat chain
 // chain with the production contracts (BaseCommitmentVaultLock, the Base
 // reader, Verifier, VCLM, CHONX, Forge, Stake). Nothing here is deployed.
 // Run from base-contracts:
@@ -60,44 +62,43 @@ function pkg(lockId, rec, recipient, racIdentity, valuationTimestamp) {
   };
 }
 
-describe("static rig PoC: Verifier input gaps (findings only, no fix)", function () {
-  it("STATIC-H02: caller-chosen valuationTimestamp skips emission decay", async function () {
+describe("static rig: Verifier input gaps are closed (safe behavior, fix 2026-10-23)", function () {
+  it("STATIC-H02 (AG-05): a caller-chosen valuationTimestamp is refused; the honest lock earns the decayed rate", async function () {
     const { user, lock, vclm, verifier } = await deploy();
     // One year after launch.
     await network.provider.send("evm_increaseTime", [Number(365n * DAY)]);
     await network.provider.send("evm_mine");
     const eth = ethers.parseEther("0.01"); // $10
+    const b = await lock7d(lock, user, eth);
+    const forged = pkg(b.lockId, b.rec, user.address, ethers.id("rac-b"), 0n); // valuationTimestamp = 0
+    await expect(verifier.recordFeeAndRac(forged)).to.be.revertedWith("VF-ORC-011: valuation timestamp != proven lock creation time");
     const a = await lock7d(lock, user, eth);
     const honest = pkg(a.lockId, a.rec, user.address, ethers.id("rac-a"), a.rec.createdAt);
     await (await verifier.recordFeeAndRac(honest)).wait();
     const b0 = await vclm.balanceOf(user.address);
     await (await verifier.verifyAndMint(honest, 0)).wait();
     const honestMint = (await vclm.balanceOf(user.address)) - b0;
-
-    const b = await lock7d(lock, user, eth);
-    const forged = pkg(b.lockId, b.rec, user.address, ethers.id("rac-b"), 0n); // valuationTimestamp = 0
-    await (await verifier.recordFeeAndRac(forged)).wait();
-    const b1 = await vclm.balanceOf(user.address);
-    await (await verifier.verifyAndMint(forged, 0)).wait();
-    const forgedMint = (await vclm.balanceOf(user.address)) - b1;
-    console.log(`      honest mint ${ethers.formatEther(honestMint)} VCLM, valuationTimestamp=0 mint ${ethers.formatEther(forgedMint)} VCLM`);
-    expect(forgedMint).to.be.gt(honestMint); // gap demonstrated
+    const launch = await verifier.protocolLaunchTimestamp();
+    const days = (a.rec.createdAt - launch) / DAY;
+    expect(days).to.be.gte(365n);
+    expect(honestMint).to.be.lt(await verifier.previewIssuance(10n * SCALE, 0, 2, SEVEN_DAYS, 0n));
   });
 
-  it("STATIC-C01: one lock records many RAC credits under different racIdentity values", async function () {
+  it("STATIC-C01 (AG-04): one lock records exactly one RAC credit, whatever racIdentity is supplied", async function () {
     const { user, lock, verifier } = await deploy();
     const a = await lock7d(lock, user, ethers.parseEther("1")); // $1000
     const epoch = await verifier.currentEpoch();
-    for (let i = 0; i < 5; i++) {
-      await (await verifier.connect(user).recordFeeAndRac(pkg(a.lockId, a.rec, user.address, ethers.id("rac-" + i), a.rec.createdAt))).wait();
+    await (await verifier.connect(user).recordFeeAndRac(pkg(a.lockId, a.rec, user.address, ethers.id("rac-0"), a.rec.createdAt))).wait();
+    for (let i = 1; i < 5; i++) {
+      await expect(verifier.connect(user).recordFeeAndRac(pkg(a.lockId, a.rec, user.address, ethers.id("rac-" + i), a.rec.createdAt)))
+        .to.be.revertedWith("VF-RAC-001: RAC already recorded");
     }
-    const one = await verifier.racCredits(ethers.id("rac-0"));
-    const basis = await verifier.epochRewardBasis(epoch);
-    console.log(`      one credit ${one}, epoch reward basis after 5 calls ${basis}`);
-    expect(basis).to.equal(one * 5n); // five credits from one fee
+    const one = await verifier.racCredits(await verifier.racKey("Base", a.lockId));
+    expect(one).to.be.gt(0n);
+    expect(await verifier.epochRewardBasis(epoch)).to.equal(one);
   });
 
-  it("STATIC-M01: price is bound at first proof submission, not at lock creation", async function () {
+  it("STATIC-M01 (AG-06): the price is the one in effect at lock creation, not at first submission", async function () {
     const { deployer, user, lock, verifier } = await deploy();
     const a = await lock7d(lock, user, ethers.parseEther("0.01"));
     // A later scheduled run doubles the price before the user submits.
@@ -105,11 +106,10 @@ describe("static rig PoC: Verifier input gaps (findings only, no fix)", function
     await (await verifier.recordFeeAndRac(pkg(a.lockId, a.rec, user.address, ethers.id("rac-p"), a.rec.createdAt))).wait();
     const lockIdHash = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", a.lockId]);
     const bound = await verifier.lockReferencePrices(lockIdHash);
-    console.log(`      price at lock creation 1000, bound price ${ethers.formatEther(bound.priceUsd18)}`);
-    expect(bound.priceUsd18).to.equal(2000n * SCALE);
+    expect(bound.priceUsd18).to.equal(1000n * SCALE);
   });
 
-  it("STATIC-C01b: Stake.allocateEpoch mints VCLM on the inflated basis", async function () {
+  it("STATIC-C01b (AG-04): Stake.allocateEpoch mints on one credit per lock", async function () {
     const { user, lock, vclm, verifier, stake } = await deploy();
     // Get some VCLM honestly and stake it so epoch 2 has weight.
     const a = await lock7d(lock, user, ethers.parseEther("0.01"));
@@ -119,16 +119,19 @@ describe("static rig PoC: Verifier input gaps (findings only, no fix)", function
     const bal = await vclm.balanceOf(user.address);
     await (await vclm.connect(user).approve(await stake.getAddress(), bal)).wait();
     await (await stake.connect(user).createPosition(0, bal, 120n * DAY)).wait();
-    // Move into epoch 2 and record the same lock fee under 20 identities.
+    // Move into epoch 2; the same lock fee under 20 identities records once.
     await network.provider.send("evm_increaseTime", [Number(11n * DAY)]);
     await network.provider.send("evm_mine");
     const b = await lock7d(lock, user, ethers.parseEther("1")); // $1000
     const epoch = await verifier.currentEpoch();
     expect(epoch).to.equal(2n);
-    for (let i = 0; i < 20; i++) {
-      await (await verifier.connect(user).recordFeeAndRac(pkg(b.lockId, b.rec, user.address, ethers.id("dup-" + i), b.rec.createdAt))).wait();
+    await (await verifier.connect(user).recordFeeAndRac(pkg(b.lockId, b.rec, user.address, ethers.id("dup-0"), b.rec.createdAt))).wait();
+    for (let i = 1; i < 20; i++) {
+      await expect(verifier.connect(user).recordFeeAndRac(pkg(b.lockId, b.rec, user.address, ethers.id("dup-" + i), b.rec.createdAt)))
+        .to.be.revertedWith("VF-RAC-001: RAC already recorded");
     }
-    const one = await verifier.racCredits(ethers.id("dup-0"));
+    const one = await verifier.racCredits(await verifier.racKey("Base", b.lockId));
+    expect(await verifier.epochRewardBasis(2n)).to.equal(one);
     // Close and allocate epochs 1 and 2 after epoch 3 ends.
     await network.provider.send("evm_increaseTime", [Number(20n * DAY)]);
     await network.provider.send("evm_mine");
@@ -139,7 +142,6 @@ describe("static rig PoC: Verifier input gaps (findings only, no fix)", function
     await (await stake.allocateEpoch(2)).wait();
     const minted = (await vclm.balanceOf(await stake.getAddress())) - s0;
     const honestReward = (one * 100n) / 10n;
-    console.log(`      one fee should give ${ethers.formatEther(honestReward)} reward VCLM; Stake minted ${ethers.formatEther(minted)} VCLM for epoch 2`);
-    expect(minted).to.equal(honestReward * 20n);
+    expect(minted).to.equal(honestReward);
   });
 });
