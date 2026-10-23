@@ -44,7 +44,7 @@ async function setup({ polygon = false } = {}) {
   let polyLock, polyReader;
   if (polygon) {
     polyLock = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Polygon", devFund.address);
-    polyReader = await (await ethers.getContractFactory("PolygonLockReaderLocalHeaders")).deploy(await polyLock.getAddress());
+    polyReader = await (await ethers.getContractFactory("PolygonLockReaderTestAnchor")).deploy(await polyLock.getAddress());
     await verifier.registerChainVerifier("Polygon", await polyReader.getAddress());
     await verifier.configureDevFund("Polygon", devFund.address);
     await verifier.registerAssetRowAlias("Polygon", POL_ROW_ID, "Ethereum");
