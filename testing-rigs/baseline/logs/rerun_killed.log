@@ -1,0 +1,18 @@
+=== FILE test/stake_t277_claim_display.test.cjs
+
+
+  t277u displayed claimable amount equals the contract, per epoch, no overlap
+      214 comparisons, all equal (L = 1063, current epoch 1067)
+    ✔ every position, many toEpochs and read groups 1, 7, 499, 500, 501: equal to claimableVclm to the wei (141011ms)
+      term change at epoch 503; planner total 304542.061766979343064997 VCLM equals the views
+    ✔ after partial claims (inside a term and right at a term change), the rest is still exact (31580ms)
+DISPLAY_READS {"epochsAllocatedToL":1063,"position5":{"epochReads":1059,"weightReads":1013,"crossCheckViews":0,"total":2072,"groupsOf500":3},"maxGasEpochs":34897,"maxGasEpochWeightPos5":299964,"maxGasEpochWeightPos0":633877,"oneShotClaimableVclmPos5":9157966,"terms0":237}
+      position 5, epochs 2..1060: 1059 epochs() reads + 1013 epochWeight() reads (zero-mint epochs skipped), 0 cross-check view (range above 200: none)
+      largest single read: epochs() 34897 gas, epochWeight() 299964 (position 5), 633877 (position 0, 237 terms); one-shot claimableVclm(5, L) would be 9157966
+    ✔ read cost: largest single eth_call and the number of reads for the 1,060-epoch position (14493ms)
+
+
+  3 passing (3m)
+
+=== EXIT 0 test/stake_t277_claim_display.test.cjs
+RERUN TOTAL passing=3 failing=0
