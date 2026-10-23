@@ -39,23 +39,30 @@ for (const [env, c] of Object.entries(CHAINS)) {
 const usdOf = (c, gross) => ((gross * SCALE) / 10n ** BigInt(c.decimals) * c.price) / SCALE;
 const racOf = (usd, fee, gross) => (((usd * fee) / gross) * 6000n) / 10000n;
 
+// Fix 2026-10-23 (AG-05/AG-06): packages carry a proven creation time one
+// second after the latest price run, and the Valuation Timestamp equals it.
+let CREATED = 1n;
+async function markCreated() {
+  CREATED = BigInt((await ethers.provider.getBlock("latest")).timestamp) + 1n;
+}
+
 let n = 0;
-function pkg(env, gross, duration, recipient, { fee, tag } = {}) {
+function pkg(env, gross, duration, recipient, { fee, tag, lockId } = {}) {
   const c = CHAINS[env];
   const f = fee === undefined ? (gross * 500n) / 10000n : fee;
   const principal = gross - f;
-  const id = ethers.id(`${env}-${duration}-${gross}-${tag || n++}`);
+  const id = lockId || ethers.id(`${env}-${duration}-${gross}-${tag || n++}`);
   return {
     sourceEnvironmentId: env, commitmentVaultLockId: id, handshakeAllowanceCount: c.allowance,
     canonicalAssetId: c.id, assetPrecision: c.decimals, assetCustodyClass: c.custodyClass,
     grossAmountSmallestUnits: gross, actualFeeAmountSmallestUnits: f, principalAmountSmallestUnits: principal,
     feeAssetId: c.id, devFundDestination: "dev", feeTransferEvidence: ethers.id("fee"),
-    valuationTimestamp: 1n, maturityTimestamp: 2n, durationSecs: duration, selectedOutputToken: 0,
+    valuationTimestamp: CREATED, maturityTimestamp: 2n, durationSecs: duration, selectedOutputToken: 0,
     baseRecipient: recipient, releaseDestination: "release", chonxActivationReceipt: "0x",
     racIdentity: ethers.keccak256(ethers.concat([id, "0x01"])), priceRecord: "0x", sourceFinalityProof: "0x",
     lockEventProof: coder.encode(
       ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8", "bytes32"],
-      [id, gross, f, principal, duration, 1n, 2n, recipient, 0, c.id]
+      [id, gross, f, principal, duration, CREATED, 2n, recipient, 0, c.id]
     ),
   };
 }
@@ -81,6 +88,7 @@ async function fixture() {
   await finalizeCeremony(verifier);
   await verifier.applyScheduledPriceRun(2n, Object.entries(CHAINS).map(([env, c]) => (
     { environmentId: env, canonicalAssetId: c.id, priceUsd18: c.price, success: true })));
+  await markCreated();
   return { verifier, vclm, recipient };
 }
 
@@ -89,7 +97,7 @@ async function acceptAndCheck(ctx, p, expectedUsd) {
   const { verifier, vclm, recipient } = ctx;
   const c = CHAINS[p.sourceEnvironmentId];
   await verifier.recordFeeAndRac(p);
-  expect(await verifier.racCredits(p.racIdentity)).to.equal(racOf(expectedUsd, p.actualFeeAmountSmallestUnits, p.grossAmountSmallestUnits));
+  expect(await verifier.racCredits(await verifier.racKey(p.sourceEnvironmentId, p.commitmentVaultLockId))).to.equal(racOf(expectedUsd, p.actualFeeAmountSmallestUnits, p.grossAmountSmallestUnits));
   const before = await vclm.balanceOf(recipient.address);
   await verifier.verifyAndMint(p, 0);
   const minted = (await vclm.balanceOf(recipient.address)) - before;
@@ -141,11 +149,12 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
           .to.be.revertedWith("VF-COM-003: handshake gross below unit band");
         await expect(ctx.verifier.recordFeeAndRac(pkg(env, c.max + 1n, HOUR, ctx.recipient.address)))
           .to.be.revertedWith("VF-COM-003: handshake gross above unit band");
-        // verifyAndMint checks the band itself (before the source check): reuse a recorded RAC.
+        // verifyAndMint checks the band itself: reuse the lock id of a recorded RAC
+        // (RAC is keyed by the proven lock since fix 2026-10-23, AG-04).
         const ok = pkg(env, c.min, HOUR, ctx.recipient.address);
         await ctx.verifier.recordFeeAndRac(ok);
         for (const [g, msg] of [[c.min - 1n, "below"], [c.max + 1n, "above"]]) {
-          const bad = { ...pkg(env, g, HOUR, ctx.recipient.address), racIdentity: ok.racIdentity };
+          const bad = pkg(env, g, HOUR, ctx.recipient.address, { lockId: ok.commitmentVaultLockId });
           await expect(ctx.verifier.verifyAndMint(bad, 0)).to.be.revertedWith(`VF-COM-003: handshake gross ${msg} unit band`);
         }
       });
@@ -164,6 +173,7 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
         const low = await fixture();
         const price = c.decimals === 8 ? (env === "Litecoin" ? SCALE / 100n : SCALE) : SCALE; // LTC $0.01, BTC/BCH $1
         await low.verifier.applyScheduledPriceRun(3n, [{ environmentId: env, canonicalAssetId: c.id, priceUsd18: price, success: true }]);
+        await markCreated();
         const saved = c.price; c.price = price;
         try {
           const p = pkg(env, c.min, HOUR, low.recipient.address);
@@ -189,6 +199,7 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
         if (usdOf(c, 20n) >= 10n ** 16n) {
           v = (await fixture()).verifier;
           await v.applyScheduledPriceRun(3n, [{ environmentId: env, canonicalAssetId: c.id, priceUsd18: SCALE, success: true }]);
+          await markCreated();
         }
         await expect(v.recordFeeAndRac(pkg(env, 20n, DAY7, ctx.recipient.address)))
           .to.be.revertedWith("VF-COM-009: standard USD below $0.01");
@@ -246,11 +257,12 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
     await v.setScheduledPricePoster(deployer.address);
     await finalizeCeremony(v);
     await v.applyScheduledPriceRun(2n, [{ environmentId: "Bitcoin Cash", canonicalAssetId: otherId, priceUsd18: CHAINS["Bitcoin Cash"].price, success: true }]);
+    await markCreated();
     const p = { ...pkg("Bitcoin Cash", 11_000n, HOUR, recipient.address) };
     const id = p.commitmentVaultLockId;
     p.canonicalAssetId = otherId; p.feeAssetId = otherId;
     p.lockEventProof = coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8", "bytes32"],
-      [id, 11_000n, 550n, 10_450n, HOUR, 1n, 2n, recipient.address, 0, otherId]);
+      [id, 11_000n, 550n, 10_450n, HOUR, CREATED, 2n, recipient.address, 0, otherId]);
     await expect(v.recordFeeAndRac(p)).to.be.revertedWith("VF-COM-003: handshake USD outside $0.01-$0.02");
   });
 });
