@@ -1,8 +1,8 @@
 // =============================================================================
 // BaseCommitmentVaultLock — the Base Commitment Vault (t262u).
 //
-// Same code as CommitmentVaultLock.sol (which stays unchanged for the six
-// non-Base EVM chains), plus one rule:
+// Same code as CommitmentVaultLock.sol (the six non-Base EVM chains),
+// including the AG-08 per-token accounting, plus one rule:
 //   VF-TOK-007 / VF-REG-008: VCLM, CHONX and SYNTH are prohibited Commitment
 //     Vault Lock inputs. They exist only on Base. createErc20Lock refuses
 //     them as its first check, so no token moves and no fee is taken. The
@@ -33,6 +33,17 @@
 //     The binding payload stored with the lock is exactly 117 bytes:
 //     lock id 32, Base recipient 20, output token 1, asset identity 32,
 //     valuation reference 32.
+//
+// VF-SEC-001 (fix 2026-10-23, AG-08): ERC-20 balances are accounted per
+// token. owedPrincipal[token] is the principal still owed to open locks of
+// that token. A lock is refused while the token balance is below that sum,
+// the Dev Fund must receive the fee (a share-rounding allowance of
+// FEE_ROUNDING_WEI only), and the fee may not take more than the fee out of
+// this contract. A release pays the full principal while the pool covers
+// what is owed; after a negative rebase it pays principal * balance / owed,
+// so a shortfall is shared pro rata and no lock is paid from another lock's
+// principal. A release may not move more than it pays. Positive rebase
+// surplus stays in this contract.
 //
 // Maturity is block.timestamp + duration. The duration gate is an exact
 // match against the sixteen COMMITMENT_DURATIONS rows. No range and no
@@ -95,6 +106,15 @@ contract BaseCommitmentVaultLock {
 
     uint256 private _entered;
 
+    /// @notice Principal still owed to open ERC-20 locks, per token (AG-08).
+    ///         Appended after _entered so the _locks slot is unchanged.
+    mapping(address => uint256) public owedPrincipal;
+
+    /// @notice Share-rounding allowance on the Dev Fund fee receipt (stETH
+    ///         style tokens round 1 to 2 wei). A token that keeps more than
+    ///         this from the fee is refused.
+    uint256 public constant FEE_ROUNDING_WEI = 2;
+
     event LockCreated(
         bytes32 indexed lockId,
         address indexed creator,
@@ -107,6 +127,7 @@ contract BaseCommitmentVaultLock {
     );
     event FeeRouted(bytes32 indexed lockId, address indexed devFund, address asset, uint256 fee);
     event PrincipalReleased(bytes32 indexed lockId, address indexed releaseDestination, address asset, uint256 principal);
+    event PrincipalReleasedProRata(bytes32 indexed lockId, uint256 principal, uint256 paid, uint256 balance, uint256 owed);
 
     modifier nonReentrant() {
         require(_entered == 0, "CVL: reentrant");
@@ -217,6 +238,9 @@ contract BaseCommitmentVaultLock {
         require(previewFee > 0 && previewPrincipal > 0, "CVL: zero fee or principal");
 
         uint256 beforeBal = _balanceOf(token, address(this));
+        // AG-08: never open a lock into a pool that already cannot cover
+        // what it owes, or the new principal would pay older locks.
+        require(beforeBal >= owedPrincipal[token], "CVL: token balance below owed principal");
         require(
             _erc20(token, abi.encodeWithSelector(IERC20MinimalBaseLock.transferFrom.selector, msg.sender, address(this), amount)),
             "CVL: transferFrom"
@@ -240,10 +264,8 @@ contract BaseCommitmentVaultLock {
             principal,
             multiplierBps
         );
-        require(
-            _erc20(token, abi.encodeWithSelector(IERC20MinimalBaseLock.transfer.selector, devFund, fee)),
-            "CVL: fee"
-        );
+        _routeErc20Fee(token, fee);
+        owedPrincipal[token] += principal;
         emit FeeRouted(lockId, devFund, token, fee);
     }
 
@@ -263,13 +285,39 @@ contract BaseCommitmentVaultLock {
         if (asset == address(0)) {
             (bool ok, ) = msg.sender.call{value: principal}("");
             require(ok, "CVL: release");
-        } else {
+            emit PrincipalReleased(lockId, msg.sender, asset, principal);
+            return;
+        }
+        uint256 bal = _balanceOf(asset, address(this));
+        uint256 owed = owedPrincipal[asset];
+        uint256 pay = principal;
+        if (bal < owed) {
+            // AG-08: the pool is short (negative rebase). Pay this lock's
+            // pro-rata share only.
+            pay = (principal * bal) / owed;
+            emit PrincipalReleasedProRata(lockId, principal, pay, bal, owed);
+        }
+        owedPrincipal[asset] = owed - principal;
+        if (pay != 0) {
             require(
-                _erc20(asset, abi.encodeWithSelector(IERC20MinimalBaseLock.transfer.selector, msg.sender, principal)),
+                _erc20(asset, abi.encodeWithSelector(IERC20MinimalBaseLock.transfer.selector, msg.sender, pay)),
                 "CVL: release"
             );
+            require(bal - _balanceOf(asset, address(this)) <= pay, "CVL: release moved more than paid");
         }
-        emit PrincipalReleased(lockId, msg.sender, asset, principal);
+        emit PrincipalReleased(lockId, msg.sender, asset, pay);
+    }
+
+    /// @dev AG-08: the fee leaves this contract and reaches the Dev Fund.
+    function _routeErc20Fee(address token, uint256 fee) internal {
+        uint256 selfBefore = _balanceOf(token, address(this));
+        uint256 fundBefore = _balanceOf(token, devFund);
+        require(
+            _erc20(token, abi.encodeWithSelector(IERC20MinimalBaseLock.transfer.selector, devFund, fee)),
+            "CVL: fee"
+        );
+        require(selfBefore - _balanceOf(token, address(this)) <= fee, "CVL: fee moved more than the fee");
+        require(_balanceOf(token, devFund) + FEE_ROUNDING_WEI >= fundBefore + fee, "CVL: Dev Fund fee short");
     }
 
     function _open(
