@@ -170,6 +170,8 @@ def sample_gambit(gdir):
     rng = random.Random(SEED)
     out = []
     for c, d in GAMBIT_DIR.items():
+        if SAMPLE[c] == 0:
+            continue  # --contracts filter: not sampled in this run
         res = json.load(open(os.path.join(gdir, d, "gambit_results.json")))
         buckets = {k: [] for k in GAMBIT_PRIORITY}
         for m in res:
@@ -284,10 +286,12 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     if a.contracts:
         keep = set(a.contracts.split(","))
-        for d in (FILES, GAMBIT_DIR, SAMPLE, ROR_SAMPLE):
+        # Keep the full tables (targeted() names every contract); zero the
+        # sample sizes of the others and drop their mutants below.
+        for d in (SAMPLE, ROR_SAMPLE):
             for k in list(d):
                 if k not in keep:
-                    del d[k]
+                    d[k] = 0
     if a.replay:
         allm = []
         for r in json.load(open(a.replay))["all"]:
@@ -301,6 +305,8 @@ def main():
             allm.append(r)
     else:
         allm = targeted() + ror(work) + sample_gambit(a.gambit)
+        if a.contracts:
+            allm = [m for m in allm if m["contract"] in keep]
     mine = [m for i, m in enumerate(allm) if i % a.workers == a.worker]
     if a.only:
         ids = a.only.split(",")
