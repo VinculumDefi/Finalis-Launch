@@ -1,0 +1,141 @@
+{
+  "USDT": {
+    "quirk": "reverted: Transaction reverted without a reason string",
+    "stated": "5000000000",
+    "gross": "5000000000",
+    "fee": "250000000",
+    "principal": "4750000000",
+    "userPaid": "5000000000",
+    "lockGot": "4750000000",
+    "devGot": "250000000",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "4750000000"
+    }
+  },
+  "USDC": {
+    "mintedAt095": null,
+    "stated": "5000000000",
+    "gross": "5000000000",
+    "fee": "250000000",
+    "principal": "4750000000",
+    "userPaid": "5000000000",
+    "lockGot": "4750000000",
+    "devGot": "250000000",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "4750000000"
+    }
+  },
+  "PAXG_fee_observed": "0",
+  "PAXG": {
+    "tax": "0",
+    "devShort": "0",
+    "stated": "2000000000000000000",
+    "gross": "2000000000000000000",
+    "fee": "100000000000000000",
+    "principal": "1900000000000000000",
+    "userPaid": "2000000000000000000",
+    "lockGot": "1900000000000000000",
+    "devGot": "100000000000000000",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "1900000000000000000"
+    }
+  },
+  "RFOT": {
+    "tax": "20000000000000000",
+    "devShort": "990000000000000",
+    "stated": "2000000000000000000",
+    "gross": "1980000000000000000",
+    "fee": "99000000000000000",
+    "principal": "1881000000000000000",
+    "userPaid": "2000000000000000000",
+    "lockGot": "1881000000000000000",
+    "devGot": "98010000000000000",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "1862190000000000000"
+    }
+  },
+  "stETH": {
+    "held": "2850000000000000000",
+    "gap": "-1",
+    "stated": "3000000000000000000",
+    "gross": "2999999999999999998",
+    "fee": "149999999999999999",
+    "principal": "2849999999999999999",
+    "userPaid": "2999999999999999998",
+    "lockGot": "2850000000000000000",
+    "devGot": "149999999999999998",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "2849999999999999998"
+    }
+  },
+  "AMPL": {
+    "pool0": "19000000000000",
+    "pool1": "17100000000000",
+    "a": {
+      "stated": "10000000000000",
+      "gross": "10000000000000",
+      "fee": "500000000000",
+      "principal": "9500000000000",
+      "userPaid": "10000000000000",
+      "lockGot": "9500000000000",
+      "devGot": "500000000000",
+      "minted": null
+    },
+    "b": {
+      "stated": "10000000000000",
+      "gross": "10000000000000",
+      "fee": "500000000000",
+      "principal": "9500000000000",
+      "userPaid": "10000000000000",
+      "lockGot": "9500000000000",
+      "devGot": "500000000000",
+      "minted": null
+    },
+    "r1": {
+      "ok": true,
+      "got": "9500000000000"
+    },
+    "r2": {
+      "ok": false,
+      "reason": "VM Exception while processing transaction: reverted with reason string 'CVL: release'"
+    }
+  },
+  "LINK": {
+    "stated": "500000000000000000000",
+    "gross": "500000000000000000000",
+    "fee": "25000000000000000000",
+    "principal": "475000000000000000000",
+    "userPaid": "500000000000000000000",
+    "lockGot": "475000000000000000000",
+    "devGot": "25000000000000000000",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "475000000000000000000"
+    }
+  },
+  "WBTC": {
+    "stated": "50000000",
+    "gross": "50000000",
+    "fee": "2500000",
+    "principal": "47500000",
+    "userPaid": "50000000",
+    "lockGot": "47500000",
+    "devGot": "2500000",
+    "minted": null,
+    "release": {
+      "ok": true,
+      "got": "47500000"
+    }
+  }
+}
