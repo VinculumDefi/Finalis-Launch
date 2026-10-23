@@ -1,0 +1,14 @@
+fork base at block 52983545
+
+
+  Rig 2: live finalized Base set (read-only probe on a local fork)
+      {"forkBlock":52983546,"finalized":true,"launch":"1792723969","readers":{"Base":"matches record","Ethereum":"matches record","Arbitrum":"matches record","Optimism":"matches record","Polygon":"matches record","BNB Smart Chain":"matches record","Avalanche":"matches record","Bitcoin":"matches record","Bitcoin Cash":"matches record","Litecoin":"matches record","Dogecoin":"matches record","DigiByte":"matches record","Zcash":"matches record","Stellar":"matches record","XRP Ledger":"matches record"},"solana":"not registered","vclmMinters":["0xfA8A...6328","0x8481...Df55"],"chonxMinters":["0xfA8A...6328","0x0000...0000"],"vclmMintersOk":true,"chonxMintersOk":true,"poster":"0x6001...0DB4","posterIsCeremonyData":true,"lastRun":"1","baseEthPrice":{"usable":true,"usd":"2392.22"},"vclmSupply":"0.0","chonxSupply":"0.0","lifetimeVclm":"0.0","chonxActivated":false,"currentEpoch":"1","lockFeeBps":"500","lockDevFund":"0xFD21...3e9a","lockDevFundOk":true,"vclmCode":true}
+    ✔ live set: finalized, 15 readers as recorded, Solana absent, minters fixed, poster and prices (7598ms)
+      epoch 1: honest RAC +71.7666 USD; 5 replays by a stranger +358.833 USD (= 3588.33 future reward VCLM)
+      1 ETH 7d: honest 31098.86 VCLM, valuationTimestamp=0 31098.86 VCLM
+    ✔ live bytecode on the fork: RAC replay and valuationTimestamp=0 (FINDING-HH-001, FINDING-HH-002) (10439ms)
+
+
+  2 passing (19s)
+
+EXIT 0
