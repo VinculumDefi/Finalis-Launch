@@ -18,13 +18,15 @@ describe("StellarLockReader (Stellar, local standalone stellar-core lock)", func
     reader = await (await ethers.getContractFactory("StellarLockReader")).deploy(FX.networkId, FX.devFund);
   });
 
-  it("verifyFinality: SHA-256 of the header XDR is the claimed ledger hash; sequence matches", async function () {
+  it("verifyFinality is refused (AG-03, no ed25519 quorum anchor); headerClaimMatches: SHA-256 of the header XDR is the claimed ledger hash; sequence matches", async function () {
     const L = FX.week;
-    const r = await reader.verifyFinality(proof(L), claim(L.ledgerHash, L.ledgerSeq));
-    expect(r[1]).to.equal(L.ledgerHash);
-    expect(r[2]).to.equal(BigInt(L.ledgerSeq));
-    await expect(reader.verifyFinality(proof(L), claim(ethers.ZeroHash, L.ledgerSeq))).to.be.revertedWith("VF-XCH-006: ledger hash mismatch");
-    await expect(reader.verifyFinality(proof(L), claim(L.ledgerHash, L.ledgerSeq + 1))).to.be.revertedWith("VF-XCH-006: ledger sequence mismatch");
+    await expect(reader.verifyFinality(proof(L), claim(L.ledgerHash, L.ledgerSeq)))
+      .to.be.revertedWith("VF-XCH-006: Stellar settled-history anchor not enforced on-chain; environment disabled");
+    const r = await reader.headerClaimMatches(proof(L), claim(L.ledgerHash, L.ledgerSeq));
+    expect(r[0]).to.equal(L.ledgerHash);
+    expect(r[1]).to.equal(BigInt(L.ledgerSeq));
+    await expect(reader.headerClaimMatches(proof(L), claim(ethers.ZeroHash, L.ledgerSeq))).to.be.revertedWith("VF-XCH-006: ledger hash mismatch");
+    await expect(reader.headerClaimMatches(proof(L), claim(L.ledgerHash, L.ledgerSeq + 1))).to.be.revertedWith("VF-XCH-006: ledger sequence mismatch");
   });
 
   it("accepts a real 7-day lock: lock id, recipient, amounts, 5% fee, times and asset from ledger data", async function () {
