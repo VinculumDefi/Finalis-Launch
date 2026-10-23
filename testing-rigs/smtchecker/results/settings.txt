@@ -1,0 +1,6 @@
+solc: Version: 0.8.19+commit.7dd6d404.Linux.g++
+engine=chc targets=assert,overflow,underflow,divByZero,outOfBounds query-timeout=30000ms wall=1800s ext-calls=untrusted
+mem-cap=6500000KB (ulimit -v) parallel=1
+certora: not available (CERTORAKEY not set)
+started: 2026-10-23T07:32:19-04:00
+finished: 2026-10-23T07:37:04-04:00
