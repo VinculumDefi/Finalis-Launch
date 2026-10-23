@@ -212,7 +212,7 @@ describe("Price fetcher -> price run (test chain)", function () {
       }
     });
 
-    it("a full 487-row Revision B fetch (mocked HTTP) builds consecutive runs of <= 250 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
+    it("a full 487-row Revision B fetch (mocked HTTP) builds consecutive runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
       const failIds = new Set(rows.filter((r, i) => i % 7 === 0).map((r) => r.pricingIdentifier));
       const m = mock([
         [/coingecko/, (u) => Object.fromEntries(cgIds(u).filter((id) => !failIds.has(id)).map((id, j) => [id, { usd: (j + 1) / 8, last_updated_at: NOW }]))],
