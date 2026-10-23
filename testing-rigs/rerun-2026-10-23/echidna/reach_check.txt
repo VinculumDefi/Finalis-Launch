@@ -1,0 +1,132 @@
+[2026-10-23 11:09:21.07] Compiling `EchidnaDbg.sol`... Done! (27.11757149s)
+Analyzing contract: /workspace/fix/testing-rigs/echidna/EchidnaDbg.sol:EchidnaDbg
+[2026-10-23 11:09:48.59] Running slither on `EchidnaDbg.sol`... Done! (27.699178475s)
+Loaded 0 transaction sequences from /tmp/echdbg/corpus/reproducers
+Loaded 0 transaction sequences from /tmp/echdbg/corpus/coverage
+[2026-10-23 11:10:16.77] [Worker 0] Test echidna_reach_rac falsified!
+  Call sequence:
+EchidnaDbg.openLock(10000000000000001,13,false) from: 0x0000…0000 Time delay: 1606999 seconds Block delay: 31106
+EchidnaDbg.closeAllocateClaim(115792089237316195423570985008687907853269984665640564039457584007913003495934) from: 0x0000…0000 Time delay: 267053 seconds Block delay: 29336
+EchidnaDbg.openLock(36736801829701528288761940241173161678987535911212237763639900975244450259067,115,false) from: 0x0000…0000 Time delay: 1784508 seconds Block delay: 45211
+EchidnaDbg.recordRac(41091009157353096185231341583872700544540029195126095845834965485453594720966,85952651631331379500700307260500358629305334017827651971521082085609529278150) from: 0x0000…0000 Time delay: 64997 seconds Block delay: 28346
+
+[2026-10-23 11:10:16.77]  Saved reproducer to /tmp/echdbg/corpus/reproducers-unshrunk/1327361169390883032.txt
+[2026-10-23 11:10:16.91] [Worker 0] New coverage: 16154 instr, 7 contracts, 1 seqs in corpus
+[2026-10-23 11:10:16.91]  Saved reproducer to /tmp/echdbg/corpus/coverage/8856156337667648938.txt
+[2026-10-23 11:10:17.81] [Worker 0] New coverage: 16457 instr, 7 contracts, 2 seqs in corpus
+[2026-10-23 11:10:17.81]  Saved reproducer to /tmp/echdbg/corpus/coverage/1289163140614546649.txt
+[2026-10-23 11:10:17.99] [Worker 0] New coverage: 16462 instr, 7 contracts, 3 seqs in corpus
+[2026-10-23 11:10:18.00]  Saved reproducer to /tmp/echdbg/corpus/coverage/3329881063570084136.txt
+[2026-10-23 11:10:18.20] [Worker 0] Test echidna_reach_mint falsified!
+  Call sequence:
+EchidnaDbg.openLock(10000000000000001,13,false) from: 0x0000…0000 Time delay: 1606999 seconds Block delay: 31106
+EchidnaDbg.closeAllocateClaim(115792089237316195423570985008687907853269984665640564039457584007913003495934) from: 0x0000…0000 Time delay: 267053 seconds Block delay: 29336
+EchidnaDbg.openLock(36736801829701528288761940241173161678987535911212237763639900975244450259067,115,false) from: 0x0000…0000 Time delay: 1784508 seconds Block delay: 45211
+EchidnaDbg.recordRac(41091009157353096185231341583872700544540029195126095845834965485453594720966,85952651631331379500700307260500358629305334017827651971521082085609529278150) from: 0x0000…0000 Time delay: 64997 seconds Block delay: 28346
+EchidnaDbg.repostPrices() from: 0x0000…0000 Time delay: 909386 seconds Block delay: 11000
+EchidnaDbg.openLock(10367998,5,false) from: 0x0000…0000 Time delay: 919885 seconds Block delay: 57497
+EchidnaDbg.openLock(115792089237316195423570985008687907853269984665640564039457584007912814279933,40,true) from: 0x0000…0000 Time delay: 2591930 seconds Block delay: 16311
+EchidnaDbg.withdraw(115792089237316195423570985008687907853269984665640564039457584007913129639933) from: 0x0000…0000 Time delay: 70997 seconds Block delay: 12999
+EchidnaDbg.releaseLock(113481659477071694813260496622237047860956726091980947255489502577801082150551) from: 0x0000…0000 Time delay: 1811722 seconds Block delay: 43471
+EchidnaDbg.repostPrices() from: 0x0000…0000 Time delay: 1819685 seconds Block delay: 58813
+EchidnaDbg.releaseLock(29063686804523704686799229543527859430342341644108553620488182707915479900006) from: 0x0000…0000 Time delay: 700382 seconds Block delay: 18814
+EchidnaDbg.*fallback*() from: 0x0000…0000 Value: 0x3a38d9132ca3eb3d5 Time delay: 920383 seconds Block delay: 40580
+EchidnaDbg.closeAllocateClaim(115792089237316195423570985008687907853269984665640564039457584007913003495934) from: 0x0000…0000 Time delay: 916785 seconds Block delay: 21556
+EchidnaDbg.releaseLock(113481659477071694813260496622237047860956726091980947255489502577801082150551) from: 0x0000…0000 Time delay: 318964 seconds Block delay: 57373
+EchidnaDbg.recordRac(41091009157353096185231341583872700544540029195126095845834965485453594720966,85952651631331379500700307260500358629305334017827651971521082085609529278150) from: 0x0000…0000 Time delay: 14002 seconds Block delay: 37999
+EchidnaDbg.releaseLock(113481659477071694813260496622237047860956726091980947255489502577801082150551) from: 0x0000…0000 Time delay: 568305 seconds Block delay: 24997
+EchidnaDbg.releaseLock(115792089237316195423570985008687907853269984665640564039457584007913129601939) from: 0x0000…0000 Time delay: 318961 seconds Block delay: 18942
+EchidnaDbg.forgeSynth(1772746325) from: 0x0000…0000 Time delay: 1366271 seconds Block delay: 28457
+EchidnaDbg.withdraw(220003) from: 0x0000…0000 Time delay: 68002 seconds Block delay: 59319
+EchidnaDbg.withdraw(76061327106042578297603127998548218734988687066296096585166549807665141479818) from: 0x0000…0000 Time delay: 1700663 seconds Block delay: 11742
+EchidnaDbg.closeAllocateClaim(115792089237316195423570985008687907853269984665640564039457584007913003495934) from: 0x0000…0000 Time delay: 56482 seconds Block delay: 48256
+EchidnaDbg.*fallback*() from: 0x0000…0000 Value: 0x3a38a03b4258562d6 Time delay: 196461 seconds Block delay: 18903
+EchidnaDbg.*fallback*() from: 0x0000…0000 Value: 0x56bc75e2d6300bdc1 Time delay: 488396 seconds Block delay: 55931
+EchidnaDbg.mint(115792089237316195423570985008687907853269984665640564039457584007913129639933,77314899368010937131134118046705586486674990139908176312114093375396886341344) from: 0x0000…0000 Time delay: 1065512 seconds Block delay: 11315
+EchidnaDbg.openLock(10000000000000001,13,false) from: 0x0000…0000 Time delay: 17498 seconds Block delay: 46896
+EchidnaDbg.recordRac(41091009157353096185231341583872700544540029195126095845834965485453594720966,85952651631331379500700307260500358629305334017827651971521082085609529278150) from: 0x0000…0000 Time delay: 2099608 seconds Block delay: 5313
+EchidnaDbg.repostPrices() from: 0x0000…0000 Time delay: 601420 seconds Block delay: 22976
+EchidnaDbg.repostPrices() from: 0x0000…0000 Time delay: 1606999 seconds Block delay: 9910
+EchidnaDbg.forgeSynth(25375382928612967483808882091464611724868748705359066649043797743310092090641) from: 0x0000…0000 Time delay: 833987 seconds Block delay: 23913
+EchidnaDbg.withdraw(115792089237316195423570985008687907853269984665640564039457584007913129639933) from: 0x0000…0000 Time delay: 1352443 seconds Block delay: 120
+EchidnaDbg.mint(100000000000000000000000002,115792089237316195423570985008687907853269984665640564039457584007913129639924) from: 0x0000…0000 Time delay: 14 seconds Block delay: 4787
+
+[2026-10-23 11:10:18.20]  Saved reproducer to /tmp/echdbg/corpus/reproducers-unshrunk/9153503186938213402.txt
+[2026-10-23 11:10:18.26] [Worker 0] New coverage: 19835 instr, 7 contracts, 4 seqs in corpus
+[2026-10-23 11:10:18.26]  Saved reproducer to /tmp/echdbg/corpus/coverage/253561859794455011.txt
+[2026-10-23 11:10:19.38] [status] tests: 2/11, fuzzing: 343/3000, values: [], cov: 19835, corpus: 4, shrinking: W0:28/200(17), gas/s: 21538376
+[2026-10-23 11:10:22.38] [status] tests: 2/11, fuzzing: 343/3000, values: [], cov: 19835, corpus: 4, shrinking: W0:167/200(6), gas/s: 0
+[2026-10-23 11:10:23.18] [Worker 0] New coverage: 19848 instr, 7 contracts, 5 seqs in corpus
+[2026-10-23 11:10:23.18]  Saved reproducer to /tmp/echdbg/corpus/coverage/6953683355551577642.txt
+[2026-10-23 11:10:23.30] [Worker 0] New coverage: 19866 instr, 7 contracts, 6 seqs in corpus
+[2026-10-23 11:10:23.30]  Saved reproducer to /tmp/echdbg/corpus/coverage/3890594534785682336.txt
+[2026-10-23 11:10:23.51] [Worker 0] New coverage: 19876 instr, 7 contracts, 7 seqs in corpus
+[2026-10-23 11:10:23.51]  Saved reproducer to /tmp/echdbg/corpus/coverage/3701194798874324982.txt
+[2026-10-23 11:10:23.71] [Worker 0] New coverage: 19914 instr, 7 contracts, 8 seqs in corpus
+[2026-10-23 11:10:23.72]  Saved reproducer to /tmp/echdbg/corpus/coverage/1055131650827406382.txt
+[2026-10-23 11:10:23.81] [Worker 0] New coverage: 19919 instr, 7 contracts, 9 seqs in corpus
+[2026-10-23 11:10:23.82]  Saved reproducer to /tmp/echdbg/corpus/coverage/6114264875490893637.txt
+[2026-10-23 11:10:23.91] [Worker 0] New coverage: 20128 instr, 7 contracts, 10 seqs in corpus
+[2026-10-23 11:10:23.91]  Saved reproducer to /tmp/echdbg/corpus/coverage/1063849297645715002.txt
+[2026-10-23 11:10:24.12] [Worker 0] New coverage: 20133 instr, 7 contracts, 11 seqs in corpus
+[2026-10-23 11:10:24.13]  Saved reproducer to /tmp/echdbg/corpus/coverage/3027312177169070017.txt
+[2026-10-23 11:10:24.22] [Worker 0] New coverage: 20138 instr, 7 contracts, 12 seqs in corpus
+[2026-10-23 11:10:24.23]  Saved reproducer to /tmp/echdbg/corpus/coverage/2257480447825483679.txt
+[2026-10-23 11:10:24.32] [Worker 0] New coverage: 20143 instr, 7 contracts, 13 seqs in corpus
+[2026-10-23 11:10:24.32]  Saved reproducer to /tmp/echdbg/corpus/coverage/576934037668612472.txt
+[2026-10-23 11:10:24.71] [Worker 0] New coverage: 20148 instr, 7 contracts, 14 seqs in corpus
+[2026-10-23 11:10:24.71]  Saved reproducer to /tmp/echdbg/corpus/coverage/4248589285377609815.txt
+[2026-10-23 11:10:25.02] [Worker 0] New coverage: 20152 instr, 7 contracts, 15 seqs in corpus
+[2026-10-23 11:10:25.02]  Saved reproducer to /tmp/echdbg/corpus/coverage/4954957718806564437.txt
+[2026-10-23 11:10:25.39] [status] tests: 2/11, fuzzing: 1675/3000, values: [], cov: 20152, corpus: 15, gas/s: 71426198
+[2026-10-23 11:10:25.44] [Worker 0] New coverage: 20180 instr, 7 contracts, 16 seqs in corpus
+[2026-10-23 11:10:25.44]  Saved reproducer to /tmp/echdbg/corpus/coverage/4006760043461364323.txt
+[2026-10-23 11:10:26.15] [Worker 0] New coverage: 20208 instr, 7 contracts, 17 seqs in corpus
+[2026-10-23 11:10:26.15]  Saved reproducer to /tmp/echdbg/corpus/coverage/8663521169360854112.txt
+[2026-10-23 11:10:27.09] [Worker 0] New coverage: 20221 instr, 7 contracts, 18 seqs in corpus
+[2026-10-23 11:10:27.09]  Saved reproducer to /tmp/echdbg/corpus/coverage/8982130124234430032.txt
+[2026-10-23 11:10:27.53] [Worker 0] New coverage: 20226 instr, 7 contracts, 19 seqs in corpus
+[2026-10-23 11:10:27.53]  Saved reproducer to /tmp/echdbg/corpus/coverage/1767025019886027391.txt
+[2026-10-23 11:10:27.67] [Worker 0] New coverage: 20231 instr, 7 contracts, 20 seqs in corpus
+[2026-10-23 11:10:27.67]  Saved reproducer to /tmp/echdbg/corpus/coverage/2026660847093169325.txt
+[2026-10-23 11:10:27.99] [Worker 0] Test limit reached. Stopping.
+[2026-10-23 11:10:27.99] [status] tests: 2/11, fuzzing: 3001/3000, values: [], cov: 20231, corpus: 20, gas/s: 88278100
+echidna_lifetime_le_cap: passing
+echidna_reach_rac: failed!💥  
+  Reason: ReturnFalse
+  Call sequence:
+    EchidnaDbg.openLock(121,0,false) Time delay: 34599 seconds Block delay: 18
+    EchidnaDbg.recordRac(4894126804777128577532366579715720238466407092577433654987205618105829,271316099941112670192755295571140138976708095781104360485523928774)
+
+Traces: 
+
+echidna_reach_chonx: passing
+echidna_reach_mint: failed!💥  
+  Reason: ReturnFalse
+  Call sequence:
+    EchidnaDbg.recordRac(14236207267278104667531214886290940451275393194245532022584178608438,312071248052394614838603769391535632351047742786220687020052852778) Time delay: 3719 seconds Block delay: 9
+    EchidnaDbg.openLock(4,0,false)
+    EchidnaDbg.openLock(132320937705935539988030798953473838894938835617123134598124403396400689,0,false)
+    EchidnaDbg.recordRac(12168972362572014897962529665007738697347453398166196030760777870154988889722,553876292966904322115403123234761395204787487492336847207434940105017818389)
+    EchidnaDbg.mint(22311207887472090982859650,2882113932102317182654365248884342912978347503955266705419660086837795696847)
+
+Traces: 
+
+echidna_chonx_within_cap: passing
+echidna_vclm_within_cap: passing
+echidna_one_rac_per_lock: passing
+echidna_synth_within_cap: passing
+echidna_stake_solvent: passing
+echidna_no_synth_before_activation: passing
+echidna_one_mint_per_lock: passing
+
+Unique instructions: 20231
+Unique codehashes: 7
+Corpus size: 20
+Seed: 20261023
+Total calls: 3001
+
+[2026-10-23 11:10:27.99] Saving test reproducers... Done! (0.00059812s)
+[2026-10-23 11:10:27.99] Saving corpus... Done! (0.000596752s)
+[2026-10-23 11:10:27.99] Saving foundry reproducers... Done! (0.0004227s)
+[2026-10-23 11:10:27.99] Saving coverage... Done! (12.382611916s)
