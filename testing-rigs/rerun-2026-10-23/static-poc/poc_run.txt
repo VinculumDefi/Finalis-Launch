@@ -1,0 +1,11 @@
+
+
+  static rig: Verifier input gaps are closed (safe behavior, fix 2026-10-23)
+    ✔ STATIC-H02 (AG-05): a caller-chosen valuationTimestamp is refused; the honest lock earns the decayed rate (911ms)
+    ✔ STATIC-C01 (AG-04): one lock records exactly one RAC credit, whatever racIdentity is supplied (121ms)
+    ✔ STATIC-M01 (AG-06): the price is the one in effect at lock creation, not at first submission (74ms)
+    ✔ STATIC-C01b (AG-04): Stake.allocateEpoch mints on one credit per lock (232ms)
+
+
+  4 passing (1s)
+
