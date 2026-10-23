@@ -1,8 +1,8 @@
-dry-run: local Base fork at block 52982838, block gas limit 400000000
+dry-run: local Base fork at block 52985059, block gas limit 400000000
 [step 0] inputs and artifacts
   registry rows 487, token addresses 475, registry sha256 1bdcb8346ab9
 [step 1] fork is Base mainnet
-  forked Base block 52982838, block gas limit 400000000
+  forked Base block 52985059, block gas limit 400000000
 [step 2] six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs
   live non-Base lock 0x115b...626E passes on all 6 chains
 [step 3] deploy VCLM, CHONX, Verifier, Forge, Stake
@@ -54,7 +54,7 @@ dry-run: local Base fork at block 52982838, block gas limit 400000000
   token addresses 475/475
   Finalized.
 [step 9] post-finalize state
-  finalized; launch 1792755251; live poster set; Solana not registered
+  finalized; launch 1792759706; live poster set; Solana not registered
 [step 10] Base reader with a real lock on the fork
   0.5 ETH 7-day lock: fee 0.025 ETH, minted 15549.43 VCLM
 [step 11] EVM readers bound to the live locks and real slot 0
@@ -62,9 +62,21 @@ dry-run: local Base fork at block 52982838, block gas limit 400000000
 [step 12] EVM readers on real mainnet receipts
   6 EVM readers prove real mainnet receipts against real headers (headers confirmed on each live chain)
 [step 13] Ethereum reader on a real finalized header
-  Ethereum reader accepts real finalized block 26254963
+  Ethereum reader accepts real finalized block 26255345
 [step 14] UTXO, Stellar and XRPL reader wiring
   6 UTXO readers, Stellar and XRPL carry the ceremony-data Dev Fund wiring
+[step 15] Rig 10 reconciliation: deployed set vs artifacts and ceremony-data
+  section 1. ...
+  section 1b. ...
+  section 2. ...
+  section 3. ...
+  section 4. ...
+  section 5. ...
+  section 5b. ...
+  section 6. ...
+  reconciliation: {"PASS":349}
   ceremony transactions 72, total gas used 109844802, largest gas limit 16777216 at step 3 (cap 16777216)
-  NOTE FINDING-HH-003: the Ethereum reader also accepts a made-up header at height 26254963 (hash 0x9308995d) that is not Ethereum history
+  NOTE FINDING-HH-003: the Ethereum reader also accepts a made-up header at height 26255345 (hash 0xa5055b72) that is not Ethereum history
+ceremony would succeed
+reconciliation PASS
 EXIT 0
