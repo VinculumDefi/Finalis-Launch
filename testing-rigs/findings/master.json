@@ -1,7 +1,7 @@
 {
- "as_of": "2026-10-23 08:05 EDT",
+ "as_of": "2026-10-23 08:20 EDT",
  "class_rule": "CONFIRMED VULNERABILITY = reproduced by a PoC; SPEC CONFLICT = code differs from Rev 6/12/13 with no exploit shown; UNVERIFIED ASSUMPTION = static or reasoning only; INCOMPLETE TESTING = a tool could not finish, which is not evidence of safety. Rigs that already classify their findings keep their class; assumption-gap findings are classified by this rule.",
- "scope_rule": "LIVE = reachable on the live Base set today (Base-only config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LATENT = non-Base only, inert until a non-Base reader is registered. N/A = tooling coverage, not a code path.",
+ "scope_rule": "LIVE (Base set) = reachable on the live Base set today (Base-only app config, commit 5a21665; only Base ETH has a usable scheduled price). LIVE (ERC-20 path) = in a live Base contract but only reachable once an ERC-20 is priced or locked. LIVE (on-chain; gated only by non-Base prices not yet posted) = the non-Base reader is registered in the live finalized Base Verifier (rig 9 read-only check); the app's Base-only config hides the UI but does not block direct contract calls, so one posted price for that asset opens the path. LATENT (non-Base only) = non-Base path not yet rechecked against the rig 9 correction. N/A = tooling coverage, not a code path.",
  "rigs": [
   {
    "n": "1",
@@ -85,12 +85,12 @@
   {
    "n": "9",
    "name": "adversarial trust-boundary",
-   "status": "NOT YET RUN",
-   "branch": "rigs/adversarial (local clone only, not pushed)",
-   "commit": "-",
-   "raw_output": "none",
-   "findings_file": null,
-   "note": "A clone exists on the box with no commits; nothing pushed as of as_of."
+   "status": "REPORTED WITH FINDINGS",
+   "branch": "rigs/adversarial",
+   "commit": "af38192",
+   "raw_output": "No raw log committed by rig 9. Reproduce with ADVERSARIAL=1 (testing-rigs/adversarial/README.md); results recorded in findings/adversarial.json",
+   "findings_file": "adversarial.json",
+   "note": "14 CONFIRMED VULNERABILITY (ADV-01..14, ADV-16; there is no ADV-15), 14 PASS (ADV-P01..P14). All ADV rows merged into AG-01..AG-07. Live Verifier read-only check: finalized, 15 non-Base readers registered (no Solana), only Base ETH has a usable price."
   },
   {
    "n": "10",
@@ -140,10 +140,171 @@
  "findings": [
   {
    "ids": [
-    "AG-04",
-    "STATIC-C01"
+    "AG-01",
+    "ADV-01",
+    "ADV-02",
+    "ADV-03",
+    "ADV-04",
+    "ADV-05",
+    "ADV-06",
+    "ADV-10"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84; AvalancheLockReader.sol:43-57",
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84; SimpleEthereumLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/ArbitrumLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/OptimismLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/PolygonLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/BnbSmartChainLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/AvalancheLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84"
+   ],
+   "description": "Assumed: The header is part of the source chain's settled (finalized) history, on the named chain Gap: Only keccak(header) == claimed hash, claimed height == header number, and claimed chain id == the reader's own constant. The claimed chain id is the caller's word; an Ethereum header carries no chain id. Nothing ties the header to any real chain. EthereumLockReader (beacon light client) exists but the ceremony registers SimpleEthereumLockReader; the checkers/ finality contracts are never called by any reader. Exploit: Run a local fork, create a real-looking lock, then rewrite header fields (mixHash, parentHash) so the header exists on no chain; the receipt proof still matches its receiptsRoot. Submit with claimed chain id 1. Known Oct 22 finding (non_base_finality_trust_model.test.cjs): about 311 VCLM per forged lock.",
+   "damage_potential": "Unlimited VCLM mint up to the 500,000,000 hard cap, and CHONX after activation, with no real asset locked. Inflated supply also inflates RAC and stake rewards.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-01)",
+    "ADVERSARIAL=1 FINDING ADV-01 minted 310.96 VCLM. Cross-ref AG-01.",
+    "ADVERSARIAL=1 FINDING ADV-02 minted 310.96 VCLM. AG-01.",
+    "ADVERSARIAL=1 FINDING ADV-03 minted 310.96 VCLM.",
+    "ADVERSARIAL=1 FINDING ADV-04 minted 310.96 VCLM.",
+    "ADVERSARIAL=1 FINDING ADV-05 minted 310.96 VCLM.",
+    "ADVERSARIAL=1 FINDING ADV-06 minted 310.96 VCLM.",
+    "ADVERSARIAL=1 FINDING ADV-10. AG-01."
+   ],
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "VF-SEC-005",
+    "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers."
+   ],
+   "rank_hint": 1,
+   "rig_views": {
+    "ADV-01": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-02": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-03": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-04": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-05": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-06": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-10": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    }
+   },
+   "note": "EVM readers (Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Avalanche) confirmed by ADV-01..06, ADV-10. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+   "rank": 1
+  },
+  {
+   "ids": [
+    "AG-02",
+    "ADV-07",
+    "ADV-16"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107"
+   ],
+   "description": "Assumed: The header carries real proof of work, links to the best chain, and has enough confirmations Gap: Only double-SHA256(header) == claimed hash and claimed height == coinbase height. No target check, no parent link, no confirmations. BitcoinHeaderChecker and ZcashHeaderChecker exist but are not called. Exploit: Build an 80-byte header with any prev hash, bits 0x1d00ffff and any nonce over a merkle root that includes a self-made lock transaction to the Dev Fund script; no mining needed. PoC AG-02 shows verifyFinality and extractFacts accept it.",
+   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated Bitcoin-family locks, valued at the registry price of BTC, LTC, etc.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-02)",
+    "ADVERSARIAL=1 FINDING ADV-07; recordedRacs true. AG-02.",
+    "ADVERSARIAL=1 FINDING ADV-16 for each chain. AG-02."
+   ],
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "Rev 6 VF-XCH-006/008."
+   ],
+   "rank_hint": 2,
+   "rig_views": {
+    "ADV-07": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-16": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    }
+   },
+   "note": "UTXO readers (Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash) confirmed by ADV-07, ADV-16. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+   "rank": 2
+  },
+  {
+   "ids": [
+    "AG-03",
+    "ADV-08",
+    "ADV-09"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/adversarial.json, testing-rigs/findings/adversarial.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LIVE (on-chain; gated only by non-Base prices not yet posted)",
+   "file_line": [
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:66-77; XrplLockReader.sol:84-95",
+    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol",
+    "base-contracts/contracts/chain-verifiers/XrplLockReader.sol"
+   ],
+   "description": "Assumed: The ledger was closed by the network (SCP quorum for Stellar, UNL validator signatures for XRPL) Gap: Only hash(header) == claimed hash and claimed sequence/index == header field. Any self-built ledger header is accepted. Exploit: Build a ledger header whose tx-set or account-state hash commits to a fabricated payment to the Dev Fund account with a chosen memo; any previous-ledger/parent hash. PoC AG-03a/03b.",
+   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated XLM/XRP locks.",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-03a, AG-03b)",
+    "ADVERSARIAL=1 FINDING ADV-08. AG-03.",
+    "ADVERSARIAL=1 FINDING ADV-09. AG-03."
+   ],
+   "spec": [
+    "VF-XCH-006",
+    "VF-XCH-007",
+    "VF-XCH-008",
+    "Rev 6 VF-XCH-006/008."
+   ],
+   "rank_hint": 3,
+   "rig_views": {
+    "ADV-08": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    },
+    "ADV-09": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    }
+   },
+   "note": "Stellar and XRP Ledger readers confirmed by ADV-08, ADV-09. Mint and RAC both need a usable scheduled price for the lock's asset row: recordFeeAndRac (VinculumFinalisVerifier.sol:646, USD at :682) and verifyAndMint (:796) both call _resolveVerifiedGrossUsd, which reverts 'VF-ORC-005: no usable scheduled price' (:997) unless a price is already bound, and a binding (:1009) is only written by an earlier call that itself had a price. So RAC does NOT bypass the price gate (ADV-07/08/09 recorded RAC only because the rig's fixture posted those prices). Today only Base ETH is priced and, per rig 9's read, no non-Base row aliases it, so the gate is one applyScheduledPriceRun by the single price poster (see AG-07) away from opening. Static reading for the price-gate claim; the forgeries themselves are PoC-reproduced.",
+   "rank": 3
+  },
+  {
+   "ids": [
+    "AG-04",
+    "STATIC-C01",
+    "ADV-11"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "critical",
    "scope": "LIVE (Base set)",
@@ -153,13 +314,15 @@
     "base-contracts/contracts/VinculumFinalisVerifier.sol:692-702",
     "base-contracts/contracts/VinculumFinalisVerifier.sol:774",
     "base-contracts/contracts/VinculumFinalisStake.sol:415",
-    "base-contracts/contracts/VinculumFinalisStake.sol:428-487"
+    "base-contracts/contracts/VinculumFinalisStake.sol:428-487",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:646-704"
    ],
    "description": "Assumed: One RAC per real fee payment; racIdentity is derived from the lock's immutable facts Gap: The only check is !recordedRacs[racIdentity]. racIdentity is free caller input, so the same proven lock can record RAC any number of times, before or after it mints. Exploit: Create one real Base lock (about $2.39 in the PoC). Call recordFeeAndRac K times with K random racIdentity values. epochRewardBasis grows K times; allocateEpoch mints basis*10 VCLM to stakers. PoC: 50 records paid 358.8 VCLM of stake rewards versus 7.176 honest.",
    "damage_potential": "Stake reward VCLM inflated without bound (until the VCLM cap), diluting every holder; attacker who stakes captures it. Works today on the Base-only ceremony.",
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-04)",
-    "PoC STATIC-C01: 5 racIdentity values for one lock, one credit 30e18, basis reached 150e18. PoC STATIC-C01b: 20 duplicate RACs for one 1000 USD lock; Stake minted 6000 VCLM for the epoch against an honest 300 VCLM (20x). testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)"
+    "PoC STATIC-C01: 5 racIdentity values for one lock, one credit 30e18, basis reached 150e18. PoC STATIC-C01b: 20 duplicate RACs for one 1000 USD lock; Stake minted 6000 VCLM for the epoch against an honest 300 VCLM (20x). testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
+    "ADVERSARIAL=1 FINDING ADV-11. AG-04. LIVE on Base path (no non-Base price needed)."
    ],
    "spec": [
     "VF-RAC-001",
@@ -174,92 +337,63 @@
     "STATIC-C01": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "critical"
+    },
+    "ADV-11": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
-   "rank": 1
-  },
-  {
-   "ids": [
-    "AG-01"
-   ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "CONFIRMED VULNERABILITY",
-   "severity": "critical",
-   "scope": "LATENT (non-Base only)",
-   "file_line": [
-    "base-contracts/contracts/chain-verifiers/EvmReceiptLockReader.sol:70-84; AvalancheLockReader.sol:43-57"
-   ],
-   "description": "Assumed: The header is part of the source chain's settled (finalized) history, on the named chain Gap: Only keccak(header) == claimed hash, claimed height == header number, and claimed chain id == the reader's own constant. The claimed chain id is the caller's word; an Ethereum header carries no chain id. Nothing ties the header to any real chain. EthereumLockReader (beacon light client) exists but the ceremony registers SimpleEthereumLockReader; the checkers/ finality contracts are never called by any reader. Exploit: Run a local fork, create a real-looking lock, then rewrite header fields (mixHash, parentHash) so the header exists on no chain; the receipt proof still matches its receiptsRoot. Submit with claimed chain id 1. Known Oct 22 finding (non_base_finality_trust_model.test.cjs): about 311 VCLM per forged lock.",
-   "damage_potential": "Unlimited VCLM mint up to the 500,000,000 hard cap, and CHONX after activation, with no real asset locked. Inflated supply also inflates RAC and stake rewards.",
-   "evidence": [
-    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-01)"
-   ],
-   "spec": [
-    "VF-XCH-006",
-    "VF-XCH-007",
-    "VF-XCH-008",
-    "VF-SEC-005",
-    "Rev 6 VF-XCH-006/008: no issuance before documented exact finality; relayer cannot waive finality. Code accepts a self-consistent header with no finality at all. Mitigation in config only: commit 5a21665 says the live Base ceremony is Base-only until settled-history checkers exist; build_ceremony_artifacts.cjs still ships these readers."
-   ],
-   "rank_hint": 1,
-   "rank": 2
-  },
-  {
-   "ids": [
-    "AG-02"
-   ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "CONFIRMED VULNERABILITY",
-   "severity": "critical",
-   "scope": "LATENT (non-Base only)",
-   "file_line": [
-    "base-contracts/contracts/chain-verifiers/UtxoLockReader.sol:96-107"
-   ],
-   "description": "Assumed: The header carries real proof of work, links to the best chain, and has enough confirmations Gap: Only double-SHA256(header) == claimed hash and claimed height == coinbase height. No target check, no parent link, no confirmations. BitcoinHeaderChecker and ZcashHeaderChecker exist but are not called. Exploit: Build an 80-byte header with any prev hash, bits 0x1d00ffff and any nonce over a merkle root that includes a self-made lock transaction to the Dev Fund script; no mining needed. PoC AG-02 shows verifyFinality and extractFacts accept it.",
-   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated Bitcoin-family locks, valued at the registry price of BTC, LTC, etc.",
-   "evidence": [
-    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-02)"
-   ],
-   "spec": [
-    "VF-XCH-006",
-    "VF-XCH-007",
-    "VF-XCH-008",
-    "Rev 6 VF-XCH-006/008."
-   ],
-   "rank_hint": 2,
-   "rank": 3
-  },
-  {
-   "ids": [
-    "AG-03"
-   ],
-   "source": "testing-rigs/findings/assumption_gap.json",
-   "class": "CONFIRMED VULNERABILITY",
-   "severity": "critical",
-   "scope": "LATENT (non-Base only)",
-   "file_line": [
-    "base-contracts/contracts/chain-verifiers/StellarLockReader.sol:66-77; XrplLockReader.sol:84-95"
-   ],
-   "description": "Assumed: The ledger was closed by the network (SCP quorum for Stellar, UNL validator signatures for XRPL) Gap: Only hash(header) == claimed hash and claimed sequence/index == header field. Any self-built ledger header is accepted. Exploit: Build a ledger header whose tx-set or account-state hash commits to a fabricated payment to the Dev Fund account with a chosen memo; any previous-ledger/parent hash. PoC AG-03a/03b.",
-   "damage_potential": "Unlimited VCLM/CHONX mint from fabricated XLM/XRP locks.",
-   "evidence": [
-    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-03a, AG-03b)"
-   ],
-   "spec": [
-    "VF-XCH-006",
-    "VF-XCH-007",
-    "VF-XCH-008",
-    "Rev 6 VF-XCH-006/008."
-   ],
-   "rank_hint": 3,
    "rank": 4
   },
   {
    "ids": [
-    "AG-05",
-    "STATIC-H02"
+    "AG-07",
+    "STATIC-L01",
+    "ADV-14"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
+   "class": "CONFIRMED VULNERABILITY",
+   "severity": "critical",
+   "scope": "LIVE (Base set)",
+   "file_line": [
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:596-628",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:543-547",
+    "base-contracts/contracts/VinculumFinalisVerifier.sol:596-620"
+   ],
+   "description": "Assumed: Prices come from the twice-daily scheduled run; a record is valid until the next run; the poster has no value authority Gap: Only poster identity, runId > last, price > 0. No bound, no timestamp, no staleness. runId = 2^64-1 freezes all later runs forever (prices can never update or be marked failed). Exploit: A compromised or mistaken poster posts 1000x price and mints from a tiny lock; or posts runId 2^64-1 to freeze prices. PoC: a 0.001 ETH lock minted 31,096 VCLM.",
+   "damage_potential": "Unlimited mint via price; permanent price freeze (stale prices used forever, VF-ORC-008 violated).",
+   "evidence": [
+    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-07)",
+    "Code review: only checks are msg.sender == poster, runId increases, asset is registered, price > 0.",
+    "ADVERSARIAL=1 FINDING ADV-14. AG-07. LIVE (poster is set on Verifier)."
+   ],
+   "spec": [
+    "VF-ORC-001",
+    "VF-ORC-008",
+    "VF-SEC-005",
+    "Rev 6 VF-ORC-008 (stale record used), VF-SEC-005 (poster gets value authority).",
+    "none found"
+   ],
+   "rank_hint": 7,
+   "rig_views": {
+    "STATIC-L01": {
+     "class": "UNVERIFIED ASSUMPTION",
+     "severity": "low"
+    },
+    "ADV-14": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "critical"
+    }
+   },
+   "rank": 5
+  },
+  {
+   "ids": [
+    "AG-05",
+    "STATIC-H02",
+    "ADV-12"
+   ],
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -275,7 +409,8 @@
    "damage_potential": "Emission decay is defeated for every lock; total issuance runs faster toward the cap.",
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-05)",
-    "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)"
+    "PoC STATIC-H02: lock one year after launch, honest mint 106.25 VCLM, same lock with valuationTimestamp=0 mints 130.0 VCLM. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
+    "ADVERSARIAL=1 FINDING ADV-12. AG-05. LIVE on Base."
    ],
    "spec": [
     "VF-ORC-011",
@@ -288,16 +423,21 @@
     "STATIC-H02": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "high"
+    },
+    "ADV-12": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
-   "rank": 5
+   "rank": 6
   },
   {
    "ids": [
     "AG-06",
-    "STATIC-M01"
+    "STATIC-M01",
+    "ADV-13"
    ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
+   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json, testing-rigs/findings/adversarial.json",
    "class": "CONFIRMED VULNERABILITY",
    "severity": "high",
    "scope": "LIVE (Base set)",
@@ -309,7 +449,8 @@
    "damage_potential": "Free option on price: up to the full price move per lock; systematic over-issuance.",
    "evidence": [
     "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-06)",
-    "PoC STATIC-M01: price 1000 at lock creation, poster moves to 2000, first proof binds 2000. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)"
+    "PoC STATIC-M01: price 1000 at lock creation, poster moves to 2000, first proof binds 2000. testing-rigs/static-poc/verifier_input_gaps.test.cjs (output in poc_output.txt)",
+    "ADVERSARIAL=1 FINDING ADV-13. AG-06. LIVE on Base."
    ],
    "spec": [
     "VF-ORC-009",
@@ -322,41 +463,10 @@
     "STATIC-M01": {
      "class": "CONFIRMED VULNERABILITY",
      "severity": "medium"
-    }
-   },
-   "rank": 6
-  },
-  {
-   "ids": [
-    "AG-07",
-    "STATIC-L01"
-   ],
-   "source": "testing-rigs/findings/assumption_gap.json, testing-rigs/findings/static.json",
-   "class": "CONFIRMED VULNERABILITY",
-   "severity": "high",
-   "scope": "LIVE (Base set)",
-   "file_line": [
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:596-628",
-    "base-contracts/contracts/VinculumFinalisVerifier.sol:543-547"
-   ],
-   "description": "Assumed: Prices come from the twice-daily scheduled run; a record is valid until the next run; the poster has no value authority Gap: Only poster identity, runId > last, price > 0. No bound, no timestamp, no staleness. runId = 2^64-1 freezes all later runs forever (prices can never update or be marked failed). Exploit: A compromised or mistaken poster posts 1000x price and mints from a tiny lock; or posts runId 2^64-1 to freeze prices. PoC: a 0.001 ETH lock minted 31,096 VCLM.",
-   "damage_potential": "Unlimited mint via price; permanent price freeze (stale prices used forever, VF-ORC-008 violated).",
-   "evidence": [
-    "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs (AG-07)",
-    "Code review: only checks are msg.sender == poster, runId increases, asset is registered, price > 0."
-   ],
-   "spec": [
-    "VF-ORC-001",
-    "VF-ORC-008",
-    "VF-SEC-005",
-    "Rev 6 VF-ORC-008 (stale record used), VF-SEC-005 (poster gets value authority).",
-    "none found"
-   ],
-   "rank_hint": 7,
-   "rig_views": {
-    "STATIC-L01": {
-     "class": "UNVERIFIED ASSUMPTION",
-     "severity": "low"
+    },
+    "ADV-13": {
+     "class": "CONFIRMED VULNERABILITY",
+     "severity": "high"
     }
    },
    "rank": 7
@@ -462,6 +572,7 @@
     "VF-XCH-013"
    ],
    "rank_hint": 10,
+   "note": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
    "rank": 11
   },
   {
@@ -690,6 +801,7 @@
     "VF-COM-002"
    ],
    "rank_hint": 14,
+   "note": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
    "rank": 21
   },
   {
@@ -713,6 +825,7 @@
     "VF-XCH-006"
    ],
    "rank_hint": 18,
+   "note": "Scope still marked LATENT; under the rig 9 correction (non-Base readers registered on the live Verifier) this likely becomes the same gated LIVE label as AG-01..03. Not yet rechecked.",
    "rank": 22
   },
   {
