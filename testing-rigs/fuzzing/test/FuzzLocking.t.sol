@@ -105,7 +105,7 @@ contract FuzzLocking is Fixture {
             verifier.recordFeeAndRac(p);
         } else {
             verifier.recordFeeAndRac(p);
-            assertTrue(verifier.isRacRecorded(id));
+            assertTrue(verifier.isLockRacRecorded("Base", id));
         }
     }
 
