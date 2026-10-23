@@ -1,0 +1,82 @@
+dry-run: local Base fork at block 52985059, block gas limit 400000000
+[step 0] inputs and artifacts
+  registry rows 487, token addresses 475, registry sha256 1bdcb8346ab9
+[step 1] fork is Base mainnet
+  forked Base block 52985059, block gas limit 400000000
+[step 2] six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs
+  live non-Base lock 0x115b...626E passes on all 6 chains
+[step 3] deploy VCLM, CHONX, Verifier, Forge, Stake
+  VCLM 0xa9E9...2079
+  CHONX 0xbBC1...80de
+  Verifier 0x489F...3650
+  Forge 0xa86F...744e
+  Stake 0x0134...E5E9
+[step 4] deploy Base lock
+[step 5] initialize VCLM and CHONX, deploy and register 15 readers
+  Base lock 0x2285...3513
+  reader Base 0xD9da...6517
+  reader Ethereum 0x51a3...E4c3
+  reader Arbitrum 0xa1c0...8CD6
+  reader Optimism 0x88B7...31BB
+  reader Polygon 0xCDfE...56C9
+  reader BNB Smart Chain 0xf92B...c9D1
+  reader Avalanche 0x420A...5E93
+  reader Bitcoin 0x4e5b...6f0F
+  reader Bitcoin Cash 0x9887...551a
+  reader Litecoin 0x73AC...067F
+  reader Dogecoin 0xA436...7211
+  reader DigiByte 0x122a...099d
+  reader Zcash 0x4C45...6b0B
+  reader Stellar 0x8d37...35bf
+  reader XRP Ledger 0xa91A...68EA
+[step 6] registry rows in batches of 50
+  registry 50/487
+  registry 100/487
+  registry 150/487
+  registry 200/487
+  registry 250/487
+  registry 300/487
+  registry 350/487
+  registry 400/487
+  registry 450/487
+  registry 487/487
+[step 7] token address index
+  token addresses 50/475
+  token addresses 100/475
+  token addresses 150/475
+  token addresses 200/475
+  token addresses 250/475
+  token addresses 300/475
+  token addresses 350/475
+  token addresses 400/475
+  token addresses 450/475
+[step 8] aliases, Dev Funds, price run 1, poster hand-over, finalize
+  token addresses 475/475
+  Finalized.
+[step 9] post-finalize state
+  finalized; launch 1792759706; live poster set; Solana not registered
+[step 10] Base reader with a real lock on the fork
+  0.5 ETH 7-day lock: fee 0.025 ETH, minted 15549.43 VCLM
+[step 11] EVM readers bound to the live locks and real slot 0
+  6 EVM readers: lock(), chainId() and environment word match the live locks' real slot 0
+[step 12] EVM readers on real mainnet receipts
+  6 EVM readers prove real mainnet receipts against real headers (headers confirmed on each live chain)
+[step 13] Ethereum reader on a real finalized header
+  Ethereum reader accepts real finalized block 26255345
+[step 14] UTXO, Stellar and XRPL reader wiring
+  6 UTXO readers, Stellar and XRPL carry the ceremony-data Dev Fund wiring
+[step 15] Rig 10 reconciliation: deployed set vs artifacts and ceremony-data
+  section 1. ...
+  section 1b. ...
+  section 2. ...
+  section 3. ...
+  section 4. ...
+  section 5. ...
+  section 5b. ...
+  section 6. ...
+  reconciliation: {"PASS":349}
+  ceremony transactions 72, total gas used 109844802, largest gas limit 16777216 at step 3 (cap 16777216)
+  NOTE FINDING-HH-003: the Ethereum reader also accepts a made-up header at height 26255345 (hash 0xa5055b72) that is not Ethereum history
+ceremony would succeed
+reconciliation PASS
+EXIT 0
