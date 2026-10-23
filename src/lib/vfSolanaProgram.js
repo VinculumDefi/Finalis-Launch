@@ -33,16 +33,21 @@ export const SEED_LOCK = 'vf_lock';
 export const SEED_HANDSHAKE = 'vf_handshake';
 export const SEED_VAULT = 'vf_vault';
 
-// Revision 6 constants (mirror on-chain constants.rs for off-chain preflight)
+// Program constants (mirror on-chain constants.rs for off-chain preflight).
+// Rev 12 governs the Handshake: $0.01 to $0.02, 5% fee, no allowance limit;
+// other durations at least $0.01 (same as vfLiveRules.js and the contracts).
+// HANDSHAKE_ALLOWANCE is the Revision 6 value the program still stores in its
+// record for layout compatibility; it is not enforced.
 export const PROGRAM_CONSTANTS = {
   SOURCE_ENVIRONMENT: 'Solana',
   HANDSHAKE_DURATION_SECS: 3600,
-  HANDSHAKE_VALUE_USD_MIN_MICRO: 950_000_000_000_000_000n,
-  HANDSHAKE_VALUE_USD_MAX_MICRO: 1_050_000_000_000_000_000n,
-  HANDSHAKE_FEE_BPS: 250,
-  STANDARD_MINIMUM_VALUE_USD_MICRO: 10_000_000_000_000_000_000n,
+  HANDSHAKE_VALUE_USD_MIN_MICRO: 10_000_000_000_000_000n,
+  HANDSHAKE_VALUE_USD_MAX_MICRO: 20_000_000_000_000_000n,
+  HANDSHAKE_FEE_BPS: 500,
+  STANDARD_MINIMUM_VALUE_USD_MICRO: 10_000_000_000_000_000n,
   STANDARD_FEE_BPS: 500,
   HANDSHAKE_ALLOWANCE: 3,
+  HANDSHAKE_ALLOWANCE_ENFORCED: false,
   MAX_LOCK_ID_LEN: 128,
   SCALE: 10n ** 18n,
   PERMITTED_DURATIONS: [
