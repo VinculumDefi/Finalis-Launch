@@ -83,6 +83,10 @@ abstract contract Fixture is Test {
     ];
 
     function _deployStack(bool doFinalize) internal {
+        // The Base reader proves finality with blockhash(block.number - 1); a
+        // zero hash or height is refused (VF-XCH-034), so start past genesis.
+        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 1 days);
         vm.startPrank(deployerAddr);
         vclm = new VinculumFinalisToken("Vinculum Finalis VCLM", "VCLM", 10_000_000_000e18);
         chonx = new VinculumFinalisToken("Vinculum Finalis CHONX", "CHONX", 100_000_000_000e18);
@@ -118,6 +122,10 @@ abstract contract Fixture is Test {
         runId++;
         vm.prank(poster);
         verifier.applyScheduledPriceRun(runId, u);
+        // AG-06 (fix 2026-10-23): a lock is valued at the price in effect strictly
+        // before its creation, so move one second past the run.
+        vm.warp(block.timestamp + 1);
+        vm.roll(block.number + 1);
     }
 
     /// Lock-level USD stated to the lock (the lock trusts it; the Verifier
