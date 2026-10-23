@@ -7,10 +7,11 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 BC="$HERE/../../base-contracts"
 LOG="$HERE/logs/hardhat_files.log"
 OUT="$HERE/logs/rerun_killed.log"
-export NODE_OPTIONS=--max-old-space-size=12288
+# HEAP lowers the V8 heap so GC runs earlier on a crowded box (same tests).
+export NODE_OPTIONS=--max-old-space-size=${HEAP:-12288}
 : > "$OUT"
 cd "$BC"
-for f in $(grep "=== EXIT 137" "$LOG" | awk '{print $4}'); do
+for f in ${FILES:-$(grep "=== EXIT 137" "$LOG" | awk '{print $4}')}; do
   echo "=== FILE $f" >> "$OUT"
   npx hardhat test "$f" >> "$OUT" 2>&1; echo "=== EXIT $? $f" >> "$OUT"
 done
