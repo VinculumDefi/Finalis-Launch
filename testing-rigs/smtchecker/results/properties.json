@@ -1,0 +1,510 @@
+{
+  "formal_layer": "solc 0.8.19 SMTChecker, CHC engine, z3 4.11.2. Certora not available (CERTORAKEY not set in env), so SMTChecker is the only formal layer.",
+  "targets": "assert, overflow, underflow, divByZero, outOfBounds",
+  "note_checked_math": "Solidity 0.8 checked arithmetic: an overflow or underflow 'happens' result means the call reverts with Panic 0x11, not a silent wrap.",
+  "notes": [
+    "prod_synth (production VinculumFinalisSynth.sol): FAIL-TO-RUN. solc/libz3 crashes with SIGSEGV after about 25 s, three times, with a 5 GB cap, a 6.5 GB cap and no cap. The Synth properties are covered by the instrumented copy (harness_synth), which ran to completion.",
+    "prod_stake and prod_verifier ran to exit 0 but almost every target came back 'Error trying to invoke SMT solver' (92 of 97 and 49 of 56). Those targets are inconclusive, not proven.",
+    "harness_feemath first run inherited the whole BaseCommitmentVaultLock and was OOM-killed (exit 247). It was replaced by FeeMath.sol, a verbatim extract of _quote (extract_feemath.py), which ran in 26 s.",
+    "A second token run with only the assert target was OOM-killed after 639 s (results/harness_token_assert_only.txt).",
+    "The box rebooted about 07:18 EDT on Oct 23 and /workspace was restored from a snapshot. prod_verifier and prod_synth were rerun after that; all other outputs survived.",
+    "Supplementary BMC runs (run_bmc_supplement.sh) are labelled as such and are not counted as CHC verdicts."
+  ],
+  "jobs": {
+    "harness_token": {
+      "exit": 0,
+      "seconds": 714
+    },
+    "harness_synth": {
+      "exit": 0,
+      "seconds": 446
+    },
+    "harness_feemath": {
+      "exit": 0,
+      "seconds": 26
+    },
+    "harness_issuance": {
+      "exit": 0,
+      "seconds": 129
+    },
+    "prod_token": {
+      "exit": 0,
+      "seconds": 101
+    },
+    "prod_synth": {
+      "exit": 245,
+      "seconds": 24
+    },
+    "prod_basecvl": {
+      "exit": 0,
+      "seconds": 192
+    },
+    "prod_stake": {
+      "exit": 0,
+      "seconds": 201
+    },
+    "harness_token_assert_only": {
+      "exit": 247,
+      "seconds": 639
+    },
+    "prod_verifier": {
+      "exit": 0,
+      "seconds": 261
+    },
+    "prod_synth_nocap": {
+      "exit": 139,
+      "seconds": 32
+    },
+    "bmc_token": {
+      "exit": 0,
+      "seconds": 0
+    },
+    "bmc_synth": {
+      "exit": 0,
+      "seconds": 1
+    }
+  },
+  "properties": [
+    {
+      "id": "P2-token-conservation",
+      "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:194",
+      "property": "Token: sum of balances equals totalSupply after every call (supply conservation)",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_token",
+        "exit": 0,
+        "seconds": 714
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P2-token-cap",
+      "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:195",
+      "property": "Token: totalSupply never exceeds hardCap",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_token",
+        "exit": 0,
+        "seconds": 714
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P1-token-minter-only",
+      "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:196",
+      "property": "Token: supply only grows when msg.sender is minterVerifier or minterStake (only a minter can mint)",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_token",
+        "exit": 0,
+        "seconds": 714
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "note": "BMC proved it for every single call from an arbitrary starting state, which is stronger than needed for this per-call property."
+      }
+    },
+    {
+      "id": "P1-token-no-mint-before-finalize",
+      "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:197",
+      "property": "Token: supply only grows after initialize() finalized the minters",
+      "engine": "CHC",
+      "verdict": "counterexample",
+      "detail": "Assertion violation happens here.",
+      "run": {
+        "job": "harness_token",
+        "exit": 0,
+        "seconds": 714
+      },
+      "counterexample_reading": "spurious",
+      "counterexample_note": "Trace needs msg.sender == address(0) while both minters are still unset (address(0)) before initialize(). No transaction can come from address(0); initialize() sets both minters and finalized=true in one call (VinculumFinalisToken.sol:95-107) and onlyMinter is VinculumFinalisToken.sol:65-71.",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P3-token-frozen",
+      "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:198",
+      "property": "Token: after finalize, minters, finalized flag and deployer never change (no unauthorized state change)",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_token",
+        "exit": 0,
+        "seconds": 714
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P3-token-deployer-only",
+      "harness": "testing-rigs/smtchecker/harness/TokenInstrumented.sol:199",
+      "property": "Token: before finalize, only the deployer can change minter config",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_token",
+        "exit": 0,
+        "seconds": 714
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "proven",
+        "detail": "no warning for this line",
+        "note": "BMC proved it for every single call from an arbitrary starting state, which is stronger than needed for this per-call property."
+      }
+    },
+    {
+      "id": "P2-synth-conservation",
+      "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:205",
+      "property": "Synth: sum of balances equals totalSupply (supply conservation)",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_synth",
+        "exit": 0,
+        "seconds": 446
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P2-synth-cap",
+      "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:206",
+      "property": "Synth: totalSupply never exceeds HARD_CAP",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_synth",
+        "exit": 0,
+        "seconds": 446
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P1-synth-mint-when-activated",
+      "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:207",
+      "property": "Synth: supply only grows when synthActivated",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_synth",
+        "exit": 0,
+        "seconds": 446
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P1-synth-whole-units",
+      "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:208",
+      "property": "Synth: forge mints whole 1e18 units only",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Division by zero might happen here.; Error trying to invoke SMT solver.; Underflow (resulting value less than 0) might happen here.",
+      "run": {
+        "job": "harness_synth",
+        "exit": 0,
+        "seconds": 446
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "P3-synth-activation-one-way",
+      "harness": "testing-rigs/smtchecker/harness/SynthInstrumented.sol:209",
+      "property": "Synth: activation can never be undone",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.; Error trying to invoke SMT solver.",
+      "run": {
+        "job": "harness_synth",
+        "exit": 0,
+        "seconds": 446
+      },
+      "reason": "solver error (z3 gave up, likely memory pressure on the shared box)",
+      "bmc_supplement": {
+        "verdict": "counterexample",
+        "detail": "Assertion violation happens here.",
+        "note": "Not informative. BMC starts each call from an arbitrary state (for the synth it even picks HARD_CAP = 0 and burn constants of 0, and it forgets state after the external token calls). The traces start from states no real deployment can reach, for example finalized with a nonzero deployer, or ghostSum already different from totalSupply. Read by hand as spurious."
+      }
+    },
+    {
+      "id": "F1-fee-conservation",
+      "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:48",
+      "property": "Fee math: fee + principal == gross",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_feemath",
+        "exit": 0,
+        "seconds": 26
+      }
+    },
+    {
+      "id": "F2-fee-exact",
+      "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:49",
+      "property": "Fee math: fee == floor(gross / 20)",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_feemath",
+        "exit": 0,
+        "seconds": 26
+      }
+    },
+    {
+      "id": "F3-verifier-accepts-cvl-fee",
+      "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:50",
+      "property": "Fee math: Verifier VF-COM-011 check accepts the CVL fee",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_feemath",
+        "exit": 0,
+        "seconds": 26
+      }
+    },
+    {
+      "id": "F4-principal-nonzero",
+      "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:51",
+      "property": "Fee math: principal > 0 when gross >= 2",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_feemath",
+        "exit": 0,
+        "seconds": 26
+      }
+    },
+    {
+      "id": "F5-multiplier-range",
+      "harness": "testing-rigs/smtchecker/harness/FeeMath.sol:52",
+      "property": "Fee math: duration multiplier in [1.0x, 8.0x]",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_feemath",
+        "exit": 0,
+        "seconds": 26
+      }
+    },
+    {
+      "id": "I1-issuance-monotonic",
+      "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:84",
+      "property": "Issuance: more verified USD never mints less",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.",
+      "run": {
+        "job": "harness_issuance",
+        "exit": 0,
+        "seconds": 129
+      },
+      "reason": "CHC could not find an invariant within the 30 s per-query timeout"
+    },
+    {
+      "id": "I2-issuance-upper-bound",
+      "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:91",
+      "property": "Issuance: issuance <= usd * rate * 12 (max multipliers)",
+      "engine": "CHC",
+      "verdict": "inconclusive",
+      "detail": "Assertion violation might happen here.",
+      "run": {
+        "job": "harness_issuance",
+        "exit": 0,
+        "seconds": 129
+      },
+      "reason": "CHC could not find an invariant within the 30 s per-query timeout"
+    },
+    {
+      "id": "I3-rate-bounds",
+      "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:100",
+      "property": "Issuance: emission rate between floor and initial",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_issuance",
+        "exit": 0,
+        "seconds": 129
+      }
+    },
+    {
+      "id": "I4-day-zero-max",
+      "harness": "testing-rigs/smtchecker/harness/IssuanceMath.sol:107",
+      "property": "Issuance: day 0 rate is the maximum",
+      "engine": "CHC",
+      "verdict": "proven",
+      "detail": "no warning for this line",
+      "run": {
+        "job": "harness_issuance",
+        "exit": 0,
+        "seconds": 129
+      }
+    }
+  ],
+  "production_contracts": {
+    "prod_token": {
+      "exit": 0,
+      "seconds": 101,
+      "counts": {
+        "counterexample": 1,
+        "unproved": 3
+      },
+      "counterexample_lines": [
+        "VinculumFinalisToken.sol:122"
+      ]
+    },
+    "prod_synth": {
+      "exit": 245,
+      "seconds": 24,
+      "counts": {},
+      "counterexample_lines": []
+    },
+    "prod_basecvl": {
+      "exit": 0,
+      "seconds": 192,
+      "counts": {
+        "counterexample": 3
+      },
+      "counterexample_lines": [
+        "BaseCommitmentVaultLock.sol:224",
+        "BaseCommitmentVaultLock.sol:317",
+        "BaseCommitmentVaultLock.sol:349"
+      ]
+    },
+    "prod_stake": {
+      "exit": 0,
+      "seconds": 201,
+      "counts": {
+        "solver_error": 92,
+        "unproved": 97
+      },
+      "counterexample_lines": []
+    },
+    "prod_verifier": {
+      "exit": 0,
+      "seconds": 261,
+      "counts": {
+        "solver_error": 49,
+        "unproved": 56
+      },
+      "counterexample_lines": []
+    },
+    "prod_synth_nocap": {
+      "exit": 139,
+      "seconds": 32,
+      "counts": {},
+      "counterexample_lines": []
+    }
+  },
+  "findings": [
+    {
+      "id": "SMT-01",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; the call reverts with Panic 0x11",
+      "file_line": "base-contracts/contracts/VinculumFinalisSynth.sol:145 (also :144)",
+      "description": "CHC found a real overflow trace in forge() for a huge count. Solidity 0.8 checked math turns it into a revert, so no wrap and no free mint.",
+      "evidence": "testing-rigs/smtchecker/results/harness_synth.txt",
+      "rev_conflict": "none"
+    },
+    {
+      "id": "SMT-02",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts",
+      "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:349",
+      "description": "CHC overflow trace for gross * STANDARD_FEE_BPS when gross > 2^256/500. Checked math reverts. No real token has that supply. Same trace on the extracted copy (FeeMath.sol:37).",
+      "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt; results/harness_feemath.txt",
+      "rev_conflict": "none"
+    },
+    {
+      "id": "SMT-03",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts, the lock fails closed",
+      "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:224",
+      "description": "CHC underflow trace for _balanceOf(after) - beforeBal when the pulled token lowers the vault balance during transferFrom (a hostile or rebasing token). Checked math reverts, so the lock is refused. Ties to finding L04 (rebasing tokens).",
+      "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt",
+      "rev_conflict": "none"
+    },
+    {
+      "id": "SMT-04",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts",
+      "file_line": "base-contracts/contracts/BaseCommitmentVaultLock.sol:317",
+      "description": "CHC overflow trace for createdAt + duration. duration is limited to the fixed CommitmentDurations table, so only a solver-chosen huge timestamp reaches it. Checked math reverts.",
+      "evidence": "testing-rigs/smtchecker/results/attempt1/prod_basecvl.txt",
+      "rev_conflict": "none"
+    },
+    {
+      "id": "SMT-05",
+      "rig": "6-smtchecker",
+      "severity": "info",
+      "damage": "none; reverts. Deployment input only",
+      "file_line": "base-contracts/contracts/VinculumFinalisToken.sol:122 (hardCap set at :84 with no range check)",
+      "description": "CHC overflow trace for totalSupply + amount. It needs a deployment with hardCap near 2^256, which the constructor accepts without a check. Checked math reverts. Deployment script must pass the Rev 6 cap.",
+      "evidence": "testing-rigs/smtchecker/results/prod_token.txt",
+      "rev_conflict": "none"
+    }
+  ],
+  "verdict_counts": {
+    "inconclusive": 12,
+    "counterexample": 1,
+    "proven": 7
+  }
+}
