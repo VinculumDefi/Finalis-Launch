@@ -1,6 +1,14 @@
-// COMBINATORIAL rig (discovery only, no fixes). Local hardhat chain only.
-// Skipped unless EXTRA_RIG=1. Run:
-//   cd base-contracts && EXTRA_RIG=1 npx hardhat test ../testing-rigs/combinatorial/combinatorial.test.cjs
+// COMBINATORIAL rig. Local hardhat chain only.
+// Converted 2026-10-23: always active, and the test FAILS if any cell deviates
+// from the spec oracle. Run:
+//   testing-rigs/run.sh none combinatorial/combinatorial.test.cjs
+// Ethereum cells use the test-only anchored reader (SimpleEthereumLockReaderTestAnchor)
+// because the production non-Base readers now refuse all evidence (AG-01). This keeps
+// the price, band, fee and stablecoin rules covered for a non-Base CVL.
+// Stablecoin below $0.95 at lock creation: a source-chain CVL has no price feed, so
+// the lock itself cannot refuse it. The Verifier refuses it fail-closed (VF-ORC-005,
+// no mint). The oracle accepts "refused at the lock" or "refused after the lock"
+// for that class and fails on any mint.
 // Grid (exhaustive): chain context {Base, Ethereum} x asset class {native, standard
 // ERC-20, stablecoin at $0.95, stablecoin above (1.00 at lock, 0.94 later),
 // stablecoin below (0.94 at lock, 1.00 later), low-decimals ERC-20, protocol token}
@@ -19,8 +27,8 @@ const req = createRequire(path.join(BC, "package.json"));
 const { ethers, network } = req("hardhat");
 const { ethLockEvidence, encodeEvidence } = req(path.join(BC, "test/lib/ethProof.cjs"));
 
-const run = process.env.EXTRA_RIG ? it : it.skip;
-const OUT = path.join(__dirname, "results");
+const run = it;
+const OUT = process.env.COMB_OUT || path.join(__dirname, "../rerun-2026-10-23/combinatorial");
 const CELLS = process.env.COMB_CELLS || path.join(OUT, "cells.jsonl");
 const LIMIT = Number(process.env.CELL_LIMIT || 0); // smoke runs only
 const SCALE = 10n ** 18n;
@@ -71,7 +79,7 @@ function issuance(u, custodyBps, durBps, days) {
   return (s * ((SCALE * BigInt(durBps)) / 10000n)) / SCALE;
 }
 
-describe("COMBINATORIAL rig (skipped unless EXTRA_RIG=1)", function () {
+describe("COMBINATORIAL rig (active, fails on any deviation)", function () {
   this.timeout(0);
   let S, runId = 1n;
 
@@ -89,7 +97,7 @@ describe("COMBINATORIAL rig (skipped unless EXTRA_RIG=1)", function () {
       "Base", devFund.address, await vclm.getAddress(), await chonx.getAddress(), await vclm.getAddress());
     const ethLock = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Ethereum", devFund.address);
     await verifier.registerChainVerifier("Base", await (await (await ethers.getContractFactory("BaseLockRecordVerifier")).deploy(await baseLock.getAddress())).getAddress());
-    await verifier.registerChainVerifier("Ethereum", await (await (await ethers.getContractFactory("SimpleEthereumLockReader")).deploy(await ethLock.getAddress())).getAddress());
+    await verifier.registerChainVerifier("Ethereum", await (await (await ethers.getContractFactory("SimpleEthereumLockReaderTestAnchor")).deploy(await ethLock.getAddress())).getAddress());
     await verifier.configureDevFund("Base", devFund.address);
     await verifier.configureDevFund("Ethereum", devFund.address);
     const F = await ethers.getContractFactory("TestFixtureERC20");
@@ -220,7 +228,8 @@ describe("COMBINATORIAL rig (skipped unless EXTRA_RIG=1)", function () {
     if (expect === "mint") o.verdict = observed === "mint" ? (o.mint_matches === "lock_price" ? "PASS" : "DEVIATION:mint_at_later_price") :
       observed === "refuse_after_lock" ? "DEVIATION:valid_lock_not_minted" : "DEVIATION:valid_lock_refused";
     else if (expect.startsWith("refuse_lock")) o.verdict = observed === "refuse_lock" ? "PASS" : observed === "mint" ? "DEVIATION:minted_but_spec_refuses" : "DEVIATION:lock_accepted_fee_taken_no_mint";
-    else /* stable below at lock */ o.verdict = observed === "mint" ? "DEVIATION:minted_but_spec_refuses" : observed === "refuse_after_lock" ? "DEVIATION:lock_accepted_fee_taken_no_mint" : "PASS";
+    else /* stable below at lock: fail-closed, no mint */ o.verdict = observed === "mint" ? "DEVIATION:minted_but_spec_refuses" :
+      observed === "refuse_after_lock" ? (/VF-ORC-005/.test(o.record_err || o.mint_err || "") ? "PASS" : "DEVIATION:wrong_refusal") : "PASS";
     if (o.lock_ok && !o.fee_is_floor5pct) o.verdict += "|FEE_RULE_BROKEN";
     if (o.lock_ok && o.devfund_received !== o.fee) o.verdict += "|DEVFUND_DELTA_NE_FEE";
     append(o);
@@ -230,7 +239,7 @@ describe("COMBINATORIAL rig (skipped unless EXTRA_RIG=1)", function () {
   run("exhaustive grid", async () => {
     fs.mkdirSync(OUT, { recursive: true });
     const done = new Set();
-    if (fs.existsSync(CELLS)) for (const l of fs.readFileSync(CELLS, "utf8").split("\n")) if (l) { const o = JSON.parse(l); done.add([o.env, o.cls, o.duration, o.bucket, o.bound].join("|")); }
+    if (fs.existsSync(CELLS)) fs.unlinkSync(CELLS); // always a fresh, complete grid
     await deploy();
     let n = 0;
     for (const env of ["Base", "Ethereum"]) for (const a of ASSETS) for (const d of DURS) for (const b of BUCKETS) for (const bound of [true, false]) {
@@ -243,5 +252,13 @@ describe("COMBINATORIAL rig (skipped unless EXTRA_RIG=1)", function () {
       if (!done.has([env, "native", d, "5", true].join("|"))) await cell(env, "native", d, "5", true);
     }
     console.log(`      wrote ${n} new cells to ${path.relative(process.cwd(), CELLS)}`);
+    const cells = fs.readFileSync(CELLS, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const counts = {};
+    for (const o of cells) counts[o.verdict] = (counts[o.verdict] || 0) + 1;
+    fs.writeFileSync(path.join(OUT, "summary.json"), JSON.stringify({ cells: cells.length, verdicts: counts }, null, 2) + "\n");
+    console.log(`      verdicts ${JSON.stringify(counts)}`);
+    const bad = cells.filter((o) => o.verdict !== "PASS");
+    if (bad.length) console.log(bad.slice(0, 10).map((o) => JSON.stringify(o)).join("\n"));
+    require("assert").strictEqual(bad.length, 0, `${bad.length} cells deviate from the spec oracle`);
   });
 });
