@@ -13,6 +13,15 @@ const USDC_ID = ethers.solidityPackedKeccak256(["string", "string"], ["Ethereum"
 const coder = ethers.AbiCoder.defaultAbiCoder();
 const HS_GROSS = ethers.parseEther("0.000015"); // $0.015 at $1000
 
+// Fix 2026-10-23 (AG-05/AG-06): mock packages carry a proven creation time
+// after the price run, and the Valuation Timestamp equals it.
+let CREATED = 1n;
+async function markCreated() {
+  CREATED = BigInt((await ethers.provider.getBlock("latest")).timestamp) + 1n;
+}
+// RAC is keyed by the proven lock (fix 2026-10-23, AG-04).
+const rk = (c, pkg) => c.verifier.racKey(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId);
+
 async function deploy({ withMock = false } = {}) {
   const [deployer, recipient, other, dest, devFund] = await ethers.getSigners();
   const T = await ethers.getContractFactory("VinculumFinalisToken");
@@ -47,6 +56,7 @@ async function deploy({ withMock = false } = {}) {
     { environmentId: "Ethereum", canonicalAssetId: USDC_ID, priceUsd18: PRICE, success: true },
   ]);
   await verifier.finalize();
+  await markCreated();
   return { deployer, recipient, other, dest, devFund, verifier, lock, reader, mock, vclm };
 }
 
@@ -81,13 +91,13 @@ function mockPkg(recipient, { lockAsset, pkgAsset, gross = 10n ** 15n, duration 
     canonicalAssetId: pkgAsset, assetPrecision: 18, assetCustodyClass: 2,
     grossAmountSmallestUnits: gross, actualFeeAmountSmallestUnits: fee, principalAmountSmallestUnits: gross - fee,
     feeAssetId: pkgAsset, devFundDestination: "dev", feeTransferEvidence: ethers.id("fee"),
-    valuationTimestamp: 1n, maturityTimestamp: 2n, durationSecs: duration,
+    valuationTimestamp: CREATED, maturityTimestamp: 2n, durationSecs: duration,
     selectedOutputToken: 0, baseRecipient: recipient, releaseDestination: "release",
     chonxActivationReceipt: "0x", racIdentity: ethers.hexlify(ethers.randomBytes(32)), priceRecord: "0x",
     sourceFinalityProof: "0x",
     lockEventProof: coder.encode(
       ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8", "bytes32"],
-      [lockId, gross, fee, gross - fee, duration, 1n, 2n, recipient, 0, lockAsset]),
+      [lockId, gross, fee, gross - fee, duration, CREATED, 2n, recipient, 0, lockAsset]),
   };
 }
 
@@ -102,8 +112,8 @@ describe("recordFeeAndRac: the lock must exist before fees are recorded", functi
       commitmentVaultLockId: ghost,
     });
     await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWithCustomError(c.reader, "LockNotFound");
-    expect(await c.verifier.recordedRacs(pkg.racIdentity)).to.equal(false);
-    expect(await c.verifier.racCredits(pkg.racIdentity)).to.equal(0n);
+    expect(await c.verifier.recordedRacs(await rk(c, pkg))).to.equal(false);
+    expect(await c.verifier.racCredits(await rk(c, pkg))).to.equal(0n);
   });
 
   it("an environment with no registered reader records nothing (VF-XCH-006)", async function () {
@@ -111,7 +121,7 @@ describe("recordFeeAndRac: the lock must exist before fees are recorded", functi
     const { lockId, rec } = await openNative(c);
     const pkg = basePkg(lockId, rec, { sourceEnvironmentId: "Solana" });
     await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-006: no verifier registered for environment");
-    expect(await c.verifier.recordedRacs(pkg.racIdentity)).to.equal(false);
+    expect(await c.verifier.recordedRacs(await rk(c, pkg))).to.equal(false);
   });
 
   it("amounts that differ from the real lock record nothing (VF-XCH-011)", async function () {
@@ -120,7 +130,7 @@ describe("recordFeeAndRac: the lock must exist before fees are recorded", functi
     const g = rec.gross * 2n, f = (g * 500n) / 10000n;
     const pkg = basePkg(lockId, rec, { grossAmountSmallestUnits: g, actualFeeAmountSmallestUnits: f, principalAmountSmallestUnits: g - f });
     await expect(c.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: gross mismatch");
-    expect(await c.verifier.recordedRacs(pkg.racIdentity)).to.equal(false);
+    expect(await c.verifier.recordedRacs(await rk(c, pkg))).to.equal(false);
   });
 
   it("a real lock records the fee and RAC, then mints", async function () {
@@ -128,7 +138,7 @@ describe("recordFeeAndRac: the lock must exist before fees are recorded", functi
     const { lockId, rec } = await openNative(c);
     const pkg = basePkg(lockId, rec);
     await c.verifier.recordFeeAndRac(pkg);
-    expect(await c.verifier.recordedRacs(pkg.racIdentity)).to.equal(true);
+    expect(await c.verifier.recordedRacs(await rk(c, pkg))).to.equal(true);
     await c.verifier.verifyAndMint(pkg, 0);
     expect(await c.vclm.balanceOf(c.recipient.address)).to.be.gt(0n);
   });
@@ -141,7 +151,7 @@ describe("The package asset must match the lock's asset", function () {
     expect(await c.reader.extractAssetId(basePkg(lockId, rec).lockEventProof)).to.equal(ETH_ID);
     const relabel = basePkg(lockId, rec, { canonicalAssetId: USDC_ID, feeAssetId: USDC_ID });
     await expect(c.verifier.recordFeeAndRac(relabel)).to.be.revertedWith("VF-XCH-011: asset mismatch");
-    expect(await c.verifier.recordedRacs(relabel.racIdentity)).to.equal(false);
+    expect(await c.verifier.recordedRacs(await rk(c, relabel))).to.equal(false);
   });
 
   it("Base: a lock of an unindexed token address is refused (asset mismatch)", async function () {
