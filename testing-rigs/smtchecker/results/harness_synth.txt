@@ -1,0 +1,204 @@
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:39:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                                       ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:38:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:31:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:209:17:
+    |
+209 |         if (hA) assert(synthActivated); // HARNESS P3 activation is one-way
+    |                 ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:205:9:
+    |
+205 |         assert(ghostSum == totalSupply); // HARNESS P2 conservation
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:206:9:
+    |
+206 |         assert(totalSupply <= HARD_CAP); // HARNESS P2 cap
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:207:31:
+    |
+207 |         if (totalSupply > hS) assert(synthActivated); // HARNESS P1 mint only when activated
+    |                               ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:189:39:
+    |
+189 |         allowance[from][msg.sender] = currentAllowance - amount;
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:195:9:
+    |
+195 |         balanceOf[from] -= amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:196:9:
+    |
+196 |         ghostSum -= amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:197:9:
+    |
+197 |         balanceOf[to] += amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:198:9:
+    |
+198 |         ghostSum += amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:144:30:
+    |
+144 |         uint256 vclmToBurn = VCLM_BURN_PER_SYNTH * count;
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+Counterexample:
+name = [0x56, 0x69, 0x6e, 0x63, 0x75, 0x6c, 0x75, 0x6d, 0x20, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x73, 0x20, 0x53, 0x59, 0x4e, 0x54, 0x48], symbol = [0x53, 0x59, 0x4e, 0x54, 0x48], decimals = 18, HARD_CAP = 10000000000000000000000000, VCLM_BURN_PER_SYNTH = 1000000000000000000000, CHONX_BURN_PER_SYNTH = 10000000000000000000000, SYNTH_ACTIVATION_THRESHOLD = 100000000000000000000000000, verifier = 1, vclmToken = 1, chonxToken = 1, synthActivated = true, synthActivationBlock = 0, totalSupply = 0, ghostSum = 0
+count = 11579208923731619542357098500868790785326998466564056404
+success = false
+vclmToBurn = 11579208923731619542357098500868790785326998466564056404000000000000000000000
+chonxToBurn = 0
+synthToMint = 0
+hS = 0
+hA = true
+
+Transaction trace:
+VinculumFinalisSynth.constructor(0x01, 0x01, 0x01)
+State: name = [0x56, 0x69, 0x6e, 0x63, 0x75, 0x6c, 0x75, 0x6d, 0x20, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x73, 0x20, 0x53, 0x59, 0x4e, 0x54, 0x48], symbol = [0x53, 0x59, 0x4e, 0x54, 0x48], decimals = 18, HARD_CAP = 10000000000000000000000000, VCLM_BURN_PER_SYNTH = 1000000000000000000000, CHONX_BURN_PER_SYNTH = 10000000000000000000000, SYNTH_ACTIVATION_THRESHOLD = 100000000000000000000000000, verifier = 1, vclmToken = 1, chonxToken = 1, synthActivated = false, synthActivationBlock = 0, totalSupply = 0, ghostSum = 0
+VinculumFinalisSynth.checkActivation(){ block.number: 0 }
+    verifier.cumulativeChonxIssued() -- untrusted external call
+State: name = [0x56, 0x69, 0x6e, 0x63, 0x75, 0x6c, 0x75, 0x6d, 0x20, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x73, 0x20, 0x53, 0x59, 0x4e, 0x54, 0x48], symbol = [0x53, 0x59, 0x4e, 0x54, 0x48], decimals = 18, HARD_CAP = 10000000000000000000000000, VCLM_BURN_PER_SYNTH = 1000000000000000000000, CHONX_BURN_PER_SYNTH = 10000000000000000000000, SYNTH_ACTIVATION_THRESHOLD = 100000000000000000000000000, verifier = 1, vclmToken = 1, chonxToken = 1, synthActivated = true, synthActivationBlock = 0, totalSupply = 0, ghostSum = 0
+VinculumFinalisSynth.forge(11579208923731619542357098500868790785326998466564056404){ msg.sender: 0x0985 }
+    VinculumFinalisSynth.checkActivation() -- internal call
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:145:31:
+    |
+145 |         uint256 chonxToBurn = CHONX_BURN_PER_SYNTH * count;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:146:31:
+    |
+146 |         uint256 synthToMint = count * 1e18; // 18 decimals per SYNTH (VF-TOK-001)
+    |                               ^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:150:13:
+    |
+150 |             totalSupply + synthToMint <= HARD_CAP,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:160:9:
+    |
+160 |         totalSupply += synthToMint;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:161:9:
+    |
+161 |         balanceOf[msg.sender] += synthToMint;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:162:9:
+    |
+162 |         ghostSum += synthToMint; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:189:39:
+    |
+189 |         allowance[from][msg.sender] = currentAllowance - amount;
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:195:9:
+    |
+195 |         balanceOf[from] -= amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:196:9:
+    |
+196 |         ghostSum -= amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:197:9:
+    |
+197 |         balanceOf[to] += amount;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:198:9:
+    |
+198 |         ghostSum += amount; // HARNESS
+    |         ^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:205:9:
+    |
+205 |         assert(ghostSum == totalSupply); // HARNESS P2 conservation
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:206:9:
+    |
+206 |         assert(totalSupply <= HARD_CAP); // HARNESS P2 cap
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:207:31:
+    |
+207 |         if (totalSupply > hS) assert(synthActivated); // HARNESS P1 mint only when activated
+    |                               ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Underflow (resulting value less than 0) might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:39:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                                       ^^^^^^^^^^^^^^^^
+
+Warning: CHC: Division by zero might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:38:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:208:31:
+    |
+208 |         if (totalSupply > hS) assert((totalSupply - hS) % 1e18 == 0); // HARNESS P1 whole units only
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation might happen here.
+   --> workspace/rigs/static/testing-rigs/smtchecker/harness/SynthInstrumented.sol:209:17:
+    |
+209 |         if (hA) assert(synthActivated); // HARNESS P3 activation is one-way
+    |                 ^^^^^^^^^^^^^^^^^^^^^^
+
