@@ -35,6 +35,7 @@ contract EchidnaVF {
     mapping(bytes32 => uint256) internal grossOf;
     mapping(bytes32 => uint256) internal durOf;
     mapping(bytes32 => uint8) internal outOf;
+    mapping(bytes32 => uint256) internal createdOf; // proven creation time (VF-ORC-011, fix 2026-10-23)
     mapping(bytes32 => uint256) internal racCount;
     mapping(bytes32 => uint256) internal mintCount;
     uint256 internal maxRacCount;
@@ -88,8 +89,8 @@ contract EchidnaVF {
         p.principalAmountSmallestUnits = gross - fee;
         p.feeAssetId = ETH_ID;
         p.devFundDestination = "Base";
-        p.valuationTimestamp = block.timestamp;
-        p.maturityTimestamp = block.timestamp + durOf[id];
+        p.valuationTimestamp = createdOf[id];
+        p.maturityTimestamp = createdOf[id] + durOf[id];
         p.durationSecs = durOf[id];
         p.selectedOutputToken = outOf[id];
         p.baseRecipient = address(this);
@@ -117,6 +118,7 @@ contract EchidnaVF {
             grossOf[id] = gross;
             durOf[id] = dur;
             outOf[id] = out_;
+            createdOf[id] = block.timestamp;
         } catch {}
     }
 
