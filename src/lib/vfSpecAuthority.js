@@ -1,6 +1,6 @@
 // =============================================================================
 // PROVENANCE: Vinculum_Finalis_Protocol_Constants.json — Revision 6, 2026-07-28
-// Governing source: 227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx
+// Governing source: Vinculum Finalis Master Specification
 // Governing source SHA-256: 5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9
 //
 // Every constant below is transcribed verbatim from the authoritative constants file.
@@ -10,7 +10,7 @@
 export const AUTHORITY = {
   revision: 'Revision 6',
   revision_date: '2026-07-28',
-  governing_source_file: '227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx',
+  governing_source_file: 'Vinculum Finalis Master Specification',
   governing_source_sha256:
     '5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9',
   requirements_count: 209,
