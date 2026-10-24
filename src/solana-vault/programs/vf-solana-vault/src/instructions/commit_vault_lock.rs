@@ -252,7 +252,7 @@ pub fn commit_native(
         ctx.bumps.lock_record,
     );
 
-    // --- Handshake allowance (VF-COM-006/007) ---
+    // --- Handshake record (layout only; Revision 12 has no allowance limit) ---
     if is_handshake {
         consume_handshake(
             &mut ctx.accounts.handshake_allowance,
@@ -403,7 +403,7 @@ pub fn commit_spl(
         ctx.bumps.lock_record,
     );
 
-    // --- Handshake allowance (VF-COM-006/007) ---
+    // --- Handshake record (layout only; Revision 12 has no allowance limit) ---
     if is_handshake {
         consume_handshake(
             &mut ctx.accounts.handshake_allowance,
