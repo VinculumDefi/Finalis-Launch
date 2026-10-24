@@ -1,6 +1,6 @@
 # Document register
 
-Revision 3, 2026-10-24 (ET). This register is the single source of truth for
+Revision 4, 2026-10-24 (ET). This register is the single source of truth for
 which edition of each controlled document governs. One live copy per document.
 Superseded editions are in `archive/specifications/`. Nothing is deleted.
 
@@ -8,10 +8,10 @@ Superseded editions are in `archive/specifications/`. Nothing is deleted.
 
 | Document | Current revision | Date | Path | Status |
 |---|---|---|---|---|
-| Master Specification | Revision 16 | 2026-10-24 | `docs/Vinculum_Finalis_Master_Specification_Revision_16_2026-10-24.md` | CURRENT GOVERNING EDITION. SHA-256 `ae61bddd9e8a136b11607a6a4bfc13d479ef707b56e87d0a2987c5d7786ff72d` |
+| Master Specification | Revision 17 | 2026-10-24 | `docs/Vinculum_Finalis_Master_Specification_Revision_17_2026-10-24.md` | CURRENT GOVERNING EDITION. SHA-256 `3b45aeeb25881c7f2465b2bf78400bfd94626df9fe0e3456d72cbe9e1452dace` |
 | Session start | Revision 4 | 2026-10-24 | `VINCULUM_SESSION_START.md` | Current |
-| Document register | Revision 3 | 2026-10-24 | `DOCUMENT_REGISTER.md` | Current (this file) |
-| Specification archive index | Revision 3 | 2026-10-24 | `archive/specifications/README.md` | Current |
+| Document register | Revision 4 | 2026-10-24 | `DOCUMENT_REGISTER.md` | Current (this file) |
+| Specification archive index | Revision 4 | 2026-10-24 | `archive/specifications/README.md` | Current |
 
 ## Superseded editions kept in place
 
@@ -32,6 +32,7 @@ None. No file in the repository reads a superseded edition by path.
 | Master Specification | Revision 13 | 2026-10-22 | `archive/specifications/master-specification/Vinculum_Finalis_Master_Specification_Revision_13_2026-10-22.md` | SHA-256 `80eb115171fc672fb19835a83f8394ff61bda1db1e44814d599844e6cdbce3b5`. Superseded. Was in `docs/`. |
 | Master Specification | Revision 14 | 2026-10-24 | `archive/specifications/master-specification/Vinculum_Finalis_Master_Specification_Revision_14_2026-10-24.md` | SHA-256 `fe94333254009bfc5ac7cf7421e70af415cea107bc45224c7acfe50bd3f14777`. Superseded. Was in `docs/`. File kept as it was. |
 | Master Specification | Revision 15 | 2026-10-24 | `archive/specifications/master-specification/Vinculum_Finalis_Master_Specification_Revision_15_2026-10-24.md` | SHA-256 `74080a46598c3664e24aa7b6a924b8aaf1316b3a18fac9a9be9b77b3ad3050fb`. Superseded by Revision 16. Archived in the same commit that added Revision 16. |
+| Master Specification | Revision 16 | 2026-10-24 | `archive/specifications/master-specification/Vinculum_Finalis_Master_Specification_Revision_16_2026-10-24.md` | SHA-256 `ae61bddd9e8a136b11607a6a4bfc13d479ef707b56e87d0a2987c5d7786ff72d`. Superseded by Revision 17. Archived in the same commit that added Revision 17. |
 | Revision 7 candidate items | Candidate | 2026-08-06 (committed) | `archive/specifications/revision-7-candidates/REVISION_7_CANDIDATE_ITEMS.md` | Not adopted. Was in `src/`. |
 | Revision 7 candidate review | Candidate | 2026-08-06 (committed) | `archive/specifications/revision-7-candidates/REVISION_7_CANDIDATE_ITEMS_REVIEW.md` | Not adopted. Was in `src/`. |
 | Session start | Revision 1 | 2026-10-12 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_1_2026-10-12.md` | From commit 31c237a. |
@@ -39,6 +40,7 @@ None. No file in the repository reads a superseded edition by path.
 | Session start | Revision 3 | 2026-10-24 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_3_2026-10-24.md` | SHA-256 `8c63b5c82941695ecae74a6aea976a4fb13018b7f0d0f10536146181cbca70ef`. |
 | Document register | Revision 1 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_1_2026-10-24.md` | SHA-256 `4941b6c9c10d976ba7575d92973641bebb9a593697e37741b3c4d18ea1e822c1`. |
 | Document register | Revision 2 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_2_2026-10-24.md` | SHA-256 `5eeccf0791992b93e263330f210a81b4d2f900e086ae4c7eac65dc3f31abb279`. |
+| Document register | Revision 3 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_3_2026-10-24.md` | SHA-256 `030a2eec6772f304c5a1e6513aea1cf9628dd6e4e3fcb7cf8fe216924ae0a79f`. |
 
 ## Files that name the Revision 6 file
 
