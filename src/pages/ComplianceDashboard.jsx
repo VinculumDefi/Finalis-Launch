@@ -45,7 +45,7 @@ export default function ComplianceDashboard() {
           <span className="mx-2">·</span>
           <span className="font-semibold text-slate-300">Audit Date:</span> 2026-08-01
           <span className="mx-2">·</span>
-          <span className="font-semibold text-slate-300">Governing Rule:</span> Master Spec is sole governing expression; all code traces to protocol constants in vfRevision6Authority.js
+          <span className="font-semibold text-slate-300">Governing Rule:</span> Master Spec is sole governing expression; all code traces to protocol constants in vfSpecAuthority.js
         </div>
 
         {/* Summary + Category Breakdown */}
