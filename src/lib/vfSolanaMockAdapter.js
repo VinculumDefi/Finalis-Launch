@@ -13,15 +13,15 @@
 // VF-COM-007/008: "elapsed time, mempool disappearance, endpoint non-observation, or an
 // application timer alone must never clear a still-valid transaction."
 //
-// VF-COM-006: Solana is an account-model mechanism with atomic persistent per-identity state
-// (PDAs) → three qualifying Handshakes per identity. Failed/reverted/invalid attempts consume
-// NO allowance (VF-COM-008).
+// Revision 12: the Handshake (1 hour, $0.01 to $0.02, 5% fee) has no allowance
+// limit. There is no per-identity usage counter and no per-identity refusal;
+// one account may have any number of Handshakes, pending or finished.
 //
 // VF-DEP-001: Dev Fund destination, canonical chain identifier, and deployed program address
 // are DEFERRED EXTERNAL INPUT — not present in Revision 6 constants, must not be invented.
 // =============================================================================
 
-import { SOLANA_HANDSHAKE_ALLOWANCE, LOCK_STATES, ATTEMPT_STATES } from './vfRevision6Authority.js';
+import { LOCK_STATES, ATTEMPT_STATES } from './vfRevision6Authority.js';
 import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE } from './vfDeploymentScope.js';
 
 export class SolanaMockAdapter {
@@ -30,10 +30,6 @@ export class SolanaMockAdapter {
     this.events = [];
     // Attempt tracking: lockId → { identity, isHandshake, state }
     this.attempts = new Map();
-    // VF-COM-006/007: per-identity Handshake usage count
-    this.handshakeUsage = new Map();
-    // VF-COM-007: per-identity pending attempt set (prevention)
-    this.pendingByIdentity = new Map();
     // VF-TOK-002/003: cumulative lifetime issuance (supply state)
     this.supply = { vclmIssued: 0n, chonxIssued: 0n };
     // VF-DEP-001: DEFERRED EXTERNAL INPUT — not invented
@@ -46,48 +42,18 @@ export class SolanaMockAdapter {
     this.events.push({ ...event, timestamp: new Date().toISOString() });
   }
 
-  // VF-COM-006/007: Check allowance and prevention before submission.
-  checkHandshakeEligibility(identity) {
-    const used = this.handshakeUsage.get(identity) || 0;
-    if (used >= SOLANA_HANDSHAKE_ALLOWANCE) {
-      return { ok: false, reason: `VF-COM-007: identity has used all ${SOLANA_HANDSHAKE_ALLOWANCE} qualifying Handshakes` };
-    }
-    const pending = this.pendingByIdentity.get(identity);
-    if (pending && pending.size > 0) {
-      return { ok: false, reason: 'VF-COM-007: identity has an objectively pending attempt — refuse before broadcast' };
-    }
-    return { ok: true, remaining: SOLANA_HANDSHAKE_ALLOWANCE - used };
-  }
-
   // Simulate source submission (creates OBJECTIVELY_PENDING attempt).
-  // VF-COM-007: "The official application must refuse an additional Handshake before broadcast
-  // while the identity is used or has an objectively pending attempt."
+  // Revision 12: a Handshake is never refused for the account's earlier or pending Handshakes.
   submitSimulation({ lockId, identity, isHandshake }) {
     // Solana is not part of this deployment: nothing is submitted (fail closed).
     if (!SOLANA_LOCKS_ENABLED) {
       this._log({ type: 'SUBMISSION_PREVENTED', lockId, identity, reason: SOLANA_NOT_DEPLOYED_MESSAGE });
       return { ok: false, reason: SOLANA_NOT_DEPLOYED_MESSAGE };
     }
-    if (isHandshake) {
-      const check = this.checkHandshakeEligibility(identity);
-      if (!check.ok) {
-        this._log({ type: 'SUBMISSION_PREVENTED', lockId, identity, reason: check.reason });
-        return check;
-      }
-      // Register as pending (prevents duplicate official submission — VF-COM-007)
-      if (!this.pendingByIdentity.has(identity)) this.pendingByIdentity.set(identity, new Set());
-      this.pendingByIdentity.get(identity).add(lockId);
-    }
     const attempt = { lockId, identity, isHandshake, state: ATTEMPT_STATES.OBJECTIVELY_PENDING };
     this.attempts.set(lockId, attempt);
     this._log({ type: 'SOURCE_SUBMITTED', lockId, identity, state: ATTEMPT_STATES.OBJECTIVELY_PENDING });
     return { ok: true, attemptId: lockId, state: ATTEMPT_STATES.OBJECTIVELY_PENDING };
-  }
-
-  // Clear pending (internal helper — never timer-based)
-  _clearPending(attempt) {
-    const set = this.pendingByIdentity.get(attempt.identity);
-    if (set) set.delete(attempt.lockId);
   }
 
   // --- Solana objective disposition: 4 terminal paths (Implementation Brief §4.7) ---
@@ -99,23 +65,17 @@ export class SolanaMockAdapter {
       return { ok: false, reason: 'no pending attempt for this lockId' };
     }
     attempt.state = ATTEMPT_STATES.RECOGNIZED;
-    this._clearPending(attempt);
-    // VF-COM-007: successful qualifying Handshake consumes allowance
-    if (attempt.isHandshake) {
-      this.handshakeUsage.set(attempt.identity, (this.handshakeUsage.get(attempt.identity) || 0) + 1);
-    }
     this._log({ type: 'SOURCE_FINALIZED', lockId, disposition: 'FINALIZED_SUCCESS', state: ATTEMPT_STATES.RECOGNIZED });
     return { ok: true, state: ATTEMPT_STATES.RECOGNIZED, disposition: 'FINALIZED_SUCCESS' };
   }
 
-  // Path 2: Finalized failure → NOT_RECOGNIZED (VF-COM-008: no allowance consumed)
+  // Path 2: Finalized failure → NOT_RECOGNIZED
   finalizeFailure(lockId) {
     const attempt = this.attempts.get(lockId);
     if (!attempt || attempt.state !== ATTEMPT_STATES.OBJECTIVELY_PENDING) {
       return { ok: false, reason: 'no pending attempt for this lockId' };
     }
     attempt.state = ATTEMPT_STATES.NOT_RECOGNIZED;
-    this._clearPending(attempt);
     this._log({ type: 'SOURCE_FINALIZED', lockId, disposition: 'FINALIZED_FAILURE', state: ATTEMPT_STATES.NOT_RECOGNIZED });
     return { ok: true, state: ATTEMPT_STATES.NOT_RECOGNIZED, disposition: 'FINALIZED_FAILURE' };
   }
@@ -127,7 +87,6 @@ export class SolanaMockAdapter {
       return { ok: false, reason: 'no pending attempt for this lockId' };
     }
     attempt.state = ATTEMPT_STATES.NOT_RECOGNIZED;
-    this._clearPending(attempt);
     this._log({ type: 'SOURCE_INVALIDATED', lockId, disposition: 'RECENT_BLOCKHASH_EXPIRY', state: ATTEMPT_STATES.NOT_RECOGNIZED });
     return { ok: true, state: ATTEMPT_STATES.NOT_RECOGNIZED, disposition: 'RECENT_BLOCKHASH_EXPIRY' };
   }
@@ -139,7 +98,6 @@ export class SolanaMockAdapter {
       return { ok: false, reason: 'no pending attempt for this lockId' };
     }
     attempt.state = ATTEMPT_STATES.NOT_RECOGNIZED;
-    this._clearPending(attempt);
     this._log({ type: 'SOURCE_INVALIDATED', lockId, disposition: 'DURABLE_NONCE_ADVANCEMENT', state: ATTEMPT_STATES.NOT_RECOGNIZED });
     return { ok: true, state: ATTEMPT_STATES.NOT_RECOGNIZED, disposition: 'DURABLE_NONCE_ADVANCEMENT' };
   }
@@ -168,7 +126,5 @@ export class SolanaMockAdapter {
   reset() {
     this.events = [];
     this.attempts = new Map();
-    this.handshakeUsage = new Map();
-    this.pendingByIdentity = new Map();
   }
 }
