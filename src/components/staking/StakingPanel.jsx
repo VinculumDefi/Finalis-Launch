@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { STAKE_DURATIONS } from '@/lib/vfRevision6Authority';
+import { STAKE_DURATIONS } from '@/lib/vfSpecAuthority';
 import { formatTokenAmount } from '@/lib/vfTokenEngine';
 import { TOKEN_MULTIPLIER_BPS, EPOCH_SECS } from '@/lib/vfStakingEngine';
 import { makeSimulatorStakeChain, previewClaimAll, runClaimAll, stoppedMessage, MAX_CLAIM_GAS } from '@/lib/vfClaimPlanner';
