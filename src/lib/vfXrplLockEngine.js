@@ -7,8 +7,9 @@
 //   - Vinculum_Finalis_Base44_Implementation_Brief.md
 //
 // This module implements the protocol domain logic for the XRPL environment:
-// validation, fee calculation, emission decay, output calculation, Handshake
-// identity/allowance, and the lock state machine.
+// validation, fee calculation, emission decay, output calculation, the source
+// account label, and the lock state machine. Revision 12: the Handshake has no
+// allowance limit and no Handshake identity.
 //
 // Every function cites the governing requirement IDs it enforces.
 // No value is fabricated. No Solana/EVM logic is reused (clean-room rule).
@@ -25,7 +26,7 @@ import {
   TOKEN_HARD_CAPS,
 } from './vfRevision6Authority.js';
 import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP } from './vfLiveRules.js';
-import { XRPL_ENVIRONMENT, XRPL_HANDSHAKE_ALLOWANCE } from './vfXrplAuthority.js';
+import { XRPL_ENVIRONMENT } from './vfXrplAuthority.js';
 import { XRPL_REGISTRY } from './vfXrplRegistry.js';
 import { isOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
 
@@ -95,12 +96,13 @@ export function validateBaseRecipient(addr) {
 }
 
 // ---------------------------------------------------------------------------
-// Handshake identity — VF-COM-005
+// Source account label
 // ---------------------------------------------------------------------------
 
-// VF-COM-005: "For an account-model mechanism it is the source environment combined
-// with the source account." XRPL is account-model → identity = (XRPL, source_account).
-export function buildHandshakeIdentity(sourceAccount) {
+// Labels an attempt with (environment, source account) for display and logs.
+// Revision 12: this is not a Handshake identity and nothing counts or limits
+// Handshakes per account.
+export function buildSourceIdentity(sourceAccount) {
   if (!sourceAccount) return null;
   return `(${XRPL_ENVIRONMENT.name}, ${sourceAccount})`;
 }
@@ -327,7 +329,7 @@ export function validateLockRequest({
     checks.push({ id: 'VF-PRI-003', pass: true });
   }
 
-  // VF-COM-005: source account required for Handshake identity
+  // VF-COM-005: a valid source account is required (it signs the lock)
   if (!sourceAccount || !validateXrplAddress(sourceAccount)) {
     errors.push('VF-COM-005: invalid source account (XRPL r-address format)');
     checks.push({ id: 'VF-COM-005', pass: false });
@@ -411,6 +413,6 @@ export function validateLockRequest({
     fee: feeResult.ok ? { fee: feeResult.fee, principal: feeResult.principal, gross: feeResult.gross, bps: feeResult.bps } : null,
     asset,
     handshake,
-    identity: sourceAccount ? buildHandshakeIdentity(sourceAccount) : null,
+    identity: sourceAccount ? buildSourceIdentity(sourceAccount) : null,
   };
 }
