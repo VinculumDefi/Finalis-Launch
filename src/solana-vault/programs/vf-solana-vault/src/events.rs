@@ -55,16 +55,6 @@ pub struct FeeTransferred {
 }
 
 #[event]
-pub struct HandshakeConsumed {
-    /// Source account label. Revision 12 has no Handshake allowance limit.
-    pub identity: String,
-    /// Record count of 1-hour Handshakes. Never a limit (Revision 12).
-    pub used: u32,
-    /// Layout field from Revision 6. Never a limit (Revision 12).
-    pub remaining: u32,
-}
-
-#[event]
 pub struct PrincipalReleased {
     /// VF-XCH-013: Lock identifier.
     pub lock_id: String,
