@@ -9,6 +9,8 @@ export const STATUS = {
   EXTERNAL: 'External Dependency',
   DEPLOYMENT: 'Requires Deployment',
   DATA: 'Requires Authoritative Data',
+  // A Revision 6 rule that a later revision replaced. Not a gap.
+  SUPERSEDED: 'Superseded',
 };
 
 export const STATUS_META = {
@@ -51,6 +53,14 @@ export const STATUS_META = {
     text: 'text-rose-400',
     border: 'border-rose-500/30',
     dot: 'bg-rose-500',
+  },
+  [STATUS.SUPERSEDED]: {
+    label: 'Superseded',
+    color: 'slate',
+    bg: 'bg-slate-500/10',
+    text: 'text-slate-400',
+    border: 'border-slate-500/30',
+    dot: 'bg-slate-500',
   },
 };
 
@@ -106,10 +116,10 @@ export const REQUIREMENTS = [
   { id: 'VF-COM-002', category: 'Commitment Vault', title: 'No interpolation', status: STATUS.IMPLEMENTED, trace: 'Duration lookup exact-match only' },
   { id: 'VF-COM-003', category: 'Commitment Vault', title: 'Handshake $0.01-$0.02 (Rev 12; Revision 6 said $0.95-$1.05)', status: STATUS.IMPLEMENTED, trace: 'checkUsdBounds() with vfLiveRules.js, matching HANDSHAKE_USD_MIN/MAX in the contracts; BTC/BCH/LTC use the coin unit band in vfUtxoMinimumLock.js, counted as at most $0.02; T-12; live-rules.test.js' },
   { id: 'VF-COM-004', category: 'Commitment Vault', title: 'Handshake fee 5.00% (Rev 12; Revision 6 said 2.50%)', status: STATUS.IMPLEMENTED, trace: 'CommitmentVaultLock.sol STANDARD_FEE_BPS = 500 on every duration; checkFeeMath() and the mock builders use feeBpsForDuration() from vfLiveRules.js (500 bps); live-rules.test.js' },
-  { id: 'VF-COM-005', category: 'Commitment Vault', title: 'Identity key = env + source-chain identity', status: STATUS.IMPLEMENTED, trace: 'buildHandshakeIdentity() in XRPL engine' },
-  { id: 'VF-COM-006', category: 'Commitment Vault', title: 'Allowance consumed at source completion', status: STATUS.PARTIAL, trace: 'Solana consume_handshake(); UTXO/XRPL/Stellar deployable pending' },
-  { id: 'VF-COM-007', category: 'Commitment Vault', title: 'Over-limit rejection before recognition', status: STATUS.PARTIAL, trace: 'checkHandshakeAllowance(); deployable verifier pending' },
-  { id: 'VF-COM-008', category: 'Commitment Vault', title: 'Failed/reverted attempts consume no allowance', status: STATUS.IMPLEMENTED, trace: 'Solana transaction atomicity; PendingAttemptLifecycle' },
+  { id: 'VF-COM-005', category: 'Commitment Vault', title: 'Identity key = env + source-chain identity (Revision 6)', status: STATUS.SUPERSEDED, trace: 'Superseded by Revision 12 (no Handshake allowance limit, no handshakeIdentity, no allowance counter). buildSourceIdentity() only labels the source account.' },
+  { id: 'VF-COM-006', category: 'Commitment Vault', title: 'Allowance consumed at source completion (Revision 6)', status: STATUS.SUPERSEDED, trace: 'Superseded by Revision 12 (no Handshake allowance limit, no handshakeIdentity, no allowance counter)' },
+  { id: 'VF-COM-007', category: 'Commitment Vault', title: 'Over-limit rejection before recognition (Revision 6)', status: STATUS.SUPERSEDED, trace: 'Superseded by Revision 12 (no Handshake allowance limit, no handshakeIdentity, no allowance counter)' },
+  { id: 'VF-COM-008', category: 'Commitment Vault', title: 'Failed/reverted attempts consume no allowance (Revision 6)', status: STATUS.SUPERSEDED, trace: 'Superseded by Revision 12 (no Handshake allowance limit, no handshakeIdentity, no allowance counter). PendingAttemptLifecycle still clears attempts only on chain-native terminal evidence.' },
   { id: 'VF-COM-009', category: 'Commitment Vault', title: '7d-3650d require $0.01+ (contract minimum) and 5.00% fee', status: STATUS.IMPLEMENTED, trace: 'checkUsdBounds() with vfLiveRules.js, matching STANDARD_USD_MIN = 0.01e18; STANDARD_FEE_BPS=500; T-11. The $10.00 figure is Revision 6 history only' },
   { id: 'VF-COM-010', category: 'Commitment Vault', title: 'Zero amount invalid', status: STATUS.IMPLEMENTED, trace: 'computeFee() rejects gross<=0' },
   { id: 'VF-COM-011', category: 'Commitment Vault', title: 'Fee = floor(gross*bps/10000)', status: STATUS.IMPLEMENTED, trace: 'checkFeeMath(); T-13' },
@@ -125,7 +135,7 @@ export const REQUIREMENTS = [
   { id: 'VF-COM-021', category: 'Commitment Vault', title: 'Full output to bound recipient', status: STATUS.IMPLEMENTED, trace: 'mintVclm(to, amount) from pkg.base_recipient' },
   { id: 'VF-COM-022', category: 'Commitment Vault', title: 'No classification/history on fungible tokens', status: STATUS.IMPLEMENTED, trace: 'Standard ERC-20, no metadata attached' },
   { id: 'VF-COM-023', category: 'Commitment Vault', title: 'Lock not renewable', status: STATUS.IMPLEMENTED, trace: 'Solana — unique PDA per lock; no renewal' },
-  { id: 'VF-COM-024', category: 'Commitment Vault', title: 'Non-1h consumes no Handshake allowance', status: STATUS.IMPLEMENTED, trace: 'Solana: if is_handshake { consume }' },
+  { id: 'VF-COM-024', category: 'Commitment Vault', title: 'Non-1h consumes no Handshake allowance (Revision 6)', status: STATUS.SUPERSEDED, trace: 'Superseded by Revision 12 (no Handshake allowance limit, no handshakeIdentity, no allowance counter)' },
   { id: 'VF-COM-025', category: 'Commitment Vault', title: 'CHONX active at creation via causal receipt', status: STATUS.PARTIAL, trace: 'checkOutputEligibility requires receipt; deployable activation channel pending' },
   { id: 'VF-COM-026', category: 'Commitment Vault', title: 'Out-of-range 1h cannot become recognized lock', status: STATUS.PARTIAL, trace: 'checkUsdBounds() (Rev 12 band $0.01 to $0.02); deployable verifier pending' },
 
