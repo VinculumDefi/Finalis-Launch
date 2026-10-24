@@ -24,7 +24,7 @@ import {
   ASSET_CLASS_MULTIPLIERS_BPS,
   CHONX_ACTIVATION_THRESHOLD,
   TOKEN_HARD_CAPS,
-} from './vfRevision6Authority.js';
+} from './vfSpecAuthority.js';
 import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP } from './vfLiveRules.js';
 import { XRPL_ENVIRONMENT } from './vfXrplAuthority.js';
 import { XRPL_REGISTRY } from './vfXrplRegistry.js';
