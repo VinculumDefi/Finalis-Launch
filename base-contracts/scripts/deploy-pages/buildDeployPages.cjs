@@ -21,7 +21,13 @@ const { execFileSync } = require("child_process");
 const bs58mod = require("bs58");
 const { ed25519 } = require("@noble/curves/ed25519");
 const { sha256 } = require("@noble/hashes/sha256");
-const { EVM_DEV_FUND, rows } = require("../../deployment/representativeBase.cjs");
+const { EVM_DEV_FUND, HANDSHAKE_RULE, rows } = require("../../deployment/representativeBase.cjs");
+// Revision 12 Handshake, the same line on every page. No allowance limit.
+if (HANDSHAKE_RULE.allowanceLimit !== null || HANDSHAKE_RULE.feeBps !== 500 || HANDSHAKE_RULE.durationSeconds !== 3600) {
+  throw new Error("representativeBase.cjs HANDSHAKE_RULE is not the Revision 12 rule");
+}
+const HANDSHAKE_LINE = "Handshake (" + HANDSHAKE_RULE.authority + "): 1 hour, $" + HANDSHAKE_RULE.usdMin + " to $" + HANDSHAKE_RULE.usdMax +
+  ", " + HANDSHAKE_RULE.feeBps / 100 + "% fee, no allowance limit";
 
 const BC = path.resolve(__dirname, "../..");
 const ROOT = path.resolve(BC, "..");
@@ -585,7 +591,7 @@ function utxoPage(env) {
     "Environment id: " + env,
     "Lock: " + row.lock + " (utxo-locks/lock.py, utxo-locks/script.py)",
     "Dev Fund (" + env + "): " + row.devFund,
-    "Handshake allowance: " + row.handshakeAllowance + " (" + row.reason + ")",
+    HANDSHAKE_LINE,
     "Confirmations required: " + conf + " (utxo-locks/finality.py)",
     "Fee: " + utxo.fee + " bps of gross to the Dev Fund; P2PKH dust minimum " + dust + " smallest units (utxo-locks/lock.py)",
     "Binding: " + binding,
@@ -621,7 +627,7 @@ function solanaPage() {
     "Program id (declare_id! in lib.rs): " + SOLANA_PROGRAM_ID,
     "Config PDA (seed \"" + SEED_CONFIG + "\"): " + SOLANA_CONFIG_PDA.address + " (bump " + SOLANA_CONFIG_PDA.bump + ")",
     "Dev Fund (" + env + "): " + row.devFund,
-    "Handshake allowance: " + row.handshakeAllowance + " (" + row.reason + ")",
+    HANDSHAKE_LINE,
     "",
     "Plan:",
     "  1. anchor build in src/solana-vault (program vf_solana_vault).",
@@ -682,7 +688,7 @@ function stellarPage() {
     "Environment id: " + env,
     "Lock: " + row.lock + " (non-evm-locks/stellar/lock_and_test.mjs)",
     "Dev Fund (" + env + "): " + row.devFund,
-    "Handshake allowance: " + row.handshakeAllowance + " (" + row.reason + ")",
+    HANDSHAKE_LINE,
     "",
     "Per lock, one transaction:",
     "  Payment of 5% of gross to the Dev Fund " + row.devFund,
@@ -715,7 +721,7 @@ function xrplPage() {
     "Environment id: " + env,
     "Lock: " + row.lock + " (non-evm-locks/xrpl/lock_and_test.mjs)",
     "Dev Fund (" + env + "): " + row.devFund,
-    "Handshake allowance: " + row.handshakeAllowance + " (" + row.reason + ")",
+    HANDSHAKE_LINE,
     "",
     "Per lock, two objects bound by SHA-256 of the 117-byte payload:",
     "  Payment of floor(gross * 500 / 10000) drops to the Dev Fund " + row.devFund,
