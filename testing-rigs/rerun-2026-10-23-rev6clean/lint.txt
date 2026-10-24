@@ -1,0 +1,5 @@
+
+> base44-app@0.0.0 lint
+> eslint . --quiet
+
+LINT_EXIT=0
