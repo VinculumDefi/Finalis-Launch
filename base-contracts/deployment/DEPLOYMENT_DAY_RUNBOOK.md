@@ -2,8 +2,9 @@
 
 Founder directive t357u: the launch is Base-only. One page (`base.html`) on
 Base. No lock is deployed on any other chain, no other reader is registered,
-and only the 27 Base rows of Revision B are registered (26 token addresses,
-no aliases). The sixteen lock contracts and their readers stay in the source
+and only the 27 Base rows of registry Revision C are registered (26 token addresses,
+no aliases). Operator decision t367u: Revision C is Revision B with row 454
+Base USDC as S1 (1.5x). The sixteen lock contracts and their readers stay in the source
 tree and are not deployed. The founder signs every transaction.
 
 One document for the day. Plain steps, in order. The short tick list for
@@ -31,8 +32,8 @@ Rules that govern the day:
   epoch (60% of the USD fees recorded) divided by $0.10, in VCLM, shared by
   weight and duration. Epochs start at the Verifier's launch time (finalize).
 - Live price poster: `0x6001…0DB4`.
-- Registry: the Base subset of Revision B (`assetRegistry.revB.json`, 487
-  rows, unchanged): 27 Base rows (26 tokens plus Base ETH), 26 token
+- Registry: the Base subset of Revision C (`assetRegistry.revC.json`, 487
+  rows; Base USDC row 454 is S1, 1.5x): 27 Base rows (26 tokens plus Base ETH), 26 token
   addresses, no aliases. No other environment is registered. cbETH is
   registered and hidden in the app only.
 - Old 2.5% locks (`0x968B…C946` on Base, `0x4eDE…3b1a` on the six other EVM
@@ -58,12 +59,13 @@ In a fresh copy of `main`, from `base-contracts`:
 git pull
 npm install --legacy-peer-deps
 npx hardhat compile --force
-node scripts/build_ceremony_artifacts.cjs
+node scripts/build_ceremony_artifacts.cjs --keep-price
 ```
 
-The last command takes a fresh first Base ETH price into
-`scripts/deploy-pages/ceremony-data.json`. Check the price it prints is today's.
-If it reports no price, stop: the page will not send without one.
+The last command rebuilds `scripts/deploy-pages/ceremony-data.json` from
+Revision C and keeps the committed first Base ETH price (t364u: no price
+refresh before the ceremony; no network call). `git status` should then show
+no change. If it refuses, stop.
 
 Then `git status` should show only `ceremony-data.json` as changed.
 `ceremony.json` must be unchanged. If
