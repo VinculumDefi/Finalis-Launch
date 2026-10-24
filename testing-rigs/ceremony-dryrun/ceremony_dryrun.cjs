@@ -1,9 +1,11 @@
 // Ceremony dry-run, Base-only launch (founder directive t357u). Runs the
 // Base ceremony exactly as base.html does (baseCeremonyFlow.runBaseCeremony,
-// built ceremony.json artifacts, the Base subset of Revision B in
+// built ceremony.json artifacts, the Base subset of registry Revision C in
 // ceremony-data.json: 27 rows, 26 token addresses, 0 aliases, one reader)
 // against a LOCAL fork of Base mainnet, then reconciles the deployed set
-// (Rig 10). Nothing is broadcast: the signer is a local Hardhat test account
+// (Rig 10), then checks Base USDC (row 454): registered as S1 and a real
+// USDC lock on the fork mints at 1.5x the S3 amount (operator decision
+// t367u, Revision C). Nothing is broadcast: the signer is a local Hardhat test account
 // on the in-process fork. No other chain is read or touched.
 //
 // SIMULATE mode is the only mode: stdout is
@@ -40,6 +42,7 @@ const STEPS = [
   "post-finalize state (one reader, no other environment wired)",
   "Base reader with a real lock on the fork",
   "Rig 10 reconciliation: deployed set vs artifacts and ceremony-data",
+  "Base USDC (row 454) is S1: registered class and a real USDC lock minted at 1.5x",
 ];
 let step = 0;
 const gasRows = [];
@@ -56,7 +59,7 @@ async function main() {
   const extra = Object.keys(art).filter((n) => !["TokenVCLM", "TokenCHONX", "VinculumFinalisVerifier", "VinculumFinalisSynth", "VinculumFinalisStake", "BaseCommitmentVaultLock", "BaseLockRecordVerifier"].includes(n));
   if (extra.length) throw new Error(`ceremony.json carries non-Base contracts: ${extra.join(", ")}`);
   if (DATA.baseOnly !== true) throw new Error("ceremony-data is not marked baseOnly");
-  if (DATA.registryRows !== 487) throw new Error(`registry source has ${DATA.registryRows} rows, expected 487 (Revision B)`);
+  if (DATA.registryRows !== 487) throw new Error(`registry source has ${DATA.registryRows} rows, expected 487 (Revision C)`);
   if (DATA.entries.length !== 27) throw new Error(`registry has ${DATA.entries.length} rows, expected 27 Base rows`);
   if (DATA.tokenAddresses.length !== 26) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 26`);
   if (DATA.assetRowAliases.length !== 0) throw new Error(`${DATA.assetRowAliases.length} aliases, expected 0`);
@@ -174,6 +177,68 @@ async function main() {
   fs.writeFileSync(path.join(__dirname, "../reconciliation/reconciliation_dryrun.json"), JSON.stringify(recon, null, 1));
   err(`  reconciliation: ${JSON.stringify(recon.counts)}`);
 
+  at(11);
+  // Revision C (t367u): Base USDC is S1. Read the class the ceremony wrote,
+  // then lock real USDC on the fork and compare the mint with the Verifier's
+  // own mint math at S3. Runs after reconciliation, so the reconciled set is
+  // the ceremony's own state. Local fork only; the poster is impersonated
+  // locally to post a $1.00 USDC price (run 2); nothing is broadcast.
+  const usdcRow = DATA.entries.find((e) => e.row === 454);
+  if (!usdcRow || usdcRow.environmentId !== "Base" || !/USDC/.test(usdcRow.symbol || usdcRow.assetId || "USDC")) throw new Error("ceremony-data has no Base USDC row 454");
+  if (usdcRow.custodyClass !== 1) throw new Error(`ceremony-data row 454 custodyClass ${usdcRow.custodyClass}, expected 1 (S1, Revision C)`);
+  const usdcKey = ethers.keccak256(ethers.solidityPacked(["string", "bytes32"], ["Base", usdcRow.canonicalAssetId]));
+  const onchain = await V.assetPrecisionTable(usdcKey);
+  if (onchain.canonicalAssetId !== usdcRow.canonicalAssetId) throw new Error("Base USDC row 454 not registered");
+  if (Number(onchain.custodyClass) !== 1) throw new Error(`Base USDC registered as custodyClass ${onchain.custodyClass}, expected 1`);
+  const usdcTok = DATA.tokenAddresses.find((t) => t.canonicalAssetId === usdcRow.canonicalAssetId);
+  if (!usdcTok) throw new Error("Base USDC is not in the token address index");
+  const USDC = ethers.getAddress(usdcTok.token || usdcTok.address);
+  const posterAddr = await V.scheduledPricePoster();
+  await ethers.provider.send("hardhat_impersonateAccount", [posterAddr]);
+  await ethers.provider.send("hardhat_setBalance", [posterAddr, "0x56BC75E2D63100000"]);
+  const P = await ethers.getSigner(posterAddr);
+  const nextRun = (await V.lastScheduledRunId()) + 1n;
+  await (await V.connect(P).applyScheduledPriceRun(nextRun, [{ success: true, environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd18: 10n ** 18n }])).wait();
+  await ethers.provider.send("hardhat_stopImpersonatingAccount", [posterAddr]);
+  // Fund the test account with real USDC on the fork: FiatToken keeps
+  // balances in slot 9 (balanceAndBlacklistStates). Checked with balanceOf.
+  const erc = new ethers.Contract(USDC, ["function balanceOf(address) view returns (uint256)", "function approve(address,uint256) returns (bool)"], S);
+  const amt = 1000n * 10n ** 6n;
+  const slot = ethers.keccak256(coder.encode(["address", "uint256"], [S.address, 9]));
+  await ethers.provider.send("hardhat_setStorageAt", [USDC, slot, ethers.toBeHex(amt, 32)]);
+  if ((await erc.balanceOf(S.address)) !== amt) throw new Error("could not fund the test account with fork USDC");
+  await (await erc.approve(await r.lock.getAddress(), amt)).wait();
+  const uLockId = ethers.id("dryrun:usdc:" + Date.now());
+  const dur = 604800n;
+  await (await r.lock.connect(S).createErc20Lock(uLockId, S.address, 0, usdcRow.canonicalAssetId, ethers.ZeroHash, S.address, dur, USDC, amt, (amt * 10n ** 18n) / 10n ** 6n)).wait();
+  const uRec = await r.lock.lockRecord(uLockId);
+  const uPkg = {
+    ...pkg, commitmentVaultLockId: uLockId, canonicalAssetId: usdcRow.canonicalAssetId, assetPrecision: 6, assetCustodyClass: 1,
+    grossAmountSmallestUnits: uRec.gross, actualFeeAmountSmallestUnits: uRec.fee, principalAmountSmallestUnits: uRec.principal,
+    feeAssetId: usdcRow.canonicalAssetId, feeTransferEvidence: ethers.id("fee:" + uLockId),
+    valuationTimestamp: uRec.createdAt, maturityTimestamp: uRec.maturity, durationSecs: uRec.duration,
+    racIdentity: ethers.id("rac:" + uLockId),
+    lockEventProof: coder.encode(["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
+      [uLockId, uRec.gross, uRec.fee, uRec.principal, uRec.duration, uRec.createdAt, uRec.maturity]),
+  };
+  const v0 = await r.vclm.balanceOf(S.address);
+  await (await V.connect(S).recordFeeAndRac(uPkg)).wait();
+  await (await V.connect(S).verifyAndMint(uPkg, 0)).wait();
+  const uMinted = (await r.vclm.balanceOf(S.address)) - v0;
+  // The Verifier's own mint math (previewIssuance = _computeIssuance) at the
+  // same USD, output, duration and emission day, for S1 and for S3.
+  const launchTs = await V.protocolLaunchTimestamp();
+  const days = uRec.createdAt > launchTs ? (uRec.createdAt - launchTs) / 86400n : 0n;
+  // The Verifier's valuation: (gross * 1e18 / 10^decimals) * price / 1e18, at $1.00.
+  const usdMicro = (((uRec.gross * 10n ** 18n) / 10n ** 6n) * 10n ** 18n) / 10n ** 18n;
+  const asS1 = await V.previewIssuance(usdMicro, 0, 1, dur, days);
+  const asS3 = await V.previewIssuance(usdMicro, 0, 3, dur, days);
+  if (uMinted !== asS1) throw new Error(`Base USDC minted ${uMinted}, the S1 mint math gives ${asS1}`);
+  const ratioBps = (uMinted * 10000n) / asS3;
+  if (ratioBps !== 15000n) throw new Error(`Base USDC minted ${ratioBps} bps of the S3 amount, expected 15000 (1.5x)`);
+  const usdcLine = `Base USDC (row 454): registered custodyClass ${onchain.custodyClass} (S1); 1000 USDC 7-day lock minted ${ethers.formatEther(uMinted)} VCLM vs ${ethers.formatEther(asS3)} at S3 = ${ratioBps} bps (${Number(ratioBps) / 10000}x)`;
+  err("  " + usdcLine);
+
   const maxTx = gasRows.reduce((m, x) => (x.gasLimit > m.gasLimit ? x : m), gasRows[0]);
   const total = gasRows.filter((x) => x.step <= 7).reduce((s, x) => s + x.gasUsed, 0n);
   err(`  ceremony transactions ${gasRows.filter((x) => x.step <= 7).length}, total gas used ${total}, largest gas limit ${maxTx.gasLimit} at step ${maxTx.step} (cap ${TX_GAS_CAP})`);
@@ -181,6 +246,7 @@ async function main() {
   fs.writeFileSync(path.join(__dirname, "dryrun_gas.json"), JSON.stringify(gasRows.map((x) => ({ step: x.step, gasLimit: String(x.gasLimit), gasUsed: String(x.gasUsed), to: short(x.to), created: short(x.created) })), null, 1));
   process.stdout.write(MODE_LINE + "\n");
   process.stdout.write("ceremony would succeed\n");
+  process.stdout.write(usdcLine + "\n");
   process.stdout.write(recon.verdict + "\n");
   if (recon.verdict !== "reconciliation PASS") process.exitCode = 2;
 }
