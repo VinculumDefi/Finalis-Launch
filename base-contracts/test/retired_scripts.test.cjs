@@ -69,7 +69,7 @@ describe("retired broadcast scripts and pages", function () {
   });
 
   it("the compiled Stake has exactly the four TRS rows from the app source, 120 days = 2.10x", async () => {
-    const src = await import(pathToFileURL(path.join(ROOT, "..", "src", "lib", "vfRevision6Authority.js")).href);
+    const src = await import(pathToFileURL(path.join(ROOT, "..", "src", "lib", "vfSpecAuthority.js")).href);
     const rows = src.STAKE_DURATIONS.map((d) => [Number(d.secs), Number(d.multiplier_bps)]);
     const DAY = 86400;
     expect(rows).to.deep.equal([[30 * DAY, 10000], [60 * DAY, 14000], [90 * DAY, 17500], [120 * DAY, 21000]]);
