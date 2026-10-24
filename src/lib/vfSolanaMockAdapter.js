@@ -21,7 +21,7 @@
 // are DEFERRED EXTERNAL INPUT — not present in Revision 6 constants, must not be invented.
 // =============================================================================
 
-import { LOCK_STATES, ATTEMPT_STATES } from './vfRevision6Authority.js';
+import { LOCK_STATES, ATTEMPT_STATES } from './vfSpecAuthority.js';
 import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE } from './vfDeploymentScope.js';
 
 export class SolanaMockAdapter {
