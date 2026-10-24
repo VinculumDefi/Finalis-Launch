@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { formatTokenAmount } from '@/lib/vfTokenEngine';
-import { SYNTH_FORGE } from '@/lib/vfRevision6Authority';
+import { SYNTH_FORGE } from '@/lib/vfSpecAuthority';
 import { Flame } from 'lucide-react';
 
 export default function ForgePanel({ tokenState, onForge, account }) {
