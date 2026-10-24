@@ -107,34 +107,6 @@ fn validate_and_compute(params: &CommitVaultLockParams) -> Result<(u128, u128, b
     Ok((fee, principal, is_handshake))
 }
 
-/// Updates the Handshake record account. Rev 12 (fix 2026-10-23, AG-20)
-/// removed the Handshake allowance, so this only records the count and never
-/// refuses a Handshake. Called by both handlers when is_handshake is true.
-fn consume_handshake(
-    ha: &mut HandshakeAllowance,
-    signer: &Pubkey,
-    bump: u8,
-) -> Result<()> {
-    // Initialize on first creation.
-    if ha.identity.is_empty() {
-        ha.identity = format!("({},{})", SOURCE_ENVIRONMENT, signer);
-        ha.source_account = *signer;
-        ha.bump = bump;
-    }
-
-    // Rev 12: no allowance limit, so there is no remaining-allowance check.
-    ha.used = ha.used.saturating_add(1);
-    ha.remaining = ha.allowance.saturating_sub(ha.used);
-
-    emit!(HandshakeConsumed {
-        identity: ha.identity.clone(),
-        used: ha.used,
-        remaining: ha.remaining,
-    });
-
-    Ok(())
-}
-
 /// Writes the lock record fields (shared by native and SPL).
 fn write_lock_record(
     record: &mut LockRecord,
@@ -193,15 +165,6 @@ pub struct CommitVaultLockNative<'info> {
     )]
     pub lock_record: Account<'info, LockRecord>,
 
-    #[account(
-        init_if_needed,
-        payer = signer,
-        space = 8 + HandshakeAllowance::LEN,
-        seeds = [SEED_HANDSHAKE, signer.key().as_ref()],
-        bump
-    )]
-    pub handshake_allowance: Account<'info, HandshakeAllowance>,
-
     /// CHECK: Verified against config.dev_fund_destination (VF-DEP-002).
     #[account(mut, constraint = dev_fund.key() == config.dev_fund_destination @ ErrorCode::DevFundMismatch)]
     pub dev_fund: AccountInfo<'info>,
@@ -214,7 +177,7 @@ pub fn commit_native(
     params: CommitVaultLockParams,
 ) -> Result<()> {
     // VF-ARC-004: Validate all parameters before any assets move.
-    let (fee, principal, is_handshake) = validate_and_compute(&params)?;
+    let (fee, principal, _is_handshake) = validate_and_compute(&params)?;
 
     let canonical_asset = "SOL".to_string();
     let clock = Clock::get()?;
@@ -252,14 +215,8 @@ pub fn commit_native(
         ctx.bumps.lock_record,
     );
 
-    // --- Handshake record (layout only; Revision 12 has no allowance limit) ---
-    if is_handshake {
-        consume_handshake(
-            &mut ctx.accounts.handshake_allowance,
-            &ctx.accounts.signer.key(),
-            ctx.bumps.handshake_allowance,
-        )?;
-    }
+    // Revision 12: no Handshake allowance and no per-wallet counter. A wallet
+    // may create any number of 1-hour Handshakes; nothing is recorded or checked.
 
     // --- Events (evidence trail) ---
     emit!(LockCreated {
@@ -310,15 +267,6 @@ pub struct CommitVaultLockSpl<'info> {
     )]
     pub lock_record: Account<'info, LockRecord>,
 
-    #[account(
-        init_if_needed,
-        payer = signer,
-        space = 8 + HandshakeAllowance::LEN,
-        seeds = [SEED_HANDSHAKE, signer.key().as_ref()],
-        bump
-    )]
-    pub handshake_allowance: Account<'info, HandshakeAllowance>,
-
     // SPL token accounts
     /// Source token account — owned by the signer.
     #[account(
@@ -357,7 +305,7 @@ pub fn commit_spl(
     params: CommitVaultLockParams,
 ) -> Result<()> {
     // VF-ARC-004: Validate all parameters before any assets move.
-    let (fee, principal, is_handshake) = validate_and_compute(&params)?;
+    let (fee, principal, _is_handshake) = validate_and_compute(&params)?;
 
     let canonical_asset = ctx.accounts.mint.key().to_string();
     let clock = Clock::get()?;
@@ -403,14 +351,8 @@ pub fn commit_spl(
         ctx.bumps.lock_record,
     );
 
-    // --- Handshake record (layout only; Revision 12 has no allowance limit) ---
-    if is_handshake {
-        consume_handshake(
-            &mut ctx.accounts.handshake_allowance,
-            &ctx.accounts.signer.key(),
-            ctx.bumps.handshake_allowance,
-        )?;
-    }
+    // Revision 12: no Handshake allowance and no per-wallet counter. A wallet
+    // may create any number of 1-hour Handshakes; nothing is recorded or checked.
 
     // --- Events ---
     emit!(LockCreated {
@@ -508,14 +450,13 @@ mod rev12_tests {
     }
 
     #[test]
-    fn handshake_record_never_refuses() {
-        let signer = Pubkey::new_unique();
-        let mut ha = HandshakeAllowance::default();
-        for i in 1..=10u32 {
-            assert!(consume_handshake(&mut ha, &signer, 254).is_ok());
-            assert_eq!(ha.used, i);
+    fn repeated_handshakes_are_never_refused() {
+        // Revision 12: there is no allowance limit and no per-wallet state, so
+        // the same valid 1-hour Handshake validates any number of times.
+        for _ in 0..10 {
+            let (fee, principal, hs) = validate_and_compute(&params(3600, CENT, 10_000)).unwrap();
+            assert!(hs);
+            assert_eq!((fee, principal), (500, 9_500));
         }
-        assert_eq!(ha.remaining, 0);
-        assert!(consume_handshake(&mut ha, &signer, 254).is_ok());
     }
 }
