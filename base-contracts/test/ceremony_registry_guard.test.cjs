@@ -1,4 +1,7 @@
 // t284u / t285u: ceremony registry SHA-256 guard, manifest checks, Connect gate.
+// t357u (Base-only launch): the source stays Revision B (487 rows); the ceremony
+// data carries only its Base subset (27 rows, 26 token addresses, 0 aliases),
+// and base.html is the only page, so its own Connect gate is tested here.
 const { expect } = require("chai");
 const fs = require("fs");
 const path = require("path");
@@ -15,7 +18,6 @@ const {
 } = require("../scripts/build_ceremony_artifacts.cjs");
 const { resolveCeremonyRegistry, REGISTRY_FILE } = require("../scripts/deploy-pages/resolveAssetRegistry.cjs");
 const { HISTORICAL_FILE, loadRegistry } = require("../scripts/registryFile.cjs");
-const { renderConnectGatePage } = require("../scripts/deploy-pages/registryGate.cjs");
 
 const PAGES = path.join(__dirname, "..", "scripts", "deploy-pages");
 const CEREMONY_DATA = path.join(PAGES, "ceremony-data.json");
@@ -33,12 +35,18 @@ describe("ceremony registry guard (t284u / t285u)", function () {
     expect(r.baseEth.row).to.equal(2);
   });
 
-  it("ceremony artifact row count is 487, source equals resolver, hash equals constant", function () {
+  it("ceremony artifact: source 487 rows, Base subset 27/26/0, source equals resolver, hash equals constant", function () {
     const resolved = assertCanonicalRegistry();
     expect(fs.existsSync(CEREMONY_DATA)).to.equal(true);
     const data = JSON.parse(fs.readFileSync(CEREMONY_DATA, "utf8"));
     expect(data.registryRows).to.equal(EXPECTED_REGISTRY_ROWS);
-    expect(data.entries.length).to.equal(EXPECTED_REGISTRY_ROWS);
+    expect(data.entries.length).to.equal(27);
+    expect(data.entries.every((e) => e.environmentId === "Base")).to.equal(true);
+    const key = (e) => e.row + ":" + e.canonicalAssetId;
+    expect(data.entries.map(key)).to.deep.equal(resolved.entries.filter((e) => e.environmentId === "Base").map(key));
+    expect(data.tokenAddresses.length).to.equal(26);
+    expect(data.tokenAddresses.every((t) => t.environmentId === "Base")).to.equal(true);
+    expect(data.assetRowAliases.length).to.equal(0);
     expect(data.registrySha256).to.equal(EXPECTED_REGISTRY_SHA256);
     expect(data.registrySha256).to.equal(resolved.sha256);
     expect(data.registrySource).to.equal(resolved.filename);
@@ -112,9 +120,9 @@ describe("ceremony registry guard (t284u / t285u)", function () {
     }
   });
 
-  it("manifest check refuses missing fee language on an EVM lock page", function () {
-    // Exercise the refused() helper shape for deployOrder / fee via a temp page.
-    const ethPage = path.join(PAGES, "ethereum.html");
+  it("manifest check refuses missing fee language on base.html", function () {
+    // Exercise the refused() helper shape for the fee check via a temp edit.
+    const ethPage = path.join(PAGES, "base.html");
     const original = fs.readFileSync(ethPage, "utf8");
     fs.writeFileSync(ethPage, original.replace(/5\.00% of gross/g, "2.50% of gross"));
     try {
@@ -122,7 +130,8 @@ describe("ceremony registry guard (t284u / t285u)", function () {
       try {
         verifyCeremonyManifest();
       } catch (e) {
-        expect(e.refusedMessage).to.match(/feeLanguage/);
+        // base.html is a packaged artifact; digest mismatch or fee language is refused.
+        expect(e.refusedMessage).to.match(/feeLanguage|artifact\.base\.html\.sha256/);
       }
     } finally {
       fs.writeFileSync(ethPage, original);
@@ -192,29 +201,28 @@ describe("ceremony registry guard (t284u / t285u)", function () {
     }
   });
 
-  it("page gate: N != 487 disables Connect and shows WRONG REGISTRY", function () {
-    const html = renderConnectGatePage({
-      filename: "assetRegistry.resolved.json",
-      rowCount: 962,
-      sha256: "00".repeat(32),
-      buttonId: "connect",
-      buttonLabel: "Connect wallet",
-    });
-    expect(html).to.include("WRONG REGISTRY: expected 487 rows, found 962");
-    expect(html).to.include('id="connect"');
-    expect(html).to.include("window.__REGISTRY_ROW_COUNT = 962");
-    expect(html).to.include("btn.disabled = true");
-    expect(html).to.match(/style="color:red;display:block"/);
+  // base.html's own Connect gate (registryProblem), run outside the browser.
+  function baseGate() {
+    const html = fs.readFileSync(path.join(PAGES, "base.html"), "utf8");
+    const src = html.match(/const EXPECTED_REGISTRY_ROWS = [\s\S]*?\nfunction registryProblem\(d\) \{[\s\S]*?\n\}/);
+    expect(src, "registryProblem in base.html").to.not.equal(null);
+    const body = src[0].replace(/^const (logEl|sealEl|connectBtn) = .*$/gm, "").replace(/^let signer, data;$/m, "");
+    return new Function("document", body + "\nreturn registryProblem;")({ getElementById: () => ({}) });
+  }
+
+  it("page gate: base.html refuses a wrong source count, a wrong Base count or a non-Base row", function () {
+    const gate = baseGate();
+    const data = JSON.parse(fs.readFileSync(CEREMONY_DATA, "utf8"));
+    expect(gate({ ...data, registryRows: 962 })).to.equal("expected 487 source rows, found 962");
+    expect(gate({ ...data, entries: data.entries.slice(1) })).to.equal("expected 27 Base rows, found 26");
+    const bad = data.entries.map((e, i) => (i === 3 ? { ...e, environmentId: "Ethereum" } : e));
+    expect(gate({ ...data, entries: bad })).to.match(/non-Base row/);
+    const html = fs.readFileSync(path.join(PAGES, "base.html"), "utf8");
+    expect(html).to.include('id="registry-wrong" style="display:none"');
+    expect(html).to.include("connectBtn.disabled = true");
   });
 
-  it("page gate: N === 487 leaves the warning hidden", function () {
-    const html = renderConnectGatePage({
-      filename: "assetRegistry.revB.json",
-      rowCount: 487,
-      sha256: EXPECTED_REGISTRY_SHA256,
-    });
-    expect(html).to.include("WRONG REGISTRY: expected 487 rows, found 487");
-    expect(html).to.include('display:none');
-    expect(html).to.include("window.__REGISTRY_ROW_COUNT = 487");
+  it("page gate: base.html passes the committed ceremony-data.json", function () {
+    expect(baseGate()(JSON.parse(fs.readFileSync(CEREMONY_DATA, "utf8")))).to.equal(null);
   });
 });
