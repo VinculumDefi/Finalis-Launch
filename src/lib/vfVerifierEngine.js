@@ -29,7 +29,7 @@ import {
   TOKEN_HARD_CAPS,
   CHONX_ACTIVATION_THRESHOLD,
   ASSET_CLASS_MULTIPLIERS_BPS,
-} from './vfRevision6Authority.js';
+} from './vfSpecAuthority.js';
 import { findEnvironment, findAssetPrecision, getAssetMultiplierBps, isDevFundConfigured } from './vfBaseRegistry.js';
 import { OUTPUT_TOKEN, outputTokenToString, computeRacIdentity } from './vfProofNormalizer.js';
 import { dispatchFinalityCheck, dispatchFactExtraction, isVerifierRegistered } from './vfChainVerifierRegistry.js';
@@ -41,7 +41,7 @@ import { HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP, feeBps
 // Exact BigInt, so the acceptance decision never touches IEEE-754.
 // The values come from vfLiveRules.js, which matches the contracts:
 // Handshake $0.01 to $0.02 inclusive (Rev 12), standard minimum $0.01, and a
-// 5% fee on every duration. The Revision 6 record (vfRevision6Authority.js
+// 5% fee on every duration. The Revision 6 record (vfSpecAuthority.js
 // FIXED_RULES: $0.95 to $1.05, 250 bps, $10.00) is historical and not read here.
 // Bitcoin, Bitcoin Cash and Litecoin native Handshakes use the unit band from
 // vfUtxoMinimumLock.js instead, and their USD for VCLM and RAC is capped at $0.02.
