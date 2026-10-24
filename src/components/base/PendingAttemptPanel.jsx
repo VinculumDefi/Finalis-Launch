@@ -17,7 +17,7 @@ const STATE_STYLES = {
 
 export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, onResolve }) {
   const [envId, setEnvId] = useState('Ethereum');
-  const [handshakeIdentity, setHandshakeIdentity] = useState('');
+  const [sourceIdentity, setSourceIdentity] = useState('');
   const [lockId, setLockId] = useState('');
   const [resolveLockId, setResolveLockId] = useState('');
   const [resolveDisposition, setResolveDisposition] = useState('');
@@ -32,16 +32,16 @@ export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, 
 
   function handleRegister() {
     setError(null);
-    if (!handshakeIdentity || !lockId) {
-      setError('Handshake identity and lock ID are required.');
+    if (!sourceIdentity || !lockId) {
+      setError('Source account and lock ID are required.');
       return;
     }
-    const r = onRegister(envId, handshakeIdentity, lockId, Date.now());
+    const r = onRegister(envId, sourceIdentity, lockId, Date.now());
     if (!r.ok) {
       setError(r.reason);
       return;
     }
-    setHandshakeIdentity('');
+    setSourceIdentity('');
     setLockId('');
   }
 
@@ -79,8 +79,8 @@ export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, 
       <CardContent className="space-y-4">
         <p className="text-xs text-[#6b6b65]">
           Tracks in-flight lock submissions from source submission to finality confirmation.
-          A pending attempt reserves the handshake identity, preventing concurrent reuse.
-          Only chain-native objective terminal dispositions release the reservation.
+          Revision 12: one source account may have any number of attempts, pending or finished.
+          Only chain-native objective terminal dispositions move an attempt out of pending.
         </p>
 
         {/* Stats */}
@@ -104,8 +104,8 @@ export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, 
               </select>
             </label>
             <label className="text-xs space-y-1">
-              <span className="text-[#6b6b65]">Handshake Identity</span>
-              <input type="text" value={handshakeIdentity} onChange={(e) => setHandshakeIdentity(e.target.value)} placeholder="(env, addr)" className="w-full border border-[#18324b]/20 rounded px-2 py-1 text-sm font-mono" />
+              <span className="text-[#6b6b65]">Source account</span>
+              <input type="text" value={sourceIdentity} onChange={(e) => setSourceIdentity(e.target.value)} placeholder="(env, addr)" className="w-full border border-[#18324b]/20 rounded px-2 py-1 text-sm font-mono" />
             </label>
             <label className="text-xs space-y-1">
               <span className="text-[#6b6b65]">Lock ID</span>
@@ -181,7 +181,7 @@ export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, 
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">{a.environmentId}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#6b6b65] font-mono truncate max-w-[120px]">{a.handshakeIdentity}</span>
+                    <span className="text-[10px] text-[#6b6b65] font-mono truncate max-w-[120px]">{a.sourceIdentity}</span>
                     <Badge className={`text-[10px] px-1.5 py-0 ${style.color} ${style.bg} border ${style.border}`} variant="outline">
                       {a.state}
                     </Badge>
@@ -217,8 +217,8 @@ export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, 
 
         <div className="mt-2 pt-2 border-t border-[#18324b]/10 text-xs text-[#6b6b65] space-y-1">
           <p>
-            <strong className="text-[#18324b]">VF-COM-007:</strong> A pending attempt reserves the
-            handshake identity. Concurrent reuse is blocked until a terminal disposition is reached.
+            <strong className="text-[#18324b]">Handshake (Revision 12):</strong> 1 hour, $0.01 to $0.02,
+            5% fee, no allowance limit. A pending attempt never blocks another from the same account.
           </p>
           <p>
             <strong className="text-[#18324b]">VF-COM-008:</strong> Only objective chain-native
