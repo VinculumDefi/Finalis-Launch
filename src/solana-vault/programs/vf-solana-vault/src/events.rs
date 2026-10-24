@@ -56,11 +56,11 @@ pub struct FeeTransferred {
 
 #[event]
 pub struct HandshakeConsumed {
-    /// VF-COM-005: Identity.
+    /// Source account label. Revision 12 has no Handshake allowance limit.
     pub identity: String,
-    /// VF-COM-006: Used count after this Handshake.
+    /// Record count of 1-hour Handshakes. Never a limit (Revision 12).
     pub used: u32,
-    /// VF-COM-006: Remaining count after this Handshake.
+    /// Layout field from Revision 6. Never a limit (Revision 12).
     pub remaining: u32,
 }
 
