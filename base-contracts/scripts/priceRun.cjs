@@ -34,10 +34,14 @@ function toUsd18(usd) {
   return BigInt(m[1]) * 10n ** 18n + BigInt(frac);
 }
 
-// Every registered line of the current registry (Revision B: 486 written rows
-// plus Base ETH = 487), as "environment|canonicalAssetId".
-function registryKeys(regFile) {
-  return new Set(loadRegistry(regFile).all.map((e) => e.environmentId + "|" + e.canonicalAssetId.toLowerCase()));
+// Every line the Verifier has registered, as "environment|canonicalAssetId".
+// Base-only launch (t357u): the ceremony registers only the Base rows of
+// Revision B (26 tokens plus Base ETH = 27), and the Verifier refuses a price
+// line for an unregistered row (VF-REG-001), so by default only Base rows are
+// kept. { baseOnly: false } gives all 487 Revision B rows.
+function registryKeys(regFile, { baseOnly = true } = {}) {
+  return new Set(loadRegistry(regFile).all.filter((e) => !baseOnly || e.environmentId === "Base")
+    .map((e) => e.environmentId + "|" + e.canonicalAssetId.toLowerCase()));
 }
 
 function buildPriceRun(fetched, runId, { registry = registryKeys() } = {}) {
@@ -106,7 +110,7 @@ async function postOnTestChain(hre, verifier, run) {
   }
 }
 
-module.exports = { buildPriceRun, buildPriceRuns, toUsd18, calldata, nextRunId, postOnTestChain, MIN_RUN_ID, MAX_LINES_PER_RUN };
+module.exports = { registryKeys, buildPriceRun, buildPriceRuns, toUsd18, calldata, nextRunId, postOnTestChain, MIN_RUN_ID, MAX_LINES_PER_RUN };
 
 if (require.main === module) {
   const a = process.argv.slice(2);
