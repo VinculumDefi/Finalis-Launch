@@ -2,7 +2,7 @@
 // Rev 6 VF-TOK-007 and VF-REG-008: VCLM, CHONX and SYNTH are prohibited Commitment
 // Vault Lock (CVL) inputs. TRS (stake) and the SYNTH Forge are separate mechanisms.
 // The real Base ceremony flow (baseCeremonyFlow.js) runs as committed.
-//   Path A: 487 rows (the ceremony as built). The Base lock refuses the three
+//   Path A: the 27 Base rows (the Base-only ceremony as built, t357u). The Base lock refuses the three
 //           protocol tokens before any token moves (t262u).
 //   Path B: rows 488-490 with their token addresses: the Verifier refuses the
 //           index write (VF-REG-008), so that ceremony never finalizes.
@@ -12,7 +12,7 @@ const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const DATA = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 
 const SCALE = 10n ** 18n;
 const DAY7 = 604800n;
@@ -49,9 +49,6 @@ function harness(mode) {
   };
   h.setup = async () => {
     [h.signer, h.user, h.recipient, h.dest, h.other] = await ethers.getSigners();
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, h.signer);
-    const newLocks = {};
-    for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, DATA.evmDevFunds[env])).getAddress();
     const log = (s) => {
       h.logs.push(...String(s).split("\n"));
       for (const n of ["VCLM", "CHONX", "Forge"]) {
@@ -59,7 +56,7 @@ function harness(mode) {
         if (m) h.addr[n] = ethers.getAddress(m[1]);
       }
     };
-    h.r = await runBaseCeremony({ ethers, signer: h.signer, art, data: h.data, newLocks, log });
+    h.r = await runBaseCeremony({ ethers, signer: h.signer, art, data: h.data, log });
     await network.provider.send("hardhat_impersonateAccount", [DATA.scheduledPricePoster]);
     await network.provider.send("hardhat_setBalance", [DATA.scheduledPricePoster, "0x56BC75E2D63100000"]);
     h.poster = await ethers.getSigner(DATA.scheduledPricePoster);
@@ -179,14 +176,14 @@ async function cvlRefused(h, sym, token, id, price, amount, label) {
   console.log(`      [${label}] ${sym} lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted`);
 }
 
-describe("t259u/t262u Path A (487 rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
+describe("t259u/t262u Path A (27 Base rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
   before(async () => { await h.setup(); });
 
-  it("A0: 487 rows / 475 token addresses; no protocol-token row or index entry; finalized", async () => {
-    expect(h.logs).to.include("registry 487/487");
-    expect(h.logs).to.include("token addresses 475/475");
+  it("A0: 27 Base rows / 26 Base token addresses; no protocol-token row or index entry; finalized", async () => {
+    expect(h.logs).to.include("registry 27/27");
+    expect(h.logs).to.include("token addresses 26/26");
     for (const id of [VCLM_ID, CHONX_ID, SYNTH_ID]) expect((await h.r.verifier.assetPrecisionTable(key("Base", id))).canonicalAssetId).to.equal(ethers.ZeroHash);
     expect(await h.r.verifier.configurationFinalized()).to.equal(true);
   });
