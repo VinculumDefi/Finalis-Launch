@@ -2,6 +2,7 @@
 
 **Governing source:** Vinculum Finalis Master Specification, Revision 6 (2026-07-28)
 **Governing source SHA-256:** `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`
+**Handshake rules:** superseded by Revision 12 (`docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`): 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit.
 **Total requirements:** 209 (per `Vinculum_Finalis_Requirement_Traceability.csv`)
 
 **Abbreviations:**
@@ -17,12 +18,12 @@
 |--------|-----------------|---------------|-------------|------|--------|
 | VF-COM-001 | Only Section 5.1 durations permitted | `constants.rs:53-70` (`PERMITTED_DURATIONS`) + `commit_vault_lock.rs:30-33` (linear search) | `vfSolanaLockEngine.js:40-42` (`isPermittedDuration`) | T-02, T-08 | Implemented |
 | VF-COM-002 | No intermediate duration or interpolated multiplier | `commit_vault_lock.rs:30-33` (`ok_or(DurationNotPermitted)`) | `vfSolanaLockEngine.js:40-42` | T-08 | Implemented |
-| VF-COM-003 | Qualifying Handshake = 1h with $0.95–$1.05 | `constants.rs:16-17` + `commit_vault_lock.rs:67-72` | `vfSolanaLockEngine.js:348-355` | T-03, T-09 | Implemented |
-| VF-COM-004 | Handshake fee 2.50% routed within chain-native atomic construction | `constants.rs:20` (`HANDSHAKE_FEE_BPS=250`) + `commit_vault_lock.rs:84-88,231-244` (CPI transfer atomic) | `vfSolanaLockEngine.js:117` | T-03 | Implemented |
-| VF-COM-005 | Identity key = source env + source-chain identity (account for account-model) | `commit_vault_lock.rs:117` (`format!("({},{})", SOURCE_ENVIRONMENT, signer)`) + `state.rs:108` (`HandshakeAllowance.identity`) | `vfSolanaLockEngine.js:98-101` (`buildHandshakeIdentity`) | T-03 | Implemented |
-| VF-COM-006 | Three qualifying Handshakes per bound identity (account-model with persistent state) | `constants.rs:44` (`HANDSHAKE_ALLOWANCE=3`) + `state.rs:107-119` (`HandshakeAllowance`) + `commit_vault_lock.rs:110-135` (`consume_handshake`) | `vfSolanaMockAdapter.js:49-59` (`checkHandshakeEligibility`) + `vfRevision6Authority.js` (`SOLANA_HANDSHAKE_ALLOWANCE`) | T-03, T-04 | Implemented |
-| VF-COM-007 | After allowance consumed, additional 1h by same identity rejected before recognition | `commit_vault_lock.rs:123` (`require!(ha.remaining > 0, HandshakeAllowanceExhausted)`) | `vfSolanaMockAdapter.js:50-57` | T-04 | Implemented |
-| VF-COM-008 | Failed/reverted/invalid attempts consume no allowance | `commit_vault_lock.rs:216` (validation before any CPI; revert on failure rolls back `init_if_needed`) | `vfSolanaMockAdapter.js:105-115` (`finalizeFailure` — no usage increment) | T-04 (implicit) | Implemented |
+| VF-COM-003 | Qualifying Handshake = 1h with $0.01 to $0.02 (Revision 12; Revision 6 said $0.95 to $1.05) | `constants.rs:15-20` (`HANDSHAKE_VALUE_USD_MIN/MAX_MICRO`) + `commit_vault_lock.rs` | `vfSolanaLockEngine.js` | T-03, T-09 | Implemented |
+| VF-COM-004 | Handshake fee 5% (Revision 12; Revision 6 said 2.50%) routed within chain-native atomic construction | `constants.rs:24` (`HANDSHAKE_FEE_BPS=500`) + `commit_vault_lock.rs` (CPI transfer atomic) | `vfSolanaLockEngine.js` | T-03 | Implemented |
+| VF-COM-005 | Identity key = source env + source-chain identity (Revision 6) | `state.rs` (`HandshakeAllowance.identity`, layout only) | `vfSolanaLockEngine.js` (`buildSourceIdentity`, a source account label only) | — | Superseded by Revision 12 (no Handshake allowance limit) |
+| VF-COM-006 | Three qualifying Handshakes per bound identity (Revision 6) | `state.rs` (`HandshakeAllowance`, kept for account layout only, never a limit) | none (no allowance check in `vfSolanaMockAdapter.js`) | `solana-program-rev12.test.js` | Superseded by Revision 12 (no Handshake allowance limit) |
+| VF-COM-007 | After allowance consumed, additional 1h by same identity rejected (Revision 6) | none (`HandshakeAllowanceExhausted` is never returned) | none | `solana-program-rev12.test.js` | Superseded by Revision 12 (no Handshake allowance limit) |
+| VF-COM-008 | Failed/reverted/invalid attempts consume no allowance (Revision 6) | `commit_vault_lock.rs` (revert on failure rolls back `init_if_needed`) | `vfSolanaMockAdapter.js` (`finalizeFailure`) | — | Superseded by Revision 12 (no Handshake allowance limit) |
 | VF-COM-009 | 7d–3650d require ≥$10.00 and 5.00% fee | `constants.rs:23,26` + `commit_vault_lock.rs:73-78` | `vfSolanaLockEngine.js:356-364` | T-02 | Implemented |
 | VF-COM-010 | Zero amount invalid | `commit_vault_lock.rs:81` (`require!(params.gross_amount > 0, ZeroGrossAmount)`) | `vfSolanaLockEngine.js:113-115` | T-02 | Implemented |
 | VF-COM-011 | Fee = floor(gross × bps / 10000) using verified precision | `commit_vault_lock.rs:83-93` (`checked_mul / 10000`) | `vfSolanaLockEngine.js:118-119` | T-02, T-10 | Implemented |
@@ -38,7 +39,7 @@
 | VF-COM-021 | Full output issued to bound recipient | — (Base-side; on-chain records `base_recipient` in `state.rs:62`) | — | — | Not Yet Implemented (Base-chain) |
 | VF-COM-022 | Classification/history does not attach to fungible VCLM/CHONX | — (Base-side token standard) | — | — | Not Yet Implemented (Base-chain) |
 | VF-COM-023 | Lock not renewable; new separate lock after maturity | `commit_vault_lock.rs:186-193` (`init` PDA — cannot re-create existing) + `release_principal.rs:89` (`released=true`) | — | T-07 | Implemented |
-| VF-COM-024 | Non-1h lock consumes no Handshake allowance | `commit_vault_lock.rs:260-266` (`if is_handshake { consume_handshake(...) }`) | `vfSolanaMockAdapter.js:65` (`if (isHandshake)`) | T-02 | Implemented |
+| VF-COM-024 | Non-1h lock consumes no Handshake allowance (Revision 6) | none (no allowance is consumed by any lock) | none | — | Superseded by Revision 12 (no Handshake allowance limit) |
 | VF-COM-025 | CHONX active at lock creation via causal activation receipt | `commit_vault_lock.rs:57-64` (`MissingChonxReceipt` check) + `error.rs:39-45` | `vfSolanaLockEngine.js:292-306` | T-02 (implicit) | Partially Implemented (receipt recorded; activation verification is Base-side) |
 | VF-COM-026 | Out-of-range 1h cannot become a recognized lock; 1h only via qualifying Handshake | `constants.rs:13` (`HANDSHAKE_DURATION_SECS=3600`) + `commit_vault_lock.rs:35,67-72` | `vfSolanaLockEngine.js:48-51` (`isHandshakeDuration`) | T-03, T-09 | Implemented |
 
@@ -71,7 +72,7 @@
 | VF-XCH-008 | Relayer/human cannot shorten/waive finality | `release_principal.rs:65-69` (Clock sysvar — cannot be manipulated) | — | — | Implemented (on-chain Clock is tamper-proof) |
 | VF-XCH-009 | Delays do not alter Valuation Timestamp/lock timestamp/maturity/output/recipient/issuance | `state.rs:57-60` (`creation_time_secs`, `maturity_time_secs` set once at `init`) | — | T-06 | Implemented |
 | VF-XCH-010 | Premature/unconfirmed/reversed events cannot authorize issuance | — (Base-side; Solana `finalized` commitment prevents reversal) | `vfSolanaProgram.js` (backend function uses `commitment: 'finalized'`) | — | Partially Implemented (Solana finality only) |
-| VF-XCH-011 | Evidence binds all immutable-facts fields incl. rac_identity + handshake_identity + handshake_allowance_count + chonx_activation_receipt + asset_precision | `state.rs:37-75` (`LockRecord` — all 16+ fields) + `events.rs:17-44` (`LockCreated` event) | `vfProofAdapter.js` (`REQUIRED_FACT_FIELDS` — 19 fields) + `vfSolanaLockEngine.js` | T-02, T-10 | Implemented |
+| VF-XCH-011 | Evidence binds all immutable-facts fields incl. rac_identity + chonx_activation_receipt + asset_precision (Revision 12 removed handshake_identity and handshake_allowance_count) | `state.rs:37-75` (`LockRecord` — all 16+ fields) + `events.rs:17-44` (`LockCreated` event) | `vfProofAdapter.js` (`REQUIRED_FACT_FIELDS`) + `vfSolanaLockEngine.js` | T-02, T-10 | Implemented |
 | VF-XCH-012 | Relayer cannot change contents/choose output/redirect/approve | — (relayer is transport-only; on-chain `LockRecord` is immutable after init) | `vfSolanaMockAdapter.js` (no relayer authority in simulation) | — | Implemented (no relayer authority in design) |
 | VF-XCH-013 | (env + lock id) authorizes issuance only once | `commit_vault_lock.rs:186-193` (`init` PDA from `sha256(lock_id)` — fails if exists) + `release_principal.rs:40` (`!released` constraint) | `vfSolanaProgram.js` (`deriveLockPda` — deterministic from lock_id) | T-02, T-07 | Implemented |
 | VF-XCH-014 | Failed/unverifiable proof does not consume id; corrected resubmission allowed | — (Base-side; on-chain lock_id is consumed at `init`, but failed `init` reverts, so PDA is never created) | — | — | Implemented (Anchor `init` reverts on failure → no PDA created) |
@@ -252,7 +253,7 @@
 | VF-VER-001 | Each requirement maps to contracts/programs/functions/tests/checks | This document | This document | — | Implemented (this traceability matrix) |
 | VF-VER-002 | Positive tests cover every successful lifecycle | — | — | T-01 through T-10 | Partially Implemented (10 tests written; not yet executed) |
 | VF-VER-003 | Negative tests cover invalid amounts/assets/prices/proofs/destinations/recipients/outputs/replays/early releases/cap breaches | — | — | T-05, T-07, T-08, T-09 | Partially Implemented (4 negative tests written; not yet executed) |
-| VF-VER-004 | Boundary tests cover thresholds/timestamps/fee rounding/allowance | — | — | T-04, T-09 | Partially Implemented (2 boundary tests written; not yet executed) |
+| VF-VER-004 | Boundary tests cover thresholds/timestamps/fee rounding (Revision 12: no Handshake allowance to test) | — | — | T-04, T-09 | Partially Implemented (2 boundary tests written; not yet executed) |
 | VF-VER-005 | Principal-isolation tests under Base/price/relayer/epoch/external failure | — | — | T-06 | Partially Implemented (1 isolation test written; not yet executed) |
 | VF-VER-006 | Independent reproduction > self-reported pass counts | — | — | — | Not Yet Implemented (requires native Solana environment) |
 | VF-VER-007 | No package declared production/deployment-ready merely for compile/passing tests | — | — | — | Implemented (README states "not deployed"; build not executed) |
