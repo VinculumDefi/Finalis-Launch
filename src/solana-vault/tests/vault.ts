@@ -36,11 +36,9 @@ const STANDARD_FEE_BPS = 500;
 const HANDSHAKE_USD_MIN = "10000000000000000"; // $0.01 (18dp, Rev 12)
 const HANDSHAKE_USD_MAX = "20000000000000000"; // $0.02 (18dp, Rev 12)
 const STANDARD_USD_MIN = "10000000000000000"; // $0.01 (18dp)
-const HANDSHAKE_ALLOWANCE = 3;
 
 const SEED_CONFIG = Buffer.from("vf_config");
 const SEED_LOCK = Buffer.from("vf_lock");
-const SEED_HANDSHAKE = Buffer.from("vf_handshake");
 const SEED_VAULT = Buffer.from("vf_vault");
 
 // SHA-256 (matching on-chain hash::hashv)
@@ -52,10 +50,6 @@ async function hashLockId(lockId: string): Promise<Buffer> {
 
 function deriveLockPda(programId: PublicKey, lockIdHash: Buffer): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([SEED_LOCK, lockIdHash], programId);
-}
-
-function deriveHandshakePda(programId: PublicKey, sourceAccount: PublicKey): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync([SEED_HANDSHAKE, sourceAccount.toBuffer()], programId);
 }
 
 function deriveConfigPda(programId: PublicKey): [PublicKey, number] {
@@ -168,7 +162,6 @@ describe("vf-solana-vault", () => {
         signer: provider.wallet.publicKey,
         config: configPda,
         lockRecord: lockPda,
-        handshakeAllowance: deriveHandshakePda(programId, provider.wallet.publicKey)[0],
         devFund: devFund.publicKey,
         systemProgram: SystemProgram.programId,
       })
@@ -185,13 +178,12 @@ describe("vf-solana-vault", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // T-03: Handshake native SOL lock — VF-COM-003/004/006
+  // T-03: Handshake native SOL lock (Rev 12: $0.01 to $0.02, 5% fee)
   // ---------------------------------------------------------------------------
-  it("T-03: creates a qualifying Handshake lock (VF-COM-003/006)", async () => {
+  it("T-03: creates a 1-hour Handshake lock at 5% (VF-COM-003, Rev 12)", async () => {
     const lockId = "test-handshake-001";
     const lockIdHash = await hashLockId(lockId);
     const [lockPda] = deriveLockPda(programId, lockIdHash);
-    const [haPda] = deriveHandshakePda(programId, provider.wallet.publicKey);
 
     const gross = new BN(50_000_000); // 0.05 SOL
     const usd = new BN("15000000000000000"); // $0.015 (within $0.01-$0.02)
@@ -212,15 +204,14 @@ describe("vf-solana-vault", () => {
         signer: provider.wallet.publicKey,
         config: configPda,
         lockRecord: lockPda,
-        handshakeAllowance: haPda,
         devFund: devFund.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
 
-    const ha = await program.account.handshakeAllowance.fetch(haPda);
-    assert.equal(ha.used, 1);
-    assert.equal(ha.remaining, HANDSHAKE_ALLOWANCE - 1);
+    const rec = await program.account.lockRecord.fetch(lockPda);
+    assert.equal(rec.durationSecs.toNumber(), HANDSHAKE_DURATION);
+    assert.equal(rec.feeAmount.toString(), gross.muln(HANDSHAKE_FEE_BPS).divn(10_000).toString());
   });
 
   // ---------------------------------------------------------------------------
@@ -249,7 +240,6 @@ describe("vf-solana-vault", () => {
           signer: provider.wallet.publicKey,
           config: configPda,
           lockRecord: lockPda,
-          handshakeAllowance: deriveHandshakePda(programId, provider.wallet.publicKey)[0],
           devFund: devFund.publicKey,
           systemProgram: SystemProgram.programId,
         })
@@ -277,15 +267,13 @@ describe("vf-solana-vault", () => {
           signer: provider.wallet.publicKey,
           config: configPda,
           lockRecord: lockPda,
-          handshakeAllowance: deriveHandshakePda(programId, provider.wallet.publicKey)[0],
           devFund: devFund.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
-    const ha = await program.account.handshakeAllowance.fetch(
-      deriveHandshakePda(programId, provider.wallet.publicKey)[0],
-    );
-    assert.equal(ha.used, 4);
+    // Rev 12: no Handshake account exists to count against.
+    const rec4 = await program.account.lockRecord.fetch(lockPda);
+    assert.equal(rec4.durationSecs.toNumber(), HANDSHAKE_DURATION);
   });
 
   // ---------------------------------------------------------------------------
@@ -395,7 +383,6 @@ describe("vf-solana-vault", () => {
           signer: provider.wallet.publicKey,
           config: configPda,
           lockRecord: lockPda,
-          handshakeAllowance: deriveHandshakePda(programId, provider.wallet.publicKey)[0],
           devFund: devFund.publicKey,
           systemProgram: SystemProgram.programId,
         })
@@ -429,7 +416,6 @@ describe("vf-solana-vault", () => {
           signer: provider.wallet.publicKey,
           config: configPda,
           lockRecord: lockPda,
-          handshakeAllowance: deriveHandshakePda(programId, provider.wallet.publicKey)[0],
           devFund: devFund.publicKey,
           systemProgram: SystemProgram.programId,
         })
@@ -466,7 +452,6 @@ describe("vf-solana-vault", () => {
         signer: provider.wallet.publicKey,
         config: configPda,
         lockRecord: lockPda,
-        handshakeAllowance: deriveHandshakePda(programId, provider.wallet.publicKey)[0],
         sourceTokenAccount: userTokenAccount,
         vaultTokenAccount,
         devFundTokenAccount: devFundTokenAccount,
