@@ -6,16 +6,16 @@
 </head>
 <body>
 <h1>Vinculum Protocol - Solana deploy plan</h1>
-<p>Network: <b>Solana mainnet-beta</b>. Environment id: <b>Solana</b>. Built from Finalis-Launch source at commit <code>281e9b2d8fd506b8b70b63935ffd996e5c694dcc</code> (origin/main). This page stops before finalize.</p>
+<p>Network: <b>Solana mainnet-beta</b>. Environment id: <b>Solana</b>. Built from Finalis-Launch source at commit <code>d28494d403c9e4c7c0536bc70c47f5897c06015c</code> (origin/main). This page stops before finalize.</p>
 
 <p>Solana is not EVM. This page prints the program, its addresses and destinations, and stops. The button only reads mainnet (no signature, no transaction) and refuses a cluster whose genesis hash is not mainnet-beta.</p>
 <pre id="log">Network: Solana mainnet-beta (genesis hash 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d)
 Environment id: Solana
-Lock: vf-solana-vault HandshakeAllowance PDA (src/solana-vault/programs/vf-solana-vault)
+Lock: vf-solana-vault program (src/solana-vault/programs/vf-solana-vault)
 Program id (declare_id! in lib.rs): E96mDgb9EjCKyxhrUPtDtAQ7Kp2bpkQW7foJDYxnVv1s
 Config PDA (seed &quot;vf_config&quot;): 9C4LTFsYqvqCPvF1GjuTrYM57cf2HzBtUSp7Sek1XAar (bump 255)
 Dev Fund (Solana): Dserz9cjpCDQH9HRsfjU7b7EJxCGoULLNBEQ3PiFgCdi
-Handshake allowance: 3 (PDA keeps a per-identity handshake count)
+Handshake (Revision 12): 1 hour, $0.01 to $0.02, 5% fee, no allowance limit
 
 Plan:
   1. anchor build in src/solana-vault (program vf_solana_vault).
