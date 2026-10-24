@@ -4,7 +4,7 @@
 // PROVENANCE: Built directly from Revision 6 authoritative documents:
 //   - vfRevision6Authority.js: ATTEMPT_STATES, SOLANA_DISPOSITION, LOCK_STATES
 //   - Vinculum_Finalis_Architecture_Design.md §4.7 (Objective pending-attempt disposition)
-//   - VF-COM-007/008: Handshake allowance enforcement during pending state
+//   - VF-COM-007/008: objective pending-attempt disposition
 //
 // STATE MACHINE (ATTEMPT_STATES from vfRevision6Authority):
 //   ELIGIBLE → OBJECTIVELY_PENDING → RECOGNIZED       (finality achieved, verifier consumed)
@@ -15,10 +15,12 @@
 //   Elapsed time, mempool disappearance, non-observation, and application
 //   timers NEVER clear a still-valid pending attempt.
 //
-// The lifecycle reserves the handshake identity while an attempt is in-flight,
-// preventing concurrent reuse. Only a chain-native terminal event (finalized
-// success, finalized failure, or Solana-specific blockhash/nonce expiry) releases
-// the reservation.
+// Revision 12: the Handshake has no allowance limit and no Handshake identity.
+// The lifecycle labels each attempt with its source account for display only;
+// it never refuses an attempt because the same account has another attempt
+// pending or finished. Only a chain-native terminal event (finalized success,
+// finalized failure, or Solana-specific blockhash/nonce expiry) moves an
+// attempt out of the pending state.
 // =============================================================================
 
 import { ATTEMPT_STATES, SOLANA_DISPOSITION } from './vfRevision6Authority.js';
@@ -69,7 +71,7 @@ export class PendingAttemptLifecycle {
   constructor() {
     // lockId → attempt record
     this.attempts = new Map();
-    // handshakeIdentity → Set<lockId> of pending attempts
+    // sourceIdentity → Set<lockId> of pending attempts (query only, never a block)
     this.pendingIdentities = new Map();
   }
 
@@ -80,10 +82,10 @@ export class PendingAttemptLifecycle {
 
   // -------------------------------------------------------------------------
   // Register a new pending attempt (ELIGIBLE → OBJECTIVELY_PENDING).
-  // The handshake identity is reserved for the duration of the in-flight state.
+  // Revision 12: any number of attempts per source account, pending or not.
   // -------------------------------------------------------------------------
 
-  registerAttempt(environmentId, handshakeIdentity, lockId, submissionTimestamp) {
+  registerAttempt(environmentId, sourceIdentity, lockId, submissionTimestamp) {
     const env = findEnvironment(environmentId);
     if (!env) {
       return { ok: false, reason: `VF-XCH-001: unknown environment "${environmentId}"` };
@@ -95,19 +97,11 @@ export class PendingAttemptLifecycle {
       return { ok: false, reason: `VF-XCH-013: lockId "${lockId}" already registered` };
     }
 
-    // VF-COM-007: identity reservation — prevent concurrent reuse while pending
-    if (this.isIdentityPending(handshakeIdentity)) {
-      return {
-        ok: false,
-        reason: `VF-COM-007: handshake identity "${handshakeIdentity}" has an in-flight pending attempt — concurrent reuse blocked`,
-      };
-    }
-
     const attempt = {
       lockId,
       environmentId,
       environmentFamily: env.family,
-      handshakeIdentity,
+      sourceIdentity,
       state: ATTEMPT_STATES.OBJECTIVELY_PENDING,
       submissionTimestamp: submissionTimestamp || Date.now(),
       terminalDisposition: null,
@@ -115,20 +109,20 @@ export class PendingAttemptLifecycle {
     };
 
     this.attempts.set(lockId, attempt);
-    if (!this.pendingIdentities.has(handshakeIdentity)) {
-      this.pendingIdentities.set(handshakeIdentity, new Set());
+    if (!this.pendingIdentities.has(sourceIdentity)) {
+      this.pendingIdentities.set(sourceIdentity, new Set());
     }
-    this.pendingIdentities.get(handshakeIdentity).add(lockId);
+    this.pendingIdentities.get(sourceIdentity).add(lockId);
 
     return { ok: true, attempt };
   }
 
   // -------------------------------------------------------------------------
-  // Check if a handshake identity is currently reserved (has a pending attempt).
+  // Query: does this source account have a pending attempt? (display only)
   // -------------------------------------------------------------------------
 
-  isIdentityPending(handshakeIdentity) {
-    const pending = this.pendingIdentities.get(handshakeIdentity);
+  isIdentityPending(sourceIdentity) {
+    const pending = this.pendingIdentities.get(sourceIdentity);
     if (!pending) return false;
     for (const lockId of pending) {
       const attempt = this.attempts.get(lockId);
@@ -155,7 +149,7 @@ export class PendingAttemptLifecycle {
     attempt.state = ATTEMPT_STATES.RECOGNIZED;
     attempt.terminalDisposition = SOLANA_DISPOSITION.FINALIZED_SUCCESS;
     attempt.resolvedTimestamp = Date.now();
-    this._cleanupPending(attempt.handshakeIdentity, lockId);
+    this._cleanupPending(attempt.sourceIdentity, lockId);
     return { ok: true, attempt };
   }
 
@@ -187,16 +181,16 @@ export class PendingAttemptLifecycle {
     attempt.state = ATTEMPT_STATES.NOT_RECOGNIZED;
     attempt.terminalDisposition = disposition;
     attempt.resolvedTimestamp = Date.now();
-    this._cleanupPending(attempt.handshakeIdentity, lockId);
+    this._cleanupPending(attempt.sourceIdentity, lockId);
     return { ok: true, attempt };
   }
 
-  _cleanupPending(handshakeIdentity, lockId) {
-    const pending = this.pendingIdentities.get(handshakeIdentity);
+  _cleanupPending(sourceIdentity, lockId) {
+    const pending = this.pendingIdentities.get(sourceIdentity);
     if (pending) {
       pending.delete(lockId);
       if (pending.size === 0) {
-        this.pendingIdentities.delete(handshakeIdentity);
+        this.pendingIdentities.delete(sourceIdentity);
       }
     }
   }
