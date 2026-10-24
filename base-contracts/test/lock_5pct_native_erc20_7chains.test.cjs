@@ -9,8 +9,10 @@
 //     destination reverts, release after maturity pays exactly the principal
 //     to the destination once.
 // It also checks the contract exposes no fee setter or owner, and exercises the
-// read-only post-deploy check in scripts/prepareLockDeploy.cjs and its refusal
-// to broadcast. In-process Hardhat network only. Nothing is broadcast.
+// read-only post-deploy check in scripts/prepareLockDeploy.cjs (Base only, the
+// Base-only launch t357u: every other environment is refused) and its refusal
+// to broadcast. The six non-Base contracts are kept in source and tested here,
+// but are not deployed. In-process Hardhat network only. Nothing is broadcast.
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
@@ -52,7 +54,9 @@ describe("5% lock, seven chains, native and ERC-20, all sixteen durations", func
       let lock, token, user, dest, other, devFund;
       before(async function () {
         [, user, dest, other] = await ethers.getSigners();
-        devFund = prep.devFundFor(env);
+        // Base-only launch: prepareLockDeploy gives a Dev Fund only for Base; the
+        // source-level tests on the other six ids use the same EVM Dev Fund.
+        devFund = env === "Base" ? prep.devFundFor(env) : ethers.getAddress(EVM_DEV_FUND);
         expect(devFund).to.equal(ethers.getAddress(EVM_DEV_FUND));
         lock = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy(env, devFund);
         token = await (await ethers.getContractFactory("TestFixtureERC20")).deploy(0);
@@ -144,34 +148,20 @@ describe("5% lock, seven chains, native and ERC-20, all sixteen durations", func
   }
 
   describe("scripts/prepareLockDeploy.cjs (dry run, read-only check)", function () {
-    it("builds the same init code the pages deploy and an identical runtime for every chain", async function () {
-      const p = await prep.prepare({ withRpc: false });
-      // Six non-Base chains. The Base lock (BaseCommitmentVaultLock) is deployed
-      // inside the Base ceremony and only checked (t262u).
-      expect(p.chains.map((c) => c.environmentId).sort()).to.deep.equal(ENVS.filter((e) => e !== "Base").sort());
-      const art = require("../artifacts/contracts/CommitmentVaultLock.sol/CommitmentVaultLock.json");
-      expect(p.creationCodeHash).to.equal(ethers.keccak256(art.bytecode));
-      for (const c of p.chains) {
-        expect(c.chainId).to.equal(CHAIN_IDS[c.environmentId]);
-        expect(c.constructorArgs.devFund).to.equal(ethers.getAddress(EVM_DEV_FUND));
-        expect(c.constructorArgsEncoded).to.equal(ethers.AbiCoder.defaultAbiCoder().encode(["string", "address"], [c.environmentId, EVM_DEV_FUND]));
-        const live = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy(c.environmentId, EVM_DEV_FUND);
-        expect(ethers.keccak256(await ethers.provider.getCode(await live.getAddress()))).to.equal(c.runtimeCodeHash);
-      }
-    });
-
-    it("post-deploy check passes on a correct lock and fails on a wrong Dev Fund or wrong environment", async function () {
+    // Base-only launch (t357u): nothing is prepared for the six non-Base chains;
+    // the source contract is still tested above but is not deployed.
+    it("refuses every environment other than Base (no non-Base lock is prepared or checked)", async function () {
       const [, probe] = await ethers.getSigners();
-      const p = await prep.prepare({ withRpc: false });
-      const exp = p.chains.find((c) => c.environmentId === "Polygon").runtimeCodeHash;
-      const good = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Polygon", EVM_DEV_FUND);
-      const r = await prep.check(ethers.provider, "Polygon", await good.getAddress(), { expectedRuntimeHash: exp, probeFrom: probe.address });
-      expect(r.pass, JSON.stringify(r.results.filter((x) => !x.pass))).to.equal(true);
-      expect(r.results.filter((x) => /duration \d+s: fee is exactly 5%/.test(x.name)).length).to.equal(16);
-      const wrongFund = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Polygon", probe.address);
-      expect((await prep.check(ethers.provider, "Polygon", await wrongFund.getAddress(), { expectedRuntimeHash: exp, probeFrom: probe.address })).pass).to.equal(false);
-      const wrongEnv = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Base", EVM_DEV_FUND);
-      expect((await prep.check(ethers.provider, "Polygon", await wrongEnv.getAddress(), { expectedRuntimeHash: exp, probeFrom: probe.address })).pass).to.equal(false);
+      expect(prep).to.not.have.property("prepare");
+      const plain = await (await ethers.getContractFactory("CommitmentVaultLock")).deploy("Polygon", EVM_DEV_FUND);
+      for (const env of ENVS.filter((e) => e !== "Base")) {
+        await expect(prep.check(ethers.provider, env, await plain.getAddress(), { probeFrom: probe.address }), env).to.be.rejectedWith(/Base-only launch/);
+        expect(() => prep.devFundFor(env), env).to.throw(/Base-only launch/);
+      }
+      const script = path.join(__dirname, "..", "scripts", "prepareLockDeploy.cjs");
+      let refused = "";
+      try { execFileSync(process.execPath, [script, "--check", "Polygon", await plain.getAddress()], { stdio: "pipe" }); } catch (e) { refused = String(e.stderr); }
+      expect(refused).to.match(/REFUSED: Base-only launch/);
     });
 
     it("--check Base passes on a BaseCommitmentVaultLock bound to VCLM, CHONX and SYNTH, and fails on wrong token addresses", async function () {
