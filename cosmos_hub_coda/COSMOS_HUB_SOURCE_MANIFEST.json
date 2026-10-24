@@ -6,7 +6,7 @@
   "status": "NO PRODUCTION CODE COMPILED OR TESTED. This manifest records evidence sources only. No compiler settings, file hashes of compiled artifacts, or test results are present because no build or test was executed (verdict not FEASIBLE NOW; see COSMOS_HUB_BUILD_AND_TEST_REPORT.md).",
 
   "governing_source": {
-    "file_name": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx",
+    "file_name": "Vinculum Finalis Master Specification",
     "revision": "Revision 6",
     "revision_date": "2026-07-28",
     "sha256": "5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9",
