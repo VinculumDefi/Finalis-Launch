@@ -8,7 +8,7 @@ import { TokenLayerState, formatTokenAmount } from '@/lib/vfTokenEngine';
 import { VerifierState, verifyProof } from '@/lib/vfVerifierEngine';
 import { buildMockEvent, buildFinalityProof } from '@/lib/vfMockEventBuilder';
 import { normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeStellarEvidence, normalizeEvmEvidence } from '@/lib/vfProofNormalizer';
-import { COMMITMENT_DURATIONS, SCALE, CHONX_ACTIVATION_THRESHOLD, SYNTH_ACTIVATION_THRESHOLD, SYNTH_FORGE } from '@/lib/vfRevision6Authority';
+import { COMMITMENT_DURATIONS, SCALE, CHONX_ACTIVATION_THRESHOLD, SYNTH_ACTIVATION_THRESHOLD, SYNTH_FORGE } from '@/lib/vfSpecAuthority';
 import TokenOverview from '@/components/tokens/TokenOverview';
 import ForgePanel from '@/components/tokens/ForgePanel';
 import IssuancePipeline from '@/components/tokens/IssuancePipeline';
