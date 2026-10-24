@@ -5,15 +5,15 @@ Nothing here governs. Nothing here is deleted.
 
 - The current edition of each document is the one listed in
   `DOCUMENT_REGISTER.md` at the repository root.
-- The current governing specification is Revision 17:
-  `docs/Vinculum_Finalis_Master_Specification_Revision_17_2026-10-24.md`.
+- The current governing specification is Revision 18:
+  `docs/Vinculum_Finalis_Master_Specification_Revision_18_2026-10-24.md`.
   Its SHA-256 is recorded in `DOCUMENT_REGISTER.md`.
 - Files are kept as they were. Moved files keep their git history
   (`git log --follow <path>`).
 
 ## Folders
 - `master-specification/`: Master Specification Revisions 6, 8, 9, 10, 11,
-  12, 13, 14, 15 and 16, and the Revision 8 lock report. Hashes are in
+  12, 13, 14, 15, 16 and 17, and the Revision 8 lock report. Hashes are in
   `DOCUMENT_REGISTER.md`.
   - Revision 6 (`Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`)
     SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`.
@@ -23,7 +23,8 @@ Nothing here governs. Nothing here is deleted.
   - Revision 7 was never committed to this repository.
   - Revisions 12, 13, 14 and 15 moved here from `docs/` on 2026-10-24, in
     the same commit that added Revision 16. Revision 16 moved here in the
-    same commit that added Revision 17.
+    same commit that added Revision 17. Revision 17 moved here in the
+    same commit that added Revision 18.
 - `revision-7-candidates/`: the Revision 7 candidate list and its review.
   Neither was adopted.
 - `document-register/`: earlier editions of `DOCUMENT_REGISTER.md`.
