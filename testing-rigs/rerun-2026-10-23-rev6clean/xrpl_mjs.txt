@@ -1,73 +1,74 @@
 starting /opt/ripple/bin/rippled
-server_info status {"build_version":"3.1.3","complete_ledgers":"2","hostid":"grok-bot-vm-458430840","initial_sync_duration_us":"144072","io_latency_ms":1,"jq_trans_overflow":"0","last_close":{"converge_time_s":0,"proposers":0},"load":{"job_types":[{"in_progress":1,"job_type":"clientRPC"},{"job_type":"WriteNode","per_second":1}],"threads":1},"load_factor":1,"node_size":"tiny","peer_disconnects":"0","peer_disconnects_resources":"0","peers":0,"ports":[{"port":"5005","protocol":["http"]},{"port":"6006","protocol":["ws
-FIXTURE source r9SkaQ…W7wx seed sEd78bASaTiqCn12KN55wcQYgBQDpP1
-FIXTURE devFund rJCc8G…naBv seed sEd7Tn9Vk1VEGjviUmq13C9EeRBGEKS
-FIXTURE release rJyeXh…3wA5 seed sEdTuMjorb1jzRd2UruMm8NzRuFrBuC
-FIXTURE stranger rNoxE8…rTxK seed sEd7xev5RSGHBLpDUeBr4bHtdML7kwP
-fund-source submit tesSUCCESS DC4A33100BF85CC7E4770D39B320A44DE89A462AC2BE607089809FF15EA3ED6B
+server_info status {"build_version":"3.1.3","complete_ledgers":"2","hostid":"grok-bot-vm-458430840","initial_sync_duration_us":"152866","io_latency_ms":1,"jq_trans_overflow":"0","last_close":{"converge_time_s":0,"proposers":0},"load":{"job_types":[{"in_progress":1,"job_type":"clientRPC"},{"job_type":"WriteNode","per_second":1}],"threads":1},"load_factor":1,"node_size":"tiny","peer_disconnects":"0","peer_disconnects_resources":"0","peers":0,"ports":[{"port":"5005","protocol":["http"]},{"port":"6006","protocol":["ws
+FIXTURE source r3Z9Rf…7brf seed [redacted local fixture seed]
+FIXTURE devFund rwhXyK…RDGp seed [redacted local fixture seed]
+FIXTURE release rENd9g…ULx7 seed [redacted local fixture seed]
+FIXTURE stranger rNVYs5…4aMj seed [redacted local fixture seed]
+fund-source submit tesSUCCESS 139929D7C745D87FAEC1465DE27B4FE54C72B9AC4E1183ECC7E5275E0C302CDC
 fund-source result tesSUCCESS
 PASS: fund-source tesSUCCESS (tesSUCCESS)
-fund-dev submit tesSUCCESS 64C9D245864B7461063A0D1A880B0EB81D4A5238C602DD1F4FAFC8C6A0997DAC
+fund-dev submit tesSUCCESS CE514BEF4CDD04C17A7D1245E96A0A01CD8ECA3A0AA6B9ECA735F4DEEEDF44F9
 fund-dev result tesSUCCESS
 PASS: fund-dev tesSUCCESS (tesSUCCESS)
-fund-release submit tesSUCCESS D9FB7071F10494FD0691117C990335F69B31F4F24D8D8C35826B313FAC296F68
+fund-release submit tesSUCCESS 7B44B09E494A3CFE7BAA74A4E903DCE1943C72F58735736A6BB6AA56C1C76D45
 fund-release result tesSUCCESS
 PASS: fund-release tesSUCCESS (tesSUCCESS)
-fund-stranger submit tesSUCCESS 758283A14562EC98F606BE703C39A99CE82F00C7FA1183D950B88CFE4CC19F28
+fund-stranger submit tesSUCCESS 3BF1EBF218ED47B051CEB3A6DB880A8C2E769DAE699DE4B1FCD0EEA44470A220
 fund-stranger result tesSUCCESS
 PASS: fund-stranger tesSUCCESS (tesSUCCESS)
-deposit-auth submit tesSUCCESS 2723D236A834C40B476820B0C2314A0729CC004B8699DCDB60D7698AFF9F9E67
+deposit-auth submit tesSUCCESS 4E36A92EF5AF1AD6683D09EF7AD536016A547FD88B57727FBFD20A0AD7F57855
 deposit-auth result tesSUCCESS
 PASS: release DepositAuth set (tesSUCCESS)
 PASS: payload 117 bytes
 PASS: fee floor(1000000 * 500 / 10000) = 50000
 PASS: principal 950000
-fee-payment submit tesSUCCESS DE491CAD067901F067785E748FC78D27F396804138D2DC7FA5FF1FAC6F34E60A
+fee-payment submit tesSUCCESS CCC1D90696D8371B0C15A899FE1375202E68D989CC2C360DA97AE43488E9550B
 fee-payment result tesSUCCESS
 PASS: fee Payment tesSUCCESS (tesSUCCESS)
 PASS: fee Payment amount is 50000 drops
 PASS: InvoiceID is SHA-256 of 117-byte payload
-parentClose 846117597 FinishAfter 846117617 unix 1792802417
-escrow-create submit tesSUCCESS 39F7ECCF2C98639B25F0565F2AF0ED30D57BEA8240D893DD93D3D4FCC71381ED
+parentClose 846156197 FinishAfter 846156217 unix 1792841017
+escrow-create submit tesSUCCESS 22C9B2E6CA60B368CB18B875CA36AEC49F2FFA3F0A11FD5EAA4107B44BBFBCE0
 escrow-create result tesSUCCESS
 PASS: EscrowCreate tesSUCCESS (tesSUCCESS)
 PASS: CancelAfter omitted on EscrowCreate
 PASS: escrow Amount is principal 950000
 PASS: fee Payment and EscrowCreate are two transactions
 PASS: one escrow object
-escrow object {"Account":"r9SkaQ…W7wx","Amount":"950000","Destination":"rJyeXh…3wA5","DestinationNode":"0","FinishAfter":846117617,"Flags":0,"LedgerEntryType":"Escrow","OwnerNode":"0","PreviousTxnID":"39F7ECCF2C98639B25F0565F2AF0ED30D57BEA8240D893DD93D3D4FCC71381ED","PreviousTxnLgrSeq":10,"index":"7403CEC7A85DF4C854437CFE5FCADD1F548F61F1BB7701F3F6FF4C3008B4D4A0"}
+escrow object {"Account":"r3Z9Rf…7brf","Amount":"950000","Destination":"rENd9g…ULx7","DestinationNode":"0","FinishAfter":846156217,"Flags":0,"LedgerEntryType":"Escrow","OwnerNode":"0","PreviousTxnID":"22C9B2E6CA60B368CB18B875CA36AEC49F2FFA3F0A11FD5EAA4107B44BBFBCE0","PreviousTxnLgrSeq":10,"index":"E9F4605BBE50B82AC543C48D677BA6052848B0A2506E0C1983E0FFF3130B9F6E"}
 PASS: escrow ledger object has no CancelAfter
 PASS: escrow object amount 950000
 dev balance after fee 200050000 release before finish 199999988
-escrow-cancel submit tecNO_PERMISSION 6067E548ECB3E55431C7D224B717F3C7F8A3C3B926E0A5EFD558D31BCF816D4B
+escrow-cancel submit tecNO_PERMISSION 1A6F2D9EDFB9DACF86226F05FFBED6C81B5A43ECA48B3940E38D4AE54DB159AA
 escrow-cancel result tecNO_PERMISSION
 PASS: EscrowCancel rejected (tecNO_PERMISSION)
 PASS: EscrowCancel tecNO_PERMISSION because CancelAfter is omitted (tecNO_PERMISSION)
 PASS: principal stays escrowed after cancel attempt
-early-finish submit tecNO_PERMISSION 9DAD021709B7EFF09A8E24E75B8B16E71A240C9537200861D18DE9012B34357F
+early-finish submit tecNO_PERMISSION BF3EB9ED8802015D88B805D1823701738D2465F8463EDC19E0B0741AD93855AE
 early-finish result tecNO_PERMISSION
 PASS: EscrowFinish before FinishAfter fails (tecNO_PERMISSION)
 PASS: principal stays escrowed before FinishAfter
 PASS: early finish charged a fee
 PASS: early finish did not deliver principal (delta 12)
-non-destination-finish submit tecNO_PERMISSION 2C008DB28A64B983BDFD3E17DA3806FF1C2A11B724023C29BD0FEFD68521D63B
+non-destination-finish submit tecNO_PERMISSION 68DAF292C42CBFB7B748BAF04C772C17DC26171C2130AF22A48256193777F308
 non-destination-finish result tecNO_PERMISSION
 PASS: non-destination cannot finish (tecNO_PERMISSION)
 PASS: non-destination EscrowFinish tecNO_PERMISSION (tecNO_PERMISSION)
 PASS: escrow remains after non-destination finish
-sleeping ms 25698
-close after wait 846117621 FinishAfter 846117617
+sleeping ms 26490
+close after wait 846156221 FinishAfter 846156217
 PASS: parent close time is after FinishAfter
-destination-finish submit tesSUCCESS D070A33AEB4DDE822A49D029F59809CF3E28D13501E2BBCDA8163CAF4DAFE429
+destination-finish submit tesSUCCESS 9E25E2C8D2F984FA8BCC3B556A8FD7DDB249A3E7B1319EB8D1120687E7ED6D9E
 destination-finish result tesSUCCESS
 PASS: destination finishes once (tesSUCCESS)
 release delta 949988 networkFee 12
 PASS: destination receives principal net of the finish fee
 PASS: escrow object consumed
-second-finish submit tecNO_TARGET 22E96EB92D0EDC855C27D2BEB0D9F6774B915B05CA5C2F66C5EFDAE67E125AAC
+second-finish submit tecNO_TARGET F7FF946257E790BF03C8AB196E9CD4466DCAB73D8188EB92482098D532426806
 second-finish result tecNO_TARGET
 PASS: second finish fails (tecNO_TARGET)
 devFund balance 200050000
 PASS: Dev Fund received exactly 50000 drops
 XRPL_HOLD_RELEASE_OK
 xrpld exit 0
+XRPL_MJS_EXIT=0
