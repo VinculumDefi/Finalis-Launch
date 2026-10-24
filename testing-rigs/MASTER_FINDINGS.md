@@ -103,7 +103,7 @@ Counts by class: CONFIRMED VULNERABILITY 15, SPEC CONFLICT 4, UNVERIFIED ASSUMPT
 
 ## Fix status 2026-10-23 (added by hand, see testing-rigs/FIX_LOG_2026-10-23.md)
 
-Branch fix/batch-2026-10-23. 23 of 60 rows FIXED (some with residual items noted), 37 STILL OPEN. FIXED means changed on the branch and covered by the named test; nothing is deployed.
+Branch fix/batch-2026-10-23. 23 of 60 rows FIXED (some with residual items noted), 1 MITIGATED (HH-013, hidden in the app by operator decision 2026-10-24), 36 STILL OPEN. FIXED means changed on the branch and covered by the named test; nothing is deployed.
 
 | # | Id | Status | Commit | Test or reason |
 |---|---|---|---|---|
@@ -141,8 +141,8 @@ Branch fix/batch-2026-10-23. 23 of 60 rows FIXED (some with residual items noted
 | 32 | STATIC-L05 | STILL OPEN | - | CEI order unchanged; no exploit shown. |
 | 33 | STATIC-L06 | STILL OPEN | - | External calls in loops unchanged; no exploit shown. |
 | 34 | FZ-04 | FIXED | e3c83cd | batch_fix FZ-04 |
-| 35 | AG-20 | FIXED | 21237b0, 0dee5f4 | The Verifier follows Rev 12: the package Handshake allowance value (Rev 6 3-or-1 rule) is ignored, never checked or counted; cl01_cl11_verifier "Rev 12 (AG-20)". App side: the Solana vault program and its app mirror carried the Rev 6 Handshake ($0.95 to $1.05, 2.5% fee, $10 minimum, 3-use limit); now Rev 12 ($0.01 to $0.02, 5%, $0.01 minimum, no limit): 526346b, 238a702, b1707dc, b28d643, eeb76e5, 85636e5; tests: cargo rev12_tests (5 passed), src/tests/solana-program-rev12.test.js (4 pass). Residual: the Solana HandshakeAllowance account is kept for account layout only and never refuses (FIX_LOG note 13). The Rev 6 Handshake allowance code and displays in the app, the XRPL and Solana mocks, the UTXO and non-EVM lock scripts and the docs were removed or labeled on fix/rev6-handshake-cleanup-2026-10-23 (FIX_LOG, Revision 6 Handshake cleanup). |
-| 36 | HH-013 | STILL OPEN | - | Fork rig label case; fork test not re-run. |
+| 35 | AG-20 | FIXED | 21237b0, 0dee5f4 | The Verifier follows Rev 12: the package Handshake allowance value (Rev 6 3-or-1 rule) is ignored, never checked or counted; cl01_cl11_verifier "Rev 12 (AG-20)". App side: the Solana vault program and its app mirror carried the Rev 6 Handshake ($0.95 to $1.05, 2.5% fee, $10 minimum, 3-use limit); now Rev 12 ($0.01 to $0.02, 5%, $0.01 minimum, no limit): 526346b, 238a702, b1707dc, b28d643, eeb76e5, 85636e5; tests: cargo rev12_tests (5 passed), src/tests/solana-program-rev12.test.js (4 pass). The Solana HandshakeAllowance account, its seed, counter, event and error were then removed on fix/rev6-handshake-cleanup-2026-10-23 (FIX_LOG note 13). The Rev 6 Handshake allowance code and displays in the app, the XRPL and Solana mocks, the UTXO and non-EVM lock scripts and the docs were removed or labeled on fix/rev6-handshake-cleanup-2026-10-23 (FIX_LOG, Revision 6 Handshake cleanup). |
+| 36 | HH-013 | MITIGATED | ca3fd7c, 27bae47 | Hidden in app by operator decision 2026-10-24: cbETH on Base (Revision B row 25) is in the app's HIDDEN_ASSETS list (src/lib/vfActiveAssetAllowlist.js) and is never shown or offered; test src/tests/hidden-assets-cbeth.test.js (5 pass). Label fix pending or permanent drop. Revision B, its hash lock, the registry pin, the Verifier and the price poster are unchanged; the fork rig label case is not fixed and the fork test was not re-run. Live Base44 app: see deployment/BASE44_HIDE_CBETH_2026-10-24.md. |
 | 37 | HH-015 | STILL OPEN | - | By design (user paths are open). |
 | 38 | STATIC-I03 | FIXED | e3c83cd | batch_fix AG-05 |
 | 39 | AG-17 | STILL OPEN | - | Comment versus code; not changed. |
