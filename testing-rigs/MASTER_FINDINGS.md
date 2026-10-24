@@ -141,7 +141,7 @@ Branch fix/batch-2026-10-23. 23 of 60 rows FIXED (some with residual items noted
 | 32 | STATIC-L05 | STILL OPEN | - | CEI order unchanged; no exploit shown. |
 | 33 | STATIC-L06 | STILL OPEN | - | External calls in loops unchanged; no exploit shown. |
 | 34 | FZ-04 | FIXED | e3c83cd | batch_fix FZ-04 |
-| 35 | AG-20 | FIXED | 21237b0, 0dee5f4 | The Verifier follows Rev 12: the package Handshake allowance value (Rev 6 3-or-1 rule) is ignored, never checked or counted; cl01_cl11_verifier "Rev 12 (AG-20)". App side: the Solana vault program and its app mirror carried the Rev 6 Handshake ($0.95 to $1.05, 2.5% fee, $10 minimum, 3-use limit); now Rev 12 ($0.01 to $0.02, 5%, $0.01 minimum, no limit): 526346b, 238a702, b1707dc, b28d643, eeb76e5, 85636e5; tests: cargo rev12_tests (5 passed), src/tests/solana-program-rev12.test.js (4 pass). Residual: the Solana allowance record and the Rev 6 mock allowance displays remain (record only), see FIX_LOG. |
+| 35 | AG-20 | FIXED | 21237b0, 0dee5f4 | The Verifier follows Rev 12: the package Handshake allowance value (Rev 6 3-or-1 rule) is ignored, never checked or counted; cl01_cl11_verifier "Rev 12 (AG-20)". App side: the Solana vault program and its app mirror carried the Rev 6 Handshake ($0.95 to $1.05, 2.5% fee, $10 minimum, 3-use limit); now Rev 12 ($0.01 to $0.02, 5%, $0.01 minimum, no limit): 526346b, 238a702, b1707dc, b28d643, eeb76e5, 85636e5; tests: cargo rev12_tests (5 passed), src/tests/solana-program-rev12.test.js (4 pass). Residual: the Solana HandshakeAllowance account is kept for account layout only and never refuses (FIX_LOG note 13). The Rev 6 Handshake allowance code and displays in the app, the XRPL and Solana mocks, the UTXO and non-EVM lock scripts and the docs were removed or labeled on fix/rev6-handshake-cleanup-2026-10-23 (FIX_LOG, Revision 6 Handshake cleanup). |
 | 36 | HH-013 | STILL OPEN | - | Fork rig label case; fork test not re-run. |
 | 37 | HH-015 | STILL OPEN | - | By design (user paths are open). |
 | 38 | STATIC-I03 | FIXED | e3c83cd | batch_fix AG-05 |
@@ -165,5 +165,5 @@ Branch fix/batch-2026-10-23. 23 of 60 rows FIXED (some with residual items noted
 | 56 | INC-SMT-02 | STILL OPEN | - | SMTChecker not re-run. |
 | 57 | INC-SMT-03 | STILL OPEN | - | SMTChecker not re-run. |
 | 58 | IT-ECH-01 | STILL OPEN | - | Echidna re-run (8 of 8 properties pass) still does not reach the Stake epoch reward mint. |
-| 59 | IT-MUT-00 | STILL OPEN | - | Gambit still makes no HandshakeCapability mutants. |
+| 59 | IT-MUT-00 | STILL OPEN | - | The HandshakeCapability part no longer applies: Revision 12 removed HandshakeCapability.sol and its probe (9e9f132, f904be7 on fix/rev6-handshake-cleanup-2026-10-23). Still open: gambit 0.2.1 has no relational-to-relational operator and only seeded samples were run. |
 | 60 | MUT-BASECVL-PIN | FIXED for MUT-41..50; 6 new pin-only OPEN | aa73a5c | old pin-only mutants killed by behaviour tests (T-BC-02..05); fresh BaseCVL sample: 13 killed, 6 pin-only |
