@@ -11,13 +11,11 @@
  * Requires a local xrpld. This file starts one in standalone mode.
  */
 
-// XRP Ledger lock cannot keep a per-identity handshake count.
-const COUNTS_PER_IDENTITY = false;
-function handshakeAllowance(countsPerIdentity) {
-  return countsPerIdentity ? 3 : 1;
-}
-if (handshakeAllowance(COUNTS_PER_IDENTITY) !== 1) {
-  throw new Error("XRP Ledger allowance must be derived as 1");
+// Revision 12: a 1-hour Handshake has no allowance limit and no per-account
+// counter. A wallet may create any number of 1-hour Handshakes.
+const HANDSHAKE_ALLOWANCE_LIMIT = null;
+if (HANDSHAKE_ALLOWANCE_LIMIT !== null) {
+  throw new Error("XRP Ledger: Revision 12 has no Handshake allowance limit");
 }
 
 
