@@ -1,6 +1,6 @@
 # Document register
 
-Revision 6, 2026-10-24 (ET). This register is the single source of truth for
+Revision 7, 2026-10-24 (ET). This register is the single source of truth for
 which edition of each controlled document governs. One live copy per document.
 Superseded editions are in `archive/specifications/`. Nothing is deleted.
 
@@ -10,9 +10,9 @@ Superseded editions are in `archive/specifications/`. Nothing is deleted.
 |---|---|---|---|---|
 | Master Specification | Revision 18 | 2026-10-24 | `docs/Vinculum_Finalis_Master_Specification_Revision_18_2026-10-24.md` | CURRENT GOVERNING EDITION. SHA-256 `487735227ea32aa6914d180d5aa8fd0ef5028e56a5ab4c328a63168072ca44bc` |
 | Asset registry | Revision C | 2026-10-24 | `base-contracts/deployment/assetRegistry.revC.json` | Registry written for the deployment under Master Specification Revision 18 (Appendix C, Appendix E item E-9). SHA-256 `5c3311eb4f7b59c34e7ccc8a6bd9e817b4f0bb02bdeff65c5cfed98f79cca581`. Full copy of Revision B with row 454 USDC_BASE class 3 to 1. Not read by the live path (`scripts/registryFile.cjs` reads Revision B). Revision B (`base-contracts/deployment/assetRegistry.revB.json`, 487 rows) stays pinned and unchanged, SHA-256 `1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9`. Operator t361u. |
-| Session start | Revision 5 | 2026-10-24 | `VINCULUM_SESSION_START.md` | Current |
-| Document register | Revision 6 | 2026-10-24 | `DOCUMENT_REGISTER.md` | Current (this file) |
-| Specification archive index | Revision 6 | 2026-10-24 | `archive/specifications/README.md` | Current |
+| Session start | Revision 6 | 2026-10-24 | `VINCULUM_SESSION_START.md` | Current |
+| Document register | Revision 7 | 2026-10-24 | `DOCUMENT_REGISTER.md` | Current (this file) |
+| Specification archive index | Revision 7 | 2026-10-24 | `archive/specifications/README.md` | Current |
 
 ## Superseded editions kept in place
 
@@ -41,11 +41,13 @@ None. No file in the repository reads a superseded edition by path.
 | Session start | Revision 2 | 2026-10-20 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_2_2026-10-20.md` | From commit a989ee2. |
 | Session start | Revision 3 | 2026-10-24 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_3_2026-10-24.md` | SHA-256 `8c63b5c82941695ecae74a6aea976a4fb13018b7f0d0f10536146181cbca70ef`. |
 | Session start | Revision 4 | 2026-10-24 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_4_2026-10-24.md` | SHA-256 `33e5dae3cd31fc775f8812cc48977b065e5cd86f749fcba256575133ec68e3bf`. |
+| Session start | Revision 5 | 2026-10-24 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_5_2026-10-24.md` | SHA-256 `805fd87e51cb03a63a4278b5396107da4279133bbb3775e210b7dc5b9ab0b242`. |
 | Document register | Revision 1 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_1_2026-10-24.md` | SHA-256 `4941b6c9c10d976ba7575d92973641bebb9a593697e37741b3c4d18ea1e822c1`. |
 | Document register | Revision 2 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_2_2026-10-24.md` | SHA-256 `5eeccf0791992b93e263330f210a81b4d2f900e086ae4c7eac65dc3f31abb279`. |
 | Document register | Revision 3 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_3_2026-10-24.md` | SHA-256 `030a2eec6772f304c5a1e6513aea1cf9628dd6e4e3fcb7cf8fe216924ae0a79f`. |
 | Document register | Revision 4 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_4_2026-10-24.md` | SHA-256 `b6f42ae04fc110336a0bb65503de4269d7af650c8e5aba3d1eb96dd7131d7a42`. |
 | Document register | Revision 5 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_5_2026-10-24.md` | SHA-256 `8c8bfc90f5389f520b61a70136c9de7c66cd9ebedc4ae79212959bdc9002d676`. |
+| Document register | Revision 6 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_6_2026-10-24.md` | SHA-256 `6ba5e70994d9775b85783e15aefe9eb43f9c5d98f48755143ebab3be47d71ab1`. |
 
 ## Files that name the Revision 6 file
 

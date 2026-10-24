@@ -1,8 +1,8 @@
 # Vinculum session start
 
-Revision 5, current as of Saturday 2026-10-24 (ET). Read this first in every
+Revision 6, current as of Saturday 2026-10-24 (ET). Read this first in every
 new session. It says what is live, what governs, and the rules. It replaces
-Revision 4 of 2026-10-24 (see History at the end).
+Revision 5 of 2026-10-24 (see History at the end).
 
 The operator is not a programmer. One step at a time. Plain English. Do not
 build, commit, change, deploy or send anything until the operator asks.
@@ -10,16 +10,17 @@ build, commit, change, deploy or send anything until the operator asks.
 ## Repository
 https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
-Revision 17 of the Master Specification was added to main at 7e45d3f. This
-session start (Revision 5) was added to main at f31ac6f. Check
+Revision 18 of the Master Specification was added to main at e96d102.
+Registry Revision C was added to main at 90ac322. This session start
+(Revision 6) was added to main at (recorded in the next commit). Check
 `git log -1 origin/main` for the newest commit.
 
 Start with these files:
 1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision,
    its path and its SHA-256; the single source of truth for which copy
    governs)
-2. `docs/Vinculum_Finalis_Master_Specification_Revision_17_2026-10-24.md`
-   (Revision 17, the current governing specification)
+2. `docs/Vinculum_Finalis_Master_Specification_Revision_18_2026-10-24.md`
+   (Revision 18, the current governing specification)
 3. `deployment/BASE44_LIVE_CONFIG_2026-10-22.md` (the live Base set)
 4. `testing-rigs/MASTER_FINDINGS.md` and `testing-rigs/FIX_LOG_2026-10-23.md`
    (open findings and recorded operator decisions)
@@ -28,17 +29,17 @@ Start with these files:
 If a file is missing, list the folder. Do not invent the file.
 
 ## Governing specification
-- Revision 17 governs:
-  `docs/Vinculum_Finalis_Master_Specification_Revision_17_2026-10-24.md`.
+- Revision 18 governs:
+  `docs/Vinculum_Finalis_Master_Specification_Revision_18_2026-10-24.md`.
 - Its SHA-256 is
-  `3b45aeeb25881c7f2465b2bf78400bfd94626df9fe0e3456d72cbe9e1452dace`.
+  `487735227ea32aa6914d180d5aa8fd0ef5028e56a5ab4c328a63168072ca44bc`.
   The same hash is in `DOCUMENT_REGISTER.md`. If the file's hash does not
   match, stop and tell the operator.
 - Every rule is stated in that file. No rule comes from an earlier revision
   by reference. Earlier revisions are in `archive/specifications/` and do
   not govern.
 - Changes whose adoption is unclear are not in the governing text. They are
-  in Revision 17, Appendix E ("Not adopted / pending").
+  in Revision 18, Appendix E ("Not adopted / pending").
 
 ## Revision control
 - To make a new revision: copy the current revision, edit the copy, and save
@@ -55,20 +56,20 @@ If a file is missing, list the folder. Do not invent the file.
 
 ## Launch scope
 - This launch is Base only: mint on Base, lock on Base.
-- The sixteen environments in Revision 17, Section 11.1 stay defined in the
+- The sixteen environments in Revision 18, Section 11.1 stay defined in the
   specification. The other fifteen stay in the repository as future work.
-  Each one is held to the same reader finality bar (Revision 17, Section
+  Each one is held to the same reader finality bar (Revision 18, Section
   11.5) before any Base issuance from it.
 - Readers are required. They must not be disabled.
 
 ## Governing rules
 - The Handshake is one hour. Its fee is 5%, the same uniform 5% on every
   chain and every duration. It is worth $0.01 to $0.02. There is no
-  allowance limit. (Adopted in Revision 12, stated in Revision 17.)
-- Revision 17 VF-COM-003 also sets coin-unit bands for Bitcoin, Bitcoin Cash
+  allowance limit. (Adopted in Revision 12, stated in Revision 18.)
+- Revision 18 VF-COM-003 also sets coin-unit bands for Bitcoin, Bitcoin Cash
   and Litecoin native Handshakes. Those chains are not in this launch.
 - Every other duration needs at least $0.01 (the contract minimum). Revision
-  17 VF-COM-009 says $10.00. This difference is pending (Revision 17,
+  18 VF-COM-009 says $10.00. This difference is pending (Revision 18,
   Appendix E, item E-8).
 - Only the sixteen durations are permitted. Ten years is 8.0x.
 - The 120-day stake multiplier is 2.1x (`docs/TRS_CORRECTION_2026-10-17.md`).
@@ -94,6 +95,11 @@ If a file is missing, list the folder. Do not invent the file.
 - The app offers new locks and mints on Base only. Every other network is
   refused.
 - Revision B has 487 rows. The registry pin and the hash lock are unchanged.
+- Registry Revision C (`base-contracts/deployment/assetRegistry.revC.json`,
+  SHA-256 `5c3311eb4f7b59c34e7ccc8a6bd9e817b4f0bb02bdeff65c5cfed98f79cca581`)
+  is the registry written for the deployment under Revision 18. It is a full
+  copy of Revision B with row 454 USDC_BASE set to S1. It is not wired into
+  the live path; Revision B stays pinned.
 - cbETH on Base is hidden at the app level only (HH-013, mitigated). It stays
   hidden until the label fix or a permanent drop
   (`testing-rigs/FIX_LOG_2026-10-23.md`, operator decision 2026-10-24).
@@ -132,7 +138,8 @@ If a file is missing, list the folder. Do not invent the file.
 ## History
 | Revision | Date | Change | Archived copy |
 |---|---|---|---|
-| 5 | 2026-10-24 | Revision 17 governs, named by number and SHA-256. | This file (current) |
+| 6 | 2026-10-24 | Revision 18 governs, named by number and SHA-256. Registry Revision C identifier and pin added. | This file (current) |
+| 5 | 2026-10-24 | Revision 17 governs, named by number and SHA-256. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_5_2026-10-24.md` |
 | 4 | 2026-10-24 | Revision 16 governs, named by number and SHA-256. Revision control rule. Launch scope: Base only. Finality status lines and old precedence lines removed. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_4_2026-10-24.md` |
 | 3 | 2026-10-24 | Revision 14 governs. Reader finality rule. Document control. Oct 22 live set, Revision B, cbETH hide. Planned-deployment section removed. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_3_2026-10-24.md` |
 | 2 | 2026-10-20 | Revision 12 Handshake. Cosmos dropped. Plan for the 2026-10-21 deployment. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_2_2026-10-20.md` |
