@@ -15,7 +15,7 @@ export const AUTHORITY = {
     '5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9',
   requirements_count: 209,
   approved_asset_count: 1001,
-  supported_environment_count: 17,
+  supported_environment_count: 16, // 7 EVM + 9 non-EVM
 };
 
 // VF-TOK-001: "VCLM, CHONX, and SYNTH each use 18 decimal places."
@@ -62,9 +62,9 @@ export const DECAY = {
 
 // Phase 1 fixed rules (Protocol Constants "phase_1_fixed_rules")
 export const FIXED_RULES = {
-  handshake_value_usd_min: 0.95, // VF-COM-003: $0.95 inclusive
-  handshake_value_usd_max: 1.05, // VF-COM-003: $1.05 inclusive
-  handshake_fee_bps: 250, // VF-COM-004: 2.50%
+  handshake_value_usd_min: 0.01, // Handshake value band: $0.01 inclusive
+  handshake_value_usd_max: 0.02, // Handshake value band: $0.02 inclusive
+  handshake_fee_bps: 500, // Handshake fee: 5.00%, uniform across all chains and durations
   standard_minimum_value_usd: 10.0, // VF-COM-009: $10.00
   standard_fee_bps: 500, // VF-COM-009: 5.00%
   reward_accounting_credit_rate: 0.6, // 60% (constants "reward_accounting_credit")
@@ -166,9 +166,6 @@ export const ATTEMPT_STATES = {
   NOT_RECOGNIZED: 'NOT_RECOGNIZED',
 };
 
-// VF-COM-006: Solana is an account-model mechanism with atomic persistent per-identity state
-// (Solana PDAs). This qualifies for three qualifying Handshakes per identity.
-// NOTE: This is the prototype mechanism's capability. The actual allowance is "determined by
-// the actual selected source mechanism, not by a broad chain label" (VF-COM-006). Production
-// determination requires deployed mechanism evidence (VF-DEP-001).
-export const SOLANA_HANDSHAKE_ALLOWANCE = 3;
+// Handshake allowance: no allowance limit. A wallet may create any number of 1-hour
+// Handshakes. Infinity keeps the numeric type, so any count comparison never blocks.
+export const SOLANA_HANDSHAKE_ALLOWANCE = Infinity;
