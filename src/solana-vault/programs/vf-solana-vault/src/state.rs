@@ -101,19 +101,21 @@ impl LockRecord {
         + 1; // bump
 }
 
-/// VF-COM-006/007: Per-identity Handshake allowance tracking.
-/// One PDA per source_account. Tracks qualifying Handshake usage.
+/// Kept for account layout only. Revision 12 has no Handshake allowance limit
+/// and no per-account counter: a wallet may create any number of 1-hour
+/// Handshakes. The program never refuses a Handshake based on these fields
+/// (FIX_LOG note 13). One PDA per source_account.
 #[account]
 pub struct HandshakeAllowance {
-    /// VF-COM-005: Identity string "(Solana, source_account)".
+    /// Source account label "(Solana, source_account)". Not a limit key.
     pub identity: String,
     /// The bound source account.
     pub source_account: Pubkey,
-    /// Successful qualifying Handshakes consumed.
+    /// Record of 1-hour Handshakes created. Never checked against a limit.
     pub used: u32,
-    /// Remaining qualifying Handshakes.
+    /// Layout field from Revision 6. Never checked against a limit.
     pub remaining: u32,
-    /// VF-COM-006: Allowance (3 for account-model with persistent state).
+    /// Layout field from Revision 6 (was 3). Revision 12 has no limit.
     pub allowance: u32,
     pub bump: u8,
 }
