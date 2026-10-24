@@ -7,8 +7,9 @@
 //   - Vinculum_Finalis_Base44_Implementation_Brief.md
 //
 // This module implements the protocol domain logic for the Solana environment:
-// validation, fee calculation, emission decay, output calculation, Handshake
-// identity/allowance, and the lock state machine.
+// validation, fee calculation, emission decay, output calculation, the source
+// account label, and the lock state machine. Revision 12: the Handshake has no
+// allowance limit and no Handshake identity.
 //
 // Every function cites the governing requirement IDs it enforces.
 // No value is fabricated. No logic from other environments is reused (clean-room rule).
@@ -26,7 +27,6 @@ import {
   TOKEN_HARD_CAPS,
   LOCK_STATES,
   ATTEMPT_STATES,
-  SOLANA_HANDSHAKE_ALLOWANCE,
 } from './vfRevision6Authority.js';
 import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP } from './vfLiveRules.js';
 import { SOLANA_REGISTRY } from './vfSolanaRegistry.js';
@@ -95,13 +95,13 @@ export function validateSolanaAddress(addr) {
 }
 
 // ---------------------------------------------------------------------------
-// Handshake identity — VF-COM-005
+// Source account label
 // ---------------------------------------------------------------------------
 
-// VF-COM-005: "For an account-model mechanism it is the source environment combined
-// with the source account." Solana is account-model.
-// identity = (source_environment_id, source_account)
-export function buildHandshakeIdentity(sourceAccount) {
+// Labels an attempt with (environment, source account) for display and logs.
+// Revision 12: this is not a Handshake identity and nothing counts or limits
+// Handshakes per account.
+export function buildSourceIdentity(sourceAccount) {
   if (!sourceAccount) return null;
   return `(${SOLANA_ENVIRONMENT.name}, ${sourceAccount})`;
 }
@@ -338,7 +338,7 @@ export function validateLockRequest({
     checks.push({ id: 'VF-PRI-003', pass: true });
   }
 
-  // VF-COM-005: source account required for Handshake identity
+  // VF-COM-005: a valid source account is required (it signs the lock)
   if (!sourceAccount || !validateSolanaAddress(sourceAccount)) {
     errors.push('VF-COM-005: invalid source account (Solana address format)');
     checks.push({ id: 'VF-COM-005', pass: false });
@@ -422,6 +422,6 @@ export function validateLockRequest({
     fee: feeResult.ok ? { fee: feeResult.fee, principal: feeResult.principal, gross: feeResult.gross, bps: feeResult.bps } : null,
     asset,
     handshake,
-    identity: sourceAccount ? buildHandshakeIdentity(sourceAccount) : null,
+    identity: sourceAccount ? buildSourceIdentity(sourceAccount) : null,
   };
 }
