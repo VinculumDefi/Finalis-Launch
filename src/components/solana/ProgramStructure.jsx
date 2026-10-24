@@ -13,7 +13,7 @@ const INSTRUCTIONS = [
 const PDAS = [
   { name: 'Config', seeds: '[b"vf_config"]', purpose: 'singleton config' },
   { name: 'Lock Record', seeds: '[b"vf_lock", sha256(lock_id)]', purpose: 'per-lock VF-XCH-011 facts' },
-  { name: 'Handshake Allowance', seeds: '[b"vf_handshake", source_account]', purpose: 'per-identity usage' },
+  { name: 'Handshake Allowance', seeds: '[b"vf_handshake", source_account]', purpose: 'kept for account layout only; Revision 12 has no allowance limit and nothing reads it as a limit' },
   { name: 'Vault (SPL)', seeds: '[b"vf_vault", mint]', purpose: 'principal custody' },
 ];
 
