@@ -7,8 +7,9 @@
 // (2) as soon as CHONX is available, SYNTH forging can begin, no extra CHONX threshold;
 // (3) one SYNTH = 1,000 VCLM + 10,000 CHONX.
 //
-// Path A: the ceremony as built (487 rows, no protocol-token rows).
-// Path B (t258u): three extra rows after the 487, before finalize:
+// Path A: the ceremony as built (Base-only launch, t357u: the 27 Base rows of
+// the 487-row Revision B, no protocol-token rows).
+// Path B (t258u): three extra rows after the Base rows, before finalize:
 //   488 VCLM (fixed $0.10), 489 CHONX (fixed $0.01), 490 SYNTH (fixed $200).
 //   Rows use custodyClass 3 / custodyPath 1 (S3, token), decimals 18, the same as
 //   the other Base ERC-20 rows and the b1cdfe8 VCLM row. The fixed values are
@@ -25,7 +26,7 @@ const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const DATA = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 
 const SCALE = 10n ** 18n;
 const DAY7 = 604800n;
@@ -61,9 +62,6 @@ function harness(withProtocolRows) {
   };
   h.setup = async () => {
     [h.signer, h.user, h.recipient, h.dest, h.other] = await ethers.getSigners();
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, h.signer);
-    const newLocks = {};
-    for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, DATA.evmDevFunds[env])).getAddress();
     const log = (s) => {
       h.logs.push(...String(s).split("\n"));
       for (const n of ["VCLM", "CHONX", "Forge"]) {
@@ -71,7 +69,7 @@ function harness(withProtocolRows) {
         if (m) h.addr[n] = ethers.getAddress(m[1]);
       }
     };
-    h.r = await runBaseCeremony({ ethers, signer: h.signer, art, data: h.data, newLocks, log });
+    h.r = await runBaseCeremony({ ethers, signer: h.signer, art, data: h.data, log });
     await network.provider.send("hardhat_impersonateAccount", [DATA.scheduledPricePoster]);
     await network.provider.send("hardhat_setBalance", [DATA.scheduledPricePoster, "0x56BC75E2D63100000"]);
     h.poster = await ethers.getSigner(DATA.scheduledPricePoster);
@@ -185,14 +183,14 @@ async function forgeChecks(h, label) {
   console.log(`      [${label}] 999.99 VCLM or 9,999.99 CHONX refused (VFT: insufficient balance); forge(2) burned exactly 2,000 VCLM + 20,000 CHONX`);
 }
 
-describe("Path A (487 rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH forge (proof, test chain)", function () {
+describe("Path A (27 Base rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH forge (proof, test chain)", function () {
   this.timeout(900000);
   const h = harness(false);
   before(async () => { await h.setup(); });
 
-  it("A0: ceremony writes 487 rows and 475 token addresses, no protocol-token row, and finalizes", async () => {
-    expect(h.logs).to.include("registry 487/487");
-    expect(h.logs).to.include("token addresses 475/475");
+  it("A0: ceremony writes the 27 Base rows and 26 Base token addresses, no protocol-token row, and finalizes", async () => {
+    expect(h.logs).to.include("registry 27/27");
+    expect(h.logs).to.include("token addresses 26/26");
     expect((await h.r.verifier.assetPrecisionTable(key("Base", VCLM_ID))).canonicalAssetId).to.equal(ethers.ZeroHash);
     expect(await h.r.verifier.configurationFinalized()).to.equal(true);
     expect(await h.r.forge.verifier()).to.equal(await h.r.verifier.getAddress());
@@ -266,8 +264,9 @@ describe("Rows 488-490 with their token addresses are refused by the ceremony (t
   it("the Verifier refuses to index VCLM, CHONX or SYNTH, so the ceremony stops before finalize", async () => {
     const h = harness(true);
     await expect(h.setup()).to.be.revertedWith("VF-REG-008: protocol token is not a lock input");
-    expect(h.logs).to.include("registry 490/490");
-    expect(h.logs.some((x) => /^token addresses 4(5|7)\d\/478$/.test(x))).to.equal(true);
+    expect(h.logs).to.include("registry 30/30"); // 27 Base rows plus the three
+    // 26 Base token addresses plus the three go in one batch of 29, refused whole.
+    expect(h.logs.some((x) => /^token addresses /.test(x))).to.equal(false);
     expect(h.logs).to.not.include("Finalized.");
   });
 });
