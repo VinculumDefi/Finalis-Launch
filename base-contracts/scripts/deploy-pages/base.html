@@ -22,7 +22,7 @@
 <main>
   <h1>Base ceremony (Base-only launch)</h1>
   <p>Deploys VCLM, CHONX, the Verifier, Forge (VinculumFinalisSynth, the SYNTH token) and Stake, then the new 5% Base lock BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge), which refuses VCLM, CHONX and SYNTH as lock inputs before any token moves. Stake is on from the start: VCLM is initialised with the Verifier and Stake as its minters. Fee: 5.00% of gross on every duration, including the 1-hour Handshake at $0.01 to $0.02.</p>
-  <p>Before finalize it deploys and registers one reader, the Base reader (BaseLockRecordVerifier, bound to the new Base lock). No other chain is registered. Then: the Base subset of Revision B in batches of 50 (27 Base rows, including Base ETH; 26 Base token addresses; no aliases), the Base Dev Fund, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
+  <p>Before finalize it deploys and registers one reader, the Base reader (BaseLockRecordVerifier, bound to the new Base lock). No other chain is registered. Then: the Base subset of registry Revision C in batches of 50 (27 Base rows, including Base ETH, with Base USDC as S1 at 1.5x; 26 Base token addresses; no aliases), the Base Dev Fund, the first Base ETH price (this wallet, run 1), poster handed to the live price poster, finalize. Finalize is permanent: nothing can be registered after it.</p>
   <div id="registry-gate">
     <p>Registry source: <code id="registry-filename">(loading)</code>. Rows: <b id="registry-rows">?</b>. SHA-256: <code id="registry-sha256">(loading)</code>. Base rows registered: <b id="registry-base-rows">?</b>.</p>
     <p id="registry-wrong" style="display:none">WRONG REGISTRY: expected 487 rows with a 27-row Base subset, found <span id="registry-wrong-n"></span></p>
@@ -38,17 +38,20 @@
 <script>
 const EXPECTED_REGISTRY_ROWS = 487;
 const EXPECTED_BASE_ROWS = 27;
+// Registry Revision C (deployment/assetRegistry.revC.json), operator decision t367u.
+const EXPECTED_REGISTRY_SHA256 = "5c3311eb4f7b59c34e7ccc8a6bd9e817b4f0bb02bdeff65c5cfed98f79cca581";
 const logEl = document.getElementById("log");
 const sealEl = document.getElementById("seal");
 function log(s) { logEl.textContent += s + "\n"; }
 let signer, data;
 const connectBtn = document.getElementById("connect");
 
-// The source is Revision B (487 rows). The page registers only its Base subset.
+// The source is registry Revision C (487 rows). The page registers only its Base subset.
 function registryProblem(d) {
   const rows = Number(d && d.registryRows);
   const entries = d && Array.isArray(d.entries) ? d.entries : [];
   if (rows !== EXPECTED_REGISTRY_ROWS) return "expected 487 source rows, found " + rows;
+  if (!d || d.registrySha256 !== EXPECTED_REGISTRY_SHA256) return "expected registry Revision C (SHA-256 " + EXPECTED_REGISTRY_SHA256.slice(0, 12) + "...), found " + String(d && d.registrySha256);
   if (entries.length !== EXPECTED_BASE_ROWS) return "expected 27 Base rows, found " + entries.length;
   if (!entries.every((e) => e.environmentId === "Base")) return "a non-Base row is in the registry entries";
   return null;
