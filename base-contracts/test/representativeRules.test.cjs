@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { rows, handshakeAllowance } = require("../deployment/representativeBase.cjs");
+const { rows, HANDSHAKE_RULE } = require("../deployment/representativeBase.cjs");
 const { deploySystem, VCLM_HARD_CAP, CHONX_HARD_CAP, SYNTH_HARD_CAP } = require("./00_smoke.test.cjs");
 
 const USD = 10n ** 18n;
@@ -30,7 +30,7 @@ const COMMITMENT = [
 ];
 
 describe("representative deployment destinations", function () {
-  it("lists the sixteen environments and derives the handshake allowance", function () {
+  it("lists the sixteen environments with one Revision 12 Handshake rule and no allowance", function () {
     expect(rows).to.have.length(16);
     const names = rows.map((row) => row.environment);
     expect(names).to.deep.equal([
@@ -53,8 +53,9 @@ describe("representative deployment destinations", function () {
     ]);
     expect(names.some((name) => /cosmos|atom/i.test(name))).to.equal(false);
     for (const row of rows) {
-      expect(row.handshakeAllowance).to.equal(handshakeAllowance(row.countsPerIdentity));
-      expect(row.handshakeAllowance).to.equal(row.countsPerIdentity ? 3 : 1);
+      // Revision 12: no row carries a Handshake allowance or a counting flag.
+      expect(row).to.not.have.property("handshakeAllowance");
+      expect(row).to.not.have.property("countsPerIdentity");
       expect(row.devFund).to.be.a("string").and.not.empty;
     }
     const evm = rows.filter((row) =>
@@ -62,15 +63,23 @@ describe("representative deployment destinations", function () {
     );
     for (const row of evm) {
       expect(row.devFund).to.equal("0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a");
-      expect(row.countsPerIdentity).to.equal(true);
+      expect(row.lock).to.equal("CommitmentVaultLock");
     }
+    expect(HANDSHAKE_RULE).to.deep.equal({
+      durationSeconds: 3600,
+      usdMin: "0.01",
+      usdMax: "0.02",
+      feeBps: 500,
+      allowanceLimit: null,
+      authority: "Revision 12",
+    });
     expect(rows.find((row) => row.environment === "Bitcoin").devFund).to.equal(
       "bc1qgf9h8m2fxeu66z9pq7dxgczuz5c4y52pek9jcu"
     );
   });
 });
 
-describe("CommitmentVaultLock exact rows, fees, and derived allowance", function () {
+describe("CommitmentVaultLock exact rows, fees, and no Handshake allowance (Revision 12)", function () {
   async function vault() {
     const [creator] = await ethers.getSigners();
     const devFund = ethers.Wallet.createRandom().address;
@@ -141,15 +150,30 @@ describe("CommitmentVaultLock exact rows, fees, and derived allowance", function
     expect((await deployed.lockRecord(ok[0])).fee).to.equal(500n);
   });
 
-  it("derives the allowance from the counting capability", async function () {
-    const { deployed } = await vault();
-    const Probe = await ethers.getContractFactory("HandshakeCapabilityProbe");
-    const probe = await Probe.deploy();
-    await probe.waitForDeployment();
-    expect(await deployed.countsPerIdentity()).to.equal(true);
-    expect(await deployed.handshakeAllowance()).to.equal(await probe.allowance(true));
-    expect(await probe.allowance(false)).to.equal(1n);
-    expect(await probe.allowance(true)).to.equal(3n);
+  it("has no Handshake allowance and accepts any number of Handshakes from one account", async function () {
+    const { creator, devFund, deployed, destination } = await vault();
+    // Revision 12: no allowance getter, no counting flag, no per-account counter.
+    expect(deployed.handshakeAllowance).to.equal(undefined);
+    expect(deployed.countsPerIdentity).to.equal(undefined);
+    expect(deployed.handshakeUses).to.equal(undefined);
+    for (const sig of ["handshakeAllowance()", "countsPerIdentity()"]) {
+      await expect(
+        ethers.provider.call({ to: await deployed.getAddress(), data: ethers.id(sig).slice(0, 10) })
+      ).to.be.reverted;
+    }
+    let probeFound = true;
+    try { await ethers.getContractFactory("HandshakeCapabilityProbe"); } catch (e) { probeFound = false; }
+    expect(probeFound).to.equal(false);
+    const dest = await destination.getAddress();
+    const before = await ethers.provider.getBalance(devFund);
+    for (let i = 0; i < 5; i++) {
+      const call = args(dest, HOUR);
+      await deployed.connect(creator).createNativeLock(...call, (15n * USD) / 1000n, { value: 10_000n });
+      const record = await deployed.lockRecord(call[0]);
+      expect(record.exists).to.equal(true);
+      expect(record.fee).to.equal(500n);
+    }
+    expect((await ethers.provider.getBalance(devFund)) - before).to.equal(500n * 5n);
   });
 });
 
