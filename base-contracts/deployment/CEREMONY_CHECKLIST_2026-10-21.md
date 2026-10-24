@@ -1,93 +1,76 @@
-# On-the-day checklist, tonight 2026-10-21
+# On-the-day checklist (Base-only launch)
 
 Short form of `DEPLOYMENT_DAY_RUNBOOK.md`. The runbook is the full text and
 wins if the two ever differ. Nothing here sends anything for you: every
 transaction is a MetaMask prompt you sign. No key is typed, pasted or stored.
 
-## A. Build and checks (from `base-contracts`, fresh copy of branch `release/2026-10-21`)
-- [ ] `git fetch` then `git checkout release/2026-10-21` and `git pull`, then
+Founder directive t357u: the launch is Base-only. No lock is deployed on any
+other chain, no other reader is registered, and only the 27 Base rows of
+Revision B are registered (26 token addresses, no aliases). The sixteen lock
+contracts and their readers stay in the source tree and are not deployed.
+
+## A. Build and checks (from `base-contracts`, fresh copy of `main`)
+- [ ] `git fetch` then `git checkout main` and `git pull`, then
       `npm install --legacy-peer-deps`
 - [ ] `npx hardhat compile --force`
-- [ ] `node scripts/deploy-pages/buildDeployPages.cjs`
 - [ ] `node scripts/build_ceremony_artifacts.cjs`: check the Base ETH price it
       prints is today's. No price: stop.
-- [ ] `git status`: only `ceremony-data.json` and the fifteen chain pages
-      (commit stamp) changed, plus `deployment/lockDeploy.prepared.json` if
-      you ran the gas refresh. `ceremony.json` unchanged (the test
-      `ceremony_artifacts_match_compile` fails if it differs from the compile).
-      Anything else: stop.
+- [ ] `git status`: only `ceremony-data.json` changed. `ceremony.json`
+      unchanged (the test `ceremony_artifacts_match_compile` fails if it
+      differs from the compile). Anything else: stop.
+- [ ] `npm run ceremony:dryrun:simulate`: prints
+      `mode: SIMULATE (Base-only, ...)`, `ceremony would succeed` and
+      `reconciliation PASS`. Anything else: stop.
 - [ ] `NODE_OPTIONS=--max-old-space-size=12288 npx hardhat test`, alone,
-      about 20 minutes, 0 failing.
-- [ ] Hash check (runbook 1.5). Expected:
-      VinculumFinalisVerifier `0x3c11faa9…1dcc66`,
-      VinculumFinalisStake `0xd2221a1a…b3d07e`,
-      BaseCommitmentVaultLock `0x7954931f…789df9`,
-      CommitmentVaultLock `0x2daadaf6…80bd99`. Any differs: stop.
+      about 30 minutes, 0 failing.
+- [ ] Hash check (runbook 1.5). Any differs: stop.
 
 ## B. Funding (fresh gas)
-- [ ] `node scripts/prepareLockDeploy.cjs` (read only) right before you start.
-      Fund at least 3 times the figure it prints. Readings at 6:59 PM ET:
+- [ ] Base only: the ceremony is 17 transactions. Fund the deployer wallet
+      with at least 3 times the gas figure from the dry-run
+      (`testing-rigs/ceremony-dryrun/dryrun_gas.json`).
 
-| Chain | Sends | Gas | Fund at least |
-|---|---|---|---|
-| Ethereum | 1 lock deploy | 1,596,454 | 0.0005 ETH (more if above 0.1 gwei) |
-| Arbitrum | 1 lock deploy | 1,611,751 | 0.0001 ETH |
-| Optimism | 1 lock deploy | 1,596,454 | 0.00001 ETH |
-| Polygon | 1 lock deploy | 1,599,828 | 1.3 POL |
-| BNB Smart Chain | 1 lock deploy | 1,596,538 | 0.00024 BNB |
-| Avalanche | 1 lock deploy | 1,596,466 | 0.012 AVAX |
-| Base | ceremony, 72 transactions | 109,789,439 | 0.002 ETH (more if above 0.02 gwei) |
-
-Base at 0.006 gwei: about 0.000662 ETH in all (about $1.64 at $2,484).
-
-## C. Pages, in this order
+## C. Page
 Serve `scripts/deploy-pages` with `python3 -m http.server 8080` and open
-`http://localhost:8080/<page>.html`.
-
-1. [ ] `ethereum.html`, `arbitrum.html`, `optimism.html`, `polygon.html`,
-       `bnb-smart-chain.html`, `avalanche.html` (any order). One prompt each.
-       Each logs `CommitmentVaultLock (<Chain>)  0x…`.
-       After each: `node scripts/prepareLockDeploy.cjs --check "<Chain>" <address>`
-       must print `ALL CHECKS PASSED`. Save the address in `new-locks.json`.
-2. [ ] `base.html` (chain id 8453). Paste the six addresses, "Connect wallet",
-       read the price line, then "Run ceremony". 72 prompts:
+`http://localhost:8080/base.html` (chain id 8453). "Connect wallet", read the
+price line, then "Run ceremony". 17 prompts:
 
 | Prompts | What |
 |---|---|
 | 1 to 5 | VCLM, CHONX, Verifier, Forge (SYNTH), Stake |
 | 6 | Base lock (BaseCommitmentVaultLock) |
 | 7 to 8 | `VCLM.initialize(Verifier, Stake)`, `CHONX.initialize(Verifier, 0)` |
-| 9 to 38 | 15 reader deploys and 15 registrations |
-| 39 to 48 | 10 registry batches |
-| 49 to 58 | 10 token address batches |
-| 59 to 61 | 3 aliases |
-| 62 to 68 | 7 Dev Fund settings |
-| 69 to 71 | poster to your wallet, price run 1, poster to `0x6001…0DB4` |
-| 72 | `finalize` |
+| 9 to 10 | Base reader (BaseLockRecordVerifier) deploy and registration |
+| 11 | 1 registry batch (27 Base rows) |
+| 12 | 1 token address batch (26 Base token addresses) |
+| 13 | Base Dev Fund |
+| 14 to 16 | poster to your wallet, price run 1, poster to `0x6001…0DB4` |
+| 17 | `finalize` |
 
 ## D. Stop points
 - [ ] Stop point A, after prompt 6. The log shows `VCLM 0x…`, `CHONX 0x…`,
       `Verifier 0x…`, `Forge 0x…`, `Stake 0x…`, then `Base lock 0x…`.
       Before prompt 7 run
       `node scripts/prepareLockDeploy.cjs --check Base <Base lock address>`.
-      It must print `ALL CHECKS PASSED` (code, 5% fee, Dev Fund, the three
-      token addresses with symbols VCLM, CHONX, SYNTH, and all three refused).
+      It must print `ALL CHECKS PASSED` (code, 5% fee on every duration
+      including the 1-hour Handshake, Dev Fund, the three token addresses
+      with symbols VCLM, CHONX, SYNTH, and all three refused).
       Otherwise reject prompt 7 and stop.
-- [ ] Stop point B, before prompt 72 (`finalize`). The log has exactly:
-      15 `reader` lines (no Solana), `registry 487/487` (10 progress lines),
-      `token addresses 475/475` (10 progress lines). Anything missing: reject.
+- [ ] Stop point B, before prompt 17 (`finalize`). The log has exactly:
+      one `reader Base` line, `registry 27/27`, `token addresses 26/26`.
+      Anything else: reject.
 - [ ] After `Finalized.` copy the log box and result box into
       `~/vf-ceremony/ceremony-log.txt`.
 
 If anything stops before `finalize`: reload `base.html` and start again; it
-makes a new full set (about 0.00066 ETH again). Never speed up or replace a
-pending transaction.
+makes a new full set. Never speed up or replace a pending transaction.
 
 ## E. After the ceremony
-1. [ ] `node scripts/applyCeremonyAddresses.cjs --log ~/vf-ceremony/ceremony-log.txt --locks ~/vf-ceremony/new-locks.json --rpc https://mainnet.base.org --out ~/vf-ceremony/base44-values.json --write`
+1. [ ] `node scripts/applyCeremonyAddresses.cjs --log ~/vf-ceremony/ceremony-log.txt --rpc https://mainnet.base.org --out ~/vf-ceremony/base44-values.json --write`
        must print "On-chain read-only checks on Base: all passed" (it also
-       checks the Base lock's three token addresses and that Stake reads the
-       Verifier's launch time).
+       checks the Base lock's three token addresses, that Stake reads the
+       Verifier's launch time, and that no other environment has a reader or
+       a Dev Fund destination).
 2. [ ] App tests, `npm run lint`, `npm run build`; secret-scan and commit only
        `src/lib/vfDeployedAddresses.js`; push.
 3. [ ] Base44 section 6 with `base44-values.json`.
@@ -126,9 +109,8 @@ full if the VCLM cap cannot hold the whole epoch reward at that time.
 CHONX activation margin (VF-COM-025, t271u): the Verifier mints CHONX for a
 lock only if the lock was created after CHONX activation was recorded
 (`chonxActivationTimestamp()`). A Base lock must be created strictly later
-(a lock in the activation block is refused). A lock on any other chain must be
-created at least 1 day (`CHONX_SOURCE_CLOCK_MARGIN_SECS` = 86,400 seconds)
-after activation, because other chains' clocks are not Base's. Earlier CHONX
+(a lock in the activation block is refused). (The 1-day margin for other chains,
+`CHONX_SOURCE_CLOCK_MARGIN_SECS`, does not apply: the launch is Base-only.) Earlier CHONX
 locks are refused forever ("VF-COM-025: lock created before CHONX activation");
 their principal is still released at maturity.
 
