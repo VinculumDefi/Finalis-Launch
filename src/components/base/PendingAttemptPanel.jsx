@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ENVIRONMENTS, findEnvironment } from '@/lib/vfBaseRegistry';
 import { getTerminalDispositions, isSuccessDisposition } from '@/lib/vfPendingAttemptLifecycle';
-import { ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
+import { ATTEMPT_STATES } from '@/lib/vfSpecAuthority';
 import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 
 const STATE_STYLES = {
