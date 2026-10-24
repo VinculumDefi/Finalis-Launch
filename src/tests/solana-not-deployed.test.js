@@ -1,7 +1,8 @@
 // Solana is not part of the 2026-10-21 deployment (t251u): the app does not
 // offer it for a new lock and cannot build or submit a Solana lock (fail closed).
-// The program id and PDA seeds in vfSolanaProgram.js are unchanged. Its
-// Handshake constants follow Rev 12 (see solana-program-rev12.test.js).
+// The program id and the config, lock and vault PDA seeds in vfSolanaProgram.js
+// are unchanged. Its Handshake constants follow Rev 12 (see
+// solana-program-rev12.test.js); Rev 12 removed the Handshake allowance seed.
 // Run: node --test src/tests/solana-not-deployed.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -62,7 +63,9 @@ test('Solana instruction builder refuses; program id and seeds unchanged', () =>
   assert.match(src, /export async function buildCommitVaultLockParams\(params\) \{\n  \/\/ Solana is not part of this deployment: no lock instruction is built\.\n  if \(!SOLANA_LOCKS_ENABLED\) throw new Error\(SOLANA_NOT_DEPLOYED_MESSAGE\);/);
   // the Rust-mirrored constants are as before
   assert.ok(src.includes("export const PROGRAM_ID = 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS';"));
-  for (const s of ["SEED_CONFIG = 'vf_config'", "SEED_LOCK = 'vf_lock'", "SEED_HANDSHAKE = 'vf_handshake'", "SEED_VAULT = 'vf_vault'"]) assert.ok(src.includes(s), s);
+  for (const s of ["SEED_CONFIG = 'vf_config'", "SEED_LOCK = 'vf_lock'", "SEED_VAULT = 'vf_vault'"]) assert.ok(src.includes(s), s);
+  // Rev 12: no Handshake allowance seed or PDA
+  assert.ok(!src.includes('SEED_HANDSHAKE') && !src.includes('vf_handshake'), 'Handshake allowance seed still present');
 });
 
 test('Solana page says it is not part of this deployment and cannot submit', () => {
