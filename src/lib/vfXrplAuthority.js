@@ -25,7 +25,7 @@ export {
   ASSET_CLASS_MULTIPLIERS_BPS,
   LOCK_STATES,
   ATTEMPT_STATES,
-} from './vfRevision6Authority.js';
+} from './vfSpecAuthority.js';
 
 // --- XRPL environment (Protocol Constants "supported_environments") ---
 
