@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef } from 'react';
 import { FileText, Lock, ScrollText } from 'lucide-react';
 import ProvenanceBanner from '@/components/xrpl/ProvenanceBanner';
 import TransactionStructure from '@/components/xrpl/TransactionStructure';
@@ -39,10 +39,6 @@ export default function XrplLock() {
   const [identity, setIdentity] = useState(null);
   const [batch, setBatch] = useState(null);
 
-  const handshakeUsed = useMemo(() => {
-    if (!identity) return 0;
-    return adapter.handshakeUsage.get(identity) || 0;
-  }, [identity, adapter, attemptState]);
 
   function onRunPreflight() {
     const usdMicro = parseUsdToFixedPoint(values.verifiedGrossUsd);
@@ -200,7 +196,6 @@ export default function XrplLock() {
               attemptState={attemptState}
               output={output}
               identity={identity}
-              handshakeUsed={handshakeUsed}
               onSubmit={onSubmit}
               onDisposition={onDisposition}
               onIssue={onIssue}
