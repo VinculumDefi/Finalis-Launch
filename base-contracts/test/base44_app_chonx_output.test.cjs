@@ -17,7 +17,7 @@ const fs = require("fs");
 const path = require("path");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const data = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 
 const APP = path.join(__dirname, "..", "..", "app", "base44-lock-2026-10-13", "src", "lib");
 const mintCfg = fs.readFileSync(path.join(APP, "mintConfig.js"), "utf8");
@@ -51,10 +51,7 @@ describe("Base44 section 7: CHONX output from the app's own package (test chain)
   before(async () => {
     const [signer, u, rcp] = await ethers.getSigners();
     user = u; recipient = rcp;
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
-    const newLocks = {};
-    for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, data.evmDevFunds[env])).getAddress();
-    r = await runBaseCeremony({ ethers, signer, art, data, newLocks });
+    r = await runBaseCeremony({ ethers, signer, art, data });
     C = { lock: await r.lock.getAddress(), verifier: await r.verifier.getAddress(), chonx: await r.chonx.getAddress() };
     verifier = new ethers.Contract(C.verifier, APP_VERIFIER_ABI, user);
     lockRO = new ethers.Contract(C.lock, LOCK_RECORD_ABI, ethers.provider);
