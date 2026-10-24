@@ -13,7 +13,7 @@ const fs = require("fs");
 const path = require("path");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const data = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 
 const APP = path.join(__dirname, "..", "..", "app", "base44-lock-2026-10-13", "src", "lib");
 const mintCfg = fs.readFileSync(path.join(APP, "mintConfig.js"), "utf8");
@@ -32,10 +32,7 @@ describe("Base44 app mint path against the Revision B contracts (section 6)", fu
   before(async () => {
     const [signer, u, rcp] = await ethers.getSigners();
     user = u; recipient = rcp;
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
-    const newLocks = {};
-    for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, data.evmDevFunds[env])).getAddress();
-    r = await runBaseCeremony({ ethers, signer, art, data, newLocks });
+    r = await runBaseCeremony({ ethers, signer, art, data });
   });
 
   it("reads the app's ABI: one proof tuple field differs (handshakeIdentity)", () => {
@@ -64,7 +61,7 @@ describe("Base44 app mint path against the Revision B contracts (section 6)", fu
       expect(real.getFunction(f.name).selector, f.name).to.equal(f.selector);
     }
     for (const name of ["recordFeeAndRac", "verifyAndMint"]) expect(code.includes("63" + app.getFunction(name).selector.slice(2)), name).to.equal(true);
-    const lockI = new ethers.Interface(art.CommitmentVaultLock.abi);
+    const lockI = new ethers.Interface(art.BaseCommitmentVaultLock.abi);
     const appLock = new ethers.Interface(LOCK_RECORD_ABI);
     for (const f of appLock.fragments) {
       if (f.type === "event") expect(lockI.getEvent(f.name).topicHash).to.equal(appLock.getEvent(f.name).topicHash);
@@ -99,7 +96,7 @@ describe("Base44 app mint path against the Revision B contracts (section 6)", fu
     const gross = (15n * 10n ** 15n * 10n ** 18n) / price.priceUsd18 / 1000n * 1000n; // wei
     const usd = (gross * price.priceUsd18) / 10n ** 18n;                               // app's scheduledGrossUsd
     const lockId = ethers.hexlify(ethers.randomBytes(32));
-    const lockW = new ethers.Contract(C.lock, art.CommitmentVaultLock.abi, user);
+    const lockW = new ethers.Contract(C.lock, art.BaseCommitmentVaultLock.abi, user);
     const receipt = await (await lockW.createNativeLock(lockId, recipient.address, 0, ethId, ethers.ZeroHash, user.address, 3600, usd, { value: gross })).wait();
     const record = await lockRO.lockRecord(lockId, { blockTag: receipt.blockNumber });
     expect(record.fee).to.equal((gross * 500n) / 10000n); // 5% on the Handshake
