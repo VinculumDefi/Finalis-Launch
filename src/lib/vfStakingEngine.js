@@ -33,7 +33,7 @@
 // Reasons returned on failure are the contract's revert texts.
 // =============================================================================
 
-import { TOKEN_HARD_CAPS, STAKE_DURATIONS, REWARD_REFERENCE_CENTS, FIXED_RULES } from './vfRevision6Authority.js';
+import { TOKEN_HARD_CAPS, STAKE_DURATIONS, REWARD_REFERENCE_CENTS, FIXED_RULES } from './vfSpecAuthority.js';
 
 export const EPOCH_SECS = FIXED_RULES.epoch_days * 86400;
 export const STAKE_TOKENS = ['VCLM', 'CHONX', 'SYNTH']; // token ids 0, 1, 2
