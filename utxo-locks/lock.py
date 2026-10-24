@@ -61,8 +61,9 @@ from tx import (
 
 FEE_BPS = 500
 
-# The CLTV redeem script cannot keep a per-identity counter (VF-COM-006).
-COUNTS_PER_IDENTITY = False
+# Revision 12: a 1-hour Handshake has no allowance limit and no per-account
+# counter. A wallet may create any number of 1-hour Handshakes.
+HANDSHAKE_ALLOWANCE_LIMIT = None
 
 # Exact COMMITMENT_DURATIONS rows. Seconds, multiplier bps. No range.
 PERMITTED_DURATIONS = (
@@ -83,11 +84,6 @@ PERMITTED_DURATIONS = (
     (283824000, 77000),
     (315360000, 80000),
 )
-
-
-def handshake_allowance(counts_per_identity: bool) -> int:
-    """Capable mechanisms get 3. Mechanisms that cannot count get 1."""
-    return 3 if counts_per_identity else 1
 
 
 def multiplier_bps(duration_secs: int) -> int:
