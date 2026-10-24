@@ -23,35 +23,15 @@ export const BASE_CONTRACTS = Object.freeze({
   stake: PENDING,
 });
 
-// The seven new 5% locks (5% on every duration): Base is BaseCommitmentVaultLock
-// (refuses VCLM, CHONX and SYNTH as inputs); the six others are CommitmentVaultLock.
+// Base-only launch: the one new 5% lock (5% on every duration),
+// BaseCommitmentVaultLock (refuses VCLM, CHONX and SYNTH as inputs).
 export const LOCKS_5PCT = Object.freeze({
   "Base": PENDING,
-  "Ethereum": PENDING,
-  "Arbitrum": PENDING,
-  "Optimism": PENDING,
-  "Polygon": PENDING,
-  "BNB Smart Chain": PENDING,
-  "Avalanche": PENDING,
 });
 
-// The 15 readers registered on the Verifier (Solana is not registered).
+// Base-only launch: the one reader registered on the Verifier (Base).
 export const READERS = Object.freeze({
   "Base": PENDING,
-  "Ethereum": PENDING,
-  "Arbitrum": PENDING,
-  "Optimism": PENDING,
-  "Polygon": PENDING,
-  "BNB Smart Chain": PENDING,
-  "Avalanche": PENDING,
-  "Bitcoin": PENDING,
-  "Bitcoin Cash": PENDING,
-  "Litecoin": PENDING,
-  "Dogecoin": PENDING,
-  "DigiByte": PENDING,
-  "Zcash": PENDING,
-  "Stellar": PENDING,
-  "XRP Ledger": PENDING,
 });
 
 // Retired 2.5% locks: never offered for a new lock. Existing locks on them can
