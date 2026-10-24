@@ -1,3 +1,5 @@
+> **SUPERSEDED. Revision 12 is superseded by Revision 14, the current governing edition: `docs/Vinculum_Finalis_Master_Specification_Revision_14_2026-10-24.md`. Its rules are carried into Revision 14. This file stays at this path because `testing-rigs/assumption-gap/assumptions.json` line 5 names it. See `DOCUMENT_REGISTER.md`.**
+
 # Vinculum Finalis Master Specification
 ## Revision 12
 ### 2026-10-16
