@@ -1,0 +1,1281 @@
+# full Hardhat suite, alone, NODE_OPTIONS=--max-old-space-size=12288, start 2026-10-24 12:01:50 EDT MemAvailable=14780336kB
+
+
+  W0 · harness smoke
+    ✔ deploys every contract in the system (726ms)
+    ✔ tokens report their configured hard caps (72ms)
+
+  CL-04 · stake durations are the four-row TRS table
+    ✔ table length is 4 and each row stores the authorized multiplier (85ms)
+    ✔ rejects every other duration, including commitment-only rows (110ms)
+
+  CL-02 · VF-IMM-001/VF-DEP-006: authority terminated at finalization
+    ✔ initialize() cannot be called twice (63ms)
+    ✔ deployer address is zeroed - authority irreversibly terminated (66ms)
+    ✔ finalized flag is independently verifiable on-chain (VF-DEP-007) (62ms)
+    ✔ no address can seize minting after finalization (60ms)
+    ✔ the original deployer has no residual minting power (58ms)
+    ✔ setMinter no longer exists (61ms)
+
+  CL-07 · stake contract can mint epoch rewards
+    ✔ stake contract is an authorized VCLM minter (56ms)
+    ✔ verifier is also an authorized VCLM minter (64ms)
+    ✔ VF-STK-004: stake has no CHONX minting privilege (53ms)
+
+  CL-03 · §10.1 token multipliers (VCLM 1.0x / CHONX 2.0x / SYNTH 4.0x)
+    ✔ VCLM weight at 30d is amount x 1.0 x 1.00 (85ms)
+    ✔ CHONX weight is exactly twice VCLM at equal amount and duration (141ms)
+    ✔ SYNTH weight is exactly four times VCLM at equal amount and duration (119ms)
+
+  CL-14 · VF-STK-025 expired position cannot backdate over a gap
+    ✔ queueExtension reverts once the position has expired (60ms)
+
+  CL-02 · Verifier: deployment ceremony closes irreversibly
+    ✔ registerChainVerifier is unreachable after finalization (59ms)
+    ✔ registerAssetPrecision is unreachable after finalization (76ms)
+    ✔ configureDevFund is unreachable after finalization (63ms)
+    ✔ finalize() cannot be called twice (58ms)
+    ✔ verifier deployer is zeroed - authority terminated (VF-DEP-006) (55ms)
+    ✔ finalized flag is publicly readable (VF-DEP-007) (53ms)
+    ✔ no attacker can install a chain verifier that validates forged locks (57ms)
+    ✔ VF-DEP-002: a zero chain verifier cannot be registered
+
+  CL-02 · Synth and Stake carry no authority
+    ✔ Synth setVerifier no longer exists (63ms)
+    ✔ Synth setTokenContracts no longer exists (55ms)
+    ✔ Synth burn targets are immutable (69ms)
+    ✔ Stake exposes no authority address (CL-29) (60ms)
+
+  VF-DEP-001 · issuance inactive until finalization
+    ✔ verifyAndMint reverts before the ceremony is closed
+
+  CommitmentVaultLock (Revision 8, seven EVM environments)
+    ✔ rejects a zero Dev Fund deployment input
+    Base
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+      ✔ requireLockRecord reverts for an unknown id and succeeds after create
+      ✔ does not return finalized for an empty hash or height 0
+      ✔ charges 5.00% on a one-hour lock and rejects durations that are not exact rows (45ms)
+      ✔ rejects a zero fee or zero principal before the lock exists
+      ✔ uses the ERC-20 balance delta when the token withholds units
+      ✔ keeps no Handshake counter: a fourth Handshake from one account is accepted at 5% (39ms)
+    Ethereum
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+    Polygon
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+    Optimism
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+    Arbitrum
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+    BNB Smart Chain
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+    Avalanche
+      ✔ labels the deployment with the environment and a supplied dev fund
+      ✔ holds: release before maturity reverts and principal stays in the contract
+      ✔ releases principal once to the bound destination at maturity, and a second or wrong caller reverts
+      ✔ routes a 5% fee on a 7-day lock to the dev fund and keeps 95% as principal
+      ✔ holds, releases, and fees an ERC-20 from the received balance
+
+  Active asset registry, interim 822 set (subset of the 961 + Base ETH; superseded by Revision B)
+    ✔ every entry is a historical row, copied unchanged (no relabelling) (523ms)
+    ✔ is a strict subset with no duplicate entries
+    ✔ contains no excluded row (212ms)
+    ✔ counts match: 755 verified, 40 renamed, 15 bridged, 12 natives = 822
+    ✔ carries a price status on every entry, priced or a confirmed fail with its reason
+    ✔ native links: Polygon POL -> row 114, Arbitrum/Optimism ETH -> row 2, each linked row included
+    ✔ the historical file is unchanged: 961 written rows
+
+  App staking simulator matches the Stake contract (t270u)
+    ✔ multipliers: token 1x/2x/4x, durations 1.00x/1.40x/1.75x/2.10x, same as the contract
+      seed 1: 91 ok, 128 refused (same reason), 47 positions, 12 closed, 7 claims, paid 5.665501034304557476 of minted 20720.0 VCLM, terminal false
+    ✔ random scenario seed 1: identical outcomes (1361ms)
+      seed 2: 110 ok, 107 refused (same reason), 51 positions, 12 closed, 18 claims, paid 13295.753314886128665085 of minted 41030.0 VCLM, terminal false
+    ✔ random scenario seed 2: identical outcomes (1273ms)
+      seed 3: 92 ok, 115 refused (same reason), 44 positions, 13 closed, 12 claims, paid 7392.880313664322615053 of minted 62940.0 VCLM, terminal false
+    ✔ random scenario seed 3: identical outcomes (1212ms)
+      seed 4: 92 ok, 113 refused (same reason), 38 positions, 15 closed, 10 claims, paid 585.545709440998286741 of minted 51440.0 VCLM, terminal false
+    ✔ random scenario seed 4: identical outcomes (1162ms)
+      seed 5: 97 ok, 125 refused (same reason), 45 positions, 12 closed, 9 claims, paid 31527.627373440808933781 of minted 58110.0 VCLM, terminal false
+    ✔ random scenario seed 5: identical outcomes (1140ms)
+      seed 6: 92 ok, 118 refused (same reason), 51 positions, 12 closed, 2 claims, paid 5279.721852316842709419 of minted 16140.0 VCLM, terminal false
+    ✔ random scenario seed 6: identical outcomes (1163ms)
+      seed 77: 131 ok, 179 refused (same reason), 48 positions, 16 closed, 26 claims, paid 31898.749633121522091982 of minted 38940.0 VCLM, terminal true
+    ✔ random scenario with the VCLM cap and terminal state: identical outcomes (1662ms)
+      seed 78: 116 ok, 183 refused (same reason), 37 positions, 17 closed, 18 claims, paid 45.787577212711548462 of minted 24600.0 VCLM, terminal true
+    ✔ second VCLM cap scenario: identical outcomes (1506ms)
+
+  applyCeremonyAddresses: ceremony page output to app config
+    ✔ reads every Base contract, the 15 readers and the seven 5% locks from the page text
+    ✔ read-only on-chain checks pass against the finalized test-chain ceremony
+    ✔ on-chain checks catch a reader or lock that does not match (40ms)
+    ✔ writes an app file the app can import, with retired 2.5% locks marked
+    ✔ the committed app file is the generated template (pending) or a finalized record
+    ✔ refuses: no Finalized line, a Stopped line, a missing reader, an extra reader
+    ✔ refuses: an old 2.5% lock, an old verifier, the poster, the Dev Fund, zero, a bad checksum
+    ✔ command line: a dry run prints short addresses and writes nothing (267ms)
+    ✔ refuses: two different addresses for one contract, or a Base contract reused
+
+  ArbitrumLockReader (receipt proof)
+    ✔ binds lock address, environment and chain id at construction
+    ✔ accepts a real lock: facts equal the on-chain LockRecord, block hash equals the claim (329ms)
+    ✔ returns the real output token (0) for a second lock (299ms)
+    ✔ rejects fabricated receipt bytes (675ms)
+    ✔ rejects a wrong lock address (553ms)
+    ✔ rejects a tampered lock ID, amount or recipient (1716ms)
+    ✔ rejects a wrong block hash or height (447ms)
+    ✔ rejects a wrong chain: claim for another chain id, or a lock from another environment (516ms)
+    ✔ the production ArbitrumLockReader rejects a Hardhat-shaped (non-Arbitrum) header (87ms)
+    real Arbitrum One data (parsing only, not a lock)
+      ✔ opens a real Arbitrum header: hash, number, sendRoot, L1 block number
+      ✔ proves every real receipt (incl. Arbitrum type 0x6a) against receiptsRoot and decodes its logs (346ms)
+      ✔ rejects tampered real data and a real non-lock receipt as a lock (844ms)
+
+  AvalancheLockReader (production) against a real local Avalanche lock
+    ✔ the fixture is a local network lock settled by a later genuine Avalanche header
+    ✔ verifyFinality refuses (AG-01, no settled-history anchor); headerClaimMatches binds the settling header
+    ✔ extractFacts proves the lock: id, amounts, 5% fee, 7-day duration, recipient, output token (200ms)
+    ✔ rejects a tampered header, receipt, storage proof, or a reader bound to another lock (1936ms)
+
+  Base44 section 7: CHONX output from the app's own package (test chain)
+      CHONX_ACTIVATION_THRESHOLD() 0xffeae027, chonxActivationBlock() 0x702f8530
+    ✔ section 7 ABI lines exist on the new Verifier with the stated selectors
+    ✔ before activation: the views read closed and a CHONX-output mint is refused (VF-COM-025)
+    ✔ same block: a CHONX lock in the activation block is refused, in either order (66ms)
+    ✔ a VCLM lock crosses 10,000,000; chonxActivated and chonxActivationBlock are set
+      CHONX lock at block 570 (activation block 568) minted 3544.8543 CHONX; receipt 0x (not read)
+    ✔ after activation: the pre-activation CHONX lock stays refused; a later lock with receipt 0x mints CHONX to the Base recipient
+
+  Base44 app mint path against the Revision B contracts (section 6)
+    ✔ reads the app's ABI: one proof tuple field differs (handshakeIdentity)
+    ✔ unchanged app: its two mint selectors are not on the new Verifier, so it stops before sending
+    ✔ updated app: new selectors exist on the new Verifier and every other app ABI line matches
+    ✔ updated app: its readMintContext checks pass and its own package mints VCLM to the Base recipient (47ms)
+
+  Base deploy page flow: 15 readers, Forge and Stake, before finalize
+    ✔ deploys Forge and Stake, Stake on from the start
+    ✔ registers all 15 readers (Base + 14 others) and not Solana
+    ✔ wires each reader to its live lock or Dev Fund
+    ✔ finalizes with the live poster, run 1 used, and nothing can be registered afterwards
+    ✔ refuses before sending: old 2.5% lock, missing lock, lock equal to the poster
+
+  Batch fix 2026-10-23
+    AG-01/02/03: every production non-Base reader refuses finality (environment disabled)
+      ✔ EVM, UTXO, Stellar, XRP Ledger and Solana readers all revert in verifyFinality (161ms)
+    AG-09: the proven lock must have paid the configured Dev Fund
+      ✔ a reader that cannot prove the Dev Fund is refused; a different Dev Fund is refused; the matching one passes (93ms)
+    AG-04: one RAC per proven lock, whatever racIdentity the package states
+      ✔ a second package for the same lock with a new racIdentity cannot record a second RAC; mint happens once (99ms)
+    AG-05: valuation uses the proven creation time
+      ✔ a package Valuation Timestamp other than the proven creation time is refused (85ms)
+      ✔ a proven creation time in the future is refused (81ms)
+      ✔ emission follows the proven day: a lock created 30 days after launch mints the day-30 amount, less than day 0 (90ms)
+    AG-06 and COMB-01/02/03: price in effect at lock creation
+      ✔ COMB-01: a lock created before any usable price is refused forever, even after a later run (83ms)
+      ✔ COMB-02: a failed run in effect at creation refuses the lock, and a later success does not cure it (77ms)
+      ✔ AG-06: a later run does not reprice an earlier lock; a lock created after it uses the new price (87ms)
+      ✔ COMB-03a: a USDC lock created at $1.00 still mints at $1.00 after a later depeg run (80ms)
+      ✔ COMB-03b: a USDC lock created during a depeg (< $0.95) stays refused after recovery (79ms)
+      ✔ $0.95 floor: exactly $0.95 and $0.97 mint at the posted price, never a hardcoded $1 (93ms)
+    AG-07: scheduled run ids are sequential
+      ✔ a skipped or maximal run id is refused, and a reverted run does not consume an id (72ms)
+    FZ-04: oversized gross is a coded error, not an arithmetic panic
+      ✔ gross above max/1e18 reverts VF-COM-011: gross out of range (77ms)
+    FZ-06: ExecutionHeader RLP parsing fails with coded errors
+      ✔ every truncation of a real header, random bytes and oversized length prefixes revert with a reason string (480ms)
+    FZ-07: UTXO input count is bounded before allocation
+      ✔ Bitcoin: a huge input count in the lock or coinbase transaction reverts VF-XCH-011: input count
+      ✔ Bitcoin Cash: a huge input count in the lock or coinbase transaction reverts VF-XCH-011: input count
+      ✔ Litecoin: a huge input count in the lock or coinbase transaction reverts VF-XCH-011: input count
+      ✔ Dogecoin: a huge input count in the lock or coinbase transaction reverts VF-XCH-011: input count
+      ✔ DigiByte: a huge input count in the lock or coinbase transaction reverts VF-XCH-011: input count
+      ✔ Zcash: a huge input count in the lock or coinbase transaction reverts VF-XCH-011: input count (65ms)
+    AG-08: rebasing and transfer-exactness in CommitmentVaultLock
+      ✔ an exact token: fee reaches the Dev Fund exactly and release pays the exact principal
+      ✔ a fee-on-transfer token is refused (the Dev Fund would be short)
+      ✔ a negative rebase blocks new locks and releases pay a pro-rata share; later lockers are not robbed
+      ✔ a positive rebase pays exactly the principal and leaves the surplus in the contract
+    AG-08: rebasing and transfer-exactness in BaseCommitmentVaultLock
+      ✔ an exact token: fee reaches the Dev Fund exactly and release pays the exact principal (42ms)
+      ✔ a fee-on-transfer token is refused (the Dev Fund would be short) (38ms)
+      ✔ a negative rebase blocks new locks and releases pay a pro-rata share; later lockers are not robbed (54ms)
+      ✔ a positive rebase pays exactly the principal and leaves the surplus in the contract (46ms)
+
+  t272u ceremony.json equals the fresh compile (all contracts)
+    ✔ ceremony.json has 22 entries over 21 distinct contracts
+    ✔ VinculumFinalisVerifier: bytecode hash and ABI equal the compiled artifact
+    ✔ TokenVCLM: bytecode hash and ABI equal the compiled artifact
+    ✔ TokenCHONX: bytecode hash and ABI equal the compiled artifact
+    ✔ CommitmentVaultLock: bytecode hash and ABI equal the compiled artifact
+    ✔ BaseCommitmentVaultLock: bytecode hash and ABI equal the compiled artifact
+    ✔ BaseLockRecordVerifier: bytecode hash and ABI equal the compiled artifact
+    ✔ VinculumFinalisSynth: bytecode hash and ABI equal the compiled artifact
+    ✔ VinculumFinalisStake: bytecode hash and ABI equal the compiled artifact
+    ✔ SimpleEthereumLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ ArbitrumLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ OptimismLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ PolygonLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ BnbSmartChainLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ AvalancheLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ BitcoinLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ BitcoinCashLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ LitecoinLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ DogecoinLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ DigiByteLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ ZcashLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ StellarLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ XrplLockReader: bytecode hash and ABI equal the compiled artifact
+    ✔ lockDeploy.prepared.json creationCodeHash and the six EVM lock pages carry the compiled CommitmentVaultLock
+
+  ceremony registry guard (t284u / t285u)
+    ✔ resolved registry has 487 rows and row 2 is Base native ETH
+    ✔ ceremony artifact row count is 487, source equals resolver, hash equals constant
+    ✔ build guard refuses the historical 962-row (resolved) file
+    ✔ build guard refuses a one-byte-modified copy of Revision B in a temp dir
+    ✔ loadRegistry refuses the historical file as ceremony source (no silent fallback)
+    ✔ manifest verification passes on the committed Revision B package
+    ✔ manifest check refuses a tampered manifest digest (constant mismatch)
+    ✔ manifest check refuses missing fee language on an EVM lock page
+    ✔ manifest check refuses deployOrder that differs from baseCeremonyFlow.js
+    ✔ manifest check refuses wrong price-poster handoff when liveConfig is swapped
+    ✔ manifest check refuses wrong Dev Fund from representativeBase
+    ✔ page gate: N != 487 disables Connect and shows WRONG REGISTRY
+    ✔ page gate: N === 487 leaves the warning hidden
+
+  BitcoinHeaderChecker
+    ✔ accepts a mined 7-header chain with the lock tx in the merkle root and six headers after it
+    ✔ reverts a 5-header chain
+    ✔ reverts when a header byte or a merkle sibling bit is flipped
+
+  ZcashHeaderChecker
+    ✔ accepts the mainnet genesis Equihash solution under its nBits target (196ms)
+    ✔ reverts a mutated Equihash solution (470ms)
+    ✔ reverts when the header hash is above the nBits target (429ms)
+    ✔ accepts 10 headers after a lock whose solution meets Equihash and its nBits target (5759ms)
+    ✔ reverts when fewer than 10 headers follow the lock header (175ms)
+    ✔ reverts a one-bit flip of a header or a merkle sibling (7662ms)
+    ✔ refuses a shielded-shaped sapling output marker and an orchard action marker (412ms)
+
+  CL-11 · Rev 12: no Handshake allowance lookup on Base
+    ✔ Rev 12 (AG-20): the package Handshake allowance value is ignored, never checked or counted (117ms)
+    ✔ no per-identity Handshake counter: repeat Handshakes mint at the 5% fee (73ms)
+
+  CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on every new valuation
+    ✔ USDC without a scheduled price fails closed; no $1 substitute (82ms)
+    ✔ USDC/USDT value = token amount x scheduled price; S1 stays 1.5x (95ms)
+    ✔ Handshake: last successful price below $0.95 is unavailable until a later run >= $0.95 (106ms)
+    ✔ sub-$0.95 refuses standard and Handshake locks, at every duration (248ms)
+    ✔ recovery to at or above $0.95 on a later run re-enables standard and Handshake locks (119ms)
+    ✔ exactly $0.95 is allowed for standard and Handshake locks; one wei below is refused (101ms)
+    ✔ USDC/USDT rows on every chain take the $0.95 floor; DAI, CUSDC and USDS do not (316ms)
+    ✔ a lock already created (bound) keeps its creation price after a drop below $0.95 (118ms)
+    ✔ $0.01 standard floor applies to the priced dollar value (97ms)
+    ✔ Handshake $0.01-$0.02 band applies to the priced dollar value (92ms)
+
+  CL-01 / VF-ORC · USD from scheduled registry price
+    ✔ other asset without usable scheduled price reverts (VF-ORC-005) (86ms)
+    ✔ scheduled success then failed run marks asset unavailable (VF-ORC-008) (67ms)
+    ✔ lock retains creation reference price across later registry change (VF-ORC-009/010) (67ms)
+    ✔ mismatched package price record reverts (VF-ORC-007) (61ms)
+    ✔ no deployment-time registerAssetPriceHash remains
+
+  EthereumBeaconLightClient (real mainnet sync-committee signatures)
+    ✔ BLS library matches @noble/curves hash_to_curve and on-curve checks (89ms)
+    ✔ rejects a checkpoint whose committee or root is not proven (296ms)
+      gas: update with rotation 8956358, finality update 8954894
+      gas: verifyFinality 363167
+    ✔ accepts the real updates, rotates the committee, and finalizes a real execution block (4087ms)
+    negatives on real data
+      ✔ unsigned header (zero signature) (987ms)
+      ✔ wrong signature (another real update's signature) (945ms)
+      ✔ under 2/3 participation (903ms)
+      ✔ wrong committee (933ms)
+      ✔ wrong fork domain (1078ms)
+      ✔ bad finality branch and bad next-committee branch (438ms)
+
+  EthereumLockReader (authenticated source evidence)
+    ✔ accepts a real lock: facts equal the on-chain LockRecord (384ms)
+    ✔ rejects a tampered receipt (207ms)
+    ✔ rejects a lock log from the wrong emitter (264ms)
+    ✔ rejects a lock from a non-Ethereum environment (527ms)
+    ✔ rejects a mismatched recipient (storage proof of another lock or edited value) (1182ms)
+    ✔ rejects plain caller fact bytes
+    finality (local sync committee)
+      ✔ accepts only after a signed, finalized update (298ms)
+      ✔ rejects an unsigned header (803ms)
+      ✔ rejects a wrong signature (810ms)
+      ✔ rejects under 2/3 participation (744ms)
+      ✔ rejects a wrong committee (1492ms)
+      ✔ rejects a wrong fork domain (735ms)
+      ✔ rejects a bad finality branch (62ms)
+      ✔ rejects a header not descending from the checkpoint (110ms)
+      ✔ rejects a tampered execution block hash binding (431ms)
+
+  SimpleEthereumLockReader (receipt proof, Ethereum chain 1)
+    ✔ binds lock address, environment and chain id at construction
+    ✔ accepts a real local lock: facts equal the LockRecord, block hash equals the claim (480ms)
+    ✔ returns the real recipient and output token 0 for another lock (125ms)
+    ✔ rejects fabricated receipt bytes and a tampered proof node (377ms)
+    ✔ rejects a wrong lock address (375ms)
+    ✔ rejects a tampered lock ID, amount or recipient (1379ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged receiptsRoot (470ms)
+    ✔ rejects a wrong chain: another chain id, or a lock set up for another environment (521ms)
+    real Ethereum mainnet block 26221236 (parsing only, not a lock)
+      ✔ the production reader opens the real header and proves every fixture receipt against receiptsRoot (815ms)
+      ✔ rejects tampered real data and refuses a real non-lock receipt as a lock (954ms)
+      ✔ rejects real headers from chains with a different header layout (171ms)
+
+  OptimismLockReader (receipt proof, Optimism chain 10)
+    ✔ binds lock address, environment and chain id at construction
+    ✔ accepts a real local lock: facts equal the LockRecord, block hash equals the claim (471ms)
+    ✔ returns the real recipient and output token 0 for another lock (108ms)
+    ✔ rejects fabricated receipt bytes and a tampered proof node (365ms)
+    ✔ rejects a wrong lock address (384ms)
+    ✔ rejects a tampered lock ID, amount or recipient (1375ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged receiptsRoot (417ms)
+    ✔ rejects a wrong chain: another chain id, or a lock set up for another environment (521ms)
+    real Optimism mainnet block 158374641 (parsing only, not a lock)
+      ✔ the production reader opens the real header and proves every fixture receipt against receiptsRoot (4065ms)
+      ✔ rejects tampered real data and refuses a real non-lock receipt as a lock (1233ms)
+      ✔ rejects real headers from chains with a different header layout (221ms)
+      ✔ accepts the real deposit receipt (type 0x7e) shape
+
+  PolygonLockReader (receipt proof, Polygon chain 137)
+    ✔ binds lock address, environment and chain id at construction
+    ✔ accepts a real local lock: facts equal the LockRecord, block hash equals the claim (473ms)
+    ✔ returns the real recipient and output token 0 for another lock (106ms)
+    ✔ rejects fabricated receipt bytes and a tampered proof node (405ms)
+    ✔ rejects a wrong lock address (350ms)
+    ✔ rejects a tampered lock ID, amount or recipient (1353ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged receiptsRoot (388ms)
+    ✔ rejects a wrong chain: another chain id, or a lock set up for another environment (572ms)
+    real Polygon mainnet block 95761809 (parsing only, not a lock)
+      ✔ the production reader opens the real header and proves every fixture receipt against receiptsRoot (357ms)
+      ✔ rejects tampered real data and refuses a real non-lock receipt as a lock (763ms)
+      ✔ the production reader rejects a Hardhat (non-Polygon) header (63ms)
+      ✔ rejects real headers from chains with a different header layout (197ms)
+
+  BnbSmartChainLockReader (receipt proof, BNB Smart Chain chain 56)
+    ✔ binds lock address, environment and chain id at construction
+    ✔ accepts a real local lock: facts equal the LockRecord, block hash equals the claim (482ms)
+    ✔ returns the real recipient and output token 0 for another lock (106ms)
+    ✔ rejects fabricated receipt bytes and a tampered proof node (397ms)
+    ✔ rejects a wrong lock address (388ms)
+    ✔ rejects a tampered lock ID, amount or recipient (1392ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged receiptsRoot (358ms)
+    ✔ rejects a wrong chain: another chain id, or a lock set up for another environment (534ms)
+    real BNB Smart Chain mainnet block 128410200 (parsing only, not a lock)
+      ✔ the production reader opens the real header and proves every fixture receipt against receiptsRoot (2636ms)
+      ✔ rejects tampered real data and refuses a real non-lock receipt as a lock (1044ms)
+      ✔ the production reader rejects a Hardhat (non-BNB Smart Chain) header (79ms)
+      ✔ rejects real headers from chains with a different header layout (270ms)
+
+  AvalancheLockReader (receipt proof, Avalanche chain 43114)
+    ✔ binds lock address, environment and chain id at construction
+    ✔ accepts a real local lock: facts equal the LockRecord, block hash equals the claim (518ms)
+    ✔ returns the real recipient and output token 0 for another lock (165ms)
+    ✔ rejects fabricated receipt bytes and a tampered proof node (449ms)
+    ✔ rejects a wrong lock address (357ms)
+    ✔ rejects a tampered lock ID, amount or recipient (1798ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged receiptsRoot (389ms)
+    ✔ rejects a wrong chain: another chain id, or a lock set up for another environment (592ms)
+    real Avalanche mainnet block 97902420 (parsing only, not a lock)
+      ✔ the production reader opens the real header and proves every fixture receipt against receiptsRoot (1890ms)
+      ✔ rejects tampered real data and refuses a real non-lock receipt as a lock (2560ms)
+      ✔ the production reader rejects a Hardhat (non-Avalanche) header (62ms)
+      ✔ rejects real headers from chains with a different header layout (269ms)
+      ✔ the real header's receiptsRoot commits to the settled block's receipts
+
+  Ethereum finality
+    ✔ accepts a receipt proof inside a finalized checkpoint (40ms)
+    ✔ reverts when a receipt byte is flipped (62ms)
+    ✔ reverts when an RLP header byte is flipped (61ms)
+    ✔ reverts when the checkpoint is only justified (83ms)
+    ✔ reverts on an empty proof, a zero hash, and height 0 (59ms)
+
+  Polygon finality
+    ✔ accepts a Bor header covered by a 2/3 milestone (44ms)
+    ✔ reverts when the Bor header is outside the milestone (60ms)
+    ✔ reverts when a header RLP byte is flipped (56ms)
+    ✔ reverts on an empty or non-proof blob
+
+  Optimism finality
+    ✔ accepts an output root after the dispute-game finality delay
+    ✔ reverts inside the dispute window
+    ✔ reverts on a mismatched output root
+    ✔ reverts on an empty proof or height 0
+
+  Arbitrum finality
+    ✔ accepts an assertion after 45818 L1 blocks
+    ✔ reverts inside the Arbitrum One challenge window
+    ✔ reverts on a mismatched assertion hash
+    ✔ reverts on an empty proof or height 0
+
+  BNB Smart Chain finality
+    ✔ accepts a 2/3 vote on the RLP header hash
+    ✔ reverts on fewer than ceil(2/3 * n) votes (62ms)
+    ✔ reverts when a vote targets a different hash (56ms)
+    ✔ reverts on a duplicate validator (52ms)
+    ✔ reverts when a header RLP byte is flipped (58ms)
+    ✔ reverts on an empty proof or height 0 (58ms)
+
+  Avalanche finality
+    ✔ accepts a linked block the stake quorum marked accepted (47ms)
+    ✔ reverts on a rejected block
+    ✔ reverts on an unaccepted block
+    ✔ reverts when one bit of the parent hash in the header RLP is flipped (94ms)
+    ✔ reverts on an empty proof or height 0 (71ms)
+
+  Live configuration: price poster
+    ✔ records the operator's live price poster, checksummed, on Base
+    ✔ differs from every Dev Fund, lock, release and deployed-contract address recorded in the repo (2457ms)
+    ✔ the test-chain ceremony does not read the live config (it keeps its generated poster)
+    ✔ the Base deploy page hands the poster to the live address before finalize and refuses a clash
+    ✔ on the test chain: price written by the deployer, poster handed over, finalize gates still pass (53ms)
+
+  5% lock, seven chains, native and ERC-20, all sixteen durations
+    ✔ the duration table matches CommitmentDurations (sixteen rows, Handshake = 3600s)
+    ✔ has no owner, no fee setter: the only state-changing functions are the two lock calls and release
+    Base (chain 8453)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (210ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (189ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    Ethereum (chain 1)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (189ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (193ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    Arbitrum (chain 42161)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (200ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (185ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    Optimism (chain 10)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (205ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (213ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    Polygon (chain 137)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (205ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (536ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    BNB Smart Chain (chain 56)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (242ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (209ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    Avalanche (chain 43114)
+      ✔ native: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (207ms)
+      ✔ ERC-20: exactly 5% to the Dev Fund and 95% locked on all sixteen durations; release only to the destination after maturity (218ms)
+      ✔ Handshake is 5% at both ends of its band, and refused outside the band (no other Handshake path)
+    scripts/prepareLockDeploy.cjs (dry run, read-only check)
+      ✔ builds the same init code the pages deploy and an identical runtime for every chain (131ms)
+      ✔ post-deploy check passes on a correct lock and fails on a wrong Dev Fund or wrong environment (157ms)
+      ✔ --check Base passes on a BaseCommitmentVaultLock bound to VCLM, CHONX and SYNTH, and fails on wrong token addresses (84ms)
+      ✔ refuses --broadcast and reads no key material (343ms)
+
+  Corrected 5% lock deploy files (Base + six EVM chains)
+    ✔ covers seven chain configurations, each embedding the current lock build
+    ✔ Base: 5% fee on all sixteen durations, Handshake included (74ms)
+    ✔ Ethereum: 5% fee on all sixteen durations, Handshake included (91ms)
+    ✔ Arbitrum: 5% fee on all sixteen durations, Handshake included (80ms)
+    ✔ Optimism: 5% fee on all sixteen durations, Handshake included (70ms)
+    ✔ Polygon: 5% fee on all sixteen durations, Handshake included (74ms)
+    ✔ BNB Smart Chain: 5% fee on all sixteen durations, Handshake included (73ms)
+    ✔ Avalanche: 5% fee on all sixteen durations, Handshake included (63ms)
+
+  recordFeeAndRac: the lock must exist before fees are recorded
+    ✔ a package for a lock that was never created records nothing (64ms)
+    ✔ an environment with no registered reader records nothing (VF-XCH-006) (57ms)
+    ✔ amounts that differ from the real lock record nothing (VF-XCH-011) (62ms)
+    ✔ a real lock records the fee and RAC, then mints (64ms)
+
+  The package asset must match the lock's asset
+    ✔ Base: a native-ETH lock relabelled as another asset is refused in both phases (66ms)
+    ✔ Base: a lock of an unindexed token address is refused (asset mismatch) (77ms)
+    ✔ verifyAndMint also refuses a package whose asset differs from the lock's (75ms)
+    ✔ recordFeeAndRac refuses a mismatched asset; an unregistered matching asset still fails VF-REG-001 (62ms)
+    ✔ the blocked Solana reader has no asset
+
+  mint path ceremony
+    ✔ mints VCLM to the lock recipient after verifyAndMint (90ms)
+    ✔ reverts when the package recipient is not the lock recipient (65ms)
+
+  Mutant kills: VinculumFinalisToken
+    ✔ T-TK-03: initialize through a contract forwarder is refused (deployer is msg.sender, not tx.origin)
+    ✔ G-Token-71: identical minters are refused
+    ✔ G-Token-144/145: a partial burn succeeds and removes exactly the amount from balance and supply
+    ✔ G-Token-155/174: burnFrom below the allowance succeeds and decrements the allowance by exactly the amount
+
+  Mutant kills: VinculumFinalisSynth
+    ✔ constants: 1,000 VCLM + 10,000 CHONX per SYNTH, 100M CHONX threshold, 10M hard cap
+    ✔ T-SY-03 / G-Synth-91: the activation view is false below 100M, true at exactly 100M and above
+    ✔ G-Synth-67: activation is permanent even if the counter later reads lower
+    ✔ forge is refused before activation
+    ✔ R-Synth-139: forge(0) is refused after activation
+    ✔ G-Synth-150 / G-Synth-204: transfer to zero refused; transferFrom decrements the allowance exactly
+
+  Mutant kills: VinculumFinalisStake extensions
+    ✔ T-ST-01: queueExtension through a contract forwarder is refused (owner is msg.sender) (40ms)
+    ✔ T-ST-03: a non-owner cannot apply a matured queued extension
+    ✔ R-Stake-346 / G-Stake-325: the owner applies exactly at the end; the new term has the queued duration
+
+  Mutant kills: VinculumFinalisVerifier
+    ✔ T-VF-02/06/15/16: the spec constants (56ms)
+    ✔ T-VF-02/03 / G-Verifier-1698: CHONX activates at exactly 10M lifetime VCLM, recording the block time (66ms)
+    ✔ R-Verifier-1141: currentEpoch counts 10-day epochs from launch, starting at 1 (52ms)
+    ✔ T-VF-10: deployment configuration through a contract forwarder is refused
+    ✔ T-VF-09: a scheduled price run through a contract forwarder is refused (65ms)
+    ✔ G-Verifier-792: a zero Base recipient is refused (66ms)
+    ✔ R-Verifier-977: an asset whose symbol is 'USDC_' is not a stablecoin and mints at its posted $0.90 (65ms)
+    ✔ T-VF-16 / G-Verifier-1102: the VCLM cap admits a lock that lands exactly on 10B (117ms)
+    ✔ T-VF-16: one wei over the VCLM cap is refused in full (128ms)
+    ✔ R-Verifier-1025-19: a lock created 30 days after launch earns the decayed rate (64ms)
+    ✔ R-Verifier-639-37: a scheduled price of exactly 2^128-1 is accepted; 2^128 is refused (64ms)
+    ✔ R-Verifier-478-29: registry batches of exactly 50 rows and 50 token addresses are accepted; 51 is refused (87ms)
+    ✔ G-Verifier-532: with the VCLM cap fully issued the fee is still verified but no RAC credit is recorded (120ms)
+    CHONX (activation, causal order and cap edges)
+      ✔ G-Verifier-780: CHONX before activation is refused (59ms)
+      ✔ G-Verifier-830 / R-Verifier-839: a non-Base lock one second inside the clock margin is refused; at the margin it mints (75ms)
+      ✔ G-Verifier-862 / R-Verifier-863 / T-VF-15: CHONX cap edges (normal, exactly to cap, one wei over) (82ms)
+
+  Mutant kills: BaseCommitmentVaultLock (MUT-41..50)
+    ✔ G-BaseCVL-417 / T-BC-02/03/04: handshake band is $0.01 to $0.02 inclusive
+    ✔ R-BaseCVL-213: a zero amount is refused
+    ✔ R-BaseCVL-217: an amount whose stated fee rounds to zero is refused even if the token over-credits
+    ✔ R-BaseCVL-227: a received amount whose fee rounds to zero is refused
+    ✔ R-BaseCVL-255 / R-BaseCVL-365: a no-return token locks and releases exactly at maturity (38ms)
+    ✔ T-BC-05: release through a contract forwarder from the destination EOA is refused (38ms)
+
+  Mutant kills: CommitmentVaultLock (MUT-41..50)
+    ✔ G-BaseCVL-417 / T-BC-02/03/04: handshake band is $0.01 to $0.02 inclusive
+    ✔ R-BaseCVL-213: a zero amount is refused
+    ✔ R-BaseCVL-217: an amount whose stated fee rounds to zero is refused even if the token over-credits
+    ✔ R-BaseCVL-227: a received amount whose fee rounds to zero is refused
+    ✔ R-BaseCVL-255 / R-BaseCVL-365: a no-return token locks and releases exactly at maturity
+    ✔ T-BC-05: release through a contract forwarder from the destination EOA is refused
+
+  non-Base finality trust model (t301u), fixed 2026-10-23
+    ✔ SimpleEthereumLockReader refuses a self-consistent local block; the Verifier records and mints nothing (138ms)
+
+  non-Base lock guard (local Hardhat)
+    ✔ accepts a correct main CommitmentVaultLock on every env
+    ✔ refuses the old 2.5% HANDSHAKE_FEE_BPS bytecode
+    ✔ refuses a retired address (0x5AB4 / 0x4eDE) even before eth_getCode
+    ✔ refuses a wrong chain label in slot 0
+
+  t298u non-Base lock refuses VCLM, CHONX and SYNTH (VF-TOK-007 / VF-REG-008)
+    ✔ VCLM copy (ITS-style, same name and symbol): refused; balances, allowance, Dev Fund, events and lock record unchanged
+    ✔ VCLM: refused by symbol alone and by name alone, and in bytes32 form (59ms)
+    ✔ CHONX copy (ITS-style, same name and symbol): refused; balances, allowance, Dev Fund, events and lock record unchanged
+    ✔ CHONX: refused by symbol alone and by name alone, and in bytes32 form (56ms)
+    ✔ SYNTH copy (ITS-style, same name and symbol): refused; balances, allowance, Dev Fund, events and lock record unchanged
+    ✔ SYNTH: refused by symbol alone and by name alone, and in bytes32 form (58ms)
+    ✔ the real Base token contracts are recognised: VinculumFinalisToken VCLM / CHONX and VinculumFinalisSynth
+    ✔ the refusal is the first check: it fires even with a bad duration, zero USD and an amount above the allowance
+    ✔ the same refusal holds on all six non-Base lock deployments
+    ✔ a normal ERC-20 still locks: 5% to the Dev Fund, principal held, record and events present
+    ✔ normal tokens whose name()/symbol() revert or return other bytes32 values still lock
+    ✔ native locks are unaffected
+
+  predeploy 1: ceremony order (finalize gated)
+    ✔ finalize reverts with nothing configured (50ms)
+    ✔ finalize reverts without the Base reader (55ms)
+    ✔ finalize reverts without the Base ETH registry row (Ethereum row alone) (55ms)
+    ✔ finalize reverts without Dev Fund (57ms)
+    ✔ finalize reverts without price poster (54ms)
+    ✔ finalize reverts without a scheduled Base ETH price (57ms)
+    ✔ finalize reverts when the last Base ETH run failed (unusable) (60ms)
+    ✔ the poster can write a scheduled price before finalize; others cannot (55ms)
+    ✔ full ordered ceremony finalizes (60ms)
+
+  predeploy 2: Base ETH row
+    ✔ Base+ETH key is registered and priced (61ms)
+    ✔ ETH only under Ethereum is not sufficient for a Base lock (61ms)
+
+  predeploy 3: multi-lock mint
+    ✔ handshake + 7d + 30d locks (all 5% fee) mint exact VCLM to baseRecipient; principal held, fee to Dev Fund (105ms)
+
+  predeploy 4: negative cases
+    ✔ mismatched recipient reverts VF-XCH-011
+    ✔ unusable price (failed run) reverts VF-ORC-005
+    ✔ relabelled to a registered, never-priced asset: asset mismatch (VF-XCH-011) (65ms)
+    ✔ zero-price success run reverts VF-ORC-004
+    ✔ relabelled to an unregistered asset: asset mismatch (VF-XCH-011)
+    ✔ fourth Handshake from the same wallet is accepted by the lock at 5%
+    ✔ fourth Handshake mint from the same wallet succeeds on the verifier (46ms)
+    ✔ release before maturity reverts
+    ✔ release from a non-destination wallet reverts; destination succeeds once
+    ✔ second mint from the same lock reverts VF-XCH-013
+
+  predeploy 5: $0.01 floors
+    ✔ constants are 0.01/0.02/0.01 on lock and verifier (56ms)
+    ✔ old 0.95/1.05/10 floor constants are gone from every source copy
+    ✔ lock rejects handshake outside $0.01-$0.02 and standard below $0.01; accepts edges (70ms)
+    ✔ verifier rejects handshake outside $0.01-$0.02 and standard below $0.01 (92ms)
+
+  predeploy 6: access control after finalize
+    ✔ all ceremony setters and finalize are closed; price writes only by poster (78ms)
+    ✔ before finalize, non-deployer cannot configure and mint paths are closed (53ms)
+
+  Price fetcher -> price run (test chain)
+    ✔ reads the 487 Revision B rows: the 486 written rows plus Base ETH; no Solana
+    tightened rule (t222u): one traded pool >= $10,000 on its own, fresh price, natives on fresh CoinGecko only
+      ✔ a single traded pool >= $10,000 passes; a fresh CoinGecko price is then used
+      ✔ two traded pools each under $10,000 that sum to $12,000 fail (no summing)
+      ✔ a $1,000,000 pool with zero 24h trades and zero volume fails; idle pools are ignored completely
+      ✔ a fresh CoinGecko price with no qualifying pool fails
+      ✔ a pool reporting more than 2x market cap is dropped
+      ✔ stale CoinGecko + qualifying pool uses that pool's own quote (largest qualifying DexScreener pool)
+      ✔ stale CoinGecko only fails: there is no stale last resort
+      ✔ a qualifying pool with no quote and no fresh CoinGecko price fails
+      ✔ an API that stays down after the retries fails closed
+      ✔ natives: a fresh CoinGecko price passes with no pool; a stale one fails; no pool is looked up for a native
+      ✔ only the row's own chain and address are requested; never a symbol search
+    on the test chain (ceremony: Revision B, 487 rows, poster = live poster)
+      ✔ the real-fetch fixture feeds priceRun and posts: Revision B rows usable at the exact price; rows not in Revision B skipped and unusable
+      run 3: 140 lines, gasUsed 14069128
+      run 4: 140 lines, gasUsed 14326070
+      run 5: 140 lines, gasUsed 14329562
+      run 6: 67 lines, gasUsed 6816846
+      ✔ a full 487-row Revision B fetch (mocked HTTP) builds consecutive runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts (781ms)
+
+  Price run for the live poster (test chain)
+    ✔ converts decimal prices exactly, with no floating point
+    ✔ builds success lines for fetched prices, failure lines for misses, and skips unknown assets
+    ✔ refuses run numbers below 2 and duplicate assets
+    ✔ posts run 2 as the live poster on the test chain; prices become usable / unusable
+    ✔ the Verifier rejects a reused run number and any sender but the poster
+
+  Path A (487 rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH forge (proof, test chain)
+      addresses: VCLM 0xaD3F...2F2e CHONX 0xcC44...4A21 Verifier 0x3063...bce3 Forge/SYNTH 0x07Db...07E8 Base lock 0xc094...4e7E
+    ✔ A0: ceremony writes 487 rows and 475 token addresses, no protocol-token row, and finalizes
+      [A] VCLM minted for 1 ETH, 7 days: 30824.82
+    ✔ A1: an ETH lock mints VCLM
+    ✔ A2: an ETH lock requesting CHONX before activation records the fee but is refused at mint (VF-COM-025)
+    ✔ A3: forging before CHONX activation is refused (VF-TOK-003: SYNTH not activated)
+      [A] lifetime VCLM after crossing: 11127760.02
+    ✔ A4: ordinary ETH locks cross 10,000,000 lifetime VCLM and activate CHONX
+      [A] CHONX minted for 1 ETH, 7 days: 308248.2
+    ✔ A5: after activation, an ordinary ETH lock requesting CHONX mints CHONX (no VCLM row needed)
+      [A] forge refused with CHONX active; lifetime CHONX: 308248.2
+    ✔ A6 (Rev 6 VF-TOK-003, settled t260u): CHONX is available but the Forge refuses until lifetime CHONX reaches 100,000,000
+      [A] lifetime CHONX after crossing: 111277600.2
+      [A] forge(1): 1 SYNTH minted; 1,000 VCLM and 10,000 CHONX burned via burnFrom (total supply down by exactly that)
+      [A] 999.99 VCLM or 9,999.99 CHONX refused (VFT: insufficient balance); forge(2) burned exactly 2,000 VCLM + 20,000 CHONX
+    ✔ A7: ordinary ETH->CHONX locks push lifetime CHONX past 100,000,000; then forge burns exactly 1,000 VCLM + 10,000 CHONX per SYNTH (61ms)
+
+  Rows 488-490 with their token addresses are refused by the ceremony (t262u, VF-TOK-007 / VF-REG-008, test chain)
+    ✔ the Verifier refuses to index VCLM, CHONX or SYNTH, so the ceremony stops before finalize (539ms)
+
+  t259u/t262u Path A (487 rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)
+      [none] addresses: VCLM 0x3721...9817 CHONX 0x4377...c6FD Verifier 0x67C7...96ba Forge/SYNTH 0x3961...948f Base lock 0x41c0...7053
+    ✔ A0: 487 rows / 475 token addresses; no protocol-token row or index entry; finalized
+      [A] forge refused at lifetime CHONX 308248.2 (< 100M); after 111277600.2, forge(3) burned exactly 3,000 VCLM + 30,000 CHONX for 3 SYNTH
+    ✔ A4 (VF-TOK-003, expected): ETH locks give VCLM and CHONX; Forge refused under 100M lifetime CHONX even with CHONX active; succeeds after with exact burns (69ms)
+      [A] VCLM lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted
+    ✔ A1: VCLM as a lock input is refused by the Base lock before any token moves or fee
+      [A] CHONX lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted
+    ✔ A1: CHONX as a lock input is refused by the Base lock before any token moves or fee
+      [A] SYNTH lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted
+    ✔ A1: SYNTH as a lock input is refused by the Base lock before any token moves or fee
+    ✔ A3 TRS (VF-STK-002/003): VCLM, CHONX and SYNTH are accepted at 1x/2x/4x; other tokens and durations refused; epoch 1 credits with no eligible weight mint nothing; unstake returns each (39ms)
+
+  t262u Path B (rows 488-490 with token addresses): the ceremony is refused at the token index (VF-REG-008)
+    ✔ registerTokenAddressBatch refuses the protocol token addresses; no finalize (583ms)
+
+  representative deployment destinations
+    ✔ lists the sixteen environments with one Revision 12 Handshake rule and no allowance
+
+  CommitmentVaultLock exact rows, fees, and no Handshake allowance (Revision 12)
+    ✔ rejects an in-range duration that is not one of the sixteen rows
+    ✔ stores each row multiplier and prices the handshake against the standard lock (161ms)
+    ✔ keeps the handshake inside $0.01 to $0.02 and the other rows at or above $0.01 (67ms)
+    ✔ has no Handshake allowance and accepts any number of Handshakes from one account (74ms)
+
+  emission schedule and forge
+    ✔ decays VCLM and CHONX from the authority rates and floors (66ms)
+    ✔ issues Verified Gross USD x emission x asset class x duration (63ms)
+    ✔ mints SYNTH only by burning 1,000 VCLM and 10,000 CHONX, and stops at 10,000,000 (49ms)
+
+  retired broadcast scripts and pages
+    ✔ each retired script loads no wallet or chain code, prints the notice and exits with an error (569ms)
+    ✔ each retired page has no script and no wallet code, and points to the runbook
+    ✔ nothing on the deployment path or in another test uses them
+    ✔ the compiled Stake has exactly the four TRS rows from the app source, 120 days = 2.10x
+
+  Revision B asset registry (487: 475 per-pool tokens + 12 natives)
+    ✔ is the file the live path reads
+    ✔ is reproducible: buildRevisionB() from the committed CSV gives the committed file (577ms)
+    ✔ 487 entries: 475 tokens + 12 natives; counts by chain
+    ✔ strict subset of the prior revision and of the interim 822 set, rows copied unchanged, no duplicates (691ms)
+    ✔ all 12 natives present, each with a fresh CoinGecko price (<= 24h)
+    ✔ every token entry passes the per-pool rule; every CSV survivor is in, every CSV failure is out (443ms)
+    ✔ no Solana, no excluded row, no duplicate-losing row
+    ✔ native links kept, each target row in Revision B: Polygon POL -> row 114, Arbitrum/Optimism ETH -> row 2
+    ✔ token address index (deployment/tokenAddressIndex.json) is built from Revision B: 475 addresses (204ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Arbitrum: 8 of 22 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12970ms)
+      ✔ USDC_ARB (row 11): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12614ms)
+      ✔ USDT_ARB (row 20): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12414ms)
+      ✔ WBTC_ARB (row 38): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11530ms)
+      ✔ DAI_ARB (row 44): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11604ms)
+      ✔ UNI_ARB (row 85): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11407ms)
+      ✔ CRV_ARB (row 273): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13007ms)
+      ✔ JONES (row 320): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11858ms)
+      ✔ WETH_ARB (row 425): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11813ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (5533ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Avalanche: 9 of 28 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12216ms)
+      ✔ USDC_AVAX (row 42): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12215ms)
+      ✔ USDT_AVAX (row 121): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12764ms)
+      ✔ DAI_AVAX (row 160): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12903ms)
+      ✔ WETH_AVAX (row 429): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12490ms)
+      ✔ WAVAX (row 528): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12678ms)
+      ✔ XAVA (row 558): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12473ms)
+      ✔ BTCB (row 624): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12872ms)
+      ✔ ISA (row 655): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12842ms)
+      ✔ SHIBX (row 686): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12924ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (6282ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Base: 6 of 26 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (791ms)
+      ✔ AERO (row 34): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (1090ms)
+      ✔ cbBTC (row 45): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (1096ms)
+      ✔ TOSHI (row 144): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (1082ms)
+      ✔ LUNA_AI (row 400): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (1053ms)
+      ✔ MIGGLES (row 402): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (1015ms)
+      ✔ USDC_BASE (row 454): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (1042ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (124ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    BNB Smart Chain: 16 of 95 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11422ms)
+      ✔ USDC_BSC (row 41): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12948ms)
+      ✔ USDT_BSC (row 50): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12037ms)
+      ✔ CAKE (row 62): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12014ms)
+      ✔ DAI_BSC (row 96): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11268ms)
+      ✔ GMT (row 147): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11576ms)
+      ✔ GALXE (row 185): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12389ms)
+      ✔ TKO (row 358): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12043ms)
+      ✔ WETH_BSC (row 428): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11944ms)
+      ✔ WBNB (row 515): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11619ms)
+      ✔ BTCB (row 529): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11999ms)
+      ✔ SXP (row 554): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11039ms)
+      ✔ EOS (row 577): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10890ms)
+      ✔ FIL (row 579): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11631ms)
+      ✔ BONDLY (row 737): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11375ms)
+      ✔ RFOX (row 850): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12302ms)
+      ✔ THG (row 875): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12242ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (5965ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Ethereum: 32 of 264 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10379ms)
+      ✔ USDC (row 1): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11642ms)
+      ✔ USDT (row 6): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12195ms)
+      ✔ WBTC (row 7): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11965ms)
+      ✔ DAI (row 10): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11307ms)
+      ✔ PAXG (row 37): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11293ms)
+      ✔ RNDR (row 53): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10782ms)
+      ✔ CRV (row 56): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10518ms)
+      ✔ RPL (row 58): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10484ms)
+      ✔ CBBTC_ETH (row 70): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11398ms)
+      ✔ CRO (row 112): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11191ms)
+      ✔ SAND (row 128): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11109ms)
+      ✔ BAND (row 241): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11612ms)
+      ✔ OHM (row 248): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11299ms)
+      ✔ OLAS (row 250): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11320ms)
+      ✔ ELON (row 279): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11366ms)
+      ✔ MASK (row 296): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11098ms)
+      ✔ AIOZ (row 298): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11496ms)
+      ✔ T (row 314): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11310ms)
+      ✔ RLC (row 324): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11181ms)
+      ✔ rsETH (row 404): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11977ms)
+      ✔ ezETH (row 408): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11415ms)
+      ✔ INJ (row 491): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12196ms)
+      ✔ RLUSD (row 500): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12277ms)
+      ✔ SHFL (row 503): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12454ms)
+      ✔ USDG (row 512): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12662ms)
+      ✔ ALEPH (row 609): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11688ms)
+      ✔ COTI (row 631): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12127ms)
+      ✔ DEXT (row 636): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11776ms)
+      ✔ KEEP (row 657): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12235ms)
+      ✔ UFO (row 701): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (15463ms)
+      ✔ POND (row 836): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13071ms)
+      ✔ SETH2 (row 856): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12544ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (5481ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Optimism: 12 of 12 indexed tokens (all) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10545ms)
+      ✔ OP (row 26): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12234ms)
+      ✔ USDC_OP (row 39): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11411ms)
+      ✔ AAVE_OP (row 83): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11253ms)
+      ✔ UNI_OP (row 86): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11334ms)
+      ✔ WBTC_OP (row 87): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10760ms)
+      ✔ DAI_OP (row 89): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10889ms)
+      ✔ VELO (row 113): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (13711ms)
+      ✔ USDT_OP (row 119): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11431ms)
+      ✔ SNS (row 141): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11697ms)
+      ✔ LINK_OP (row 195): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12815ms)
+      ✔ WETH_OP (row 426): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11132ms)
+      ✔ LYRA (row 807): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11637ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (7427ms)
+
+  Sampled CVL x 16 durations + TRS x 4 durations (seed "t204u-cvl-trs-sample-v1")
+    Polygon: 9 of 28 indexed tokens (seeded 10% + well-known) + native
+      ✔ native: 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10912ms)
+      ✔ USDC_POL (row 40): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11538ms)
+      ✔ USDT_POL (row 49): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11493ms)
+      ✔ WBTC_POL (row 88): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11440ms)
+      ✔ DAI_POL (row 90): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11238ms)
+      ✔ WETH_POL (row 427): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (10975ms)
+      ✔ WMATIC (row 523): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11088ms)
+      ✔ PLOT (row 672): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11391ms)
+      ✔ ROUTE (row 683): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (11556ms)
+      ✔ OMEN (row 823): 16 CVL durations at 5%, proven, exact VCLM minted, released at maturity; TRS at 30/60/90/120 days (12635ms)
+      ✔ CHONX: native lock after activation mints the exact CHONX amount; released at maturity (6715ms)
+
+  t269u Stake differential: O(1) close/allocate gives exactly the f816be3 results
+      seed 1: 27 positions, 21 final epochs (7 paid), minted 44955.9 VCLM, paid 44955.899999999999999962
+    ✔ seed 1 {}: identical totals, mints and per-owner payouts (1160ms)
+      seed 2: 14 positions, 21 final epochs (5 paid), minted 26302.0 VCLM, paid 26301.999999999999999988
+    ✔ seed 2 {}: identical totals, mints and per-owner payouts (2864ms)
+      seed 3: 21 positions, 21 final epochs (6 paid), minted 30408.5 VCLM, paid 30408.499999999999999981
+    ✔ seed 3 {}: identical totals, mints and per-owner payouts (866ms)
+      seed 4: 29 positions, 29 final epochs (8 paid), minted 43443.1 VCLM, paid 43443.099999999999999966
+    ✔ seed 4 {"epochs":24}: identical totals, mints and per-owner payouts (1295ms)
+      seed 5: 15 positions, 21 final epochs (2 paid), minted 6316.8 VCLM, paid 6316.799999999999999996
+    ✔ seed 5 {"terminalEpoch":9}: identical totals, mints and per-owner payouts (722ms)
+      seed 6: 18 positions, 23 final epochs (2 paid), minted 15551.3 VCLM, paid 15551.299999999999999987
+    ✔ seed 6 {"terminalEpoch":11,"epochs":18}: identical totals, mints and per-owner payouts (848ms)
+      seed 7: 20 positions, 21 final epochs (1 paid), minted 3340.6 VCLM, paid 3340.6
+    ✔ seed 7 {"capEpoch":8}: identical totals, mints and per-owner payouts (748ms)
+      seed 8: 38 positions, 35 final epochs (9 paid), minted 49418.3 VCLM, paid 49418.299999999999999967
+    ✔ seed 8 {"epochs":30}: identical totals, mints and per-owner payouts (1608ms)
+      seed 9: 18 positions, 21 final epochs (3 paid), minted 11779.5 VCLM, paid 11779.499999999999999994
+    ✔ seed 9 {}: identical totals, mints and per-owner payouts (726ms)
+      seed 10: 14 positions, 25 final epochs (5 paid), minted 30994.0 VCLM, paid 30993.999999999999999987
+    ✔ seed 10 {"terminalEpoch":12,"epochs":20}: identical totals, mints and per-owner payouts (916ms)
+
+  t269u Stake scale: close and allocate do not grow with positions
+      30 positions: max closeEpoch 134584, max allocateEpoch 155951, claim 120d (11 epochs) 144079, claim 30d 74416
+      3000 positions: max closeEpoch 134584, max allocateEpoch 155951, claim 120d (11 epochs) 144079, claim 30d 74416
+    ✔ 3,000 positions: closeEpoch and allocateEpoch gas equal to the 30-position case; claim cost per epoch only (5689ms)
+
+  t272u Stake claim pays the full entitlement, no deduction of any kind
+    ✔ two stakers, three epochs: exact floor shares, one Transfer each, ETH changes by gas only (74ms)
+
+  t270u Stake scheduled-weight evaluation: randomized differential vs f816be3
+      seed 1: 41 positions, 37 final epochs, minted 138862.0, dust 108 wei
+    ✔ seed 1 {"epochs":32} (2134ms)
+      seed 2: 8 positions, 29 final epochs, minted 29021.1, dust 10 wei
+    ✔ seed 2 {"terminalEpoch":10,"epochs":24} (970ms)
+      seed 3: 36 positions, 29 final epochs, minted 33702.7, dust 21 wei
+    ✔ seed 3 {"capEpoch":9,"epochs":24} (1859ms)
+      seed 4: 40 positions, 33 final epochs, minted 84827.5, dust 91 wei
+    ✔ seed 4 {"closeLag":true,"epochs":28} (1922ms)
+      seed 5: 49 positions, 41 final epochs, minted 144679.5, dust 106 wei
+    ✔ seed 5 {"lateAlloc":true,"epochs":36} (2480ms)
+      seed 6: 44 positions, 45 final epochs, minted 124363.1, dust 79 wei
+    ✔ seed 6 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (2226ms)
+      seed 7: 16 positions, 31 final epochs, minted 7091.3, dust 2 wei
+    ✔ seed 7 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1049ms)
+      seed 8: 24 positions, 25 final epochs, minted 62795.3, dust 72 wei
+    ✔ seed 8 {} (1102ms)
+      seed 9: 37 positions, 37 final epochs, minted 128074.4, dust 94 wei
+    ✔ seed 9 {"epochs":32} (1744ms)
+      seed 10: 16 positions, 29 final epochs, minted 28790.2, dust 20 wei
+    ✔ seed 10 {"terminalEpoch":11,"epochs":24} (1254ms)
+      seed 11: 26 positions, 29 final epochs, minted 1907.4, dust 6 wei
+    ✔ seed 11 {"capEpoch":7,"epochs":24} (1196ms)
+      seed 12: 32 positions, 33 final epochs, minted 119384.2, dust 107 wei
+    ✔ seed 12 {"closeLag":true,"epochs":28} (1542ms)
+      seed 13: 47 positions, 41 final epochs, minted 166063.9, dust 104 wei
+    ✔ seed 13 {"lateAlloc":true,"epochs":36} (2171ms)
+      seed 14: 32 positions, 46 final epochs, minted 126059.4, dust 57 wei
+    ✔ seed 14 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (1686ms)
+      seed 15: 15 positions, 31 final epochs, minted 18804.3, dust 6 wei
+    ✔ seed 15 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1105ms)
+      seed 16: 38 positions, 25 final epochs, minted 109319.4, dust 116 wei
+    ✔ seed 16 {} (1315ms)
+      seed 17: 39 positions, 37 final epochs, minted 139719.2, dust 103 wei
+    ✔ seed 17 {"epochs":32} (2086ms)
+      seed 18: 9 positions, 29 final epochs, minted 16584.8, dust 4 wei
+    ✔ seed 18 {"terminalEpoch":12,"epochs":24} (805ms)
+      seed 19: 36 positions, 29 final epochs, minted 29817.8, dust 30 wei
+    ✔ seed 19 {"capEpoch":10,"epochs":24} (1559ms)
+      seed 20: 37 positions, 33 final epochs, minted 120791.9, dust 97 wei
+    ✔ seed 20 {"closeLag":true,"epochs":28} (1851ms)
+      seed 21: 42 positions, 41 final epochs, minted 168755.0, dust 124 wei
+    ✔ seed 21 {"lateAlloc":true,"epochs":36} (2356ms)
+      seed 22: 19 positions, 45 final epochs, minted 95955.4, dust 18 wei
+    ✔ seed 22 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (1275ms)
+      seed 23: 11 positions, 31 final epochs, minted 14197.1, dust 4 wei
+    ✔ seed 23 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1067ms)
+      seed 24: 20 positions, 25 final epochs, minted 63550.7, dust 37 wei
+    ✔ seed 24 {} (1035ms)
+      seed 25: 34 positions, 37 final epochs, minted 145114.7, dust 130 wei
+    ✔ seed 25 {"epochs":32} (1859ms)
+      seed 26: 19 positions, 29 final epochs, minted 31328.0, dust 19 wei
+    ✔ seed 26 {"terminalEpoch":13,"epochs":24} (1069ms)
+      seed 27: 34 positions, 29 final epochs, minted 25572.9, dust 14 wei
+    ✔ seed 27 {"capEpoch":8,"epochs":24} (1407ms)
+      seed 28: 42 positions, 33 final epochs, minted 123763.1, dust 129 wei
+    ✔ seed 28 {"closeLag":true,"epochs":28} (1681ms)
+      seed 29: 51 positions, 41 final epochs, minted 165305.3, dust 136 wei
+    ✔ seed 29 {"lateAlloc":true,"epochs":36} (2873ms)
+      seed 30: 24 positions, 48 final epochs, minted 104503.8, dust 34 wei
+    ✔ seed 30 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (2835ms)
+      seed 31: 12 positions, 31 final epochs, minted 5921.0, dust 7 wei
+    ✔ seed 31 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1101ms)
+      seed 32: 23 positions, 25 final epochs, minted 70554.7, dust 55 wei
+    ✔ seed 32 {} (1093ms)
+      seed 33: 31 positions, 37 final epochs, minted 162273.2, dust 75 wei
+    ✔ seed 33 {"epochs":32} (1882ms)
+      seed 34: 15 positions, 29 final epochs, minted 42578.6, dust 19 wei
+    ✔ seed 34 {"terminalEpoch":14,"epochs":24} (1220ms)
+      seed 35: 39 positions, 29 final epochs, minted 12876.5, dust 18 wei
+    ✔ seed 35 {"capEpoch":6,"epochs":24} (1588ms)
+      seed 36: 40 positions, 33 final epochs, minted 107143.2, dust 115 wei
+    ✔ seed 36 {"closeLag":true,"epochs":28} (2131ms)
+      seed 37: 44 positions, 41 final epochs, minted 169701.2, dust 118 wei
+    ✔ seed 37 {"lateAlloc":true,"epochs":36} (2308ms)
+      seed 38: 27 positions, 45 final epochs, minted 128824.0, dust 45 wei
+    ✔ seed 38 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (1688ms)
+      seed 39: 17 positions, 31 final epochs, minted 4896.6, dust 9 wei
+    ✔ seed 39 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1219ms)
+      seed 40: 26 positions, 25 final epochs, minted 106547.6, dust 80 wei
+    ✔ seed 40 {} (1145ms)
+      seed 41: 52 positions, 37 final epochs, minted 109648.7, dust 120 wei
+    ✔ seed 41 {"epochs":32} (2448ms)
+      seed 42: 9 positions, 29 final epochs, minted 15079.5, dust 4 wei
+    ✔ seed 42 {"terminalEpoch":8,"epochs":24} (815ms)
+      seed 43: 24 positions, 29 final epochs, minted 26493.7, dust 10 wei
+    ✔ seed 43 {"capEpoch":9,"epochs":24} (1125ms)
+      seed 44: 36 positions, 33 final epochs, minted 98860.5, dust 90 wei
+    ✔ seed 44 {"closeLag":true,"epochs":28} (1657ms)
+      seed 45: 43 positions, 41 final epochs, minted 132766.5, dust 134 wei
+    ✔ seed 45 {"lateAlloc":true,"epochs":36} (2185ms)
+      seed 46: 32 positions, 45 final epochs, minted 159406.0, dust 64 wei
+    ✔ seed 46 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (1844ms)
+      seed 47: 16 positions, 31 final epochs, minted 10429.4, dust 13 wei
+    ✔ seed 47 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1175ms)
+      seed 48: 25 positions, 25 final epochs, minted 62157.2, dust 44 wei
+    ✔ seed 48 {} (1202ms)
+      seed 49: 43 positions, 37 final epochs, minted 162887.4, dust 155 wei
+    ✔ seed 49 {"epochs":32} (2068ms)
+      seed 50: 10 positions, 29 final epochs, minted 17848.8, dust 7 wei
+    ✔ seed 50 {"terminalEpoch":9,"epochs":24} (897ms)
+      seed 51: 36 positions, 29 final epochs, minted 6543.9, dust 10 wei
+    ✔ seed 51 {"capEpoch":7,"epochs":24} (1517ms)
+      seed 52: 36 positions, 33 final epochs, minted 97751.3, dust 121 wei
+    ✔ seed 52 {"closeLag":true,"epochs":28} (2137ms)
+      seed 53: 50 positions, 41 final epochs, minted 120849.3, dust 111 wei
+    ✔ seed 53 {"lateAlloc":true,"epochs":36} (2291ms)
+      seed 54: 29 positions, 49 final epochs, minted 83092.9, dust 41 wei
+    ✔ seed 54 {"longGaps":true,"closeLag":true,"lateAlloc":true,"epochs":40} (1731ms)
+      seed 55: 16 positions, 31 final epochs, minted 2516.1, dust 4 wei
+    ✔ seed 55 {"capEpoch":7,"terminalEpoch":15,"closeLag":true,"epochs":26} (1153ms)
+      seed 56: 29 positions, 25 final epochs, minted 80842.4, dust 67 wei
+    ✔ seed 56 {} (1028ms)
+      seed 57: 44 positions, 37 final epochs, minted 141053.4, dust 120 wei
+    ✔ seed 57 {"epochs":32} (1917ms)
+      seed 58: 10 positions, 29 final epochs, minted 14098.5, dust 9 wei
+    ✔ seed 58 {"terminalEpoch":10,"epochs":24} (1029ms)
+      seed 59: 30 positions, 29 final epochs, minted 8347.7, dust 32 wei
+    ✔ seed 59 {"capEpoch":10,"epochs":24} (1260ms)
+      seed 60: 35 positions, 33 final epochs, minted 107233.7, dust 103 wei
+    ✔ seed 60 {"closeLag":true,"epochs":28} (1654ms)
+EVAL_COUNTS {"basis.set":2161,"create.ok":1797,"queueExtension.termEndsMidEpoch":478,"queueExtension.ok":562,"queueExtension.reverted":670,"queueExtension.midEpoch":423,"allocate.inOrder":1754,"applyExtension.reverted":512,"withdraw.normal.reverted":748,"basis.zero":255,"withdraw.normal.ok":247,"claim.partialRange":441,"claim.refusedEpochNotAllocated":98,"claim.span5plusEpochs":180,"applyExtension.ok":85,"queueExtension.inEpochWhereTermEnds":121,"claim.upToLatestFinal":110,"allocate.atEnd":272,"epoch.zeroWeight":141,"epoch.paid":977,"epoch.zeroBasis":653,"epochs.finalTotal":2026,"positions.exactRuleChecked":1797,"wallets.total":631,"wallets.withMultiplePositions":482,"dust.totalWei":3678,"seeds":60,"run.terminal":15,"withdraw.earlyTerminal.ok":89,"create.reverted":142,"epoch.capSkipped":255,"run.endedTerminal":15,"run.capLimited":15,"close.catchUpExtraEpochs":338,"allocate.late2plusEpochsAfterFinal":295,"allocate.outOfOrderRefused":143,"longGap":30}
+EVAL_GASMAX {"create":404172,"queueExtension":179449,"closeEpoch":134584,"allocateEpoch":173051,"withdraw.normal":131011,"claimPosition(random)":203397,"applyExtension":97980,"claimPosition(final)":260239,"withdraw.earlyTerminal":184216}
+EVAL_ACCUMULATOR {"positions":1797,"sameAsExact":353,"differ":1444,"accPaysMore":79,"accPaysLess":1365,"maxAbsDiffWei":"222979","sumAbsDiffWei":"12638250","perEpochSettledDiffers":1369,"perEpochOverpayEpochs":0}
+
+  t270u Stake scale and worst-case gas
+      500 positions: 94 withdrawals, 167 extensions, minted 113100.0 VCLM identical; reference allocateEpoch max 11678171 gas (23356 per position, cap reached near 718 positions); current max 155951
+    ✔ scale differential: 500 positions, identical to f816be3; reference allocate grows per position (5623ms)
+      30 positions: {"create":369918,"close":114684,"queue":179415,"close2":134584,"alloc":68338,"alloc2":68338,"withdraw":108561,"claim120":144079}
+      5000 positions: {"create":369918,"close":114684,"queue":179427,"close2":134584,"alloc":68338,"alloc2":68338,"withdraw":108561,"claim120":144079}
+    ✔ 5,000 historical positions: per-call gas identical to a 30-position contract (17463ms)
+      position 0: 50 terms (49 applied), position 1: 197 terms; 600 epochs allocated
+      claim 120-day position: 1 epochs 77026, 10 epochs 151987, 100 epochs 964265, 300 epochs 2688801; about 8622 gas per epoch, 1937 epochs (53 years) per transaction under 16,777,216
+      claim 30-day position: 1 epoch 77077, 400 epochs 4050664 (about 9958 per epoch, 1677 epochs per transaction); 1 epoch after 197 terms 77089 (term history walked from the first term)
+    ✔ long-lived positions: claim gas per epoch, epochs per transaction under 16,777,216, term history cost (4191ms)
+      after a 100-epoch delay: closeEpoch 94784 each (101 transactions), allocateEpoch 88218 each
+    ✔ constructed worst cases: queueExtension touching a closed epoch, early terminal withdrawal, 100-epoch delay (288ms)
+      out-of-order refused; zero-weight, zero-RAC, cap-skipped and terminal epochs all count as allocated; 99 in-order catch-up allocations max 88218 gas each
+    ✔ t270u(g) chronological allocation: out of order reverts, every outcome counts as allocated, catch-up after 100 epochs (269ms)
+GAS_WORST {"allocateEpoch(500 positions, current)":155951,"claimPositions(50 positions, up to 18 epochs)":2596180,"closeEpoch":134596,"allocateEpoch":155951,"applyExtensionIfMatured":95180,"queueExtension(long history)":179398,"claimPosition(1 epoch)":77026,"claimPosition(300 epochs)":2688801,"claimPosition(1 epoch after 197 terms)":77089,"createPosition(first, fresh slots)":404017,"createPosition(new owner, fresh epoch slots)":369936,"createPosition(typical)":369879,"queueExtension(touches closed epoch, two multipliers)":162541,"withdrawPosition(early terminal, queued term)":176626,"withdrawPosition(early terminal)":131725,"closeEpoch(after 100-epoch delay, each)":94784,"allocateEpoch(after 100-epoch delay, each)":88218,"claimPositions(3 positions after delay)":125229,"withdrawPosition(normal)":100321,"allocateEpoch(in-order catch-up after 100 epochs, each)":88218}
+
+  t272u allocateEpoch constant cost: 10, 1,000 and 10,000 historical positions
+      allocateEpoch gas by historical position count (epochs 12, 13, 14 allocated after every position exists; maxAny = max over epochs 1..14):
+          10 positions (0 extended, 1 withdrawn): epoch 12 138851, epoch 13 138851, epoch 14 138851, max over 1..14 155951
+        1000 positions (58 extended, 130 withdrawn): epoch 12 138851, epoch 13 138851, epoch 14 138851, max over 1..14 155951
+       10000 positions (580 extended, 1300 withdrawn): epoch 12 138851, epoch 13 138851, epoch 14 138851, max over 1..14 155951
+ALLOC_SCALE [{"positions":10,"extended":0,"withdrawn":1,"e12":138851,"e13":138851,"e14":138851,"maxAny":155951,"maxMeasured":138851},{"positions":1000,"extended":58,"withdrawn":130,"e12":138851,"e13":138851,"e14":138851,"maxAny":155951,"maxMeasured":138851},{"positions":10000,"extended":580,"withdrawn":1300,"e12":138851,"e13":138851,"e14":138851,"maxAny":155951,"maxMeasured":138851}]
+    ✔ same allocateEpoch gas at every size (spread at most 100 gas) (37667ms)
+
+  t272u Stake eligibility and epoch totals vs f816be3
+      ends at t0+4E (end of epoch 4): counts in epochs 2 and 3; ends at t0+4E-1: counts in epoch 2 only. Same in f816be3.
+    ✔ boundary: ending exactly at the end of epoch N+1 counts in N; ending one second earlier does not (222ms)
+      epochs 2-4 at the 30-day multiplier 10000 bps, epoch 5 on at the 120-day multiplier 21000 bps; same in f816be3
+    ✔ t269u: the multiplier at the start of the earning epoch applies, even when an extension is queued later in that epoch (223ms)
+      14 epochs, 6 positions, 4 wallets: every epoch total and every position weight equal f816be3 and the sum of position weights
+    ✔ epoch totals stay exact through create, expiry, withdrawal at maturity, extensions and early terminal withdrawal (514ms)
+
+  t272u long unclaimed history: bounded claims with per-position checkpoints
+LONG_CLAIMS {"120-day terms":{"terms":176,"claim1":79122,"claim36":404871,"claim180":1644015,"gasPerEpoch":8605,"maxEpochsPerTx":1941,"chunkEpochs":1882,"chunkGas":16488184,"restEpochs":0,"restGas":0,"txForAll2100FromScratch":2},"30-day terms":{"terms":701,"claim1":79173,"claim36":447573,"claim180":1857321,"gasPerEpoch":9789,"maxEpochsPerTx":1706,"chunkEpochs":1671,"chunkGas":16631155,"restEpochs":211,"restGas":2162922,"txForAll2100FromScratch":2}}
+LONG_GAS {"createFirst":404090,"create":369875,"queueExtension":179398,"closeEpochMax":134596,"allocateEpochMax":155951,"queueExtensionMax":179398,"applyExtensionMax":95180,"withdrawAtMaturity":110759,"withdrawAtMaturity30":105978,"claimPositions10positions":565459}
+      120-day terms (176 terms): claim 1 epoch 79122, 36 epochs 404871, 180 epochs 1644015; about 8605 gas per epoch; at most 1941 epochs per transaction; 2,100 unclaimed epochs need 2 claims
+      30-day terms (701 terms): claim 1 epoch 79173, 36 epochs 447573, 180 epochs 1857321; about 9789 gas per epoch; at most 1706 epochs per transaction; 2,100 unclaimed epochs need 2 claims
+      one wallet, 10 positions (10 paid epochs each) in one claimPositions: 565459 gas
+    ✔ 2,100 epochs unclaimed: 1/36/180-epoch claim gas, max epochs per transaction, full recovery in two claims (30729ms)
+
+  t276u claim planner against the compiled Stake
+      inflated estimates: 4 estimates (4x1060, 2x1060, 1x1060, 1x1042) before a fitting batch: position 6, epoch 1042, 74479 gas
+    ✔ estimates above the limit shrink the batch (position set halved, then epoch range halved) and are re-estimated (9087ms)
+      preview: 3 transactions for 509958.342626812333870846 VCLM over 5 positions
+      claimPositions([6,2,1,3], 1060): estimate 663279, used 663279, paid 7136.62560209662065104
+      claimPosition([0], 647): estimate 6490241, used 6490241, paid 305550.646834815717885832
+      claimPosition([0], 1060): estimate 4162842, used 4162842, paid 197271.070189899995333974
+      stopped after 1, resumed: 3 transactions in all, max gas used 6490241
+PLANNER_RUN {"preview":3,"sent":[{"kind":"many","ids":["6","2","1","3"],"toEpoch":1060,"estimate":663279,"gasUsed":663279,"amount":"7136625602096620651040"},{"kind":"one","ids":["0"],"toEpoch":647,"estimate":6490241,"gasUsed":6490241,"amount":"305550646834815717885832"},{"kind":"one","ids":["0"],"toEpoch":1060,"estimate":4162842,"gasUsed":4162842,"amount":"197271070189899995333974"}],"maxGas":6490241,"progress":[{"stage":"before","index":1,"total":3,"remaining":null},{"stage":"after","index":1,"total":3,"remaining":"502821717024715713219806"},{"stage":"before","index":2,"total":3,"remaining":null},{"stage":"stopped","index":2,"total":3,"remaining":"502821717024715713219806"},{"stage":"before","index":1,"total":2,"remaining":null},{"stage":"after","index":1,"total":2,"remaining":"197271070189899995333974"},{"stage":"before","index":2,"total":2,"remaining":null},{"stage":"after","index":2,"total":2,"remaining":"0"}]}
+    ✔ preview, stop after transaction 1, resume later: exact total, every transaction at most 8,000,000 gas (75130ms)
+    ✔ claiming the same range again pays nothing and never pays twice (55ms)
+
+  t277u displayed claimable amount equals the contract, per epoch, no overlap
+      213 comparisons, all equal (L = 1063, current epoch 1067)
+    ✔ every position, many toEpochs and read groups 1, 7, 499, 500, 501: equal to claimableVclm to the wei (150286ms)
+      term change at epoch 503; planner total 304542.061766979343064997 VCLM equals the views
+    ✔ after partial claims (inside a term and right at a term change), the rest is still exact (30434ms)
+DISPLAY_READS {"epochsAllocatedToL":1063,"position5":{"epochReads":1059,"weightReads":1013,"crossCheckViews":0,"total":2072,"groupsOf500":3},"maxGasEpochs":34897,"maxGasEpochWeightPos5":299964,"maxGasEpochWeightPos0":633877,"oneShotClaimableVclmPos5":9157966,"terms0":237}
+      position 5, epochs 2..1060: 1059 epochs() reads + 1013 epochWeight() reads (zero-mint epochs skipped), 0 cross-check view (range above 200: none)
+      largest single read: epochs() 34897 gas, epochWeight() 299964 (position 5), 633877 (position 0, 237 terms); one-shot claimableVclm(5, L) would be 9157966
+    ✔ read cost: largest single eth_call and the number of reads for the 1,060-epoch position (14250ms)
+
+  StellarLockReader (Stellar, local standalone stellar-core lock)
+    ✔ verifyFinality is refused (AG-03, no ed25519 quorum anchor); headerClaimMatches: SHA-256 of the header XDR is the claimed ledger hash; sequence matches
+      extractFacts gas: 57523
+    ✔ accepts a real 7-day lock: lock id, recipient, amounts, 5% fee, times and asset from ledger data
+    ✔ accepts a real Handshake (1-hour) lock at 5%
+    ✔ rejects a lock transaction that is in the ledger but failed (txFAILED)
+    ✔ rejects fabricated or edited transaction bytes, result sets and headers
+    ✔ rejects an edited payload and a wrong duration
+    ✔ rejects a real lock whose fee is not 5%, one paying another account, and another network
+
+  Test-chain ceremony: new main verifier
+    ✔ deploys VCLM, CHONX, Forge, Stake and the verifier wired to each other
+    ✔ the test locks charge 5% on every duration including Handshake
+    ✔ registers exactly the 15 ready readers (incl. Stellar and XRP Ledger) and not Solana
+    ✔ UTXO readers carry the Dev Fund scriptPubKey decoded from the representative deployment
+    ✔ Stellar and XRP Ledger readers carry the recorded Dev Funds, decoded and checksum-checked
+    ✔ indexes the rows' own token addresses (475, one row per environment + address) and aliases Polygon native POL to the POL row (971ms)
+      registry gas: 34528578 in 10 batches
+    ✔ writes exactly the Revision B rows (486 plus the Base ETH row = 487), nothing extra (741ms)
+    ✔ uses a generated poster: only it can post; the test Base ETH price is usable; others are not
+    ✔ finalize gates VF-DEP-010..014 all pass (static call only; not finalized)
+    ✔ refuses to run on any network other than the in-process Hardhat chain
+
+  Token locks: registered token addresses verify and mint
+    ✔ a lock of a registered Base token address verifies and mints VCLM (89ms)
+    ✔ an unregistered token address is refused (85ms)
+    ✔ a wrong-chain address is refused: an address indexed on Ethereum does not resolve on Base (81ms)
+    ✔ a package naming another registered token is refused even for a registered lock (77ms)
+    ✔ the index refuses a row from another environment, a zero address, and a second row for one address
+
+  Duplicate addresses: one row per (environment, address)
+    ✔ prior revision: 52 addresses on two or more same-environment rows, each resolved to exactly one row (823 addresses)
+    ✔ Revision B: 475 addresses, one per token entry, no duplicate left, and no duplicate-losing row present (128ms)
+    ✔ rule: the row matching the contract's own symbol() wins; else case-insensitive; else lowest row
+    ✔ the same address on two chains maps independently (environment is part of the key)
+
+  Polygon native POL resolves to the existing POL row (environment Ethereum)
+    ✔ no Polygon POL row; the reader reports the POL row's id; the alias supplies decimals and price; a native lock mints (3210ms)
+    ✔ the alias is ceremony-only and needs the row to exist (133ms)
+
+  adversarial token substitution (main Verifier + Base lock/reader)
+    ✔ worthless ERC-20 locked labelled as Base ETH is refused (VF-XCH-011: asset mismatch) (88ms)
+    ✔ worthless ERC-20 locked labelled as a registered token row is refused (VF-XCH-011) (85ms)
+    ✔ BaseCommitmentVaultLock refuses VCLM as a lock input (VF-TOK-007) (74ms)
+
+  t262u TRS rewards on the real ceremony flow (487 rows, test chain)
+      [none] addresses: VCLM 0xe22C...Ef38 CHONX 0xF3b2...Cf87 Verifier 0x4E56...Fd51 Forge/SYNTH 0x009B...E84C Base lock 0xa61d...EF22
+    ✔ ceremony order: tokens, Verifier, Forge, Stake before the Base lock; Base lock holds the three protocol token addresses; Stake T0 = Verifier launch
+    ✔ epoch 1: ETH locks give VCLM, CHONX (after 10M) and SYNTH (after 100M lifetime CHONX); RAC goes to epoch 1 (66ms)
+      VCLM: refused, no token moved, no fee, no lock record
+      CHONX: refused, no token moved, no fee, no lock record
+      SYNTH: refused, no token moved, no fee, no lock record
+    ✔ Base lock refuses VCLM, CHONX and SYNTH as inputs before any token moves or fee (VF-TOK-007, BaseCommitmentVaultLock)
+    ✔ epoch 1: stakers stake VCLM 30d, VCLM 90d, CHONX 60d, SYNTH 120d (all start after T0, so none earns epoch 1)
+    ✔ epoch 2: external ETH locks record RAC in epoch 2 only; epoch 3 records none (45ms)
+    ✔ allocation waits for N+1 end (VF-STK-013); epochs close in order (VF-STK-010)
+    ✔ epoch 1 (credits but zero eligible weight) mints nothing (VF-STK-015)
+      position a: weight 1000.0 claimed 140.395523713659778554 VCLM
+      position d: weight 5250.0 claimed 737.076499496713837408 VCLM
+      position b: weight 14000.0 claimed 1965.537331991236899757 VCLM
+      position c: weight 16.8 claimed 2.358644798389484279 VCLM
+      epoch 2 basis $284.5368 -> 2845.368 VCLM; paid 2845.367999999999999998; remainder 2 wei stays in Stake (VF-STK-027)
+    ✔ epoch 2 pays floor(basis/$0.10 x weight / total weight) to each of the four positions; reward counted in lifetime VCLM (42ms)
+    ✔ epoch 3 (zero RAC) pays zero; supply unchanged
+    ✔ unstake returns each token after its term; early withdraw refused
+
+  t264u reward VCLM counts toward the 10,000,000 CHONX threshold (real ceremony flow, test chain)
+      [none] addresses: VCLM 0x6aCE...6270 CHONX 0x4f0a...d405 Verifier 0xbd12...52Bd Forge/SYNTH 0x90bf...8735 Base lock 0xc7C0...dA62
+      lock VCLM 9998999.999999999999998065 (below 10M); reward 56467.36384615384615095; lifetime 10055467.363846153846149015; CHONX opened on the reward; the earlier lock stays refused
+    ✔ lock VCLM about 1,000 short of 10M; the epoch reward crosses it; anyone records activation once; the earlier CHONX lock stays refused (VF-COM-025); a lock created after activation mints (217ms)
+
+  t271u CHONX activation not yet recorded after rewards crossed 10M (VF-COM-025)
+      [none] addresses: VCLM 0xb70b...1537 CHONX 0x670e...1026 Verifier 0xD044...ADd7 Forge/SYNTH 0xe43D...85f9 Base lock 0x0924...E975
+    ✔ a CHONX lock created before activation is recorded is refused (its own mint call cannot activate and cure it); after syncChonxActivation a later lock mints (169ms)
+
+  t262u Verifier defence: protocol token addresses cannot enter the token index (VF-REG-008)
+    ✔ registerTokenAddressBatch refuses VCLM, CHONX and SYNTH (SYNTH via the stake minter's synthToken) (41ms)
+
+  t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap
+    ✔ constants: bands and native ids match the readers and the Revision B registry rows (44ms)
+    ✔ the unit band is keyed on the native asset id AND the environment: a mismatched pair keeps the USD band (67ms)
+    Bitcoin
+      ✔ Handshake at min (11000) and max (22000) accepted, exact 5% fee, RAC and issuance on the $0.02-capped USD
+      ✔ min-1 and max+1 refused with a unit-band error, in recordFeeAndRac and in verifyAndMint
+      ✔ a non-5% fee is still refused inside the band
+      ✔ below $0.02 the actual USD is used (the cap only lowers, never raises) (91ms)
+      ✔ non-Handshake durations unchanged: USD path, $0.01 minimum, uncapped issuance (399ms)
+    Bitcoin Cash
+      ✔ Handshake at min (11000) and max (22000) accepted, exact 5% fee, RAC and issuance on the $0.02-capped USD
+      ✔ min-1 and max+1 refused with a unit-band error, in recordFeeAndRac and in verifyAndMint
+      ✔ a non-5% fee is still refused inside the band
+      ✔ below $0.02 the actual USD is used (the cap only lowers, never raises) (93ms)
+      ✔ non-Handshake durations unchanged: USD path, $0.01 minimum, uncapped issuance
+    Litecoin
+      ✔ Handshake at min (110000) and max (220000) accepted, exact 5% fee, RAC and issuance on the $0.02-capped USD
+      ✔ min-1 and max+1 refused with a unit-band error, in recordFeeAndRac and in verifyAndMint
+      ✔ a non-5% fee is still refused inside the band
+      ✔ below $0.02 the actual USD is used (the cap only lowers, never raises) (97ms)
+      ✔ non-Handshake durations unchanged: USD path, $0.01 minimum, uncapped issuance (38ms)
+    Ethereum (unchanged USD band)
+      ✔ Handshake inside $0.01-$0.02 accepted with the actual USD (no cap effect) (40ms)
+      ✔ Handshake outside $0.01-$0.02 refused with the original error, even at BTC-style unit amounts
+      ✔ standard lock unchanged: uncapped issuance
+    Dogecoin (unchanged USD band)
+      ✔ Handshake inside $0.01-$0.02 accepted with the actual USD (no cap effect)
+      ✔ Handshake outside $0.01-$0.02 refused with the original error, even at BTC-style unit amounts
+      ✔ standard lock unchanged: uncapped issuance
+
+  BitcoinLockReader (Bitcoin, local utxo-locks lock)
+    ✔ is configured for this environment
+    ✔ accepts a real 7-day lock: facts come from the transaction and payload; fee is 5% (76ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5%
+    ✔ rejects fabricated or edited transaction bytes (52ms)
+    ✔ rejects a tampered payload (lock ID, recipient or output token) and a swapped redeem script (88ms)
+    ✔ rejects a duration that does not match the CLTV maturity, and a non-permitted duration (63ms)
+    ✔ rejects a lock that pays a different Dev Fund (57ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged coinbase (53ms)
+
+  BitcoinCashLockReader (Bitcoin Cash, local utxo-locks lock)
+    ✔ is configured for this environment
+    ✔ accepts a real 7-day lock: facts come from the transaction and payload; fee is 5% (78ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5%
+    ✔ rejects fabricated or edited transaction bytes (61ms)
+    ✔ rejects a tampered payload (lock ID, recipient or output token) and a swapped redeem script (107ms)
+    ✔ rejects a duration that does not match the CLTV maturity, and a non-permitted duration (87ms)
+    ✔ rejects a lock that pays a different Dev Fund (62ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged coinbase (58ms)
+
+  LitecoinLockReader (Litecoin, local utxo-locks lock)
+    ✔ is configured for this environment
+    ✔ accepts a real 7-day lock: facts come from the transaction and payload; fee is 5% (80ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5%
+    ✔ rejects fabricated or edited transaction bytes (57ms)
+    ✔ rejects a tampered payload (lock ID, recipient or output token) and a swapped redeem script (78ms)
+    ✔ rejects a duration that does not match the CLTV maturity, and a non-permitted duration (83ms)
+    ✔ rejects a lock that pays a different Dev Fund (49ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged coinbase (59ms)
+
+  DogecoinLockReader (Dogecoin, local utxo-locks lock)
+    ✔ is configured for this environment
+    ✔ accepts a real 7-day lock: facts come from the transaction and payload; fee is 5% (82ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5%
+    ✔ rejects fabricated or edited transaction bytes (61ms)
+    ✔ rejects a tampered payload (lock ID, recipient or output token) and a swapped redeem script (78ms)
+    ✔ rejects a duration that does not match the CLTV maturity, and a non-permitted duration (85ms)
+    ✔ rejects a lock that pays a different Dev Fund (57ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged coinbase (54ms)
+
+  DigiByteLockReader (DigiByte, local utxo-locks lock)
+    ✔ is configured for this environment
+    ✔ accepts a real 7-day lock: facts come from the transaction and payload; fee is 5% (66ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5%
+    ✔ rejects fabricated or edited transaction bytes (64ms)
+    ✔ rejects a tampered payload (lock ID, recipient or output token) and a swapped redeem script (84ms)
+    ✔ rejects a duration that does not match the CLTV maturity, and a non-permitted duration (60ms)
+    ✔ rejects a lock that pays a different Dev Fund (38ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged coinbase (56ms)
+
+  ZcashLockReader (Zcash, local utxo-locks lock)
+    ✔ is configured for this environment
+    ✔ accepts a real 7-day lock: facts come from the transaction and payload; fee is 5% (204ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5% (39ms)
+    ✔ rejects fabricated or edited transaction bytes (240ms)
+    ✔ rejects a tampered payload (lock ID, recipient or output token) and a swapped redeem script (371ms)
+    ✔ rejects a duration that does not match the CLTV maturity, and a non-permitted duration (244ms)
+    ✔ rejects a lock that pays a different Dev Fund (160ms)
+    ✔ rejects a wrong block hash or height, an edited header, and a forged coinbase (339ms)
+
+  DogecoinLockReader: lock.py dust split
+    ✔ refuses a lock whose fee output is the dust minimum instead of 5% of gross (47ms)
+
+  UTXO readers: wrong chain
+    ✔ a lock from one UTXO chain is refused by another chain's reader (94ms)
+
+  Solana reader fails closed (blocked)
+    ✔ SolanaLockReader refuses every proof
+
+  Stellar and XRP Ledger readers refuse caller-supplied facts
+    ✔ a plain encoding of facts is not a ledger proof
+
+  VCLM is not a lock input: row 488 refused, Base lock refuses VCLM (t262u, test chain)
+    ✔ 1: VCLM as row 488 with its token address is refused at the token index (VF-REG-008); no finalize (592ms)
+    2: the 487-row ceremony
+      ✔ registry 487 rows, VCLM has no row and no index entry
+      ✔ an ETH lock mints VCLM; a VCLM lock is refused by the Base lock with nothing moved
+      ✔ CHONX opens after 10,000,000 VCLM from an ordinary lock, then an ordinary ETH lock mints CHONX (38ms)
+
+  XrplLockReader (XRP Ledger, local standalone rippled lock)
+    ✔ SHA-512Half in Solidity matches Node for empty, short, block-edge and long input (148ms)
+    ✔ verifyFinality is refused (AG-03, no ed25519 quorum anchor); headerClaimMatches: the header hashes to the claimed ledger hash and index (143ms)
+      extractFacts gas: 3147804
+    ✔ accepts a real 7-day lock: lock id, recipient, amounts, 5% fee, times and asset from ledger data (557ms)
+    ✔ accepts a real Handshake (1-hour) lock at 5% (93ms)
+    ✔ rejects fabricated or edited transaction bytes, metadata and tree nodes (2252ms)
+    ✔ rejects an edited payload (lock id, recipient, output token) and a wrong duration (2964ms)
+    ✔ rejects a real lock whose fee is not 5%, and one that pays another account (1659ms)
+
+
+  849 passing (30m)
+
+HARDHAT_EXIT=0 end 12:31:50 EDT
