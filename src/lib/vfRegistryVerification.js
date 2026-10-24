@@ -10,7 +10,7 @@
 // =============================================================================
 
 export const REGISTRY_SOURCE = {
-  file_name: '227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx',
+  file_name: 'Vinculum Finalis Master Specification',
   sha256: '5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9',
   revision: 'Revision 6',
   date: '2026-07-28',
