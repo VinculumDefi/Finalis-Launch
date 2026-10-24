@@ -17,7 +17,7 @@
 // =============================================================================
 
 import { findAssetPrecision, findEnvironment, getAssetMultiplierBps } from './vfBaseRegistry.js';
-import { SCALE, COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfRevision6Authority.js';
+import { SCALE, COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS, FIXED_RULES } from './vfSpecAuthority.js';
 
 // ---------------------------------------------------------------------------
 // Canonical ProofPackage structure (Section D)
