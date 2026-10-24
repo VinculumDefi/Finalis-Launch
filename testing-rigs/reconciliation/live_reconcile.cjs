@@ -5,6 +5,12 @@
 // is derived by deploying the same artifacts on the LOCAL in-process Hardhat
 // network (no fork). Nothing is signed or sent to any real network.
 // Run: testing-rigs/reconciliation/live.sh
+//
+// Base-only launch (t357u): reconcile.cjs now expects exactly one reader
+// (Base) and the 27-row Base subset. The 2026-10-22 set in live_set.cjs has
+// fifteen readers and the full registry, so it is expected to MISMATCH;
+// it is kept as a record. Point live_set.cjs at the new Base-only set after
+// the founder's ceremony. Not run by the Base-only gate.
 const path = require("path");
 const fs = require("fs");
 const { execSync } = require("child_process");
@@ -13,7 +19,6 @@ const { ethers } = hre;
 const BC = path.resolve(__dirname, "../../base-contracts");
 const art = require(path.join(BC, "scripts/deploy-pages/ceremony.json"));
 const DATA = require(path.join(BC, "scripts/deploy-pages/ceremony-data.json"));
-const FLOW = require(path.join(BC, "scripts/deploy-pages/baseCeremonyFlow.js"));
 const RECON = require("./reconcile.cjs");
 const RPCS = require("./rpcs.cjs");
 const LIVE = require("./live_set.cjs");
@@ -27,7 +32,7 @@ async function main() {
   // Addresses must be the ones the main-branch config document records.
   let doc = "";
   try { doc = execSync("git show origin/main:deployment/BASE44_LIVE_CONFIG_2026-10-22.md", { cwd: BC, encoding: "utf8" }); } catch (_) {}
-  const addrs = [...Object.values(LIVE.base), ...Object.values(LIVE.readers).map((x) => x[1]), LIVE.nonBaseLock];
+  const addrs = [...Object.values(LIVE.base), ...Object.values(LIVE.readers).map((x) => x[1])];
   const notInDoc = doc ? addrs.filter((a) => !doc.toLowerCase().includes(a.toLowerCase())) : addrs;
   const set = {
     vclm: LIVE.base.TokenVCLM, chonx: LIVE.base.TokenCHONX, verifier: LIVE.base.VinculumFinalisVerifier, forge: LIVE.base.VinculumFinalisSynth,
@@ -59,10 +64,9 @@ async function main() {
   err(`operator ${RECON.short(operator)}: ${cer.length} ceremony txs, nonces ${cer[0].nonce}..${cer[cer.length - 1].nonce}, blocks ${cer[0].block}..${cer[cer.length - 1].block}; ${pre.length} earlier txs to ${[...new Set(pre.map((t) => RECON.short(t.to)))].join(",")}`);
   const bal = async (a) => P.getBalance(a);
   const simFrom = (await bal(DATA.devFund)) >= 10n ** 16n ? DATA.devFund : operator;
-  const nonBaseProviders = RPCS.providers(ethers, FLOW.EVM_ENVS);
-  const tokenProviders = { ...RPCS.providers(ethers, FLOW.EVM_ENVS), Base: P };
+  const tokenProviders = { Base: P };
   const rec = await RECON.reconcile({
-    hre, P, set, DATA, art, FLOW, mode: "live", nonBaseProviders, nonBaseLock: LIVE.nonBaseLock, operator, txs: cer,
+    hre, P, set, DATA, art, mode: "live", operator, txs: cer,
     fromBlock: cer[0].block, simFrom, tokenProviders, logPaceMs: 1000, logChunk: 1000, logP: new ethers.JsonRpcProvider(process.env.RIG_LOGS_RPC || "https://base.gateway.tenderly.co", 8453, { staticNetwork: true, batchMaxCount: 1 }), receiptLogs: cer.flatMap((t) => t.logs),
     txListComplete: { ok: contiguous, detail: `nonces ${cer[0].nonce}..${cer[cer.length - 1].nonce} contiguous=${contiguous}; finalize at block ${cer[cer.length - 1].block}` },
     log: err,
