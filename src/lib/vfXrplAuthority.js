@@ -42,11 +42,9 @@ export const XRPL_ENVIRONMENT = {
   registry_entries: null,
 };
 
-// VF-COM-006: XRPL is classified alongside UTXO/Stellar for the Handshake allowance.
-// Per Section Q.2: "1-use Base recognition counter; exactly one canonical release public key
-// per UTXO-family mechanism." XRPL account addresses serve as the identity.
-// The official application must block the second qualifying attempt before broadcast (Q.4.2).
-export const XRPL_HANDSHAKE_ALLOWANCE = 1;
+// Revision 12: the Handshake (1 hour, $0.01 to $0.02, 5% fee) has no allowance
+// limit on XRPL or any other environment. There is no XRPL Handshake allowance
+// constant and no per-account counter.
 
 // XRPL objective pending-attempt disposition (Implementation Brief §4.7):
 // "XRPL: finalized success/failure, or LastLedgerSequence expiry."
