@@ -27,7 +27,7 @@ import {
   XRPL_DEFAULT_LLS_MARGIN,
   computeFinishAfter,
 } from './vfXrplAuthority.js';
-import { validateXrplAddress, validateBaseRecipient, buildHandshakeIdentity } from './vfXrplLockEngine.js';
+import { validateXrplAddress, validateBaseRecipient } from './vfXrplLockEngine.js';
 
 // ---------------------------------------------------------------------------
 // Lock metadata (stored in EscrowCreate Memos — VF-XCH-011 immutable facts)
@@ -58,8 +58,6 @@ export function buildLockMemo(params) {
     output_token: params.outputToken,
     fee_destination: params.devFundDestination || 'DEFERRED_EXTERNAL_INPUT',
     chonx_activation_receipt: params.chonxActivationReceipt || 'not_applicable',
-    handshake_identity: buildHandshakeIdentity(params.sourceAccount),
-    handshake_allowance_count: 1, // VF-COM-006: 1-use for XRPL (Section Q.2)
   };
 
   // XRPL memos use hex-encoded data
