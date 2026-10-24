@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, AlertTriangle } from 'lucide-react';
-import { AUTHORITY, XRPL_ENVIRONMENT, XRPL_HANDSHAKE_ALLOWANCE } from '@/lib/vfXrplAuthority';
+import { AUTHORITY, XRPL_ENVIRONMENT } from '@/lib/vfXrplAuthority';
 
 export default function ProvenanceBanner() {
   return (
@@ -18,7 +18,7 @@ export default function ProvenanceBanner() {
         </div>
         <div className="text-xs space-y-1 font-mono text-[#6b6b65] pt-1 border-t border-[#18324b]/10">
           <div>Environment: <span className="text-[#0a0a0a]">{XRPL_ENVIRONMENT.name}</span> ({XRPL_ENVIRONMENT.family})</div>
-          <div>Handshake allowance: <span className="text-[#0a0a0a]">{XRPL_HANDSHAKE_ALLOWANCE}</span>-use (Section Q.2 — UTXO/XRPL/Stellar family)</div>
+          <div>Handshake (Revision 12): <span className="text-[#0a0a0a]">1 hour, $0.01 to $0.02, 5% fee, no allowance limit</span></div>
           <div>Canonical chain ID: <span className="text-amber-600">DEFERRED EXTERNAL INPUT</span></div>
         </div>
       </div>
