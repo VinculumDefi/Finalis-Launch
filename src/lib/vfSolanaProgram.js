@@ -30,14 +30,13 @@ export const PROGRAM_ID = 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS';
 // PDA seed constants (mirror on-chain constants.rs)
 export const SEED_CONFIG = 'vf_config';
 export const SEED_LOCK = 'vf_lock';
-export const SEED_HANDSHAKE = 'vf_handshake';
 export const SEED_VAULT = 'vf_vault';
 
 // Program constants (mirror on-chain constants.rs for off-chain preflight).
 // Rev 12 governs the Handshake: $0.01 to $0.02, 5% fee, no allowance limit;
 // other durations at least $0.01 (same as vfLiveRules.js and the contracts).
-// HANDSHAKE_ALLOWANCE is the Revision 6 value the program still stores in its
-// record for layout compatibility; it is not enforced.
+// Revision 12 removed the Handshake allowance account and per-wallet counter
+// from the program, so there is no allowance constant here.
 export const PROGRAM_CONSTANTS = {
   SOURCE_ENVIRONMENT: 'Solana',
   HANDSHAKE_DURATION_SECS: 3600,
@@ -46,8 +45,6 @@ export const PROGRAM_CONSTANTS = {
   HANDSHAKE_FEE_BPS: 500,
   STANDARD_MINIMUM_VALUE_USD_MICRO: 10_000_000_000_000_000n,
   STANDARD_FEE_BPS: 500,
-  HANDSHAKE_ALLOWANCE: 3,
-  HANDSHAKE_ALLOWANCE_ENFORCED: false,
   MAX_LOCK_ID_LEN: 128,
   SCALE: 10n ** 18n,
   PERMITTED_DURATIONS: [
@@ -79,13 +76,6 @@ export async function deriveLockPda(lockId, programId = PROGRAM_ID) {
   const lockIdHash = await hashLockId(lockId);
   return PublicKey.findProgramAddressSync(
     [Buffer.from(SEED_LOCK), Buffer.from(lockIdHash)],
-    new PublicKey(programId),
-  );
-}
-
-export function deriveHandshakePda(sourceAccount, programId = PROGRAM_ID) {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from(SEED_HANDSHAKE), new PublicKey(sourceAccount).toBuffer()],
     new PublicKey(programId),
   );
 }
@@ -194,18 +184,6 @@ export async function queryLockRecord(lockId, programId = PROGRAM_ID, rpcUrl = D
   const account = await queryAccountInfo(lockPda.toBase58(), rpcUrl);
   return {
     pda: lockPda.toBase58(),
-    exists: account !== null,
-    lamports: account?.lamports ?? 0,
-    owner: account?.owner ?? null,
-    dataBase64: account?.data?.[0] ?? null,
-  };
-}
-
-export async function queryHandshakeAllowance(sourceAccount, programId = PROGRAM_ID, rpcUrl = DEFAULT_RPC_URL) {
-  const [haPda] = deriveHandshakePda(sourceAccount, programId);
-  const account = await queryAccountInfo(haPda.toBase58(), rpcUrl);
-  return {
-    pda: haPda.toBase58(),
     exists: account !== null,
     lamports: account?.lamports ?? 0,
     owner: account?.owner ?? null,
