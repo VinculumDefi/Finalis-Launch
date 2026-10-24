@@ -1,83 +1,54 @@
-# Live deployment order (prepared, NOT executed)
+# Live deployment order (Base-only launch, prepared, NOT executed)
 
-Prepared from main for the operator. Nothing here has been broadcast, and no
+Prepared from main for the founder. Nothing here has been broadcast, and no
 keys are in the repository. Addresses are shortened on purpose.
+
+Founder directive t357u: the launch is Base-only. One page, `base.html`, on
+Base. No lock is deployed on any other chain and no other reader is
+registered. The sixteen lock contracts and their readers stay in the source
+tree and are not deployed.
 
 Live price poster (from `deployment/liveConfig.json`): `0x6001…0DB4`.
 
-Every lock below charges **5% on every duration, including the 1-hour Handshake**.
-`test/lock_deploy_files_5pct.test.cjs` deploys the exact bytecode embedded in
-each file and checks all sixteen durations on each of the seven chains.
-Per-chain values, gas and the post-deploy check are in
-`deployment/LOCK_DEPLOYMENT_STEPS.md` and `scripts/prepareLockDeploy.cjs`.
+The Base lock charges **5% of gross on every duration, including the 1-hour
+Handshake**. `test/lock_deploy_files_5pct.test.cjs` deploys the exact
+BaseCommitmentVaultLock bytecode in `ceremony.json` and checks all sixteen
+durations. The post-deploy check is `scripts/prepareLockDeploy.cjs --check
+Base <address>` (read only; every other environment is refused).
 
 ## On the day: checklist before anything is signed
 None of these steps sends anything.
-1. Build all deploy files once from branch `release/2026-10-21` (main once it is merged), right before the ceremony (the three
+1. Build the deploy files once from `main`, right before the ceremony (the
    commands are in `scripts/deploy-pages/README.md`, under "Build on the day";
    the full day is in `deployment/DEPLOYMENT_DAY_RUNBOOK.md`). This also
-   takes a fresh first Base ETH price into `ceremony-data.json`. Check that
-   the verifier creation code hash is `0x3c11faa9…1dcc66`, the Stake
-   creation code hash is `0xd2221a1a…b3d07e`, the
-   BaseCommitmentVaultLock creation code hash is `0x7954931f…789df9` and the
-   CommitmentVaultLock creation code hash is `0x2daadaf6…80bd99`; if any
-   differs, stop.
-2. Run the full test suite alone:
-   `NODE_OPTIONS=--max-old-space-size=12288 npx hardhat test`. It must pass.
-3. Refresh gas: `node scripts/prepareLockDeploy.cjs` (read only). Every chain
-   must show a gas figure, not an RPC error.
-4. Fund the deployer wallet on all seven chains (Base, Ethereum, Arbitrum,
-   Optimism, Polygon, BNB Smart Chain, Avalanche) with at least 3 times the
-   estimated cost. On Base the ceremony sends many more transactions than one
-   lock deploy (21 contract deploys and 51 further calls), so fund Base well
-   above 3 times one lock deploy.
-5. After each lock is deployed, run the read-only check
-   `node scripts/prepareLockDeploy.cjs --check "<Chain>" <newLockAddress>`.
-   It must print `ALL CHECKS PASSED` before the address is used anywhere.
+   takes a fresh first Base ETH price into `ceremony-data.json`. Check the
+   creation code hashes in runbook 1.5; if any differs, stop.
+2. Run the Base-only SIMULATE dry-run (`npm run ceremony:dryrun:simulate`)
+   and the full test suite alone
+   (`NODE_OPTIONS=--max-old-space-size=12288 npx hardhat test`). Both must pass.
+3. Fund the deployer wallet on Base only, with at least 3 times the dry-run
+   gas total (17 transactions: 7 contract deploys and 10 calls).
 
-## Step 1 - Non-Base locks (six pages, any order)
-One page for each chain. Each one deploys `CommitmentVaultLock(<chain>, EVM Dev Fund 0xFD21…3e9a)`, and only that.
-
-| Chain | Page | Chain id |
-|---|---|---|
-| Ethereum | `scripts/deploy-pages/ethereum.html` | 1 |
-| Arbitrum | `scripts/deploy-pages/arbitrum.html` | 42161 |
-| Optimism | `scripts/deploy-pages/optimism.html` | 10 |
-| Polygon | `scripts/deploy-pages/polygon.html` | 137 |
-| BNB Smart Chain | `scripts/deploy-pages/bnb-smart-chain.html` | 56 |
-| Avalanche | `scripts/deploy-pages/avalanche.html` | 43114 |
-
-For each chain: connect the deployer wallet, check the page's chain-id check, sign, then
-write down the new lock address and run the `--check` above. The old locks stay on-chain, untouched.
-
-## Step 2 - Base page (`scripts/deploy-pages/base.html`, chain id 8453)
-Paste the six new lock addresses from Step 1 into the page. Before anything is
-sent, the page refuses a missing or invalid address, an old 2.5% lock
-(`0x968B…C946` or `0x4eDE…3b1a`), or an address equal to the poster, the Dev
-Fund or the wallet. It also refuses missing ceremony data, a price that is not
-positive, incomplete reader wiring, and a poster that is zero or equal to the
-wallet or the Dev Fund. It then runs `scripts/deploy-pages/baseCeremonyFlow.js`,
-which is the same code that `test/base_ceremony_flow.test.cjs` runs on the
-test chain. In order:
+## Step 1 - Base page (`scripts/deploy-pages/base.html`, chain id 8453)
+Before anything is sent, the page refuses missing or non-Base ceremony data,
+any alias, reader wiring other than the Base reader, Dev Fund wiring other
+than Base, a price that is not positive, and a poster that is zero, an old
+contract, or equal to the wallet or the Dev Fund. It then runs
+`scripts/deploy-pages/baseCeremonyFlow.js`, which is the same code that
+`test/base_ceremony_flow.test.cjs` runs on the test chain. In order:
 1. Deploy VCLM, CHONX, the Verifier, **Forge** (VinculumFinalisSynth, the SYNTH token) and **Stake** (`Stake(VCLM, CHONX, Forge, Verifier)`; Stake epochs start at the Verifier's launch time).
 2. Deploy the new 5% Base lock `BaseCommitmentVaultLock("Base", 0xFD21…3e9a, VCLM, CHONX, Forge)`, read back a 5% fee, and read back that it refuses VCLM, CHONX and SYNTH as lock inputs (VF-TOK-007). The old Base lock is left as it is.
-3. `VCLM.initialize(Verifier, Stake)`, so Stake is on from the start. Then `CHONX.initialize(Verifier, 0)`.
-4. Deploy and register **15 readers**, reading each one back:
-   - Base, bound to the new Base lock.
-   - Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain and Avalanche, each bound to its new lock from Step 1.
-   - Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte and Zcash, each with its live Dev Fund script.
-   - Stellar (public network, live Dev Fund key) and XRP Ledger (live Dev Fund account).
-   - Solana is not registered.
-   The Dev Fund wiring is decoded and checksum-checked from the recorded Dev Funds by `scripts/build_ceremony_artifacts.cjs` into `ceremony-data.json`.
-5. Write the registry in batches of 50: the Revision B rows (`deployment/assetRegistry.revB.json`): 486 rows plus the Base ETH row, 487 lines. Then the token address index (475 addresses) and the native-coin aliases (Polygon POL to row 114, Arbitrum and Optimism ETH to row 2).
-6. Set the Dev Fund for all seven EVM chains.
+3. `VCLM.initialize(Verifier, Stake)`, so Stake is on from the start. Then `CHONX.initialize(Verifier, 0)`. The Verifier is the only VCLM and CHONX minter (Stake also mints VCLM rewards).
+4. Deploy and register **one reader**, BaseLockRecordVerifier bound to the new Base lock, and read it back. No other environment is registered.
+5. Write the Base subset of Revision B (`deployment/assetRegistry.revB.json`, 487 rows, unchanged): 27 Base rows (26 tokens plus Base ETH) in one batch, then the 26 Base token addresses. No aliases.
+6. Set the Base Dev Fund.
 7. Set the price poster to the deployer wallet for the first Base ETH price only (run 1). Write that price, then read it back as usable.
 8. Hand the price poster to `0x6001…0DB4` and read it back.
 9. `finalize()`. This is permanent: after it, nothing can be registered.
 
-After the 6th prompt the page logs the five token and core contract lines and then `Base lock 0x…`. Run `node scripts/prepareLockDeploy.cjs --check Base <address>` before signing the 7th prompt; if it fails, reject the prompt and stop. 72 prompts in all.
+After the 6th prompt the page logs the five token and core contract lines and then `Base lock 0x…`. Run `node scripts/prepareLockDeploy.cjs --check Base <address>` before signing the 7th prompt; if it fails, reject the prompt and stop. 17 prompts in all.
 
-## Step 3 - Price runs (after finalize)
+## Step 2 - Price runs (after finalize)
 `scripts/priceRun.cjs` turns fetched prices into the poster's lines: a success
 line for each fetched price, and a failure line for each miss. Run numbers
 start at 2. The script writes the run and its calldata for `0x6001…0DB4` to
@@ -86,19 +57,12 @@ sign, and never sends to a live chain. It was tested on the test chain in
 
 ## Closed (operator decisions, no contract change)
 - **Token locks.** Resolved. A token lock is proven through the token address
-  index written in step 5: the EVM reader reports `keccak256(environment,
-  token address)` for a token lock (`EvmReceiptLockReader.extractAssetId`), and
-  the Verifier accepts it only if `tokenAssetIndex` maps that key to the
+  index written in step 5: the Base reader reports `keccak256(environment,
+  token address)` for a token lock, and the Verifier accepts it only if `tokenAssetIndex` maps that key to the
   package's registry row (`VinculumFinalisVerifier._verifySource`). An
   unregistered address, an address from another chain, or a package naming a
   different row is refused (`test/token_locks.test.cjs`). The app currently
   offers Base ETH only; that is an app choice, not a Verifier limit.
-- **Bitcoin, Bitcoin Cash and Litecoin Handshakes.** Resolved in the Verifier
-  (commit b1ef1f5). A 1-hour Handshake on these three chains is sized in coin
-  units, not USD: Bitcoin and Bitcoin Cash 11,000 to 22,000 sats, Litecoin
-  110,000 to 220,000 litoshis, inclusive. The fee is still exactly 5%. Its VCLM
-  and RAC count it as at most $0.02. Every other chain keeps the $0.01 to $0.02
-  Handshake band. `utxo-locks/lock.py` and the app use the same band.
 - **Price is fixed at first fee recording.** The Verifier reads the asset's
   last successful scheduled price the first time a lock's fee is recorded
   (`recordFeeAndRac`) and keeps it for that lock; a later run does not reprice
@@ -112,10 +76,8 @@ sign, and never sends to a live chain. It was tested on the test chain in
 ## CHONX activation margin (VF-COM-025, t271u)
 The Verifier mints CHONX for a lock only if the lock was created after CHONX
 activation was recorded (`chonxActivationTimestamp()`). A Base lock must be
-created strictly later (a lock in the activation block is refused). A lock on
-any other chain must be created at least 1 day
-(`CHONX_SOURCE_CLOCK_MARGIN_SECS` = 86,400 seconds) after activation, because
-other chains' clocks are not Base's. Earlier CHONX locks are refused forever;
+created strictly later (a lock in the activation block is refused). (The
+1-day margin for other chains does not apply: the launch is Base-only.) Earlier CHONX locks are refused forever;
 their principal is still released at maturity.
 
 ## Stake allocation order (t270u(g))
