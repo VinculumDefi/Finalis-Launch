@@ -11,7 +11,7 @@ import RegistryPanel from '@/components/compliance/RegistryPanel';
 
 export default function ComplianceDashboard() {
   const blockedItems = REQUIREMENTS.filter(
-    (r) => r.status !== STATUS.IMPLEMENTED
+    (r) => r.status !== STATUS.IMPLEMENTED && r.status !== STATUS.SUPERSEDED
   );
 
   return (
