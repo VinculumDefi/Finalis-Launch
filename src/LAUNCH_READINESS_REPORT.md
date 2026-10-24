@@ -1,4 +1,7 @@
 # Vinculum Finalis — Launch Readiness Report
+
+> **Handshake rules in this document are superseded by Revision 12: 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit.** See `../docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`.
+
 **Revision 6 — 2026-08-02**
 
 ## Executive Summary
