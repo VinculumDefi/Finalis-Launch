@@ -3,6 +3,9 @@
 // impersonation (no key). HTTP is mocked here; nothing is fetched or posted live.
 // The fixture test/fixtures/price_fetch_sample.json is a slice of one real
 // read-only fetch (t209u item 2).
+// Base-only launch (t357u): the ceremony registers only the 27 Base rows, so
+// the fetcher and price run default to those rows. The fetcher's chain logic is
+// still exercised offline on all 487 Revision B rows (baseOnly: false).
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
@@ -10,7 +13,7 @@ const { fetchPrices, registryRows, rowAddress, summarize, MIN_LIQUIDITY_USD, FRE
 const { buildPriceRun, buildPriceRuns, nextRunId, postOnTestChain, MAX_LINES_PER_RUN } = require("../scripts/priceRun.cjs");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const data = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 const SAMPLE = require("./fixtures/price_fetch_sample.json");
 
 const key = (env, id) => ethers.solidityPackedKeccak256(["string", "bytes32"], [env, id]);
@@ -32,7 +35,8 @@ const addrs = (u) => u.split("/").pop().split("?")[0].split(",");
 
 describe("Price fetcher -> price run (test chain)", function () {
   this.timeout(900000);
-  const rows = registryRows();
+  const rows = registryRows(undefined, { baseOnly: false });
+  const baseRows = registryRows();
   // Distinct token rows (each with its own CoinGecko id) on their own chains.
   const toks = [];
   for (const r of rows) if (r.kind === "token" && /^0x[0-9a-fA-F]{40}$/.test(r.identifier) && !toks.some((t) => t.pricingIdentifier === r.pricingIdentifier)) toks.push(r);
@@ -50,8 +54,13 @@ describe("Price fetcher -> price run (test chain)", function () {
   const solRow = { ...sol, identifier: solMint, kind: "token" };
   const lc = (a) => String(a).toLowerCase();
 
-  it("reads the 487 Revision B rows: the 486 written rows plus Base ETH; no Solana", () => {
+  it("reads the 487 Revision B rows (486 written plus Base ETH, no Solana); the default is the 27 Base rows", () => {
     expect(rows.length).to.equal(487);
+    expect(baseRows.length).to.equal(27);
+    expect(baseRows.every((r) => r.environmentId === "Base")).to.equal(true);
+    expect(baseRows.filter((r) => r.row === 2).length).to.equal(1);
+    expect(baseRows.map((r) => r.environmentId + "|" + lc(r.canonicalAssetId)).sort())
+      .to.deep.equal(data.entries.map((e) => e.environmentId + "|" + lc(e.canonicalAssetId)).sort());
     expect(rows.filter((r) => r.environmentId === "Base" && r.row === 2).length).to.equal(1);
     expect(rows.filter((r) => r.environmentId === "Solana").length).to.equal(0);
     expect(sol.environmentId).to.equal("Solana");
@@ -184,24 +193,24 @@ describe("Price fetcher -> price run (test chain)", function () {
     });
   });
 
-  describe("on the test chain (ceremony: Revision B, 487 rows, poster = live poster)", function () {
+  describe("on the test chain (Base-only ceremony: 27 Base rows, poster = live poster)", function () {
     let v;
     before(async () => {
       const [signer] = await ethers.getSigners();
-      const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
-      const newLocks = {};
-      for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, data.evmDevFunds[env])).getAddress();
-      v = (await runBaseCeremony({ ethers, signer, art, data, newLocks })).verifier;
+      v = (await runBaseCeremony({ ethers, signer, art, data })).verifier;
     });
 
-    it("the real-fetch fixture feeds priceRun and posts: Revision B rows usable at the exact price; rows not in Revision B skipped and unusable", async () => {
+    it("the real-fetch fixture feeds priceRun and posts: registered Base rows usable at the exact price; every other row skipped and unusable", async () => {
       expect(SAMPLE.length).to.be.gte(8);
-      const inRevB = new Set(rows.map((x) => x.environmentId + "|" + x.canonicalAssetId.toLowerCase()));
+      const inAllRevB = new Set(rows.map((x) => x.environmentId + "|" + x.canonicalAssetId.toLowerCase()));
+      expect(SAMPLE.filter((f) => !inAllRevB.has(f.environmentId + "|" + f.canonicalAssetId.toLowerCase())).length).to.equal(7);
+      const inRevB = new Set(baseRows.map((x) => x.environmentId + "|" + x.canonicalAssetId.toLowerCase()));
       const isIn = (f) => inRevB.has(f.environmentId + "|" + f.canonicalAssetId.toLowerCase());
       const r = buildPriceRun(SAMPLE, await nextRunId(v));
-      // Fixture rows dropped by Revision B (Solana SOL, sUSD, ggAVAX, TigerOG, SWEAT, GT, IPOR) are skipped, never posted.
+      // Fixture rows dropped by Revision B (Solana SOL, sUSD, ggAVAX, TigerOG, SWEAT, GT, IPOR)
+      // and every non-Base row (not registered on the Base-only launch) are skipped, never posted.
       expect(r.skipped.map((x) => x.symbol).sort()).to.deep.equal(SAMPLE.filter((f) => !isIn(f)).map((f) => f.symbol).sort());
-      expect(r.skipped.length).to.equal(7);
+      expect(r.updates.length).to.be.gte(1);
       for (const x of r.skipped) expect(x.why).to.equal("not in registry");
       expect(r.updates.length).to.equal(SAMPLE.filter(isIn).length);
       await postOnTestChain(hre, v, r);
@@ -212,8 +221,8 @@ describe("Price fetcher -> price run (test chain)", function () {
       }
     });
 
-    it("a full 487-row Revision B fetch (mocked HTTP) builds consecutive runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
-      const failIds = new Set(rows.filter((r, i) => i % 7 === 0).map((r) => r.pricingIdentifier));
+    it("a full Base-row fetch (mocked HTTP, 27 rows) builds runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
+      const failIds = new Set(baseRows.filter((r, i) => i % 7 === 0).map((r) => r.pricingIdentifier));
       const m = mock([
         [/coingecko/, (u) => Object.fromEntries(cgIds(u).filter((id) => !failIds.has(id)).map((id, j) => [id, { usd: (j + 1) / 8, last_updated_at: NOW }]))],
         // Every token has one traded $50,000 pool on its own chain.
@@ -221,20 +230,20 @@ describe("Price fetcher -> price run (test chain)", function () {
           priceUsd: "0.5", priceNative: "1", liquidity: { usd: 50000 }, txns: { h24: { buys: 1, sells: 1 } }, volume: { h24: 10 } }]; }],
         [/geckoterminal/, () => ({ data: [], included: [] })],
       ]);
-      const res = await fetchPrices({ rows, get: m.get, now: () => NOW, pause: NOPAUSE });
-      expect(res.length).to.equal(487);
+      const res = await fetchPrices({ rows: baseRows, get: m.get, now: () => NOW, pause: NOPAUSE });
+      expect(res.length).to.equal(27);
       const c = summarize(res);
-      const failNatives = rows.filter((r) => r.kind === "native" && failIds.has(r.pricingIdentifier)).length;
-      const dsTokens = rows.filter((r) => r.kind === "token" && failIds.has(r.pricingIdentifier)).length;
-      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(487);
+      const failNatives = baseRows.filter((r) => r.kind === "native" && failIds.has(r.pricingIdentifier)).length;
+      const dsTokens = baseRows.filter((r) => r.kind === "token" && failIds.has(r.pricingIdentifier)).length;
+      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(27);
       expect(c.fail).to.equal(failNatives);          // a native with no fresh CoinGecko price fails
       expect(c.DexScreener).to.equal(dsTokens);      // a token with no CoinGecko price uses its qualifying pool
       expect(c.DexScreener).to.be.gt(0);
       for (const f of res.filter((x) => x.usd == null)) expect(f.reason).to.equal("no_fresh_coingecko");
       const first = await nextRunId(v);
       const runs = buildPriceRuns(res, first);
-      expect(runs.length).to.equal(Math.ceil(487 / MAX_LINES_PER_RUN));
-      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(487);
+      expect(runs.length).to.equal(Math.ceil(27 / MAX_LINES_PER_RUN));
+      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(27);
       expect(runs.map((r) => r.runId)).to.deep.equal(runs.map((_, i) => first + BigInt(i)));
       for (const r of runs) {
         const rc = await postOnTestChain(hre, v, r);
