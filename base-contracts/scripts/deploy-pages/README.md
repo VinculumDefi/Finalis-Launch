@@ -1,47 +1,35 @@
-# Sixteen-network deploy pages
+# Base ceremony page (Base-only launch)
 
-One page per network. The chain pages are built from the current source by
-`buildDeployPages.cjs`. `base.html` is kept by hand (the builder does not
-overwrite it); it loads `ceremony.json`, `ceremony-data.json` and
-`baseCeremonyFlow.js` from this folder.
-
-The six non-Base EVM pages each send one deploy and stop. The Base page runs
-the whole Base ceremony and ends with `finalize()`, which is permanent.
+Founder directive t357u: the launch is Base-only. This folder holds one page,
+`base.html`. It loads `ceremony.json`, `ceremony-data.json` and
+`baseCeremonyFlow.js` from this folder. The fifteen non-Base pages,
+`buildDeployPages.cjs` and `registryGate.cjs` were removed (they are in git
+history). The sixteen lock contracts, their readers and their tests are kept
+in `contracts/` and `test/`; none of them is deployed or wired by this
+ceremony.
 
 | Environment | Page | What it does |
 |---|---|---|
-| Base | `base.html` | MetaMask, chain id 8453 only. You first paste the six new non-Base lock addresses. Before any signature it refuses: a missing or invalid lock address, an old 2.5% lock (`0x968B…C946`, `0x4eDE…3b1a`), a lock equal to the poster, Dev Fund or wallet, incomplete ceremony data, a Base ETH price that is not positive, incomplete reader wiring, and a live poster that is missing, zero, or equal to the wallet or Dev Fund. Then, in order (`baseCeremonyFlow.js`): deploys VCLM, CHONX, VinculumFinalisVerifier (checks its Base ETH id equals registry row 2), VinculumFinalisSynth (Forge) and VinculumFinalisStake (bound to the Verifier, whose launch time starts the Stake epochs); deploys BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge), reads back a 5% fee and that it refuses the three protocol tokens; calls `VCLM.initialize(Verifier, Stake)` and `CHONX.initialize(Verifier, 0)`; deploys and registers 15 readers (Base, the six EVM chains bound to the pasted locks, six UTXO chains, Stellar, XRP Ledger; not Solana), reading each back; writes the Revision B registry (487 rows, batches of 50), the token address index (475 addresses) and three native-coin aliases; sets the Dev Fund for the seven EVM chains; sets the poster to the connected wallet, writes price run 1 (Base ETH, from `ceremony-data.json`) and reads it back as usable; hands the poster to the live poster `0x6001…0DB4` and reads it back; then `finalize()` and reads it back. |
-| Ethereum | `ethereum.html` | MetaMask, chain id 1 only. CommitmentVaultLock("Ethereum", Dev Fund). |
-| Polygon | `polygon.html` | MetaMask, chain id 137 only. CommitmentVaultLock("Polygon", Dev Fund). |
-| Optimism | `optimism.html` | MetaMask, chain id 10 only. CommitmentVaultLock("Optimism", Dev Fund). |
-| Arbitrum | `arbitrum.html` | MetaMask, chain id 42161 only. CommitmentVaultLock("Arbitrum", Dev Fund). |
-| BNB Smart Chain | `bnb-smart-chain.html` | MetaMask, chain id 56 only. CommitmentVaultLock("BNB Smart Chain", Dev Fund). |
-| Avalanche | `avalanche.html` | MetaMask, chain id 43114 only. CommitmentVaultLock("Avalanche", Dev Fund). |
-| Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, DigiByte, Zcash | `bitcoin.html`, `bitcoin-cash.html`, `litecoin.html`, `dogecoin.html`, `digibyte.html`, `zcash.html` | Plan only. The utxo-locks CLTV P2SH lock is a per-user transaction, so there is nothing to deploy. Prints the Dev Fund, confirmations, dust and binding rule. |
-| Solana | `solana.html` | Not part of this deployment (no Solana reader is registered; the app refuses Solana locks). Plan only, kept for later. Prints the vf-solana-vault program id, config PDA and Dev Fund. Program upload needs the program keypair through the CLI. The page has one read-only mainnet status check. |
-| Stellar | `stellar.html` | Plan only. Claimable-balance lock; nothing to deploy. |
-| XRP Ledger | `xrp-ledger.html` | Plan only. EscrowCreate FinishAfter lock; nothing to deploy. |
+| Base | `base.html` | MetaMask, chain id 8453 only. Before any signature it refuses: incomplete ceremony data, any non-Base registry row or token address, any alias, reader wiring other than the Base reader, Dev Fund wiring other than Base, a Base ETH price that is not positive, and a live poster that is missing, zero, an old contract, or equal to the wallet or Dev Fund. Then, in order (`baseCeremonyFlow.js`): deploys VCLM, CHONX, VinculumFinalisVerifier (checks its Base ETH id equals registry row 2), VinculumFinalisSynth (Forge) and VinculumFinalisStake; deploys BaseCommitmentVaultLock("Base", Dev Fund, VCLM, CHONX, Forge) and reads back the 5% fee and that it refuses the three protocol tokens; calls `VCLM.initialize(Verifier, Stake)` and `CHONX.initialize(Verifier, 0)`; deploys and registers one reader, BaseLockRecordVerifier bound to the Base lock; writes the Base subset of Revision B (27 rows), the Base token address index (26 addresses) and no aliases; sets the Base Dev Fund; sets the poster to the connected wallet, writes price run 1 (Base ETH) and reads it back; hands the poster to the live poster `0x6001…0DB4`; then `finalize()` and reads it back. |
 
-Cosmos Hub is not a row.
+The Base lock charges 5% of gross on every duration, including the 1-hour
+Handshake. The Base Dev Fund is `0xFD21…3e9a`.
 
-Every lock charges 5% on every duration, including the 1-hour Handshake. The
-order of use, the on-the-day checklist and the read-only post-deploy check are
-in `deployment/LIVE_DEPLOYMENT_ORDER.md` and `deployment/LOCK_DEPLOYMENT_STEPS.md`.
-
-Dev Funds come from `deployment/representativeBase.cjs`. The EVM Dev Fund, used on Base and the six EVM chains, is `0xFD21…3e9a`.
+The Base subset is derived at build time from Revision B
+(`deployment/assetRegistry.revB.json`, 487 rows, unchanged): every row whose
+environment is Base. cbETH is registered and hidden in the app only.
 
 ## Build on the day (deploy files only)
 
-Run these once, from main, right before the ceremony (see
-`deployment/DEPLOYMENT_DAY_RUNBOOK.md`). They rebuild only the deploy files
-from the committed source and registry files. They do not change the registry.
-
 ```
 npm install --legacy-peer-deps
-npx hardhat compile --force                          # full compile; the reference build
-node scripts/deploy-pages/buildDeployPages.cjs       # the fifteen chain pages (base.html is kept)
-node scripts/build_ceremony_artifacts.cjs            # ceremony.json, and ceremony-data.json with a fresh first Base ETH price
+npx hardhat compile --force                  # full compile; the reference build
+node scripts/build_ceremony_artifacts.cjs    # ceremony.json, and ceremony-data.json (Base subset) with a fresh first Base ETH price
+npm run ceremony:dryrun:simulate             # Base-only SIMULATE rehearsal on a local Base fork, then Rig 10 reconciliation
 ```
+
+`node scripts/prepareLockDeploy.cjs --check Base <lock> [probe]` is a
+read-only check of a deployed Base lock. Every other environment is refused.
 
 Retired, not used for this deployment: `scripts/broadcast.html`,
 `scripts/ceremony.html`, `scripts/broadcastBaseTest.cjs`,
@@ -61,6 +49,6 @@ node scripts/buildRevisionB.cjs                      # writes deployment/assetRe
 node scripts/buildTokenAddressIndex.cjs              # writes deployment/tokenAddressIndex.json from Revision B
 ```
 
-The pages, the ceremony data and the test-chain ceremony read Revision B (`deployment/assetRegistry.revB.json`, 487 entries) through `scripts/registryFile.cjs`. `assetRegistry.resolved.json` is the prior revision and is kept unchanged. See `deployment/ASSET_REGISTRY_REVISIONS.md`.
+The ceremony data (Base subset) and the test-chain ceremony read Revision B (`deployment/assetRegistry.revB.json`, 487 entries) through `scripts/registryFile.cjs`. `assetRegistry.resolved.json` is the prior revision and is kept unchanged. See `deployment/ASSET_REGISTRY_REVISIONS.md`.
 
 `resolveAssetRegistry.cjs` reads the 1,001-row registry from the URL in `src/lib/vfRegistryVerification.js` and drops the Cosmos row. Token decimals come from `decimals()` on each token's own network or from the Solana mint account. Native decimals come from `src/lib/vfBaseRegistry.js`. If a row's decimals cannot be read, the script records the reason and the row is not written. No decimals are guessed. Two Solana rows share a mint with an earlier row, so they map to the same Verifier key and are not written a second time.
