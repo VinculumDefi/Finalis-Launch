@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, FileCode, Network } from 'lucide-react';
-import { AUTHORITY } from '@/lib/vfRevision6Authority';
+import { AUTHORITY } from '@/lib/vfSpecAuthority';
 import { ENVIRONMENTS, ENVIRONMENT_COUNT } from '@/lib/vfBaseRegistry';
 
 export default function VerifierArchitecture() {
