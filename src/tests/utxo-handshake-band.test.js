@@ -175,8 +175,8 @@ test('pages: Handshakes on these chains are band-checked and show the note; no $
   assert.match(tl, /\(15n \* SCALE\) \/ 1000n/);
   const engine = read('src/lib/vfVerifierEngine.js');
   assert.ok(!/\(95n \* SCALE\)|105n \* SCALE|outside \$0\.95/.test(engine)); // code, not the history comment
-  // The Revision 6 record stays as transcribed (historical); the engine no longer reads its band.
-  assert.equal(FIXED_RULES.handshake_value_usd_min, 0.95);
+  // The authority record carries the current $0.01 Handshake minimum; the engine does not read its band.
+  assert.equal(FIXED_RULES.handshake_value_usd_min, 0.01);
   assert.ok(!engine.includes('handshake_value_usd'));
   // The standard minimum lock check is unchanged and still needs a price.
   assert.equal(checkUtxoMinimumLock({ env: 'Bitcoin', grossSmallestUnits: 30000n }).ok, false);
