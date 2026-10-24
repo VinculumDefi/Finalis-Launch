@@ -42,8 +42,8 @@ const LOG_LABEL = { lock: "Base lock", vclm: "VCLM", chonx: "CHONX", verifier: "
 // immutables (Dev Fund, VCLM, CHONX, SYNTH), so the code hash is taken with the
 // immutable byte ranges zeroed (ranges from the compiler's immutableReferences),
 // and the immutables are checked by their getters.
-const LOCK_RUNTIME_HASH = "0x1273f544e21b20838f94c0e18c5790dda8ec2b014fe4881264f90898a0e2bea2";
-const LOCK_IMMUTABLE_RANGES = [[1406, 32], [2721, 32], [4858, 32], [5265, 32], [5339, 32], [5493, 32], [6052, 32], [6108, 32], [6148, 32]];
+const LOCK_RUNTIME_HASH = "0x0996a0322d1489999653dd4e199019fcd9e8de6044f1a097a9249cb447becc3c";
+const LOCK_IMMUTABLE_RANGES = [[1384, 32], [2699, 32], [4836, 32], [5243, 32], [5317, 32], [5415, 32], [5974, 32], [6030, 32], [6070, 32]];
 function maskedCodeHash(codeHex) {
   const code = Buffer.from(codeHex.replace(/^0x/, ""), "hex");
   for (const [start, len] of LOCK_IMMUTABLE_RANGES) code.fill(0, start, start + len);
