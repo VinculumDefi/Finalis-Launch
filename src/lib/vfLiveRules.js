@@ -1,7 +1,7 @@
 // =============================================================================
 // Live contract rules for the practice simulator and the lock helpers.
 //
-// vfRevision6Authority.js is a pinned historical record of Revision 6. Its
+// vfSpecAuthority.js is a pinned historical record of Revision 6. Its
 // FIXED_RULES still carry the Revision 6 Handshake values ($0.95 to $1.05,
 // 250 bps) and the Revision 6 $10.00 standard minimum. The contracts that will
 // be deployed use different values, so no live code path reads those four
@@ -19,7 +19,7 @@
 // FIXED_RULES.
 // =============================================================================
 
-import { FIXED_RULES, SCALE, HANDSHAKE_DURATION_SECS } from './vfRevision6Authority.js';
+import { FIXED_RULES, SCALE, HANDSHAKE_DURATION_SECS } from './vfSpecAuthority.js';
 
 export const LIVE_RULES = Object.freeze({
   ...FIXED_RULES,
