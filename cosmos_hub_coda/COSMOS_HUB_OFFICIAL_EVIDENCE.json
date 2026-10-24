@@ -4,7 +4,7 @@
   "date": "2026-07-28",
   "subject_environment": "Cosmos Hub (cosmoshub-4) live mainnet",
   "authority": {
-    "governing_source": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx",
+    "governing_source": "Vinculum Finalis Master Specification",
     "revision": "Revision 6",
     "revision_date": "2026-07-28",
     "sha256": "5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9",
@@ -12,7 +12,7 @@
     "sole_governing_expression": "VF-DOC-001 (Section 0.1)"
   },
   "clean_room_package_files_read": [
-    { "file": "227826f11_Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx", "bytes": 152710, "status": "read in full (sole governing specification)" },
+    { "file": "Vinculum Finalis Master Specification", "bytes": 152710, "status": "read in full (sole governing specification)" },
     { "file": "Vinculum_Finalis_Base44_CODA_Cosmos_Hub_Prompt.md", "bytes": 15528, "status": "read (task charter)" },
     { "file": "Vinculum_Finalis_Governing_Requirements.json", "bytes": 130995, "status": "read (209 requirement records, exact governing text)" },
     { "file": "Vinculum_Finalis_Protocol_Constants.json", "bytes": 15316, "status": "read (durations, multipliers, fees, environments, formulas)" },
