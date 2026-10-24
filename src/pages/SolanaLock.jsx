@@ -7,7 +7,7 @@ import LockConfigForm from '@/components/solana/LockConfigForm';
 import PreflightPanel from '@/components/solana/PreflightPanel';
 import LifecyclePanel from '@/components/solana/LifecyclePanel';
 import { Button } from '@/components/ui/button';
-import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
+import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfSpecAuthority';
 import { validateLockRequest, computeOutput, buildSourceIdentity } from '@/lib/vfSolanaLockEngine';
 import { SolanaMockAdapter } from '@/lib/vfSolanaMockAdapter';
 import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE, NOT_IN_THIS_DEPLOYMENT_LABEL } from '@/lib/vfDeploymentScope';
