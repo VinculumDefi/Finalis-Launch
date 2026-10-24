@@ -3,7 +3,7 @@
  * Does not call deploy(), sendTransaction(), or provider.send().
  * Does not read a private key. Does not broadcast.
  */
-const { EVM_DEV_FUND, rows } = require("../deployment/representativeBase.cjs");
+const { EVM_DEV_FUND, HANDSHAKE_RULE, rows } = require("../deployment/representativeBase.cjs");
 
 function assertNoPrivateKeyInEnv() {
   const suspects = ["PRIVATE_KEY", "DEPLOYER_PRIVATE_KEY", "BASE_PRIVATE_KEY", "MNEMONIC"];
@@ -27,9 +27,12 @@ function main() {
   }
   console.log("DRY RUN: representative deployment. No transaction will be sent.");
   console.log(`EVM Dev Fund (Base and the other six EVM environments): ${EVM_DEV_FUND}`);
+  console.log(
+    `Handshake (${HANDSHAKE_RULE.authority}), every environment: 1 hour, $${HANDSHAKE_RULE.usdMin} to $${HANDSHAKE_RULE.usdMax}, ${HANDSHAKE_RULE.feeBps / 100}% fee, no allowance limit`
+  );
   for (const row of rows) {
     console.log(
-      `${row.environment}\tallowance ${row.handshakeAllowance}\t${row.countsPerIdentity ? "counts per identity" : "cannot count per identity"}\t${row.devFund}`
+      `${row.environment}\t${row.lock}\t${row.devFund}`
     );
   }
   console.log("Stopped before broadcast.");
