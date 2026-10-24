@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ShieldCheck, FlaskConical, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AUTHORITY, SCALE, COMMITMENT_DURATIONS, TOKEN_HARD_CAPS, CHONX_ACTIVATION_THRESHOLD } from '@/lib/vfRevision6Authority';
+import { AUTHORITY, SCALE, COMMITMENT_DURATIONS, TOKEN_HARD_CAPS, CHONX_ACTIVATION_THRESHOLD } from '@/lib/vfSpecAuthority';
 import { VerifierState, verifyProof } from '@/lib/vfVerifierEngine';
 import { normalizeSolanaEvidence, normalizeXrplEvidence, normalizeUtxoEvidence, normalizeStellarEvidence, normalizeEvmEvidence } from '@/lib/vfProofNormalizer';
 import { buildMockEvent, buildFinalityProof } from '@/lib/vfMockEventBuilder';
