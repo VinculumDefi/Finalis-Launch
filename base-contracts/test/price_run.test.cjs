@@ -6,7 +6,7 @@ const { ethers } = hre;
 const { buildPriceRun, toUsd18, calldata, nextRunId, postOnTestChain } = require("../scripts/priceRun.cjs");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const data = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 const LIVE = require("../deployment/liveConfig.json");
 
 const key = (env, id) => ethers.solidityPackedKeccak256(["string", "bytes32"], [env, id]);
@@ -15,15 +15,14 @@ describe("Price run for the live poster (test chain)", function () {
   this.timeout(600000);
   let v;
   const eth = data.row2.canonicalAssetId;
-  const other = data.entries.find((e) => e.environmentId !== "Base");
-  const third = data.entries.find((e) => e.environmentId !== "Base" && e !== other);
+  // Base-only launch (t357u): every registered row is a Base row.
+  const other = data.entries.find((e) => e.canonicalAssetId.toLowerCase() !== eth.toLowerCase());
+  const third = data.entries.find((e) => e.canonicalAssetId.toLowerCase() !== eth.toLowerCase() && e !== other);
+  const nonBase = require("../scripts/deploy-pages/resolveAssetRegistry.cjs").resolveCeremonyRegistry().entries.find((e) => e.environmentId !== "Base");
 
   before(async () => {
     const [signer] = await ethers.getSigners();
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
-    const newLocks = {};
-    for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, data.evmDevFunds[env])).getAddress();
-    v = (await runBaseCeremony({ ethers, signer, art, data, newLocks })).verifier; // ends with poster = live poster
+    v = (await runBaseCeremony({ ethers, signer, art, data })).verifier; // ends with poster = live poster
   });
 
   it("converts decimal prices exactly, with no floating point", () => {
@@ -39,11 +38,12 @@ describe("Price run for the live poster (test chain)", function () {
       { environmentId: other.environmentId, canonicalAssetId: other.canonicalAssetId, usd: "1.25" },
       { environmentId: third.environmentId, canonicalAssetId: third.canonicalAssetId, usd: null },
       { environmentId: "Nowhere", canonicalAssetId: ethers.ZeroHash, usd: "9" },
+      { environmentId: nonBase.environmentId, canonicalAssetId: nonBase.canonicalAssetId, usd: "9" },
     ], 2);
     expect(r.poster).to.equal(LIVE.scheduledPricePoster);
     expect(r.updates.map((u) => u.success)).to.deep.equal([true, true, false]);
     expect(r.updates[0].priceUsd18).to.equal(25005n * 10n ** 17n);
-    expect(r.skipped.length).to.equal(1);
+    expect(r.skipped.map((x) => x.environmentId)).to.deep.equal(["Nowhere", nonBase.environmentId]); // not registered on the Base-only launch
     expect(calldata(r).slice(0, 10)).to.equal(v.interface.getFunction("applyScheduledPriceRun").selector);
   });
 
