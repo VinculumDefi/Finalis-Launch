@@ -65,8 +65,11 @@ const CHAINS = {
 const EVM_ADDR = /^0x[0-9a-fA-F]{40}$/;
 const B58_ADDR = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
-function registryRows(regFile) {
-  return loadRegistry(regFile).all; // Revision B: written rows + Base ETH
+// Rows to price. Base-only launch (t357u): by default only the Base rows of
+// Revision B (26 tokens plus Base ETH = 27), the rows the ceremony registers.
+// { baseOnly: false } gives all 487 Revision B rows (written rows + Base ETH).
+function registryRows(regFile, { baseOnly = true } = {}) {
+  return loadRegistry(regFile).all.filter((r) => !baseOnly || r.environmentId === "Base");
 }
 
 const isNative = (r) => (r.kind ? r.kind === "native" : r.custodyPath === 0);
