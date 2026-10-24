@@ -307,7 +307,9 @@ describe("CommitmentVaultLock (Revision 8, seven EVM environments)", function ()
         });
 
         it("keeps no Handshake counter: a fourth Handshake from one account is accepted at 5%", async function () {
-          expect(await vault.handshakeAllowance()).to.equal(3n); // mechanism report only
+          // Revision 12: no allowance getter, no counting flag, no counter.
+          expect(vault.handshakeAllowance).to.equal(undefined);
+          expect(vault.countsPerIdentity).to.equal(undefined);
           expect(vault.handshakeUses).to.equal(undefined);
           for (let i = 0; i < 4; i++) {
             const args = bindingArgs(await destination.getAddress(), HOUR);
