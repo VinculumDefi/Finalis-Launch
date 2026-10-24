@@ -21,7 +21,8 @@ const fmt = (x, d = 18) => ethers.formatUnits(x, d);
 
 // Base-only launch: ceremony-data holds only the 27 Base rows. Rigs that
 // probe non-Base rows (to show they are refused) look them up in the full
-// Revision B source.
+// ceremony source, registry Revision C (t367u). Its non-Base rows are
+// identical to Revision B.
 let FULL_REVB = null;
 const entry = (env, sym) => {
   let e = DATA.entries.find((x) => x.environmentId === env && x.symbol === sym);
