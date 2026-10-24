@@ -22,7 +22,7 @@ test_price_rise_refuses_instead_of_raising_the_fee (test_locks.MinimumLockTests.
 test_priced_fixture_holds_and_releases_with_exact_5pct (test_locks.MinimumLockTests.test_priced_fixture_holds_and_releases_with_exact_5pct) ... ok
 
 ----------------------------------------------------------------------
-Ran 22 tests in 0.070s
+Ran 22 tests in 0.068s
 
 OK
 bitcoin: Handshake 11000 and 22000 accepted, fee 550 and 1100
@@ -31,12 +31,12 @@ litecoin: Handshake 110000 and 220000 accepted, fee 5500 and 11000
 bitcoin: confirmation depth refuses < 6 and accepts >= 6
 zcash: confirmation depth refuses < 10 and accepts >= 10
 dogecoin: fee output is exactly 100000 koinu and principal stays 1000000
-bitcoin: hold and release passed; fee 50000 principal 950000 binding 117 bytes; dev-fund fixture 027521c69ef3529063b63ab707547bba1893fb915771be45d9b1d81f238cc9d757 release fixture 03fd945c707b0de7f4bd7a648afbc82e5187eb141b738d4137b52304429773c110
-bitcoin-cash: hold and release passed; fee 50000 principal 950000 binding 117 bytes; dev-fund fixture 02669be635004ae9dc6de3dcdae8a5223f1c44e32f608aa56b81a51af7bbc5b797 release fixture 03d92401765a591a01c6307cba86bcaa1f01bcc230120418662fcdf8c94a8b0bc6
-litecoin: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 0348ab5eba7e6b95665989b090d4cf48f29840790ca2ab28e36b2ec42d7c9a4294 release fixture 038e820c63c668f16673a469ae179297fd6751d285e298e63e6419501623c67027
-dogecoin: hold and release passed; fee 100000 principal 1000000 binding 32 bytes; dev-fund fixture 03dd81567c824287a7d07760824b5878c61974953b30a3e38714d6cb57eb5ba166 release fixture 0302b608562e5a8120d9cce160efbb5a37af88a42e01e924cae0fdf501d318f7e6
-digibyte: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 0378db4e3b36e132bb08ec9f4a244e67e9cf405b891bd4444c4ddff1f217f387ce release fixture 0267ed4caa21a6a52cda141329e2165ff251c94ebdcdf257ece4afeedc2b72fea8
-zcash: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 03b98c4434a5fd0ee827b2bc5684d9ab957200fae22e10781643be249fafedf1ab release fixture 028528eecdc1d8e860fae2a3cbf5dd1740a53196e91b4eb17e9bd2259ffa71481b
+bitcoin: hold and release passed; fee 50000 principal 950000 binding 117 bytes; dev-fund fixture 02affc6d900916b3c8d0414cee3e2fbaa7c7781d16cff3fb84c04a0c3b7dd3b842 release fixture 03245fe96987ec0a9abbcec9d107b2b40da20b394f303d9eba2999f17cb0fb9ae9
+bitcoin-cash: hold and release passed; fee 50000 principal 950000 binding 117 bytes; dev-fund fixture 0292affa3a373dbcd88a9afbf497b9e81fcdd24cf81db254be8c455ed50cd4146f release fixture 038385959c9d9b58039a7889b3ffd043906b138993fe53f15e14a459e25da76c91
+litecoin: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 03147abf68185cfe349a1f04d2ce05aaf120570e97074ca658b02a99fb41492e25 release fixture 021eb4a7d890a96dfd570734a9eff62a774dd2e7ca72a551b16171eb0b0cf37f83
+dogecoin: hold and release passed; fee 100000 principal 1000000 binding 32 bytes; dev-fund fixture 035c6c858055507e545d7aa4004fe0b3390c9181db6de3b31b32950431c217b1d0 release fixture 025256007158e99e4ba0bcb224bc82087acf8ae956c0bf97f0ea144e49a4bafc9f
+digibyte: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 031c2dbbedaa4456eeb246e5105f759623b3a5247f50a7d479a3c0a2fc923aab31 release fixture 0215ae739d112c3300d03bf29dbcb0dfb0af618f5a60d4700542c0e90d5b86f075
+zcash: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 039d404c03ac4199c95ae8b019582e5bdf51d6292a2b11ebdac30a49a426278ed7 release fixture 02330139741e16ffc6ccb5afea13d70340769edb467eb803af418344c0aab15646
 litecoin: confirmation depth refuses < 24 and accepts >= 24
 bitcoin-cash: confirmation depth refuses < 15 and accepts >= 15
 digibyte: confirmation depth refuses < 10 and accepts >= 10
