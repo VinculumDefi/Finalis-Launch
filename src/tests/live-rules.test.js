@@ -1,6 +1,6 @@
 // Live contract rules in the practice simulator (t249u).
 // Rev 12: 5% on every duration, Handshake $0.01 to $0.02. Contract minimum $0.01.
-// The Revision 6 record (vfRevision6Authority.js) stays as transcribed, but no
+// The Revision 6 record (vfSpecAuthority.js) stays as transcribed, but no
 // live code path reads its Handshake band, Handshake fee or $10 minimum.
 // Run: node --test src/tests/live-rules.test.js
 import { test } from 'node:test';
@@ -9,7 +9,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP, feeBpsForDuration } from '../lib/vfLiveRules.js';
-import { FIXED_RULES } from '../lib/vfRevision6Authority.js';
+import { FIXED_RULES } from '../lib/vfSpecAuthority.js';
 import { checkFeeMath, checkUsdBounds } from '../lib/vfVerifierEngine.js';
 import { buildMockEvent, buildFinalityProof } from '../lib/vfMockEventBuilder.js';
 import { normalizeSolanaEvidence } from '../lib/vfProofNormalizer.js';
@@ -65,7 +65,7 @@ test('no live code path reads the stale Revision 6 Handshake band, Handshake fee
   }
   assert.ok(files.length > 20);
   const stale = /FIXED_RULES\s*\.\s*(handshake_fee_bps|handshake_value_usd_min|handshake_value_usd_max|standard_minimum_value_usd)/;
-  const hits = files.filter((f) => f !== path.join('src', 'lib', 'vfRevision6Authority.js') && stale.test(read(f)));
+  const hits = files.filter((f) => f !== path.join('src', 'lib', 'vfSpecAuthority.js') && stale.test(read(f)));
   assert.deepEqual(hits, []);
 });
 
