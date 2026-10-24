@@ -40,7 +40,8 @@ export default function PdaDerivation({ lockId, sourceAccount }) {
         }
       }
 
-      // Handshake allowance PDA (needs valid sourceAccount)
+      // Handshake allowance PDA (needs valid sourceAccount). Kept for the program's
+      // account layout only; Revision 12 has no allowance limit.
       if (sourceAccount && sourceAccount.trim() && isValidAddress(sourceAccount.trim())) {
         try {
           const [pda, bump] = deriveHandshakePda(sourceAccount.trim());
@@ -158,7 +159,7 @@ export default function PdaDerivation({ lockId, sourceAccount }) {
       <div className="space-y-2">
         <PdaRow label="Config PDA" result={pdaResults?.config} />
         <PdaRow label="Lock Record PDA" result={pdaResults?.lock} />
-        <PdaRow label="Handshake Allowance PDA" result={pdaResults?.handshake} />
+        <PdaRow label="Handshake Allowance PDA (layout only, no limit, Revision 12)" result={pdaResults?.handshake} />
       </div>
 
       {!pdaResults?.lock && (
