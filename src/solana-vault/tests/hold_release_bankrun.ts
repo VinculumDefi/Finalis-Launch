@@ -15,7 +15,6 @@ const STANDARD_FEE_BPS = 500;
 const STANDARD_USD_MIN = "10000000000000000000";
 const SEED_CONFIG = Buffer.from("vf_config");
 const SEED_LOCK = Buffer.from("vf_lock");
-const SEED_HANDSHAKE = Buffer.from("vf_handshake");
 
 function hashLockId(lockId: string): Buffer {
   return crypto.createHash("sha256").update(lockId).digest();
@@ -64,10 +63,6 @@ describe("vf-solana-vault hold/release (bankrun)", () => {
     const lockId = "hold-release-001";
     const lockIdHash = hashLockId(lockId);
     const [lockPda] = PublicKey.findProgramAddressSync([SEED_LOCK, lockIdHash], programId);
-    const [haPda] = PublicKey.findProgramAddressSync(
-      [SEED_HANDSHAKE, provider.wallet.publicKey.toBuffer()],
-      programId,
-    );
     const gross = new BN(1_000_000);
     const fee = gross.muln(STANDARD_FEE_BPS).divn(10000);
     const principal = gross.sub(fee);
@@ -92,7 +87,6 @@ describe("vf-solana-vault hold/release (bankrun)", () => {
         signer: provider.wallet.publicKey,
         config: configPda,
         lockRecord: lockPda,
-        handshakeAllowance: haPda,
         devFund: devFund.publicKey,
         systemProgram: SystemProgram.programId,
       })
