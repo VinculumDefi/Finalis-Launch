@@ -1,5 +1,5 @@
 import React from 'react';
-import { COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS } from '@/lib/vfRevision6Authority';
+import { COMMITMENT_DURATIONS, HANDSHAKE_DURATION_SECS } from '@/lib/vfSpecAuthority';
 import { XRPL_REGISTRY } from '@/lib/vfXrplRegistry';
 import { filterOfferable } from '@/lib/vfActiveAssetAllowlist';
 
