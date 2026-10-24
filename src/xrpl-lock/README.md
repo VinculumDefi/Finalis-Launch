@@ -48,6 +48,8 @@ XRPL has **three** terminal disposition paths:
 | Finalized failure | NOT_RECOGNIZED | VF-COM-008 |
 | LastLedgerSequence expiry | NOT_RECOGNIZED (objective invalidation) | VF-COM-007/008, VF-VER-003 |
 
+The VF-COM-006/007/008 references in this table are Revision 6 numbering and cite only the pending-attempt disposition part of those rules. Revision 12 superseded their Handshake allowance parts; nothing here counts or limits Handshakes.
+
 Elapsed time, mempool disappearance, endpoint non-observation, or application timers **never** clear a still-valid pending attempt.
 
 ## Finality (VF-XCH-006/010)
