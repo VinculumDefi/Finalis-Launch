@@ -1,8 +1,8 @@
 # Vinculum session start
 
-Revision 3, current as of Saturday 2026-10-24 (ET). Read this first in every
+Revision 4, current as of Saturday 2026-10-24 (ET). Read this first in every
 new session. It says what is live, what governs, and the rules. It replaces
-Revision 2 of 2026-10-20 (see History at the end).
+Revision 3 of 2026-10-24 (see History at the end).
 
 The operator is not a programmer. One step at a time. Plain English. Do not
 build, commit, change, deploy or send anything until the operator asks.
@@ -10,15 +10,15 @@ build, commit, change, deploy or send anything until the operator asks.
 ## Repository
 https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
-The document control pass merged to main at 69e069a. Main at 50851dd has the
-Handshake cleanup and the full Hardhat suite at 849 passing, 0 failing. Check
+Revision 16 of the Master Specification was added to main at a3f4e77. Check
 `git log -1 origin/main` for the newest commit.
 
 Start with these files:
-1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision
-   and its path; the single source of truth for which copy governs)
-2. `docs/Vinculum_Finalis_Master_Specification_Revision_14_2026-10-24.md`
-   (Revision 14, the current governing specification)
+1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision,
+   its path and its SHA-256; the single source of truth for which copy
+   governs)
+2. `docs/Vinculum_Finalis_Master_Specification_Revision_16_2026-10-24.md`
+   (Revision 16, the current governing specification)
 3. `deployment/BASE44_LIVE_CONFIG_2026-10-22.md` (the live Base set)
 4. `testing-rigs/MASTER_FINDINGS.md` and `testing-rigs/FIX_LOG_2026-10-23.md`
    (open findings and recorded operator decisions)
@@ -27,31 +27,47 @@ Start with these files:
 If a file is missing, list the folder. Do not invent the file.
 
 ## Governing specification
-- Revision 14 governs:
-  `docs/Vinculum_Finalis_Master_Specification_Revision_14_2026-10-24.md`.
-- It carries forward the full text of Revision 6 and folds in only adopted
-  changes: Revision 12 (the Handshake), Revision 13 (ITS timing only), the
-  Cosmos drop, the 120-day stake multiplier of 2.1x, and the 2026-10-24
-  reader finality rule. Each change is marked with its source.
-- Precedence is settled. Revision 6 governs everything except the Handshake
-  (Revision 12) and ITS timing (Revision 13). The Revision 8 and 9 wording
-  that calls Revision 6 obsolete is not adopted.
-- Changes whose adoption is unclear are not in the governing text. They are in
-  Revision 14, Appendix E ("Not adopted / pending").
-- The Revision 6 original is archived unchanged at
-  `archive/specifications/master-specification/Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`.
-  Its SHA-256 is
-  `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`
-  (computed on the archived file in this pass).
+- Revision 16 governs:
+  `docs/Vinculum_Finalis_Master_Specification_Revision_16_2026-10-24.md`.
+- Its SHA-256 is
+  `ae61bddd9e8a136b11607a6a4bfc13d479ef707b56e87d0a2987c5d7786ff72d`.
+  The same hash is in `DOCUMENT_REGISTER.md`. If the file's hash does not
+  match, stop and tell the operator.
+- Every rule is stated in that file. No rule comes from an earlier revision
+  by reference. Earlier revisions are in `archive/specifications/` and do
+  not govern.
+- Changes whose adoption is unclear are not in the governing text. They are
+  in Revision 16, Appendix E ("Not adopted / pending").
+
+## Revision control
+- To make a new revision: copy the current revision, edit the copy, and save
+  it as the next revision number. Move the old file to
+  `archive/specifications/`. Update the authority file,
+  `DOCUMENT_REGISTER.md`, with the new file's SHA-256. The new file, the
+  archive move and the register update go in the same commit.
+- This session start always names only the live revision, by number and
+  SHA-256.
+- One live copy per document. It is the copy listed in `DOCUMENT_REGISTER.md`.
+  Nothing is deleted.
+- Each new edition bumps the revision number and adds a row to its history
+  table.
+
+## Launch scope
+- This launch is Base only: mint on Base, lock on Base.
+- The sixteen environments in Revision 16, Section 11.1 stay defined in the
+  specification. The other fifteen stay in the repository as future work.
+  Each one is held to the same reader finality bar (Revision 16, Section
+  11.5) before any Base issuance from it.
+- Readers are required. They must not be disabled.
 
 ## Governing rules
 - The Handshake is one hour. Its fee is 5%, the same uniform 5% on every
-  chain and every duration. It is worth $0.01 to $0.02. Bitcoin, Bitcoin Cash
-  and Litecoin native Handshakes use a coin unit band instead (Bitcoin and
-  Bitcoin Cash 11,000 to 22,000 sats; Litecoin 110,000 to 220,000 litoshis),
-  and their value for VCLM and RAC is capped at $0.02.
-- Every other duration needs at least $0.01 (the contract minimum). Revision 6
-  VF-COM-009 still says $10.00. This difference is pending (Revision 14,
+  chain and every duration. It is worth $0.01 to $0.02. There is no
+  allowance limit. (Adopted in Revision 12, stated in Revision 16.)
+- Revision 16 VF-COM-003 also sets coin-unit bands for Bitcoin, Bitcoin Cash
+  and Litecoin native Handshakes. Those chains are not in this launch.
+- Every other duration needs at least $0.01 (the contract minimum). Revision
+  16 VF-COM-009 says $10.00. This difference is pending (Revision 16,
   Appendix E, item E-8).
 - Only the sixteen durations are permitted. Ten years is 8.0x.
 - The 120-day stake multiplier is 2.1x (`docs/TRS_CORRECTION_2026-10-17.md`).
@@ -66,45 +82,16 @@ If a file is missing, list the folder. Do not invent the file.
 - Cosmos is dropped. It is not an environment, not a registry row in use, and
   not in the app.
 
-## Reader finality (operator directive, 2026-10-24)
-All sixteen environments are required. Each needs a Base reader that proves
-the lock is part of that chain's settled history before any Base issuance:
-1. Ethereum
-2. BNB Smart Chain
-3. Avalanche
-4. Polygon
-5. Arbitrum
-6. Base
-7. Optimism
-8. Bitcoin
-9. Bitcoin Cash
-10. Solana
-11. XRP Ledger
-12. Stellar
-13. Litecoin
-14. Dogecoin
-15. DigiByte
-16. Zcash
-
-- Readers are required. They must not be disabled.
-- Nothing is signed until each environment's finality gap is closed or scoped
-  out by the governing specification.
-- Solana is now required like every other environment. It is not in the live
-  Base set, so the app still refuses Solana locks.
-- The finality plan is in progress. It classifies 9 environments as closable
-  (Base, Ethereum, Arbitrum, Optimism, Polygon, BNB Smart Chain, Bitcoin,
-  Bitcoin Cash, Zcash) and 7 as not closable today (Avalanche, Solana,
-  Litecoin, Dogecoin, DigiByte, XRP Ledger, Stellar). This is pending operator
-  review. Nothing is implemented.
-
 ## Current live deployment (Base ceremony of 2026-10-22)
 - The Oct 22 Base live set is finalized and immutable. Base lock
   `0xa1bE…3558`, Verifier `0xfA8A…6328`. Details are in
   `deployment/BASE44_LIVE_CONFIG_2026-10-22.md`.
 - A finalized contract cannot be changed. Any fix needs a new deployment that
   the operator signs.
+- A Base-only ceremony is being prepared. Nothing from it is deployed or
+  signed.
 - The app offers new locks and mints on Base only. Every other network is
-  refused until its reader finality gap is closed.
+  refused.
 - Revision B has 487 rows. The registry pin and the hash lock are unchanged.
 - cbETH on Base is hidden at the app level only (HH-013, mitigated). It stays
   hidden until the label fix or a permanent drop
@@ -121,16 +108,6 @@ the lock is part of that chain's settled history before any Base issuance:
 - The saved apps in `app/base44-lock-2026-10-12/` and
   `app/base44-lock-2026-10-13/` are history.
 
-## Document control
-- One live copy per document. It is the copy listed in `DOCUMENT_REGISTER.md`.
-- Superseded editions go to `archive/specifications/`. Nothing is deleted.
-- Each new edition bumps the revision number and adds a row to its history
-  table.
-- A file that code, a test or a script reads by path stays where it is. It
-  gets a superseded header instead and is listed in the register.
-- `DOCUMENT_REGISTER.md` is the single source of truth for which edition
-  governs.
-
 ## Standing operator rules
 - No deploy, broadcast, register or finalize without the operator's explicit
   go-ahead for that exact step. Never ask for or read keys.
@@ -138,7 +115,9 @@ the lock is part of that chain's settled history before any Base issuance:
 - Do not read full addresses back to the operator. Shorten them, for example
   `0x6001…0DB4`.
 - Plain English. No em-dashes. No analogies.
-- Whole-file edits. One file per commit. Secret-scan before every commit.
+- Whole-file edits. One file per commit, except a new revision: the new file,
+  the archive move and the register update go in one commit. Secret-scan
+  before every commit.
 - Push to main only after the tests pass: app tests, lint, build, Python tests
   and the full Hardhat suite run alone
   (`cd base-contracts && NODE_OPTIONS=--max-old-space-size=12288 npx hardhat test`).
@@ -152,6 +131,7 @@ the lock is part of that chain's settled history before any Base issuance:
 ## History
 | Revision | Date | Change | Archived copy |
 |---|---|---|---|
-| 3 | 2026-10-24 | Revision 14 governs. Reader finality rule. Document control. Oct 22 live set, Revision B, cbETH hide. Planned-deployment section removed. | This file (current) |
+| 4 | 2026-10-24 | Revision 16 governs, named by number and SHA-256. Revision control rule. Launch scope: Base only. Finality status lines and old precedence lines removed. | This file (current) |
+| 3 | 2026-10-24 | Revision 14 governs. Reader finality rule. Document control. Oct 22 live set, Revision B, cbETH hide. Planned-deployment section removed. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_3_2026-10-24.md` |
 | 2 | 2026-10-20 | Revision 12 Handshake. Cosmos dropped. Plan for the 2026-10-21 deployment. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_2_2026-10-20.md` |
 | 1 | 2026-10-12 | Orientation reading list. The 2026-10-12 contracts and mint proof. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_1_2026-10-12.md` |
