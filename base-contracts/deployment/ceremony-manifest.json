@@ -9,20 +9,20 @@
       "revisionLabel": "Revision B",
       "sha256": "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9",
       "rowCount": 487,
-      "rowCountNote": "486 Revision B rows plus Base ETH as row 2"
+      "rowCountNote": "486 Revision B rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 27 Base rows."
     },
     {
       "filename": "baseCeremonyFlow.js",
       "path": "scripts/deploy-pages/baseCeremonyFlow.js",
-      "revisionLabel": "Revision B ceremony flow",
-      "sha256": "5b587d3f5bb73a5f0a3ee1a4ae5725da927e61fbc1ebb9aca8cea18b3b4c8564",
+      "revisionLabel": "Revision B ceremony flow (Base-only)",
+      "sha256": "38b80e7da3e0a550546a2ac2d16c8de2e130db1f8f7d9d5eb496ff23707c8ff9",
       "rowCount": null
     },
     {
       "filename": "base.html",
       "path": "scripts/deploy-pages/base.html",
-      "revisionLabel": "Revision B ceremony page",
-      "sha256": "96898bfad07d20a051dd138fbd101c3d193da61d0eef36a4f13570811c0becaf",
+      "revisionLabel": "Revision B ceremony page (Base-only)",
+      "sha256": "ac62af3cc17492ef044655eb7473e0b09dd53790692ab2a618cc64879aa01f61",
       "rowCount": null
     },
     {
@@ -46,6 +46,11 @@
   "registryBaseEthEnvironment": "Base",
   "registryBaseEthSymbol": "ETH",
   "registryBaseEthAssetId": "native-ETH",
+  "baseOnly": true,
+  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision B, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Revision B itself is unchanged.",
+  "expectedBaseRows": 27,
+  "expectedBaseTokenAddresses": 26,
+  "expectedBaseAliases": 0,
   "deployOrder": [
     "VinculumFinalisToken (VCLM)",
     "VinculumFinalisToken (CHONX)",
@@ -72,41 +77,5 @@
     "$0.02"
   ],
   "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a",
-  "pricePosterHandoff": "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4",
-  "nonBaseLock": {
-    "contract": "CommitmentVaultLock",
-    "note": "Main 5% lock expected on the six non-Base EVM chains. The retired f9e4d8c bytecode at 0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A (HANDSHAKE_FEE_BPS=250) and 0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a must be refused.",
-    "expectedRuntimeHash": "0x96b653727a7a2d279c91ea8647a5104aeee1844590b4f72b258eb193f5eec6b0",
-    "immutableRanges": [
-      [
-        2604,
-        32
-      ],
-      [
-        4758,
-        32
-      ],
-      [
-        5170,
-        32
-      ]
-    ],
-    "feeBps": 500,
-    "feeLanguage": "5.00% of gross on every duration",
-    "noHandshakeFeeBpsSelector": true,
-    "handshakeFeeBpsSelector": "0xee8a0fb0",
-    "environments": [
-      "Ethereum",
-      "Arbitrum",
-      "Optimism",
-      "Polygon",
-      "BNB Smart Chain",
-      "Avalanche"
-    ],
-    "devFund": "0xFD21BF773A193CDcb9F793100CB13a8baAdc3e9a",
-    "retiredAddresses": [
-      "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a",
-      "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A"
-    ]
-  }
+  "pricePosterHandoff": "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4"
 }
