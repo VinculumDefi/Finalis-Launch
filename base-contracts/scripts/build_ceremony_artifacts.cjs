@@ -11,7 +11,14 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // unless these constants are changed in this file (reviewed commit).
 const EXPECTED_REGISTRY_SHA256 = "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9";
 const EXPECTED_REGISTRY_ROWS = 487;
-const EXPECTED_MANIFEST_SHA256 = "d8f2f3aafd7f18926d1eb6382de92c7a556a80957bf4f3f160071e8a017a6be1";
+const EXPECTED_MANIFEST_SHA256 = "f2279557df337a20a14a7082ee63ebecd18b159c39c527733644bf82f508594c";
+// Base-only launch: the ceremony registers only the Base rows of Revision B.
+// Revision B itself is unchanged (487 rows, pinned above); the Base subset is
+// derived here at build time and must have exactly these counts.
+const BASE_ONLY_RULE = "Revision B entries with environmentId === \"Base\" (row 2 Base ETH included); token addresses with environmentId === \"Base\"; no aliases";
+const EXPECTED_BASE_ROWS = 27;
+const EXPECTED_BASE_TOKEN_ADDRESSES = 26;
+const EXPECTED_BASE_ALIASES = 0;
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
 
@@ -250,50 +257,35 @@ function verifyCeremonyManifest(opts = {}) {
     });
   }
 
-  // Non-Base lock artifact: main CommitmentVaultLock masked runtime hash, 5%, no HANDSHAKE_FEE_BPS.
-  const nbl = manifest.nonBaseLock;
-  if (!nbl) {
-    failures.push({ field: "nonBaseLock", expected: "object with expectedRuntimeHash / feeBps / environments", actual: "missing" });
-  } else {
-    const flowHashMatch = flowSrc.match(/const CVL_RUNTIME_HASH = "(0x[0-9a-fA-F]{64})"/);
-    const flowHash = flowHashMatch ? flowHashMatch[1].toLowerCase() : "";
-    if (!nbl.expectedRuntimeHash || nbl.expectedRuntimeHash.toLowerCase() !== flowHash) {
-      failures.push({
-        field: "nonBaseLock.expectedRuntimeHash",
-        expected: flowHash || "(CVL_RUNTIME_HASH in baseCeremonyFlow.js)",
-        actual: String(nbl.expectedRuntimeHash),
-      });
-    }
-    if (nbl.feeBps !== 500) {
-      failures.push({ field: "nonBaseLock.feeBps", expected: "500", actual: String(nbl.feeBps) });
-    }
-    if (nbl.noHandshakeFeeBpsSelector !== true) {
-      failures.push({ field: "nonBaseLock.noHandshakeFeeBpsSelector", expected: "true", actual: String(nbl.noHandshakeFeeBpsSelector) });
-    }
-    if (!nbl.devFund || nbl.devFund.toLowerCase() !== manifest.devFund.toLowerCase()) {
-      failures.push({ field: "nonBaseLock.devFund", expected: manifest.devFund, actual: String(nbl && nbl.devFund) });
-    }
-    const envs = ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"];
-    if (JSON.stringify(nbl.environments) !== JSON.stringify(envs)) {
-      failures.push({ field: "nonBaseLock.environments", expected: envs.join(", "), actual: JSON.stringify(nbl.environments) });
-    }
+  // Base-only: the manifest must not describe any non-Base lock.
+  if (manifest.nonBaseLock !== undefined) {
+    failures.push({ field: "nonBaseLock", expected: "absent (Base-only launch)", actual: "present" });
+  }
+  if (manifest.baseOnly !== true || manifest.expectedBaseRows !== EXPECTED_BASE_ROWS
+      || manifest.expectedBaseTokenAddresses !== EXPECTED_BASE_TOKEN_ADDRESSES || manifest.expectedBaseAliases !== EXPECTED_BASE_ALIASES) {
+    failures.push({
+      field: "manifest.baseOnly",
+      expected: "baseOnly true, " + EXPECTED_BASE_ROWS + " rows, " + EXPECTED_BASE_TOKEN_ADDRESSES + " token addresses, " + EXPECTED_BASE_ALIASES + " aliases",
+      actual: String(manifest.baseOnly) + ", " + manifest.expectedBaseRows + ", " + manifest.expectedBaseTokenAddresses + ", " + manifest.expectedBaseAliases,
+    });
+  }
+  const baseRows = resolved.entries.filter((e) => e.environmentId === "Base");
+  if (baseRows.length !== EXPECTED_BASE_ROWS) {
+    failures.push({ field: "registry.baseRows", expected: String(EXPECTED_BASE_ROWS), actual: String(baseRows.length) });
   }
 
   // Fee language on generated / maintained pages (and base.html).
   const feePhrases = manifest.feePhrasesRequiredOnPages || [];
   const pageFiles = fs.readdirSync(pages).filter((f) => f.endsWith(".html"));
   for (const phrase of feePhrases) {
-    // base.html must carry the fee language; chain pages that mention fees must too.
+    // base.html (the only page) must carry every fee phrase.
     const baseHtml = fs.readFileSync(path.join(pages, "base.html"), "utf8");
-    // Handshake floors appear on EVM lock pages; base.html has 5.00% of gross.
-    if (phrase === "5.00% of gross" || phrase === "Handshake") {
-      if (!baseHtml.includes(phrase) && !baseHtml.includes("5.00% of gross")) {
-        failures.push({
-          field: "feeLanguage.base.html",
-          expected: "contains " + JSON.stringify(phrase),
-          actual: "missing in base.html",
-        });
-      }
+    if (!baseHtml.includes(phrase)) {
+      failures.push({
+        field: "feeLanguage.base.html",
+        expected: "contains " + JSON.stringify(phrase),
+        actual: "missing in base.html",
+      });
     }
   }
   if (!fs.readFileSync(path.join(pages, "base.html"), "utf8").includes(manifest.feeLanguage)) {
@@ -303,20 +295,10 @@ function verifyCeremonyManifest(opts = {}) {
       actual: "missing from base.html",
     });
   }
-  // EVM lock pages (when present) must include Handshake floor phrases.
-  for (const f of ["ethereum.html", "polygon.html", "optimism.html", "arbitrum.html", "bnb-smart-chain.html", "avalanche.html"]) {
-    const p = path.join(pages, f);
-    if (!fs.existsSync(p)) continue;
-    const html = fs.readFileSync(p, "utf8");
-    for (const phrase of feePhrases) {
-      if (!html.includes(phrase)) {
-        failures.push({
-          field: "feeLanguage." + f,
-          expected: "contains " + JSON.stringify(phrase),
-          actual: "missing",
-        });
-      }
-    }
+  // Base-only: no non-Base deploy page may remain in the package.
+  const strayPages = pageFiles.filter((f) => f !== "base.html");
+  if (strayPages.length) {
+    failures.push({ field: "pages", expected: "base.html only", actual: strayPages.join(", ") });
   }
 
   if (opts.extraFailures && opts.extraFailures.length) failures.push(...opts.extraFailures);
@@ -331,20 +313,17 @@ function assertCanonicalRegistry() {
 }
 
 function loadBytecodeTargets() {
+  // Base-only package: the six Base contracts plus the Base reader. TokenVCLM
+  // and TokenCHONX share one contract, so 7 entries over 6 distinct contracts.
   const targets = {
     VinculumFinalisVerifier: "VinculumFinalisVerifier.sol/VinculumFinalisVerifier.json",
     TokenVCLM: "VinculumFinalisToken.sol/VinculumFinalisToken.json",
     TokenCHONX: "VinculumFinalisToken.sol/VinculumFinalisToken.json",
-    CommitmentVaultLock: "CommitmentVaultLock.sol/CommitmentVaultLock.json",
     BaseCommitmentVaultLock: "BaseCommitmentVaultLock.sol/BaseCommitmentVaultLock.json",
     BaseLockRecordVerifier: "chain-verifiers/BaseLockRecordVerifier.sol/BaseLockRecordVerifier.json",
     VinculumFinalisSynth: "VinculumFinalisSynth.sol/VinculumFinalisSynth.json",
     VinculumFinalisStake: "VinculumFinalisStake.sol/VinculumFinalisStake.json",
   };
-  const { ASSET_ROW_ALIASES, READY_EVM, READY_UTXO, devFundScript, stellarKey, xrplAccount, STELLAR_PUBLIC_NETWORK } = require("./testChainCeremony.cjs");
-  for (const [, name] of [...READY_EVM, ...READY_UTXO]) targets[name] = "chain-verifiers/" + name + ".sol/" + name + ".json";
-  targets.StellarLockReader = "chain-verifiers/StellarLockReader.sol/StellarLockReader.json";
-  targets.XrplLockReader = "chain-verifiers/XrplLockReader.sol/XrplLockReader.json";
   const out = {};
   for (const [name, rel] of Object.entries(targets)) {
     const p = path.join(art, rel);
@@ -352,7 +331,7 @@ function loadBytecodeTargets() {
     const j = JSON.parse(fs.readFileSync(p, "utf8"));
     out[name] = { abi: j.abi, bytecode: j.bytecode };
   }
-  return { out, ASSET_ROW_ALIASES, READY_EVM, READY_UTXO, devFundScript, stellarKey, xrplAccount, STELLAR_PUBLIC_NETWORK };
+  return { out };
 }
 
 function get(url) {
@@ -374,10 +353,11 @@ function writeAtomic(dest, contents) {
 async function buildCeremonyArtifacts() {
   // Verify first. Write nothing on failure (no ceremony-data.json, no HTML).
   const { manifest, resolved } = verifyCeremonyManifest();
-  const entries = resolved.entries;
+  // Base subset of Revision B, derived here. Revision B itself is not changed.
+  const entries = resolved.entries.filter((e) => e.environmentId === "Base");
   const row2 = resolved.baseEth;
 
-  const { out, ASSET_ROW_ALIASES, READY_EVM, READY_UTXO, devFundScript, stellarKey, xrplAccount, STELLAR_PUBLIC_NETWORK } = loadBytecodeTargets();
+  const { out } = loadBytecodeTargets();
   const rep = require(path.join(root, "deployment", "representativeBase.cjs"));
   const base = rep.rows.find((r) => r.environment === "Base");
   if (!base || !base.devFund) { console.error("Base Dev Fund missing"); process.exit(1); }
@@ -405,34 +385,23 @@ async function buildCeremonyArtifacts() {
       "0x4eDE54E1cb6E337923F8D63Fa0799AE778263b1a",
       "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A",
     ],
-    nonBaseLock: {
-      contract: "CommitmentVaultLock",
-      expectedRuntimeHash: "0x96b653727a7a2d279c91ea8647a5104aeee1844590b4f72b258eb193f5eec6b0",
-      immutableRanges: [[2604, 32], [4758, 32], [5170, 32]],
-      feeBps: 500,
-      feeLanguage: "5.00% of gross on every duration",
-      noHandshakeFeeBpsSelector: true,
-      handshakeFeeBpsSelector: "0xee8a0fb0",
-      environments: ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"],
-    },
-    readers: {
-      evm: READY_EVM.map(([env, contract]) => ({ env, contract })),
-      utxo: READY_UTXO.map(([env, contract]) => ({ env, contract, devFundScript: "0x" + devFundScript(env, rep.rows.find((r) => r.environment === env).devFund).toString("hex") })),
-      stellar: { env: "Stellar", contract: "StellarLockReader", networkPassphrase: STELLAR_PUBLIC_NETWORK,
-        networkId: "0x" + crypto.createHash("sha256").update(STELLAR_PUBLIC_NETWORK).digest("hex"),
-        devFundKey: stellarKey(rep.rows.find((r) => r.environment === "Stellar").devFund) },
-      xrpl: { env: "XRP Ledger", contract: "XrplLockReader", devFundAccount: xrplAccount(rep.rows.find((r) => r.environment === "XRP Ledger").devFund) },
-    },
+    readers: { base: { env: "Base", contract: "BaseLockRecordVerifier" } },
     tokenAddresses: require("./buildTokenAddressIndex.cjs").buildTokenAddressIndex().entries
+      .filter((t) => t.environmentId === "Base")
       .map((t) => ({ environmentId: t.environmentId, token: t.token, canonicalAssetId: t.canonicalAssetId })),
-    assetRowAliases: ASSET_ROW_ALIASES,
-    evmDevFunds: Object.fromEntries(rep.rows.filter((r) => /^0x[0-9a-fA-F]{40}$/.test(r.devFund)).map((r) => [r.environment, r.devFund])),
+    assetRowAliases: [],
+    evmDevFunds: { Base: base.devFund },
     row2: { canonicalAssetId: row2.canonicalAssetId, symbol: row2.symbol, decimals: row2.decimals, custodyClass: row2.custodyClass, custodyPath: row2.custodyPath },
     entries: entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath, row: e.row })),
     registrySource: resolved.filename,
     registryPath: resolved.name,
     registryRows: resolved.rowCount,
     registrySha256: resolved.sha256,
+    baseOnly: true,
+    baseSubsetRule: BASE_ONLY_RULE,
+    baseRows: entries.length,
+    baseTokenAddresses: null,
+    baseAliases: 0,
     registryRevisionLabel: manifest.revisionLabel,
     deployOrderKeys: manifest.deployOrderKeys,
     feeLanguage: manifest.feeLanguageDetail,
@@ -440,12 +409,24 @@ async function buildCeremonyArtifacts() {
     priceSource
   };
 
-  if (data.registryRows !== EXPECTED_REGISTRY_ROWS || data.entries.length !== EXPECTED_REGISTRY_ROWS) {
+  data.baseTokenAddresses = data.tokenAddresses.length;
+  if (data.registryRows !== EXPECTED_REGISTRY_ROWS) {
     throw refused([{
-      field: "ceremony-data.entries.length",
-      expected: String(EXPECTED_REGISTRY_ROWS),
-      actual: "registryRows=" + data.registryRows + " entries=" + data.entries.length + " source=" + resolved.filename,
+      field: "ceremony-data.registryRows",
+      expected: String(EXPECTED_REGISTRY_ROWS) + " (Revision B source)",
+      actual: "registryRows=" + data.registryRows + " source=" + resolved.filename,
     }]);
+  }
+  if (data.entries.length !== EXPECTED_BASE_ROWS || data.tokenAddresses.length !== EXPECTED_BASE_TOKEN_ADDRESSES || data.assetRowAliases.length !== EXPECTED_BASE_ALIASES
+      || data.entries.some((e) => e.environmentId !== "Base") || data.tokenAddresses.some((t) => t.environmentId !== "Base")) {
+    throw refused([{
+      field: "ceremony-data.baseSubset",
+      expected: EXPECTED_BASE_ROWS + " Base rows, " + EXPECTED_BASE_TOKEN_ADDRESSES + " Base token addresses, " + EXPECTED_BASE_ALIASES + " aliases",
+      actual: data.entries.length + " rows, " + data.tokenAddresses.length + " token addresses, " + data.assetRowAliases.length + " aliases",
+    }]);
+  }
+  if (!data.entries.some((e) => e.row === 2 && e.canonicalAssetId === row2.canonicalAssetId)) {
+    throw refused([{ field: "ceremony-data.row2", expected: "Base ETH (row 2) in the Base subset", actual: "missing" }]);
   }
   if (data.devFund.toLowerCase() !== manifest.devFund.toLowerCase()) {
     throw refused([{ field: "ceremony-data.devFund", expected: manifest.devFund, actual: data.devFund }]);
@@ -458,18 +439,15 @@ async function buildCeremonyArtifacts() {
   writeAtomic(path.join(pages, "ceremony.json"), JSON.stringify(out));
   writeAtomic(path.join(pages, "ceremony-data.json"), JSON.stringify(data));
 
-  // Deploy pages: only after ceremony-data passed every check. Generator also
-  // refuses when the registry hash or row count mismatches.
-  const { buildAllPages } = require("./deploy-pages/buildDeployPages.cjs");
-  buildAllPages();
-  // Re-check fee language on the pages just written (base.html is kept as-is).
+  // Base-only: base.html is the only page (maintained by hand). Re-check.
   verifyCeremonyManifest();
 
   if (!priceUsd18) {
     console.error("REFUSAL: scheduled ETH price miss. ceremony-data.json written with no price. The page will not send.");
     process.exit(0);
   }
-  console.log("wrote ceremony data", data.entries.length, "entries, price source", priceSource,
+  console.log("wrote ceremony data (Base only)", data.entries.length, "Base rows of", data.registryRows, "Revision B rows,",
+    data.tokenAddresses.length, "token addresses,", data.assetRowAliases.length, "aliases, price source", priceSource,
     "registry", resolved.filename, "sha256", resolved.sha256, "manifest", EXPECTED_MANIFEST_SHA256.slice(0, 12) + "...");
 }
 
@@ -477,6 +455,10 @@ module.exports = {
   EXPECTED_REGISTRY_SHA256,
   EXPECTED_REGISTRY_ROWS,
   EXPECTED_MANIFEST_SHA256,
+  EXPECTED_BASE_ROWS,
+  EXPECTED_BASE_TOKEN_ADDRESSES,
+  EXPECTED_BASE_ALIASES,
+  BASE_ONLY_RULE,
   MANIFEST_PATH,
   assertRegistryGuard,
   assertCanonicalRegistry,
