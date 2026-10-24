@@ -5,6 +5,8 @@
 Governing authority: `Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`
 SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`
 
+Handshake rules follow Revision 12 (`docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`): 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit. The lock contracts have no `handshakeAllowance()` and no per-account Handshake counter.
+
 Where this code and the specification disagree, the specification governs.
 
 ---
@@ -56,7 +58,7 @@ Then, with a working test harness:
 
 ## What is NOT fixed
 
-**Six Critical findings remain open.** This code is not ready for deployment.
+**Five Critical findings remain open.** This code is not ready for deployment.
 
 | ID | Summary |
 |---|---|
@@ -64,10 +66,11 @@ Then, with a working test harness:
 | CL-06 | `rewardBasis` is never assigned; epoch allocation always sees zero eligible |
 | CL-09 | Unbounded loops in `closeEpoch` and `allocateEpoch` iterate every position ever created. Past the block gas limit both become uncallable and rewards freeze permanently, with no repair path. |
 | CL-10 | `daysSinceLaunch` is caller-supplied rather than derived from the valuation timestamp |
-| CL-11 | Handshake allowance read from a caller-controlled package field |
 | CL-12 | Dev Fund enforcement exists only as a commented-out `require` |
 
-CL-01, CL-10, CL-11 and CL-12 are one workstream: **no quantity that determines issuance may be supplied by the party requesting issuance.** They are a single rewrite of the `verifyAndMint` entry path.
+CL-11 (Handshake allowance read from a caller-controlled package field) is closed: Revision 12 removed the Handshake allowance, the Verifier ignores the package allowance field (AG-20, `test/cl01_cl11_verifier.test.cjs`), and the lock contracts no longer expose `handshakeAllowance()`.
+
+CL-01, CL-10 and CL-12 are one workstream: **no quantity that determines issuance may be supplied by the party requesting issuance.** They are a single rewrite of the `verifyAndMint` entry path.
 
 See the Findings Register for the full set, including resolved and rejected items.
 
