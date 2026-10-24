@@ -16,7 +16,7 @@
 //
 // Base-only launch (founder directive t357u): the intended set is the Base
 // contracts and exactly one reader (Base). Every other environment must have
-// no reader and no Dev Fund destination, and no non-Base Revision B row may
+// no reader and no Dev Fund destination, and no non-Base registry row may
 // be registered.
 //
 // Every check ends PASS, MISMATCH or INCOMPLETE. INCOMPLETE (an RPC that could
@@ -148,7 +148,7 @@ async function reconcile(o) {
   }
   // Base-only: the deployed set has exactly one reader.
   R.add("bytecode", "the set has exactly one reader (Base)", JSON.stringify(Object.keys(set.readers)) === JSON.stringify(["Base"]) ? "PASS" : "MISMATCH", Object.keys(set.readers).join(","));
-  // ceremony-data is the Base subset of Revision B.
+  // ceremony-data is the Base subset of the ceremony registry (Revision C, t367u).
   R.add("bytecode", "ceremony-data is Base-only: 27 rows, 26 token addresses, 0 aliases, one reader, one Dev Fund",
     DATA.baseOnly === true && DATA.entries.length === EXPECTED_BASE.rows && DATA.tokenAddresses.length === EXPECTED_BASE.tokenAddresses && DATA.assetRowAliases.length === EXPECTED_BASE.aliases
       && DATA.entries.every((e) => e.environmentId === "Base") && DATA.tokenAddresses.every((t) => t.environmentId === "Base")
@@ -328,7 +328,7 @@ async function reconcile(o) {
   }
 
   log(`  section 5. ...`);
-  // ---- 5. registry: the Base subset of Revision B (27 rows, 26 token addresses, 0 aliases); no non-Base row; readers by chain name
+  // ---- 5. registry: the Base subset of the ceremony registry, Revision C (27 rows, 26 token addresses, 0 aliases); no non-Base row; readers by chain name
   {
     const mc = new ethers.Contract(MULTICALL3, ["function aggregate3((address target,bool allowFailure,bytes callData)[] calls) view returns ((bool success,bytes returnData)[])"], P);
     const many = async (calls) => {
@@ -371,12 +371,13 @@ async function reconcile(o) {
         const n = DATA.entries.filter((e) => e.environmentId === env).length;
         R.add("registry", `${n} ${env} rows resolve to the ${cfg.contract} at ${short(set.readers[env])}`, a === A(set.readers[env]) ? "PASS" : "MISMATCH", a === A(set.readers[env]) ? "" : `chainVerifiers -> ${short(a)}`);
       }
-      // Base-only: no non-Base row of Revision B is registered.
+      // Base-only: no non-Base row of the ceremony registry is registered
+      // (Revision C; its non-Base rows are identical to Revision B).
       const { resolveCeremonyRegistry } = require(path.join(BC, "scripts/deploy-pages/resolveAssetRegistry.cjs"));
       const nonBase = resolveCeremonyRegistry().entries.filter((e) => e.environmentId !== "Base");
       const nb = await many(nonBase.map((e) => vi.encodeFunctionData("assetPrecisionTable", [key(e.environmentId, e.canonicalAssetId)])));
       const set2 = nonBase.filter((e, i) => !nb[i].success || vi.decodeFunctionResult("assetPrecisionTable", nb[i].returnData).canonicalAssetId !== ethers.ZeroHash);
-      R.add("registry", `${nonBase.length} non-Base Revision B rows are not registered`, set2.length ? "MISMATCH" : "PASS", set2.slice(0, 5).map((e) => `${e.environmentId}/${e.symbol}`).join("; "));
+      R.add("registry", `${nonBase.length} non-Base registry rows are not registered`, set2.length ? "MISMATCH" : "PASS", set2.slice(0, 5).map((e) => `${e.environmentId}/${e.symbol}`).join("; "));
     } catch (e) { R.add("registry", "registry reads", "INCOMPLETE", e.shortMessage || e.message); }
     // Every indexed token address has contract code on its intended network.
     if (o.tokenProviders) {
