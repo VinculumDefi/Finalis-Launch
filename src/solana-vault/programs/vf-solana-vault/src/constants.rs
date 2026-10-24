@@ -45,16 +45,8 @@ pub const CHONX_ACTIVATION_THRESHOLD: u128 = 10_000_000u128 * SCALE;
 pub const VCLM_HARD_CAP: u128 = 10_000_000_000u128 * SCALE;
 pub const CHONX_HARD_CAP: u128 = 100_000_000_000u128 * SCALE;
 
-/// This program keeps a HandshakeAllowance PDA per source account. Rev 12
-/// removed the Handshake allowance, so the PDA is only a record kept for
-/// account-layout compatibility and never refuses a Handshake.
-pub const COUNTS_PER_IDENTITY: bool = true;
-
-/// Revision 6 VF-COM-006 value (3 or 1). Rev 12 removed the limit; the value
-/// is stored in the record for layout compatibility and is not enforced.
-pub fn handshake_allowance(counts_per_identity: bool) -> u32 {
-    if counts_per_identity { 3 } else { 1 }
-}
+/// Revision 12: there is no Handshake allowance and no per-wallet Handshake
+/// counter. A wallet may create any number of 1-hour Handshakes.
 
 /// VF-XCH-013: Lock ID maximum length (bytes).
 /// Revision 6 does not specify a maximum. 128 bytes is a practical limit that fits
@@ -85,7 +77,6 @@ pub const PERMITTED_DURATIONS: &[(u64, u64)] = &[
 /// PDA seed constants.
 pub const SEED_CONFIG: &[u8] = b"vf_config";
 pub const SEED_LOCK: &[u8] = b"vf_lock";
-pub const SEED_HANDSHAKE: &[u8] = b"vf_handshake";
 pub const SEED_VAULT: &[u8] = b"vf_vault";
 
 /// VF-ARC-006: Base recipient length (0x + 40 hex = 42 chars, 20 bytes decoded).
