@@ -41,7 +41,8 @@ test('vfSolanaProgram.js mirrors constants.rs (no Revision 6 band, fee or minimu
   assert.equal(PROGRAM_CONSTANTS.STANDARD_MINIMUM_VALUE_USD_MICRO, rustConst(c, 'STANDARD_MINIMUM_VALUE_USD_MICRO'));
   assert.equal(BigInt(PROGRAM_CONSTANTS.HANDSHAKE_FEE_BPS), rustConst(c, 'HANDSHAKE_FEE_BPS'));
   assert.equal(BigInt(PROGRAM_CONSTANTS.STANDARD_FEE_BPS), rustConst(c, 'STANDARD_FEE_BPS'));
-  assert.equal(PROGRAM_CONSTANTS.HANDSHAKE_ALLOWANCE_ENFORCED, false);
+  assert.equal(PROGRAM_CONSTANTS.HANDSHAKE_ALLOWANCE, undefined);
+  assert.equal(PROGRAM_CONSTANTS.HANDSHAKE_ALLOWANCE_ENFORCED, undefined);
   // $1.00 (inside the old Revision 6 band) is outside the Rev 12 band
   assert.ok(10n ** 18n > PROGRAM_CONSTANTS.HANDSHAKE_VALUE_USD_MAX_MICRO);
 });
@@ -55,8 +56,13 @@ test('off-chain fee: the Handshake pays 5%, the same as every other duration', (
   assert.equal(w.fee, 500n);
 });
 
-test('the program no longer refuses a Handshake for an exhausted allowance', () => {
-  const ix = rs('instructions/commit_vault_lock.rs');
-  assert.ok(!/require!\([^;]*remaining[^;]*HandshakeAllowanceExhausted/s.test(ix), 'allowance check still present');
-  assert.ok(!/err!\(VaultError::HandshakeAllowanceExhausted\)/.test(ix), 'allowance error still returned');
+test('Rev 12: the program has no Handshake allowance account, counter, seed, event or error', () => {
+  const files = ['constants.rs', 'state.rs', 'events.rs', 'error.rs', 'lib.rs', 'instructions/commit_vault_lock.rs'];
+  for (const f of files) {
+    let src;
+    try { src = rs(f); } catch { continue; }
+    for (const re of [/HandshakeAllowance/, /handshake_allowance/, /SEED_HANDSHAKE/, /vf_handshake/, /HandshakeConsumed/, /COUNTS_PER_IDENTITY/, /consume_handshake/]) {
+      assert.ok(!re.test(src), `${f} still has ${re}`);
+    }
+  }
 });
