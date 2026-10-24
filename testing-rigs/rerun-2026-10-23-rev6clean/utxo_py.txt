@@ -1,0 +1,47 @@
+test_band_equals_the_verifier_constants (test_locks.HandshakeBandTests.test_band_equals_the_verifier_constants) ... ok
+test_fee_under_dust_is_still_refused_never_raised (test_locks.HandshakeBandTests.test_fee_under_dust_is_still_refused_never_raised) ... ok
+test_handshake_fixture_holds_and_releases (test_locks.HandshakeBandTests.test_handshake_fixture_holds_and_releases) ... ok
+test_min_and_max_accepted_with_exact_5pct_and_no_price (test_locks.HandshakeBandTests.test_min_and_max_accepted_with_exact_5pct_and_no_price) ... ok
+test_min_minus_one_and_max_plus_one_refused (test_locks.HandshakeBandTests.test_min_minus_one_and_max_plus_one_refused) ... ok
+test_non_handshake_durations_unchanged (test_locks.HandshakeBandTests.test_non_handshake_durations_unchanged) ... ok
+test_other_chains_handshake_unchanged (test_locks.HandshakeBandTests.test_other_chains_handshake_unchanged) ... ok
+test_bitcoin_and_zcash_confirmation_constants (test_locks.LockTests.test_bitcoin_and_zcash_confirmation_constants) ... ok
+test_dogecoin_dust_fee_is_exactly_the_minimum (test_locks.LockTests.test_dogecoin_dust_fee_is_exactly_the_minimum) ... ok
+test_hold_and_release (test_locks.LockTests.test_hold_and_release) ... ok
+test_sixteen_durations_and_no_handshake_allowance_limit (test_locks.LockTests.test_sixteen_durations_and_no_handshake_allowance_limit) ... ok
+test_sourced_confirmation_counts (test_locks.LockTests.test_sourced_confirmation_counts) ... ok
+test_standard_split (test_locks.LockTests.test_standard_split) ... ok
+test_accept_at_minimum_refuse_one_unit_below (test_locks.MinimumLockTests.test_accept_at_minimum_refuse_one_unit_below) ... ok
+test_dust_raised_split_is_gone_on_btc_bch_ltc (test_locks.MinimumLockTests.test_dust_raised_split_is_gone_on_btc_bch_ltc) ... ok
+test_effective_minimum_at_today_and_high_prices (test_locks.MinimumLockTests.test_effective_minimum_at_today_and_high_prices) ... ok
+test_fail_closed_without_a_fresh_price (test_locks.MinimumLockTests.test_fail_closed_without_a_fresh_price) ... ok
+test_minimums_are_the_operator_values_and_only_three_chains (test_locks.MinimumLockTests.test_minimums_are_the_operator_values_and_only_three_chains) ... ok
+test_native_floors_and_their_derivation (test_locks.MinimumLockTests.test_native_floors_and_their_derivation) ... ok
+test_other_chains_unchanged (test_locks.MinimumLockTests.test_other_chains_unchanged) ... ok
+test_price_rise_refuses_instead_of_raising_the_fee (test_locks.MinimumLockTests.test_price_rise_refuses_instead_of_raising_the_fee) ... ok
+test_priced_fixture_holds_and_releases_with_exact_5pct (test_locks.MinimumLockTests.test_priced_fixture_holds_and_releases_with_exact_5pct) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.070s
+
+OK
+bitcoin: Handshake 11000 and 22000 accepted, fee 550 and 1100
+bitcoin-cash: Handshake 11000 and 22000 accepted, fee 550 and 1100
+litecoin: Handshake 110000 and 220000 accepted, fee 5500 and 11000
+bitcoin: confirmation depth refuses < 6 and accepts >= 6
+zcash: confirmation depth refuses < 10 and accepts >= 10
+dogecoin: fee output is exactly 100000 koinu and principal stays 1000000
+bitcoin: hold and release passed; fee 50000 principal 950000 binding 117 bytes; dev-fund fixture 027521c69ef3529063b63ab707547bba1893fb915771be45d9b1d81f238cc9d757 release fixture 03fd945c707b0de7f4bd7a648afbc82e5187eb141b738d4137b52304429773c110
+bitcoin-cash: hold and release passed; fee 50000 principal 950000 binding 117 bytes; dev-fund fixture 02669be635004ae9dc6de3dcdae8a5223f1c44e32f608aa56b81a51af7bbc5b797 release fixture 03d92401765a591a01c6307cba86bcaa1f01bcc230120418662fcdf8c94a8b0bc6
+litecoin: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 0348ab5eba7e6b95665989b090d4cf48f29840790ca2ab28e36b2ec42d7c9a4294 release fixture 038e820c63c668f16673a469ae179297fd6751d285e298e63e6419501623c67027
+dogecoin: hold and release passed; fee 100000 principal 1000000 binding 32 bytes; dev-fund fixture 03dd81567c824287a7d07760824b5878c61974953b30a3e38714d6cb57eb5ba166 release fixture 0302b608562e5a8120d9cce160efbb5a37af88a42e01e924cae0fdf501d318f7e6
+digibyte: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 0378db4e3b36e132bb08ec9f4a244e67e9cf405b891bd4444c4ddff1f217f387ce release fixture 0267ed4caa21a6a52cda141329e2165ff251c94ebdcdf257ece4afeedc2b72fea8
+zcash: hold and release passed; fee 50000 principal 950000 binding 32 bytes; dev-fund fixture 03b98c4434a5fd0ee827b2bc5684d9ab957200fae22e10781643be249fafedf1ab release fixture 028528eecdc1d8e860fae2a3cbf5dd1740a53196e91b4eb17e9bd2259ffa71481b
+litecoin: confirmation depth refuses < 24 and accepts >= 24
+bitcoin-cash: confirmation depth refuses < 15 and accepts >= 15
+digibyte: confirmation depth refuses < 10 and accepts >= 10
+dogecoin: confirmation depth refuses < 60 and accepts >= 60
+bitcoin: 24269 accepted at $20 minimum, 24268 refused
+bitcoin-cash: 361952 accepted at $1 minimum, 361951 refused
+litecoin: 1678134 accepted at $1 minimum, 1678133 refused
+PY_EXIT=0
