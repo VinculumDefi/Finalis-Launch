@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Calculator } from 'lucide-react';
-import { SCALE } from '@/lib/vfRevision6Authority';
+import { SCALE } from '@/lib/vfSpecAuthority';
 import { computeFee } from '@/lib/vfSolanaLockEngine';
 
 function fmtFP(value, displayDecimals = 6) {
