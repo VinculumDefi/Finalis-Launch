@@ -4,7 +4,8 @@
 // PROVENANCE: Built directly from Revision 6 authoritative documents:
 //   - vfRevision6Authority.js: ATTEMPT_STATES, SOLANA_DISPOSITION, LOCK_STATES
 //   - Vinculum_Finalis_Architecture_Design.md §4.7 (Objective pending-attempt disposition)
-//   - VF-COM-007/008: objective pending-attempt disposition
+//   - VF-COM-007/008: objective pending-attempt disposition (Revision 6 numbering. Revision 12 superseded the Handshake allowance parts of
+//     VF-COM-005..008; the pending-attempt disposition rule still applies.)
 //
 // STATE MACHINE (ATTEMPT_STATES from vfRevision6Authority):
 //   ELIGIBLE → OBJECTIVELY_PENDING → RECOGNIZED       (finality achieved, verifier consumed)
