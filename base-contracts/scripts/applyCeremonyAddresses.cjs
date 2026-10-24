@@ -9,21 +9,20 @@
 //                   the log box and the result box below it into one text file.
 //                   Lines used: "Base lock 0x..", "VCLM 0x..", "CHONX 0x..",
 //                   "Verifier 0x..", "Forge 0x..", "Stake 0x..",
-//                   "reader <environment> 0x..", "Finalized.", and the result box
+//                   "reader Base 0x..", "Finalized.", and the result box
 //                   lines "lock/vclm/chonx/verifier/forge/stake 0x..".
-//   --locks <file>  JSON with the six new non-Base lock addresses, e.g.
-//                   {"Ethereum":"0x..","Arbitrum":"0x..","Optimism":"0x..",
-//                    "Polygon":"0x..","BNB Smart Chain":"0x..","Avalanche":"0x.."}
+//                   Base-only launch: the only reader is Base; any other
+//                   "reader <environment>" line is refused.
 //   --rpc <url>     Optional. Read-only checks on Base (e.g. https://mainnet.base.org).
 //   --write         Write src/lib/vfDeployedAddresses.js. Without it, nothing is
 //                   written (dry run) and the result is only printed.
 //   --out <file>    Optional. Write the values for Base44 section 6 as JSON.
 //
 // Usage (from base-contracts):
-//   node scripts/applyCeremonyAddresses.cjs --log ceremony-log.txt --locks new-locks.json --rpc https://mainnet.base.org --write
+//   node scripts/applyCeremonyAddresses.cjs --log ceremony-log.txt --rpc https://mainnet.base.org --write
 //
 // Fails closed: any missing, malformed, zero, duplicated or old address, a log
-// without "Finalized.", a reader set that is not the expected 15, or (with --rpc)
+// without "Finalized.", a reader set that is not the Base reader only, or (with --rpc)
 // any on-chain read that does not match stops the script and nothing is written.
 "use strict";
 const fs = require("fs");
@@ -34,8 +33,11 @@ const ROOT = path.join(__dirname, "..", "..");
 const APP_FILE = path.join(ROOT, "src", "lib", "vfDeployedAddresses.js");
 const DATA = require("./deploy-pages/ceremony-data.json");
 
+// Base-only launch: one reader (Base). Every other environment must stay
+// unregistered on the Verifier; verifyOnChain checks that.
 const EVM_ENVS = ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"];
-const READER_ENVS = ["Base", ...EVM_ENVS, ...DATA.readers.utxo.map((r) => r.env), DATA.readers.stellar.env, DATA.readers.xrpl.env];
+const READER_ENVS = ["Base"];
+const NON_BASE_ENVS = require("../deployment/representativeBase.cjs").rows.map((r) => r.environment).filter((e) => e !== "Base");
 const BASE_KEYS = ["lock", "vclm", "chonx", "verifier", "forge", "stake"];
 const LOG_LABEL = { lock: "Base lock", vclm: "VCLM", chonx: "CHONX", verifier: "Verifier", forge: "Forge", stake: "Stake" };
 // Base lock = BaseCommitmentVaultLock (t262u). Its runtime code holds four
@@ -120,20 +122,9 @@ function parseCeremonyLog(text) {
   return { base, readers };
 }
 
-function parseLocks(obj) {
-  if (!obj || typeof obj !== "object") fail("new lock list is missing.");
-  const keys = Object.keys(obj).filter((k) => !k.startsWith("_"));
-  const unknown = keys.filter((k) => !EVM_ENVS.includes(k));
-  if (unknown.length) fail("unknown chain(s) in the lock list: " + unknown.join(", ") + ".");
-  const locks = {};
-  for (const env of EVM_ENVS) locks[env] = checkAddress("new " + env + " lock", obj[env]);
-  return locks;
-}
-
 // Cross-checks and builds the record written to the app.
-function buildRecord({ logText, locksJson }) {
+function buildRecord({ logText }) {
   const { base, readers } = parseCeremonyLog(logText);
-  const locks = parseLocks(locksJson);
   // The Base contracts and readers are all separate deployments, so all distinct.
   const all = [...BASE_KEYS.map((k) => [k, base[k]]), ...Object.entries(readers).map(([e, a]) => ["reader " + e, a])];
   const byAddr = new Map();
@@ -142,16 +133,13 @@ function buildRecord({ logText, locksJson }) {
     if (byAddr.has(k)) fail(`${label} and ${byAddr.get(k)} share the address ${short(a)}.`);
     byAddr.set(k, label);
   }
-  // A non-Base lock may share an address with another non-Base lock (same deployer
-  // and nonce on two chains), but not with a Base contract.
-  for (const env of EVM_ENVS) if (byAddr.has(locks[env].toLowerCase())) fail(`new ${env} lock equals ${byAddr.get(locks[env].toLowerCase())} on Base.`);
   return {
     status: "FINALIZED",
     chainId: 8453,
     priceRunNext: 2,
     scheduledPricePoster: ethers.getAddress(DATA.scheduledPricePoster),
     base,
-    locks: { Base: base.lock, ...locks },
+    locks: { Base: base.lock },
     readers,
   };
 }
@@ -167,7 +155,12 @@ async function verifyOnChain(provider, rec, art = require("./deploy-pages/ceremo
   eq("verifier.configurationFinalized", await v.configurationFinalized(), true);
   eq("verifier.scheduledPricePoster", await v.scheduledPricePoster(), rec.scheduledPricePoster);
   for (const [env, a] of Object.entries(rec.readers)) eq("verifier.chainVerifiers(" + env + ")", await v.chainVerifiers(env), a);
-  eq("verifier.chainVerifiers(Solana)", await v.chainVerifiers("Solana"), ethers.ZeroAddress);
+  // Base-only: no other environment has a reader or a Dev Fund destination.
+  for (const env of NON_BASE_ENVS) {
+    eq("verifier.chainVerifiers(" + env + ")", await v.chainVerifiers(env), ethers.ZeroAddress);
+    eq("verifier.devFundDestinations(" + env + ")", await v.devFundDestinations(env), ethers.ZeroAddress);
+  }
+  eq("verifier.devFundDestinations(Base)", await v.devFundDestinations("Base"), DATA.devFund);
   const vclm = c("TokenVCLM", rec.base.vclm), chonx = c("TokenCHONX", rec.base.chonx);
   eq("VCLM.minterVerifier", await vclm.minterVerifier(), rec.base.verifier);
   eq("VCLM.minterStake", await vclm.minterStake(), rec.base.stake);
@@ -176,7 +169,6 @@ async function verifyOnChain(provider, rec, art = require("./deploy-pages/ceremo
   eq("Forge.verifier", await c("VinculumFinalisSynth", rec.base.forge).verifier(), rec.base.verifier);
   eq("Stake.verifier", await c("VinculumFinalisStake", rec.base.stake).verifier(), rec.base.verifier);
   eq("Base reader.vault", await c("BaseLockRecordVerifier", rec.readers.Base).vault(), rec.base.lock);
-  for (const r of DATA.readers.evm) eq(r.env + " reader.lock", await c(r.contract, rec.readers[r.env]).lock(), rec.locks[r.env]);
   const lock = c("BaseCommitmentVaultLock", rec.base.lock);
   eq("Base lock STANDARD_FEE_BPS", await lock.STANDARD_FEE_BPS(), 500n);
   eq("Base lock runtime code hash (immutables masked)", maskedCodeHash(await provider.getCode(rec.base.lock)), LOCK_RUNTIME_HASH);
@@ -224,13 +216,13 @@ function renderAppFile(rec) {
   for (const k of BASE_KEYS) lines.push(`  ${k}: ${base[k] ? JSON.stringify(base[k]) : P},`);
   lines.push("});");
   lines.push("");
-  lines.push("// The seven new 5% locks (5% on every duration): Base is BaseCommitmentVaultLock");
-  lines.push("// (refuses VCLM, CHONX and SYNTH as inputs); the six others are CommitmentVaultLock.");
+  lines.push("// Base-only launch: the one new 5% lock (5% on every duration),");
+  lines.push("// BaseCommitmentVaultLock (refuses VCLM, CHONX and SYNTH as inputs).");
   lines.push("export const LOCKS_5PCT = Object.freeze({");
-  for (const env of ["Base", ...EVM_ENVS]) lines.push(`  ${JSON.stringify(env)}: ${locks[env] ? JSON.stringify(locks[env]) : P},`);
+  for (const env of ["Base"]) lines.push(`  ${JSON.stringify(env)}: ${locks[env] ? JSON.stringify(locks[env]) : P},`);
   lines.push("});");
   lines.push("");
-  lines.push("// The 15 readers registered on the Verifier (Solana is not registered).");
+  lines.push("// Base-only launch: the one reader registered on the Verifier (Base).");
   lines.push("export const READERS = Object.freeze({");
   for (const env of READER_ENVS) lines.push(`  ${JSON.stringify(env)}: ${readers[env] ? JSON.stringify(readers[env]) : P},`);
   lines.push("});");
@@ -265,9 +257,10 @@ function base44Values(rec) {
 function arg(argv, name) { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; }
 
 async function main(argv) {
-  const logFile = arg(argv, "--log"), locksFile = arg(argv, "--locks"), rpcUrl = arg(argv, "--rpc"), out = arg(argv, "--out");
-  if (!logFile || !locksFile) fail("usage: --log <file> --locks <file> [--rpc <url>] [--write] [--out <file>].");
-  const rec = buildRecord({ logText: fs.readFileSync(logFile, "utf8"), locksJson: JSON.parse(fs.readFileSync(locksFile, "utf8")) });
+  const logFile = arg(argv, "--log"), rpcUrl = arg(argv, "--rpc"), out = arg(argv, "--out");
+  if (argv.includes("--locks")) fail("--locks is retired: Base-only launch, there are no non-Base locks.");
+  if (!logFile) fail("usage: --log <file> [--rpc <url>] [--write] [--out <file>].");
+  const rec = buildRecord({ logText: fs.readFileSync(logFile, "utf8") });
   console.log("Base contracts:");
   for (const k of BASE_KEYS) console.log("  " + k.padEnd(9) + short(rec.base[k]));
   console.log("5% locks:");
@@ -291,7 +284,7 @@ async function main(argv) {
   }
 }
 
-module.exports = { parseCeremonyLog, parseLocks, buildRecord, verifyOnChain, renderAppFile, base44Values, RETIRED, READER_ENVS, EVM_ENVS, APP_FILE, LOCK_RUNTIME_HASH, LOCK_IMMUTABLE_RANGES, maskedCodeHash };
+module.exports = { parseCeremonyLog, buildRecord, NON_BASE_ENVS, verifyOnChain, renderAppFile, base44Values, RETIRED, READER_ENVS, EVM_ENVS, APP_FILE, LOCK_RUNTIME_HASH, LOCK_IMMUTABLE_RANGES, maskedCodeHash };
 
 if (require.main === module) {
   main(process.argv.slice(2)).catch((e) => { console.error("STOPPED: " + (e && e.message ? e.message : e)); process.exitCode = 1; });
