@@ -51,7 +51,9 @@ test('Solana mock adapter refuses to submit and records nothing as pending', () 
     assert.equal(r.reason, SOLANA_NOT_DEPLOYED_MESSAGE);
   }
   assert.equal(a.attempts.size, 0);
-  assert.equal(a.pendingByIdentity.size, 0);
+  // Revision 12: there is no per-account pending map or Handshake counter.
+  assert.equal(a.pendingByIdentity, undefined);
+  assert.equal(a.handshakeUsage, undefined);
   assert.ok(a.events.every((e) => e.type === 'SUBMISSION_PREVENTED'));
 });
 
