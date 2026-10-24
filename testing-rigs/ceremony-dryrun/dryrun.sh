@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
-# npm run ceremony:dryrun (from base-contracts). Forks Base mainnet into the
-# LOCAL in-process Hardhat network a few blocks behind the tip, with the real
-# Base block gas limit, and runs ceremony_dryrun.cjs. Nothing is broadcast.
+# npm run ceremony:dryrun:simulate (from base-contracts). Base-only launch
+# (t357u). Forks Base mainnet into the LOCAL in-process Hardhat network a few
+# blocks behind the tip, with the real Base block gas limit, and runs
+# ceremony_dryrun.cjs with a local test signer. Nothing is broadcast. No other
+# chain is forked or read.
 #
-# --simulate-non-base-locks: a clearly labeled simulation. The fixed
-# CommitmentVaultLock is deployed on LOCAL Hardhat forks of the six non-Base
-# chains (never on a real chain) and steps 3 to 15 run against those locks.
-# Without the flag the default mode is unchanged and checks the live locks.
+# --simulate: the only mode (Base-only SIMULATE rehearsal). No flag means the
+# same thing. --simulate-non-base-locks is retired (no non-Base lock is
+# deployed or checked in the Base-only launch).
 set -euo pipefail
-export DRYRUN_SIMULATE_NON_BASE_LOCKS=0
 for a in "$@"; do
   case "$a" in
-    --simulate-non-base-locks) export DRYRUN_SIMULATE_NON_BASE_LOCKS=1 ;;
-    *) echo "unknown option: $a (only --simulate-non-base-locks)" >&2; exit 64 ;;
+    --simulate) ;;
+    --simulate-non-base-locks) echo "retired: --simulate-non-base-locks (Base-only launch; use --simulate)" >&2; exit 64 ;;
+    *) echo "unknown option: $a (only --simulate)" >&2; exit 64 ;;
   esac
 done
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -27,9 +28,7 @@ export RIG_FORK_BLOCK="${RIG_FORK_BLOCK:-$(( tip - 5 ))}"
 gl=$(rpc "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getBlockByNumber\",\"params\":[\"$(printf '0x%x' "$RIG_FORK_BLOCK")\",false]}" | sed -E 's/.*"gasLimit":"(0x[0-9a-f]+)".*/\1/')
 export RIG_BLOCK_GAS=$(( gl ))
 echo "dry-run: local Base fork at block $RIG_FORK_BLOCK, block gas limit $RIG_BLOCK_GAS" >&2
-if [ "$DRYRUN_SIMULATE_NON_BASE_LOCKS" = 1 ]; then
-  echo "dry-run: SIMULATE mode, non-Base locks are simulated on local forks (not the live locks)" >&2
-fi
+echo "dry-run: SIMULATE mode, Base-only, local Base fork, local test signer" >&2
 cd "$BC"
 OUTF=$(mktemp)
 set +e
@@ -39,7 +38,7 @@ set -e
 cat "$OUTF"
 # A crash of the fork backend (for example an RPC 403) can end the process
 # without a verdict. That is a harness failure, never a pass.
-if ! grep -q "^ceremony would" "$OUTF"; then
+if ! grep -q "^mode: SIMULATE (Base-only" "$OUTF" || ! grep -q "^ceremony would" "$OUTF"; then
   echo "dry-run harness did not reach a verdict (exit $rc, see stderr); this is NOT a pass"
   rm -f "$OUTF"; exit 1
 fi
