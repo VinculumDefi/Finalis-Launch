@@ -57,8 +57,8 @@ src/solana-vault/
 │   ├── Cargo.toml
 │   └── src/
 │       ├── lib.rs                          # program entry, instruction dispatch
-│       ├── constants.rs                    # Revision 6 constants (transcribed verbatim)
-│       ├── state.rs                        # Config, LockRecord, HandshakeAllowance (layout only), params
+│       ├── constants.rs                    # Revision 6 constants; Handshake values per Revision 12
+│       ├── state.rs                        # Config, LockRecord, params (no Handshake allowance account, Revision 12)
 │       ├── error.rs                        # error enum (every variant traces to a requirement)
 │       ├── events.rs                       # event definitions (evidence trail)
 │       └── instructions/
@@ -88,7 +88,6 @@ src/solana-vault/
 |---|---|---|
 | Config | `[b"vf_config"]` | singleton global config |
 | Lock Record | `[b"vf_lock", sha256(lock_id)]` | per-lock VF-XCH-011 facts |
-| Handshake Allowance | `[b"vf_handshake", source_account]` | kept for account layout only; never a limit (Revision 12) |
 | Vault (SPL) | `[b"vf_vault", mint]` | principal custody per token |
 
 ## Architecture Decisions
@@ -96,7 +95,7 @@ src/solana-vault/
 1. **Anchor framework** — ecosystem standard for Solana programs.
 2. **SHA-256 for lock_id hashing** — available in both Solana SDK and browser Web Crypto API, enabling off-chain PDA derivation without extra dependencies.
 3. **Output calculation is off-chain** — the program records inputs (verified_gross_usd, output_token, duration, asset class). The Base-side verifier computes the output using the same formula. This keeps the source-chain program minimal.
-4. **No Handshake allowance limit (Revision 12)** — a wallet may create any number of 1-hour Handshakes ($0.01 to $0.02, 5% fee). The HandshakeAllowance PDA is kept only so the account layout does not change; the program never refuses a Handshake based on it.
+4. **No Handshake allowance limit (Revision 12)** — a wallet may create any number of 1-hour Handshakes ($0.01 to $0.02, 5% fee). Revision 12 removed the Handshake allowance account, its seed and the per-wallet counter from the program; the program is not deployed, so no live account layout is affected.
 5. **Clock sysvar for maturity** — standard on-chain time source (VF-PRI-001).
 6. **"finalized" confirmation level** for Solana finality (VF-XCH-010).
 7. **Native SOL + SPL token support** — two instruction paths sharing the same validation logic.
