@@ -46,8 +46,13 @@ test('16 environments, none of them Cosmos', () => {
   assert.equal('CosmosHub' in DEV_FUND_DESTINATIONS, false);
   assert.deepEqual(Object.keys(DEV_FUND_DESTINATIONS).sort(), [...SIXTEEN].sort());
   assert.equal(getRegisteredEnvironments().length, 16);
-  // no environment is held back with an undefined Handshake allowance
-  for (const e of ENVIRONMENTS) assert.ok(e.handshakeAllowance === 1 || e.handshakeAllowance === 3, e.id);
+  // Revision 12: no environment carries a Handshake allowance, a counting flag
+  // or an enforcement side, so none is held back or limited.
+  for (const e of ENVIRONMENTS) {
+    for (const k of ['handshakeAllowance', 'countsPerIdentity', 'handshakeEnforcement']) {
+      assert.equal(k in e, false, `${e.id} still has ${k}`);
+    }
+  }
 });
 
 test('no Cosmos normalizer or mock event builder', () => {
