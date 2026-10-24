@@ -17,7 +17,7 @@
 // the registry is the single source of truth for asset metadata.
 // =============================================================================
 
-import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfRevision6Authority.js';
+import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfSpecAuthority.js';
 
 // ---------------------------------------------------------------------------
 // VF-XCH-001/002/003: 16 supported source environments
