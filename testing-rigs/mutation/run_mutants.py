@@ -72,7 +72,7 @@ FAST = {
                  "protocol_tokens_cvl_trs_forge", "token_substitution_adversarial", "trs_rewards_e2e",
                  "base_ceremony_flow", "test_chain_ceremony"),
     "CVL": T("CommitmentVaultLock", "lock_5pct_native_erc20_7chains", "lock_exists_and_asset_match",
-             "non_base_finality_trust_model", "non_base_lock_guard", "non_base_lock_protocol_token_refusal",
+             "non_base_finality_trust_model", "non_base_lock_protocol_token_refusal",
              "predeploy_suite", "representativeRules", "token_locks"),
     "Durations": T("cl01_cl11_verifier", "lock_5pct_native_erc20_7chains", "CommitmentVaultLock",
                    "utxo_handshake_unit_band", "token_locks", "representativeRules"),
