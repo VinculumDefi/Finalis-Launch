@@ -25,7 +25,7 @@ export default function PreflightPanel({ values, result, onRunPreflight }) {
 
       <p className="text-xs text-[#6b6b65]">
         VF-ARC-004: "A known-invalid request must be rejected before fee or principal assets move."
-        {handshake && ' This is a Trust-Building Handshake (1 hour). XRPL uses 1-use allowance (Q.2).'}
+        {handshake && ' This is a Trust-Building Handshake (Revision 12: 1 hour, $0.01 to $0.02, 5% fee, no allowance limit).'}
       </p>
 
       {feePreview && feePreview.ok && (
