@@ -2,7 +2,8 @@
 
 | File | Status | Entries | What it is |
 |---|---|---|---|
-| `assetRegistry.revB.json` | **Current (Revision B, 2026-10-19)** | 487 | 475 tokens that pass the per-pool filter plus 12 native coins. Read by the ceremony, verifier registration, token address index, price fetch and price runs, and deploy pages (`scripts/registryFile.cjs`). See `ASSET_REGISTRY_REVISION_B.md`. |
+| `assetRegistry.revC.json` | **Ceremony source (Revision C, 2026-10-24)** | 487 | Operator decision t367u. A full copy of Revision B with one change: row 454 `USDC_BASE` (Base USDC) is custody class S1 (1.5x) instead of S3, per Master Specification Revision 18, Section 6.1. Read by the Base-only ceremony: `resolveCeremonyRegistry()`, `build_ceremony_artifacts.cjs`, `ceremony-data.json` (`CEREMONY_REGISTRY_FILE` in `scripts/registryFile.cjs`). SHA-256 `5c3311eb4f7b…a581`, pinned in `ceremony-manifest.json` and the build. |
+| `assetRegistry.revB.json` | Current default (Revision B, 2026-10-19); not the ceremony source | 487 | 475 tokens that pass the per-pool filter plus 12 native coins. Unchanged (SHA-256 `1bdcb8346ab9…e2a9`, still pinned in `ceremony-manifest.json`). The registry of the finalized Oct 22 set. Still the `loadRegistry()` default for the token address index, price fetch and price runs, the test-chain ceremony and the app allowlist. Its rows are identical to Revision C except row 454's custody class. See `ASSET_REGISTRY_REVISION_B.md`. |
 | `assetRegistry.active.json` | Superseded (interim set, 2026-10-19) | 822 | On-chain-checked subset of the prior revision. Kept unchanged as a record. Not read by the live path. Revision B was cut from it. See `ASSET_REGISTRY_ACTIVE.md`. |
 | `assetRegistry.resolved.json` | Prior revision (historical) | 961 written rows + Base ETH = 962 | The resolved Approved Asset Registry (1,000 rows, 961 writable). Kept unchanged; do not delete or rewrite. Still written by `scripts/deploy-pages/resolveAssetRegistry.cjs`. Not read by the live path. |
 
@@ -10,6 +11,7 @@
 
 | Tag | Commit | What it marks |
 |---|---|---|
+| `registry-revC-2026-10-24` | label only (no tag pushed) | Ceremony source from 2026-10-24: `assetRegistry.revC.json` (Revision C, 487 entries). Recorded as `revisionLabel` in `ceremony-manifest.json` and `registryRevisionLabel` in `ceremony-data.json`. |
 | `registry-revB-2026-10-20` | the commit that adds this section | Current active list: `assetRegistry.revB.json` (Revision B, 487 entries, unchanged since t220u) together with the 2026-10-20 on-chain verification `onchain_verify_20261020.csv` (823 historical EVM token addresses checked; all 475 Revision B tokens pass). |
 | `registry-historical-961` | `529d658` | The last commit that changed `assetRegistry.resolved.json` (prior revision, 961 written rows). |
 
@@ -27,5 +29,5 @@ Rebuild the current revision and what depends on it:
 ```
 node scripts/buildRevisionB.cjs            # deployment/assetRegistry.revB.json
 node scripts/buildTokenAddressIndex.cjs    # deployment/tokenAddressIndex.json
-node scripts/build_ceremony_artifacts.cjs  # scripts/deploy-pages/ceremony-data.json: the Base subset (27 rows, 26 token addresses, 0 aliases); fetches the ETH price
+node scripts/build_ceremony_artifacts.cjs --keep-price  # scripts/deploy-pages/ceremony-data.json: the Base subset of Revision C (27 rows, 26 token addresses, 0 aliases); keeps the committed ETH price (t364u). Without --keep-price it fetches a new ETH price.
 ```
