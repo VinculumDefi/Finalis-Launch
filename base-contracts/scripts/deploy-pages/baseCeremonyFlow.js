@@ -21,8 +21,8 @@
   // Main CommitmentVaultLock runtime (immutables masked). Used to refuse the
   // retired f9e4d8c 2.5% HANDSHAKE_FEE_BPS=250 locks at 0x5AB4… on the six
   // non-Base chains, and any other bytecode that is not main.
-  const CVL_RUNTIME_HASH = "0x7ee4878767cfdea969c49e503eea1e82ff0d2a681a79aeaaf25b705ecd3db4b7";
-  const CVL_IMMUTABLE_RANGES = [[2626, 32], [4780, 32], [5192, 32]];
+  const CVL_RUNTIME_HASH = "0x96b653727a7a2d279c91ea8647a5104aeee1844590b4f72b258eb193f5eec6b0";
+  const CVL_IMMUTABLE_RANGES = [[2604, 32], [4758, 32], [5170, 32]];
   const HANDSHAKE_FEE_BPS_SELECTOR = "0xee8a0fb0";
   const EVM_RPC = {
     Ethereum: { url: "https://ethereum-rpc.publicnode.com", chainId: 1 },
