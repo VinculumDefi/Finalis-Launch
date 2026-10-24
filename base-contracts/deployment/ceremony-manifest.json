@@ -1,28 +1,35 @@
 {
   "_note": "Machine-facing pre-deployment manifest. Verified by scripts/build_ceremony_artifacts.cjs. Not an operator checklist. The build hardcodes this file's SHA-256 so editing the manifest to match a wrong registry is refused.",
-  "revision": "Revision B",
-  "revisionLabel": "registry-revB-2026-10-20",
+  "revision": "Revision C",
+  "revisionLabel": "registry-revC-2026-10-24",
   "artifacts": [
+    {
+      "filename": "assetRegistry.revC.json",
+      "path": "deployment/assetRegistry.revC.json",
+      "revisionLabel": "Revision C",
+      "sha256": "5c3311eb4f7b59c34e7ccc8a6bd9e817b4f0bb02bdeff65c5cfed98f79cca581",
+      "rowCount": 487,
+      "rowCountNote": "486 Revision C rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 27 Base rows. Revision C is a full copy of Revision B with row 454 USDC_BASE as S1 (operator decision t367u)."
+    },
     {
       "filename": "assetRegistry.revB.json",
       "path": "deployment/assetRegistry.revB.json",
-      "revisionLabel": "Revision B",
+      "revisionLabel": "Revision B (record of the finalized Oct 22 set; pinned unchanged; not the ceremony source)",
       "sha256": "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9",
-      "rowCount": 487,
-      "rowCountNote": "486 Revision B rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 27 Base rows."
+      "rowCount": 487
     },
     {
       "filename": "baseCeremonyFlow.js",
       "path": "scripts/deploy-pages/baseCeremonyFlow.js",
-      "revisionLabel": "Revision B ceremony flow (Base-only)",
-      "sha256": "38b80e7da3e0a550546a2ac2d16c8de2e130db1f8f7d9d5eb496ff23707c8ff9",
+      "revisionLabel": "Revision C ceremony flow (Base-only)",
+      "sha256": "d2e1de2dd50fa870642be09f00a8a3d5fe130fa68038cbd8a7dbd46d215992c5",
       "rowCount": null
     },
     {
       "filename": "base.html",
       "path": "scripts/deploy-pages/base.html",
-      "revisionLabel": "Revision B ceremony page (Base-only)",
-      "sha256": "ac62af3cc17492ef044655eb7473e0b09dd53790692ab2a618cc64879aa01f61",
+      "revisionLabel": "Revision C ceremony page (Base-only)",
+      "sha256": "50d08f3064c75db97eaeb2e710a43fbe1fa0a0b3ee2546d7513014803a35998a",
       "rowCount": null
     },
     {
@@ -47,7 +54,7 @@
   "registryBaseEthSymbol": "ETH",
   "registryBaseEthAssetId": "native-ETH",
   "baseOnly": true,
-  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision B, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Revision B itself is unchanged.",
+  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision C, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Operator decision t367u: the ceremony source is Revision C (row 454 USDC_BASE is S1 at 1.5x, Master Specification Revision 18 Section 6.1). Revision B itself is unchanged and stays pinned above.",
   "expectedBaseRows": 27,
   "expectedBaseTokenAddresses": 26,
   "expectedBaseAliases": 0,
