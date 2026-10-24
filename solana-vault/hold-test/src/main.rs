@@ -83,7 +83,6 @@ async fn main() {
     let lock_id = "hold-release-001";
     let lock_hash: [u8; 32] = Sha256::digest(lock_id.as_bytes()).into();
     let lock_pda = pda(&[b"vf_lock", &lock_hash], &program_id);
-    let handshake = pda(&[b"vf_handshake", payer.pubkey().as_ref()], &program_id);
 
     let dev_before = context.banks_client.get_balance(dev_fund.pubkey()).await.unwrap();
     let lock_before = context.banks_client.get_balance(lock_pda).await.unwrap();
@@ -105,7 +104,6 @@ async fn main() {
             AccountMeta::new(payer.pubkey(), true),
             AccountMeta::new_readonly(config, false),
             AccountMeta::new(lock_pda, false),
-            AccountMeta::new(handshake, false),
             AccountMeta::new(dev_fund.pubkey(), false),
             AccountMeta::new_readonly(system_program::id(), false),
         ],
