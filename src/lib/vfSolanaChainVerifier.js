@@ -5,7 +5,9 @@
 // VF-XCH-006/010: Finality must be objective — slot must be at 'finalized' commitment.
 // VF-XCH-011: Facts extracted independently from raw LockCreated event.
 //
-// VF-COM-007/008: Pending attempt dispositions (objective, chain-native):
+// VF-COM-007/008 (Revision 6 numbering; Revision 12 superseded the Handshake
+// allowance parts, the pending-attempt disposition rule still applies):
+// Pending attempt dispositions (objective, chain-native):
 //   FINALIZED_SUCCESS, FINALIZED_FAILURE, RECENT_BLOCKHASH_EXPIRY,
 //   DURABLE_NONCE_ADVANCEMENT. Elapsed time/mempool absence never clears a
 //   still-valid pending attempt.
