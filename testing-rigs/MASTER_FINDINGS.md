@@ -167,3 +167,48 @@ Branch fix/batch-2026-10-23. 23 of 60 rows FIXED (some with residual items noted
 | 58 | IT-ECH-01 | STILL OPEN | - | Echidna re-run (8 of 8 properties pass) still does not reach the Stake epoch reward mint. |
 | 59 | IT-MUT-00 | STILL OPEN | - | The HandshakeCapability part no longer applies: Revision 12 removed HandshakeCapability.sol and its probe (9e9f132, f904be7 on fix/rev6-handshake-cleanup-2026-10-23). Still open: gambit 0.2.1 has no relational-to-relational operator and only seeded samples were run. |
 | 60 | MUT-BASECVL-PIN | FIXED for MUT-41..50; 6 new pin-only OPEN | aa73a5c | old pin-only mutants killed by behaviour tests (T-BC-02..05); fresh BaseCVL sample: 13 killed, 6 pin-only |
+
+## Reader finality anchor status 2026-10-24 (added by hand)
+
+Judged against the operator's Revision 15 text t349u (no independence clause: every environment must meet the bar, and the protocol is not launchable until all do). Revision 15 is operator text, not a repository file. No spec document or the document register was edited. Local Hardhat chain only: nothing deployed, signed, broadcast, registered or finalized.
+
+| Environment | Status | Evidence |
+|---|---|---|
+| Base | CLOSED. Same-chain lock state, read directly by the Base reader; no external anchor needed. | base_ceremony_flow, lock_exists_and_asset_match, mint_path_ceremony, token_locks, token_substitution_adversarial, non_base_finality_trust_model: 31 passing on 2026-10-24. |
+| Ethereum | BUILT AND TESTED, DOES NOT YET MEET THE BAR (two items below). | test/ethereum_finality_anchor.test.cjs: 41 passing. |
+| Avalanche, Solana, Litecoin, Dogecoin, DigiByte, XRP Ledger, Stellar | REFUSED. No on-chain finality anchor the Base Verifier can check. Not launchable under Revision 14 line 541 (non-Base readers may not be disabled to reach launch) and t349u. | test/seven_refused_environments.test.cjs: 8 passing. Each reader reverts with its VF-XCH-006 string for every input. Reasons: Avalanche, Snowman acceptance is local with no signed finality certificate; Solana, Proof-of-History far beyond block gas and ed25519 stake-weighted votes; Litecoin and Dogecoin, scrypt (plus AuxPoW) not checkable in one Base transaction; DigiByte, five proof-of-work algorithms including scrypt and Odocrypt; XRP Ledger, UNL validation not built; Stellar, no canonical quorum set, and a deploy-time quorum is a fixed signer set (VF-XCH-017). |
+| Arbitrum, Optimism, Polygon, Bitcoin, Bitcoin Cash, Zcash, BNB Smart Chain | NOT STARTED in this pass. | - |
+
+### Ethereum design
+
+- New files only; the live Verifier is not modified: contracts/checkers/BaseBeaconRootAnchor.sol, contracts/checkers/EvmStorageProof.sol, contracts/chain-verifiers/EthereumStorageLockReader.sol (an IChainVerifier).
+- Anchor: Base's EIP-4788 contract (0x000F...Beac02) gives the beacon root of an attested header. SSZ branches prove the mainnet genesis validators root, the fork version (Fulu or Electra only), and the state's finalized checkpoint root. The finalized header must hash to that root, and its body proves the execution state root, block number and block hash. Strictest reading taken: the finalized checkpoint, never the head; a separate finality proof argument is refused.
+- Lock: account proof and storage proofs against the finalized execution state root. The reader is pinned to one lock address, its code hash, and a reviewed build hash (keccak of the code with the Dev Fund immutables zeroed). It proves the environment word is "Ethereum", the record words, and the binding payload (length 235, first word equal to lockId).
+- Gas: verifyFinality about 1.51M; recordFeeAndRac about 6.08M. Both are under the 16,777,216 transaction cap.
+
+### Ethereum against the t349u bar
+
+| Bar item | Result |
+|---|---|
+| Anchor to settled history checkable on-chain by the Base Verifier | MET inside the reader: the Base Verifier's own transaction runs the 4788 and SSZ checks through the registered reader. |
+| Refuse any header not provably in settled history | MET. Forged-header test set FH-01 to FH-15 on real mainnet data, plus "reject correctly formatted header not in settled history" through a local Verifier. |
+| Refuse wrong lock contract, wrong asset, wrong chain, replay | MET. Tests named below. |
+| Refuse non-EVM identity where EVM is required, and the reverse | MET for the cases tested (Ethereum package under Bitcoin, a Bitcoin-shaped proof under Ethereum, a 32-byte ed25519 key as recipient, a Base token address locked on Ethereum). |
+| The Base Verifier must independently check the anchor and the refusal conditions | NOT MET. See gap E-1. |
+| Mandatory test: accept a real anchored lock and produce a mint on Base | NOT MET with real data. See gap E-2. Passes on a SYNTHETIC local lock. |
+
+Revision 15 Section 3 tests (all through a local Base Verifier, all passing): "accept a real anchored lock and produce a mint on Base" (SYNTHETIC lock and beacon tree, real 4788 runtime); "reject correctly formatted header not in settled history"; "reject header containing a tx that never created a Vinculum lock"; "reject wrong lock contract or wrong asset" (wrong lock contract, and wrong asset, as two tests); "reject replay of a previously used proof"; "reject proof confusing an address or identity across chains (both directions)". Additional coverage kept from t348u: wrong-network lock record, token address from another network, unauthorized price source, altered recipient, resubmission with a different identity or proof package, and three Section 4 tests.
+
+Gap E-1 (Verifier independence). The Verifier itself checks, against facts the reader proves: lockId, gross, fee, principal, duration, recipient, output token (VF-XCH-011), valuation timestamp equal to the proven creation time (VF-ORC-011), the asset (VF-XCH-011 asset mismatch, through the token address index), the price in effect strictly before creation (VF-ORC-005, VF-ORC-007), the Dev Fund and the reader's environment (VF-FEE-009), and replay (VF-XCH-013, VF-RAC-001). It does not itself check the anchor (it accepts verifyFinality's return) or the lock address (it relies on the reader's immutable pin). Smallest change, not made: the Verifier stores per environment the lock address, the reader's code hash and the anchor contract, checks that reader.lock() and the reader's code hash match, and calls the anchor contract itself, comparing the finalized block hash and number with the reader's. This needs a Verifier change and a new deployment. Also: the live Verifier is finalized, and readers can only be registered before finalize, so no new reader can be added to it without a new Verifier deployment.
+
+Gap E-2 (no real lock). No Vinculum lock record exists on Ethereum mainnet. Creating one is a broadcast, which is not authorized. Real data proves the anchor, the live lock account, its code pin and the Ethereum environment slot, and then the Verifier refuses with "Ethereum lock record absent".
+
+### Other Ethereum findings
+
+- E-3: the live Ethereum lock (0x115b...626E) is a pre-AG-08 build. Its masked build hash is 0x07b5...8594; the manifest's non-Base lock hash 0x96b6...c6b0 does not match it, and the reader refuses the manifest hash for that code.
+- E-4 (spec deviation, needs a ruling): the reader proves the lock record by storage proof in the finalized state, not by the receipt or event proof Architecture C.1 describes. A record present in finalized state shows the lock was created at or before the finalized block.
+- E-5: the reader does not read the released flag; release does not change the facts the Verifier uses.
+- E-6: a future beacon fork (Gloas) changes the state layout; the reader refuses unknown fork versions, so it fails closed and will need a new reader.
+- E-7: AG-10 (lockId front-run) for this reader reduces to griefing at lock creation, because the reader is pinned to one lock and the recipient comes from the proven record.
+- E-8: the three new files compile in their own Hardhat job (hardhat.config.cjs overrides; Hardhat needs the compilers form for overrides to apply). Without it, viaIR renumbering changes the bytecode of seven existing readers and breaks the t272u ceremony.json pin (ceremony_artifacts_match_compile: 24 of 24 passing with the override).
+- E-9 (pre-existing, not from this work): test/live_config.test.cjs fails "differs from every Dev Fund, lock, release and deployed-contract address recorded in the repo" because the poster address appears in an archived Revision 11 specification file added by 49936f9. Archive and spec files were not edited.
