@@ -21,7 +21,7 @@ from finality import (
 from decimal import Decimal
 
 from lock import (
-    COUNTS_PER_IDENTITY,
+    HANDSHAKE_ALLOWANCE_LIMIT,
     EXACT_FEE_CHAINS,
     MIN_LOCK_FLOOR_UNITS,
     MIN_LOCK_USD,
@@ -44,7 +44,6 @@ from lock import (
     PRINCIPAL_SATS,
     RAW_BINDING_CHAINS,
     LockFixture,
-    handshake_allowance,
     multiplier_bps,
     split_outputs,
 )
@@ -267,16 +266,17 @@ class LockTests(unittest.TestCase):
         self.assertEqual(FEE_SATS, 50_000)
         self.assertEqual(PRINCIPAL_SATS, 950_000)
 
-    def test_sixteen_durations_and_derived_handshake_allowance(self):
+    def test_sixteen_durations_and_no_handshake_allowance_limit(self):
         self.assertEqual(len(PERMITTED_DURATIONS), 16)
         self.assertEqual(multiplier_bps(3600), 10000)
         self.assertEqual(multiplier_bps(315360000), 80000)
         with self.assertRaises(ValueError):
             multiplier_bps(8 * 86400)
-        self.assertFalse(COUNTS_PER_IDENTITY)
-        self.assertEqual(handshake_allowance(COUNTS_PER_IDENTITY), 1)
-        self.assertEqual(handshake_allowance(True), 3)
-        self.assertEqual(handshake_allowance(False), 1)
+        # Revision 12: no Handshake allowance limit and no per-account counter.
+        self.assertIsNone(HANDSHAKE_ALLOWANCE_LIMIT)
+        import lock as lock_module
+        self.assertFalse(hasattr(lock_module, "handshake_allowance"))
+        self.assertFalse(hasattr(lock_module, "COUNTS_PER_IDENTITY"))
 
 
 # Fixture prices for the minimum-lock tests: the CoinGecko USD prices read on
