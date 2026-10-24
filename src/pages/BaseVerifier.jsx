@@ -19,9 +19,9 @@ import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHands
 // (Revision B + on-chain verification). Solana is not part of this deployment
 // and is not offered for new locks.
 const ENV_GROUPS = [
-  { label: 'EVM (3-use, source-enforced)', envs: ['Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Base', 'Optimism'] },
-  { label: 'UTXO (1-use, Base-enforced)', envs: ['Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash'] },
-  { label: 'Account-model (1-use, Base-enforced)', envs: ['XRPL', 'Stellar'] },
+  { label: 'EVM', envs: ['Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Base', 'Optimism'] },
+  { label: 'UTXO', envs: ['Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash'] },
+  { label: 'Account-model', envs: ['XRPL', 'Stellar'] },
 ].map((g) => ({ ...g, envs: g.envs.filter((e) => isInThisDeployment(e) && isOfferableEnvironmentNative(e)) })).filter((g) => g.envs.length);
 
 function parseUsdToFixedPoint(usdStr) {
@@ -115,8 +115,8 @@ export default function BaseVerifier() {
     setPkg(null);
   }
 
-  function handleRegisterAttempt(envId, handshakeIdentity, lockId, ts) {
-    const r = lifecycle.registerAttempt(envId, handshakeIdentity, lockId, ts);
+  function handleRegisterAttempt(envId, sourceIdentity, lockId, ts) {
+    const r = lifecycle.registerAttempt(envId, sourceIdentity, lockId, ts);
     bumpLifecycle();
     return r;
   }
