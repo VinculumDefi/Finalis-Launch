@@ -51,6 +51,8 @@ A recursive scan of the entire accessible workspace (`/app`, excluding `node_mod
      `chain_id = cosmoshub-4`, `base_denom = uatom`, bech32 prefix `cosmos`, registry row 479,
      the 16 permitted durations, fee basis points (2.50% handshake / 5.00% standard), value
      bounds ($0.95–$1.05 handshake, ≥$10 standard), handshake allowance = 3.
+     These are Revision 6 values for the removed Cosmos path. Handshake rules are
+     superseded by Revision 12: 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit.
    - `vault_contract_address = PENDING_DEPLOYMENT` (no address exists).
    - Base chain: `vclm_address`, `chonx_address`, `synth_address`, `proof_verifier_address` =
      `PENDING_DEPLOYMENT`; `proof_verifier_abi = NOT_PRESENT` (no ABI exists).
