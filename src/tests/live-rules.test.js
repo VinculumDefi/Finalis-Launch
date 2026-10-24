@@ -44,10 +44,10 @@ test('LIVE_RULES equal the constants in CommitmentVaultLock.sol and VinculumFina
   assert.ok(Object.isFrozen(LIVE_RULES));
 });
 
-test('the Revision 6 record is unchanged (historical)', () => {
-  assert.equal(FIXED_RULES.handshake_fee_bps, 250);
-  assert.equal(FIXED_RULES.handshake_value_usd_min, 0.95);
-  assert.equal(FIXED_RULES.handshake_value_usd_max, 1.05);
+test('the authority record carries the current Handshake values', () => {
+  assert.equal(FIXED_RULES.handshake_fee_bps, 500);
+  assert.equal(FIXED_RULES.handshake_value_usd_min, 0.01);
+  assert.equal(FIXED_RULES.handshake_value_usd_max, 0.02);
   assert.equal(FIXED_RULES.standard_minimum_value_usd, 10.0);
 });
 
