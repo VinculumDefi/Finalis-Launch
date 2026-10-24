@@ -5,7 +5,6 @@ import {
   PROGRAM_ID,
   deriveConfigPda,
   deriveLockPda,
-  deriveHandshakePda,
   isValidAddress,
 } from '@/lib/vfSolanaProgram';
 
@@ -40,16 +39,7 @@ export default function PdaDerivation({ lockId, sourceAccount }) {
         }
       }
 
-      // Handshake allowance PDA (needs valid sourceAccount). Kept for the program's
-      // account layout only; Revision 12 has no allowance limit.
-      if (sourceAccount && sourceAccount.trim() && isValidAddress(sourceAccount.trim())) {
-        try {
-          const [pda, bump] = deriveHandshakePda(sourceAccount.trim());
-          results.handshake = { pda: pda.toBase58(), bump, sourceAccount: sourceAccount.trim() };
-        } catch (e) {
-          results.handshake = { error: e.message };
-        }
-      }
+      // Revision 12: there is no Handshake allowance account to derive.
 
       if (!cancelled) {
         setPdaResults(results);
@@ -159,7 +149,6 @@ export default function PdaDerivation({ lockId, sourceAccount }) {
       <div className="space-y-2">
         <PdaRow label="Config PDA" result={pdaResults?.config} />
         <PdaRow label="Lock Record PDA" result={pdaResults?.lock} />
-        <PdaRow label="Handshake Allowance PDA (layout only, no limit, Revision 12)" result={pdaResults?.handshake} />
       </div>
 
       {!pdaResults?.lock && (
@@ -167,7 +156,7 @@ export default function PdaDerivation({ lockId, sourceAccount }) {
           Enter a Lock ID above to derive the lock record PDA.
         </div>
       )}
-      {!pdaResults?.handshake && sourceAccount && !isValidAddress(sourceAccount?.trim?.() || '') && (
+      {sourceAccount && !isValidAddress(sourceAccount?.trim?.() || '') && (
         <div className="text-[10px] text-amber-600">
           Source account is not a valid Solana address.
         </div>
