@@ -1,6 +1,6 @@
 // Shared suite for test/sampled/*.test.cjs (one file per chain, run separately).
 // t209u: every lock asserts the EXACT minted amount (expected value computed
-// here from Revision 6 constants in src/lib/vfRevision6Authority.js, not from
+// here from Revision 6 constants in src/lib/vfSpecAuthority.js, not from
 // the contract), release refused before maturity, release at maturity returns
 // exactly rec.principal (95% of gross) to the destination, second release
 // refused, a wallet other than the recorded destination refused. TRS: each of
@@ -109,7 +109,7 @@ async function evidenceFor(env, lockAddr, txHash, lockId) {
 
 
 // ---- Independent expected issuance (Revision 6; Revision 12 changes only the Handshake) ----
-let R6; // src/lib/vfRevision6Authority.js, loaded in before()
+let R6; // src/lib/vfSpecAuthority.js, loaded in before()
 // Revision 6 asset classes: S1 canonical Ethereum USDC/USDT; S2 native ETH, BTC and
 // canonical Ethereum AAVE, LINK, UNI; S3 every other entry.
 function rev6Class(r) {
@@ -277,7 +277,7 @@ function runSampled(ENVS) {
 describe(`Sampled CVL x 16 durations + TRS x 4 durations (seed "${SEED}")`, function () {
   this.timeout(0);
   before(async () => {
-    R6 = await import(pathToFileURL(path.join(__dirname, "..", "..", "..", "src", "lib", "vfRevision6Authority.js")).href);
+    R6 = await import(pathToFileURL(path.join(__dirname, "..", "..", "..", "src", "lib", "vfSpecAuthority.js")).href);
     V = await deployAll();
     V.launch = await V.verifier.protocolLaunchTimestamp();
     expect(V.launch).to.be.gt(0n);
