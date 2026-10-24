@@ -25,7 +25,7 @@ function StateBadge({ state }) {
 }
 
 export default function LifecyclePanel({
-  lockState, attemptState, output, identity, handshakeUsed,
+  lockState, attemptState, output, identity,
   onSubmit, onDisposition, onIssue, onMature, onRelease,
 }) {
   const isPending = attemptState === ATTEMPT_STATES.OBJECTIVELY_PENDING;
@@ -44,12 +44,11 @@ export default function LifecyclePanel({
         {attemptState && (<><span className="text-xs text-[#6b6b65]">Attempt:</span> <StateBadge state={attemptState} /></>)}
       </div>
 
-      {/* Handshake tracking */}
+      {/* Source account */}
       {identity && (
         <div className="rounded-md border border-[#18324b]/20 bg-[#18324b]/[0.03] p-3 text-xs space-y-1">
-          <div><span className="text-[#6b6b65]">Handshake identity (VF-COM-005):</span> <span className="font-mono text-[#0a0a0a]">{identity}</span></div>
-          <div><span className="text-[#6b6b65]">Qualifying Handshakes used:</span> <span className="font-mono text-[#0a0a0a]">{handshakeUsed} / 3</span></div>
-          <div className="text-[10px] text-[#6b6b65]">VF-COM-006: account-model mechanism with persistent per-identity state → three-use allowance.</div>
+          <div><span className="text-[#6b6b65]">Source account:</span> <span className="font-mono text-[#0a0a0a]">{identity}</span></div>
+          <div className="text-[10px] text-[#6b6b65]">Handshake (Revision 12): 1 hour, $0.01 to $0.02, 5% fee, no allowance limit.</div>
         </div>
       )}
 
@@ -87,7 +86,7 @@ export default function LifecyclePanel({
       {/* Not recognized */}
       {attemptState === ATTEMPT_STATES.NOT_RECOGNIZED && (
         <div className="rounded-md border border-rose-300/50 bg-rose-50 p-3 text-xs text-rose-700">
-          Attempt NOT RECOGNIZED. <b>VF-COM-008: no allowance consumed.</b> VF-COM-015: any fee actually transferred
+          Attempt NOT RECOGNIZED. VF-COM-015: any fee actually transferred
           to the Dev Fund is permanently non-refundable; principal remains deterministically releasable at maturity.
         </div>
       )}
