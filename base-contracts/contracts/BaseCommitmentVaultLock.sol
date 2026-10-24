@@ -49,14 +49,14 @@
 // match against the sixteen COMMITMENT_DURATIONS rows. No range and no
 // interpolated multiplier. The one-hour row is the Handshake ($0.01 to
 // $0.02). The other fifteen require at least $0.01. All sixteen charge
-// 5.00%. This contract keeps no per-account Handshake counter.
+// 5.00%. Revision 12: no Handshake allowance limit and no per-account
+// Handshake counter.
 // =============================================================================
 
 // SPDX-License-Identifier: PROTOCOL-RESTRICTED
 pragma solidity 0.8.19;
 
 import "./CommitmentDurations.sol";
-import "./HandshakeCapability.sol";
 
 contract BaseCommitmentVaultLock {
     uint256 public constant STANDARD_FEE_BPS = 500;
@@ -67,9 +67,6 @@ contract BaseCommitmentVaultLock {
     uint256 public constant HANDSHAKE_USD_MAX = 0.02e18;
     // VF-COM-009: at least $0.01 for every non-handshake duration.
     uint256 public constant STANDARD_USD_MIN = 0.01e18;
-    // Mechanism flag reported by handshakeAllowance(). This contract no
-    // longer counts Handshake uses on-chain.
-    bool public constant countsPerIdentity = true;
 
     /// @notice Environment name supplied at deployment. Not a chain id guess.
     string public environmentId;
@@ -174,10 +171,6 @@ contract BaseCommitmentVaultLock {
     ///         Name deliberately does not claim to decide finality.
     function foreignHeaderFinalityNotDecided(bytes32 blockHash, uint256 height) external pure returns (bool) {
         return blockHash != bytes32(0) && height != 0 && false;
-    }
-
-    function handshakeAllowance() public pure returns (uint256) {
-        return HandshakeCapability.allowance(countsPerIdentity);
     }
 
     function createNativeLock(
