@@ -132,7 +132,7 @@ function buildPkg({
   };
 }
 
-describe("CL-11 · handshake allowance lookup on Base", function () {
+describe("CL-11 · Rev 12: no Handshake allowance lookup on Base", function () {
   it("Rev 12 (AG-20): the package Handshake allowance value is ignored, never checked or counted", async function () {
     const [deployer, recipient] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("VinculumFinalisToken");
@@ -227,7 +227,7 @@ describe("CL-11 · handshake allowance lookup on Base", function () {
     const hsGross = 40n;
     const stdGross = 100000n;
 
-    // Standard (30d) success must NOT consume handshake allowance
+    // Standard (30d) success; Rev 12 has no Handshake allowance to consume
     const stdPkg = buildPkg({
       env: "Bitcoin",
       lockId: ethers.id("lock-std"),
