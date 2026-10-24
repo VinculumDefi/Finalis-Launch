@@ -19,16 +19,12 @@
 
 import { ASSET_CLASS_MULTIPLIERS_BPS } from './vfRevision6Authority.js';
 
-// VF-COM-006: capable mechanisms get 3, mechanisms that cannot count get 1.
-export function handshakeAllowanceFor(countsPerIdentity) {
-  if (countsPerIdentity == null) return null;
-  return countsPerIdentity ? 3 : 1;
-}
-
 // ---------------------------------------------------------------------------
 // VF-XCH-001/002/003: 16 supported source environments
-// Each entry carries the environment identity, family, Handshake allowance
-// (determined by source-mechanism state capability — Q.2), and finality model.
+// Each entry carries the environment identity, family and finality model.
+// Revision 12: the Handshake (1 hour, $0.01 to $0.02, 5% fee) has no allowance
+// limit on any environment, so no row carries an allowance, a counting flag or
+// an enforcement side.
 // `registryName` is the display name used by the Approved Asset Registry and the
 // price cascade (DexScreener/GeckoTerminal chain mapping).
 // Canonical chain identifiers are DEFERRED EXTERNAL INPUT (VF-XCH-003) where
@@ -36,32 +32,29 @@ export function handshakeAllowanceFor(countsPerIdentity) {
 // ---------------------------------------------------------------------------
 
 const ENVIRONMENT_ROWS = [
-  // --- EVM family (7) — 3-use Handshake, source-enforced ---
-  { id: 'Ethereum',  family: 'EVM',  registryName: 'Ethereum',       countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'PoS finalized', verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'BNB',       family: 'EVM',  registryName: 'BNB Smart Chain', countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'FFF',            verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Avalanche', family: 'EVM',  registryName: 'Avalanche',      countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'Snowman',        verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Polygon',   family: 'EVM',  registryName: 'Polygon',        countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'Heimdall v2',   verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Arbitrum',  family: 'EVM',  registryName: 'Arbitrum',       countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'Optimistic',    verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Base',      family: 'EVM',  registryName: 'Base',           countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'OP Stack',       verificationStatus: 'RESOLVED_SAME_CHAIN' },
-  { id: 'Optimism',  family: 'EVM',  registryName: 'Optimism',       countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'OP Stack',       verificationStatus: 'DESIGN_DEFINED' },
-  // --- Non-EVM programmable (1) — 3-use, source-enforced ---
-  { id: 'Solana',    family: 'Non-EVM', registryName: 'Solana', countsPerIdentity: true, handshakeEnforcement: 'source', finality: 'finalized slot',  verificationStatus: 'DESIGN_DEFINED' },
-  // --- Non-EVM UTXO family (6) — 1-use per canonical release public key, Base-enforced ---
-  { id: 'Bitcoin',     family: 'UTXO', registryName: 'Bitcoin',      countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Litecoin',    family: 'UTXO', registryName: 'Litecoin',     countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Dogecoin',    family: 'UTXO', registryName: 'Dogecoin',      countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'DigiByte',    family: 'UTXO', registryName: 'DigiByte',      countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Zcash',       family: 'UTXO', registryName: 'Zcash',         countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=10',    verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'BitcoinCash', family: 'UTXO', registryName: 'Bitcoin Cash',  countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
-  // --- Non-EVM account-model (2) — 1-use per account (unless deployable stateful), Base-enforced ---
-  { id: 'XRPL',        family: 'XRPL',   registryName: 'XRP Ledger', countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'validated ledger', verificationStatus: 'DESIGN_DEFINED' },
-  { id: 'Stellar',     family: 'Stellar', registryName: 'Stellar',   countsPerIdentity: false, handshakeEnforcement: 'base', finality: 'SCP closed',      verificationStatus: 'DESIGN_DEFINED' },
+  // --- EVM family (7) ---
+  { id: 'Ethereum',  family: 'EVM',  registryName: 'Ethereum',       finality: 'PoS finalized', verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'BNB',       family: 'EVM',  registryName: 'BNB Smart Chain', finality: 'FFF',            verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Avalanche', family: 'EVM',  registryName: 'Avalanche',      finality: 'Snowman',        verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Polygon',   family: 'EVM',  registryName: 'Polygon',        finality: 'Heimdall v2',   verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Arbitrum',  family: 'EVM',  registryName: 'Arbitrum',       finality: 'Optimistic',    verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Base',      family: 'EVM',  registryName: 'Base',           finality: 'OP Stack',       verificationStatus: 'RESOLVED_SAME_CHAIN' },
+  { id: 'Optimism',  family: 'EVM',  registryName: 'Optimism',       finality: 'OP Stack',       verificationStatus: 'DESIGN_DEFINED' },
+  // --- Non-EVM programmable (1) ---
+  { id: 'Solana',    family: 'Non-EVM', registryName: 'Solana', finality: 'finalized slot',  verificationStatus: 'DESIGN_DEFINED' },
+  // --- Non-EVM UTXO family (6) ---
+  { id: 'Bitcoin',     family: 'UTXO', registryName: 'Bitcoin',      finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Litecoin',    family: 'UTXO', registryName: 'Litecoin',     finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Dogecoin',    family: 'UTXO', registryName: 'Dogecoin',      finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'DigiByte',    family: 'UTXO', registryName: 'DigiByte',      finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Zcash',       family: 'UTXO', registryName: 'Zcash',         finality: 'depth>=10',    verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'BitcoinCash', family: 'UTXO', registryName: 'Bitcoin Cash',  finality: 'depth>=6',     verificationStatus: 'DESIGN_DEFINED' },
+  // --- Non-EVM account-model (2) ---
+  { id: 'XRPL',        family: 'XRPL',   registryName: 'XRP Ledger', finality: 'validated ledger', verificationStatus: 'DESIGN_DEFINED' },
+  { id: 'Stellar',     family: 'Stellar', registryName: 'Stellar',   finality: 'SCP closed',      verificationStatus: 'DESIGN_DEFINED' },
 ];
 
-export const ENVIRONMENTS = ENVIRONMENT_ROWS.map((row) => ({
-  ...row,
-  handshakeAllowance: handshakeAllowanceFor(row.countsPerIdentity),
-}));
+export const ENVIRONMENTS = ENVIRONMENT_ROWS.map((row) => ({ ...row }));
 
 
 export const ENVIRONMENT_COUNT = ENVIRONMENTS.length; // 16
