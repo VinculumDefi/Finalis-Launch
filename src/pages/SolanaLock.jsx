@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { FileText, Lock, ScrollText, Ban } from 'lucide-react';
 import ProvenanceBanner from '@/components/solana/ProvenanceBanner';
 import ProgramStructure from '@/components/solana/ProgramStructure';
@@ -8,7 +8,7 @@ import PreflightPanel from '@/components/solana/PreflightPanel';
 import LifecyclePanel from '@/components/solana/LifecyclePanel';
 import { Button } from '@/components/ui/button';
 import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfRevision6Authority';
-import { validateLockRequest, computeOutput, buildHandshakeIdentity } from '@/lib/vfSolanaLockEngine';
+import { validateLockRequest, computeOutput, buildSourceIdentity } from '@/lib/vfSolanaLockEngine';
 import { SolanaMockAdapter } from '@/lib/vfSolanaMockAdapter';
 import { SOLANA_LOCKS_ENABLED, SOLANA_NOT_DEPLOYED_MESSAGE, NOT_IN_THIS_DEPLOYMENT_LABEL } from '@/lib/vfDeploymentScope';
 
@@ -40,10 +40,6 @@ export default function SolanaLock() {
   const [lockId, setLockId] = useState(null);
   const [identity, setIdentity] = useState(null);
 
-  const handshakeUsed = useMemo(() => {
-    if (!identity) return 0;
-    return adapter.handshakeUsage.get(identity) || 0;
-  }, [identity, adapter, attemptState]);
 
   function onRunPreflight() {
     const usdMicro = parseUsdToFixedPoint(values.verifiedGrossUsd);
@@ -73,7 +69,7 @@ export default function SolanaLock() {
     const id = `vf-sol-lock-${Date.now()}`;
     setLockId(id);
     const isHandshake = String(values.durationSecs) === '3600';
-    const ident = buildHandshakeIdentity(values.sourceAccount);
+    const ident = buildSourceIdentity(values.sourceAccount);
     const r = adapter.submitSimulation({ lockId: id, identity: ident, isHandshake });
     if (r.ok) {
       setLockState(LOCK_STATES.SOURCE_SUBMITTED);
@@ -197,7 +193,6 @@ export default function SolanaLock() {
               attemptState={attemptState}
               output={output}
               identity={identity}
-              handshakeUsed={handshakeUsed}
               onSubmit={onSubmit}
               onDisposition={onDisposition}
               onIssue={onIssue}
