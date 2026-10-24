@@ -31,7 +31,7 @@ pub enum ErrorCode {
     #[msg("VF-COM-007: Identity has used all qualifying Handshake allowance")]
     HandshakeAllowanceExhausted,
 
-    // VF-COM-008: (informational — failed attempts consume no allowance)
+    // VF-COM-008: Revision 6 only, superseded by Revision 12 (no allowance to consume)
 
     // VF-COM-020: Invalid output token
     #[msg("VF-COM-020: Output token must be VCLM or activated CHONX")]
