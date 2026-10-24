@@ -2,7 +2,7 @@
  "mode": "dryrun",
  "verdict": "reconciliation PASS",
  "counts": {
-  "PASS": 350
+  "PASS": 230
  },
  "checks": [
   {
@@ -49,123 +49,15 @@
   },
   {
    "area": "bytecode",
-   "name": "reader:Ethereum (SimpleEthereumLockReader) at 0x88B7...31BB",
+   "name": "the set has exactly one reader (Base)",
    "status": "PASS",
-   "detail": "runtime 15314 bytes, keccak 0x4a73a402e6, immutables and constructor args derived"
+   "detail": "Base"
   },
   {
    "area": "bytecode",
-   "name": "reader:Arbitrum (ArbitrumLockReader) at 0xCDfE...56C9",
+   "name": "ceremony-data is Base-only: 27 rows, 26 token addresses, 0 aliases, one reader, one Dev Fund",
    "status": "PASS",
-   "detail": "runtime 15743 bytes, keccak 0xd20b8d6263, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Optimism (OptimismLockReader) at 0xf92B...c9D1",
-   "status": "PASS",
-   "detail": "runtime 15431 bytes, keccak 0x918bd5726c, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Polygon (PolygonLockReader) at 0x420A...5E93",
-   "status": "PASS",
-   "detail": "runtime 15537 bytes, keccak 0x2477e25b04, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:BNB Smart Chain (BnbSmartChainLockReader) at 0x4e5b...6f0F",
-   "status": "PASS",
-   "detail": "runtime 15448 bytes, keccak 0x2325f00f5e, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Avalanche (AvalancheLockReader) at 0x9887...551a",
-   "status": "PASS",
-   "detail": "runtime 15479 bytes, keccak 0x0a3dbf53e0, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Bitcoin (BitcoinLockReader) at 0x73AC...067F",
-   "status": "PASS",
-   "detail": "runtime 17581 bytes, keccak 0x37a0035519, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Bitcoin Cash (BitcoinCashLockReader) at 0xA436...7211",
-   "status": "PASS",
-   "detail": "runtime 17581 bytes, keccak 0xcea2464112, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Litecoin (LitecoinLockReader) at 0x122a...099d",
-   "status": "PASS",
-   "detail": "runtime 17581 bytes, keccak 0x87cc93cbb0, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Dogecoin (DogecoinLockReader) at 0x4C45...6b0B",
-   "status": "PASS",
-   "detail": "runtime 17581 bytes, keccak 0x8fc059d247, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:DigiByte (DigiByteLockReader) at 0x8d37...35bf",
-   "status": "PASS",
-   "detail": "runtime 17581 bytes, keccak 0xe87d7958f3, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Zcash (ZcashLockReader) at 0xa91A...68EA",
-   "status": "PASS",
-   "detail": "runtime 17581 bytes, keccak 0x8acc3b59fc, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:Stellar (StellarLockReader) at 0x3E21...18E9",
-   "status": "PASS",
-   "detail": "runtime 9366 bytes, keccak 0xe09fd38a44, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "reader:XRP Ledger (XrplLockReader) at 0xBfe7...9Ca3",
-   "status": "PASS",
-   "detail": "runtime 12024 bytes, keccak 0x494a413fce, immutables and constructor args derived"
-  },
-  {
-   "area": "bytecode",
-   "name": "non-Base lock on Ethereum at 0x2A0A...7947",
-   "status": "PASS",
-   "detail": "masked runtime 0x96b653727a, label Ethereum, Dev Fund 0xFD21...3e9a"
-  },
-  {
-   "area": "bytecode",
-   "name": "non-Base lock on Arbitrum at 0x2A0A...7947",
-   "status": "PASS",
-   "detail": "masked runtime 0x96b653727a, label Arbitrum, Dev Fund 0xFD21...3e9a"
-  },
-  {
-   "area": "bytecode",
-   "name": "non-Base lock on Optimism at 0x2A0A...7947",
-   "status": "PASS",
-   "detail": "masked runtime 0x96b653727a, label Optimism, Dev Fund 0xFD21...3e9a"
-  },
-  {
-   "area": "bytecode",
-   "name": "non-Base lock on Polygon at 0x2A0A...7947",
-   "status": "PASS",
-   "detail": "masked runtime 0x96b653727a, label Polygon, Dev Fund 0xFD21...3e9a"
-  },
-  {
-   "area": "bytecode",
-   "name": "non-Base lock on BNB Smart Chain at 0x2A0A...7947",
-   "status": "PASS",
-   "detail": "masked runtime 0x96b653727a, label BNB Smart Chain, Dev Fund 0xFD21...3e9a"
-  },
-  {
-   "area": "bytecode",
-   "name": "non-Base lock on Avalanche at 0x2A0A...7947",
-   "status": "PASS",
-   "detail": "masked runtime 0x96b653727a, label Avalanche, Dev Fund 0xFD21...3e9a"
+   "detail": "27 rows, 26 tokens, 0 aliases, source 487"
   },
   {
    "area": "creation",
@@ -248,174 +140,6 @@
   {
    "area": "creation",
    "name": "reader:Base deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Ethereum creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441919"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Ethereum deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Arbitrum creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441920"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Arbitrum deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Optimism creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441921"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Optimism deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Polygon creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441922"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Polygon deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:BNB Smart Chain creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441923"
-  },
-  {
-   "area": "creation",
-   "name": "reader:BNB Smart Chain deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Avalanche creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441924"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Avalanche deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Bitcoin creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441925"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Bitcoin deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Bitcoin Cash creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441926"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Bitcoin Cash deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Litecoin creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441927"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Litecoin deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Dogecoin creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441928"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Dogecoin deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:DigiByte creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441929"
-  },
-  {
-   "area": "creation",
-   "name": "reader:DigiByte deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Zcash creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441930"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Zcash deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:Stellar creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441931"
-  },
-  {
-   "area": "creation",
-   "name": "reader:Stellar deployed by the operator",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "creation",
-   "name": "reader:XRP Ledger creation input = ceremony.json bytecode + intended constructor args",
-   "status": "PASS",
-   "detail": "tx nonce 3441932"
-  },
-  {
-   "area": "creation",
-   "name": "reader:XRP Ledger deployed by the operator",
    "status": "PASS",
    "detail": ""
   },
@@ -531,7 +255,7 @@
    "area": "references",
    "name": "Verifier.protocolLaunchTimestamp set",
    "status": "PASS",
-   "detail": "launch 2026-10-24T00:45:43.000Z"
+   "detail": "launch 2026-10-24T22:03:52.000Z"
   },
   {
    "area": "references",
@@ -547,91 +271,91 @@
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Ethereum) = Dev Fund",
+   "name": "Verifier.devFundDestinations(Ethereum) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Polygon) = Dev Fund",
+   "name": "Verifier.devFundDestinations(Polygon) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Optimism) = Dev Fund",
+   "name": "Verifier.devFundDestinations(Optimism) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Arbitrum) = Dev Fund",
+   "name": "Verifier.devFundDestinations(Arbitrum) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(BNB Smart Chain) = Dev Fund",
+   "name": "Verifier.devFundDestinations(BNB Smart Chain) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Avalanche) = Dev Fund",
+   "name": "Verifier.devFundDestinations(Avalanche) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Bitcoin) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Bitcoin) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Bitcoin Cash) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Bitcoin Cash) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Litecoin) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Litecoin) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Dogecoin) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Dogecoin) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(DigiByte) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(DigiByte) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Zcash) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Zcash) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Stellar) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Solana) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(XRP Ledger) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(Stellar) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "references",
-   "name": "Verifier.devFundDestinations(Solana) unset (non-EVM Dev Fund lives in its reader)",
+   "name": "Verifier.devFundDestinations(XRP Ledger) unset (Base-only launch)",
    "status": "PASS",
    "detail": ""
   },
@@ -762,254 +486,8 @@
    "detail": ""
   },
   {
-   "area": "references",
-   "name": "Ethereum reader.lock = non-Base lock",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Ethereum reader.chainId = 1",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Ethereum reader.environmentId = Ethereum",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Ethereum reader.environmentWord = real slot 0 of the lock on Ethereum",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Arbitrum reader.lock = non-Base lock",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Arbitrum reader.chainId = 42161",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Arbitrum reader.environmentId = Arbitrum",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Arbitrum reader.environmentWord = real slot 0 of the lock on Arbitrum",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Optimism reader.lock = non-Base lock",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Optimism reader.chainId = 10",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Optimism reader.environmentId = Optimism",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Optimism reader.environmentWord = real slot 0 of the lock on Optimism",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Polygon reader.lock = non-Base lock",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Polygon reader.chainId = 137",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Polygon reader.environmentId = Polygon",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Polygon reader.environmentWord = real slot 0 of the lock on Polygon",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "BNB Smart Chain reader.lock = non-Base lock",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "BNB Smart Chain reader.chainId = 56",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "BNB Smart Chain reader.environmentId = BNB Smart Chain",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "BNB Smart Chain reader.environmentWord = real slot 0 of the lock on BNB Smart Chain",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Avalanche reader.lock = non-Base lock",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Avalanche reader.chainId = 43114",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Avalanche reader.environmentId = Avalanche",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Avalanche reader.environmentWord = real slot 0 of the lock on Avalanche",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Bitcoin reader.devFundScript",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Bitcoin reader.environmentId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Bitcoin Cash reader.devFundScript",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Bitcoin Cash reader.environmentId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Litecoin reader.devFundScript",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Litecoin reader.environmentId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Dogecoin reader.devFundScript",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Dogecoin reader.environmentId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "DigiByte reader.devFundScript",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "DigiByte reader.environmentId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Zcash reader.devFundScript",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Zcash reader.environmentId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Stellar reader.devFundKey",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Stellar reader.networkId",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "Stellar reader.ENVIRONMENT_ID",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "XRPL reader.devFundAccount",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "references",
-   "name": "XRPL reader.ENVIRONMENT_ID",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
    "area": "readers",
-   "name": "ceremony receipts: registration events (15) give exactly the 15 intended readers",
+   "name": "ceremony receipts: registration events (1) give exactly the one intended reader (Base)",
    "status": "PASS",
    "detail": "extra [] missing [] wrong []"
   },
@@ -1017,11 +495,11 @@
    "area": "readers",
    "name": "ceremony receipts: each environment registered exactly once",
    "status": "PASS",
-   "detail": "15 registrations"
+   "detail": "1 registrations"
   },
   {
    "area": "readers",
-   "name": "full log scan to head: registration events (15) give exactly the 15 intended readers",
+   "name": "full log scan to head: registration events (1) give exactly the one intended reader (Base)",
    "status": "PASS",
    "detail": "extra [] missing [] wrong []"
   },
@@ -1029,7 +507,7 @@
    "area": "readers",
    "name": "full log scan to head: each environment registered exactly once",
    "status": "PASS",
-   "detail": "15 registrations"
+   "detail": "1 registrations"
   },
   {
    "area": "readers",
@@ -1039,91 +517,91 @@
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Ethereum) = intended SimpleEthereumLockReader",
+   "name": "chainVerifiers(Ethereum) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Arbitrum) = intended ArbitrumLockReader",
+   "name": "chainVerifiers(Polygon) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Optimism) = intended OptimismLockReader",
+   "name": "chainVerifiers(Optimism) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Polygon) = intended PolygonLockReader",
+   "name": "chainVerifiers(Arbitrum) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(BNB Smart Chain) = intended BnbSmartChainLockReader",
+   "name": "chainVerifiers(BNB Smart Chain) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Avalanche) = intended AvalancheLockReader",
+   "name": "chainVerifiers(Avalanche) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Bitcoin) = intended BitcoinLockReader",
+   "name": "chainVerifiers(Bitcoin) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Bitcoin Cash) = intended BitcoinCashLockReader",
+   "name": "chainVerifiers(Bitcoin Cash) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Litecoin) = intended LitecoinLockReader",
+   "name": "chainVerifiers(Litecoin) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Dogecoin) = intended DogecoinLockReader",
+   "name": "chainVerifiers(Dogecoin) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(DigiByte) = intended DigiByteLockReader",
+   "name": "chainVerifiers(DigiByte) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
-   "name": "chainVerifiers(Zcash) = intended ZcashLockReader",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "readers",
-   "name": "chainVerifiers(Stellar) = intended StellarLockReader",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "readers",
-   "name": "chainVerifiers(XRP Ledger) = intended XrplLockReader",
+   "name": "chainVerifiers(Zcash) unset",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "readers",
    "name": "chainVerifiers(Solana) unset",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "area": "readers",
+   "name": "chainVerifiers(Stellar) unset",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "area": "readers",
+   "name": "chainVerifiers(XRP Ledger) unset",
    "status": "PASS",
    "detail": ""
   },
@@ -1465,67 +943,19 @@
   },
   {
    "area": "registry",
-   "name": "487 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
+   "name": "27 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "registry",
-   "name": "475 token addresses index to their intended row",
+   "name": "26 token addresses index to their intended row",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "registry",
-   "name": "3 row aliases point to the intended row",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "265 Ethereum rows resolve to the SimpleEthereumLockReader at 0x88B7...31BB",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 Bitcoin rows resolve to the BitcoinLockReader at 0x73AC...067F",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 Dogecoin rows resolve to the DogecoinLockReader at 0x4C45...6b0B",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "22 Arbitrum rows resolve to the ArbitrumLockReader at 0xCDfE...56C9",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 XRP Ledger rows resolve to the XrplLockReader at 0xBfe7...9Ca3",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "96 BNB Smart Chain rows resolve to the BnbSmartChainLockReader at 0x4e5b...6f0F",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 Litecoin rows resolve to the LitecoinLockReader at 0x122a...099d",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "29 Avalanche rows resolve to the AvalancheLockReader at 0x9887...551a",
+   "name": "0 row aliases point to the intended row",
    "status": "PASS",
    "detail": ""
   },
@@ -1537,49 +967,7 @@
   },
   {
    "area": "registry",
-   "name": "12 Optimism rows resolve to the OptimismLockReader at 0xf92B...c9D1",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "28 Polygon rows resolve to the PolygonLockReader at 0x420A...5E93",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 Bitcoin Cash rows resolve to the BitcoinCashLockReader at 0xA436...7211",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 DigiByte rows resolve to the DigiByteLockReader at 0x8d37...35bf",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 Zcash rows resolve to the ZcashLockReader at 0xa91A...68EA",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "1 Stellar rows resolve to the StellarLockReader at 0x3E21...18E9",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "264 Ethereum token addresses have contract code on Ethereum",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "22 Arbitrum token addresses have contract code on Arbitrum",
+   "name": "460 non-Base Revision B rows are not registered",
    "status": "PASS",
    "detail": ""
   },
@@ -1590,58 +978,34 @@
    "detail": ""
   },
   {
-   "area": "registry",
-   "name": "12 Optimism token addresses have contract code on Optimism",
+   "area": "ceremony txs",
+   "name": "registry rows written = the 27 ceremony-data rows, no extras",
    "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "28 Polygon token addresses have contract code on Polygon",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "95 BNB Smart Chain token addresses have contract code on BNB Smart Chain",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "registry",
-   "name": "28 Avalanche token addresses have contract code on Avalanche",
-   "status": "PASS",
-   "detail": ""
+   "detail": "27 written, 0 single writes"
   },
   {
    "area": "ceremony txs",
-   "name": "registry rows written = the 487 ceremony-data rows, no extras",
+   "name": "token index writes = the 26 ceremony-data rows",
    "status": "PASS",
-   "detail": "487 written, 0 single writes"
-  },
-  {
-   "area": "ceremony txs",
-   "name": "token index writes = the 475 ceremony-data rows",
-   "status": "PASS",
-   "detail": "475 written"
+   "detail": "26 written"
   },
   {
    "area": "ceremony txs",
    "name": "alias writes = ceremony-data aliases",
    "status": "PASS",
-   "detail": "3 written"
+   "detail": "0 written"
   },
   {
    "area": "ceremony txs",
    "name": "Dev Fund writes = ceremony-data evmDevFunds",
    "status": "PASS",
-   "detail": "7 written"
+   "detail": "1 written"
   },
   {
    "area": "ceremony txs",
-   "name": "reader registrations = the 15 intended readers",
+   "name": "reader registrations = the one intended reader (Base)",
    "status": "PASS",
-   "detail": "15 registrations"
+   "detail": "1 registrations"
   },
   {
    "area": "ceremony txs",
@@ -1653,7 +1017,7 @@
    "area": "ceremony txs",
    "name": "one pre-finalize price run 1: Base ETH at ceremony-data priceUsd18",
    "status": "PASS",
-   "detail": "run 1: Base 2371.14 USD"
+   "detail": "run 1: Base 2338.62 USD"
   },
   {
    "area": "ceremony txs",
@@ -1677,7 +1041,7 @@
    "area": "ceremony txs",
    "name": "operator transaction list is complete (contiguous nonces from first create to finalize)",
    "status": "PASS",
-   "detail": "72 txs, local fork blocks 53006577..53006651"
+   "detail": "17 txs, local fork blocks 53045032..53045051"
   },
   {
    "area": "closed",
@@ -2018,90 +1382,6 @@
   {
    "area": "closed",
    "name": "BaseLockRecordVerifier: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "SimpleEthereumLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "ArbitrumLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "OptimismLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "PolygonLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "BnbSmartChainLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "AvalancheLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "BitcoinLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "BitcoinCashLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "LitecoinLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "DogecoinLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "DigiByteLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "ZcashLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "StellarLockReader: no non-view functions",
-   "status": "PASS",
-   "detail": ""
-  },
-  {
-   "area": "closed",
-   "name": "XrplLockReader: no non-view functions",
    "status": "PASS",
    "detail": ""
   }
