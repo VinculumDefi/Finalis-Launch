@@ -14,6 +14,11 @@
 // Hardhat network (hre), so immutables and constructor args are part of the
 // byte-for-byte comparison.
 //
+// Base-only launch (founder directive t357u): the intended set is the Base
+// contracts and exactly one reader (Base). Every other environment must have
+// no reader and no Dev Fund destination, and no non-Base Revision B row may
+// be registered.
+//
 // Every check ends PASS, MISMATCH or INCOMPLETE. INCOMPLETE (an RPC that could
 // not be read, a path the rig cannot evaluate) is never counted as a pass.
 const path = require("path");
@@ -23,6 +28,9 @@ const short = (a) => (typeof a === "string" && /^0x[0-9a-fA-F]{40}$/.test(a) ? a
 const scrub = (s) => String(s).replace(/0x[0-9a-fA-F]{40}/g, (a) => short(a));
 const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// The fifteen environments other than Base in the sixteen-environment base.
+const NON_BASE_ENVS = require(path.join(BC, "deployment/representativeBase.cjs")).rows.map((r) => r.environment).filter((e) => e !== "Base");
+const EXPECTED_BASE = { rows: 27, tokenAddresses: 26, aliases: 0 };
 
 // Every non-view function of every contract in the set, by contract.
 //   config: must revert for the operator (deployer) and for a stranger.
@@ -103,20 +111,13 @@ function dummy(ethers, input, stranger) {
 }
 
 async function reconcile(o) {
-  const { hre, P, set, DATA, art, FLOW, mode, nonBaseProviders, operator, txs, log = () => {} } = o;
+  const { hre, P, set, DATA, art, mode, operator, txs, log = () => {} } = o;
   const { ethers } = hre;
   const R = makeReporter(log);
   const coder = ethers.AbiCoder.defaultAbiCoder();
   const A = (x) => ethers.getAddress(x);
   const at = (name, addr) => new ethers.Contract(addr, art[name].abi, P);
-  const NB = A(o.nonBaseLock);
-  const readersCfg = [
-    { env: "Base", contract: "BaseLockRecordVerifier", args: [set.lock] },
-    ...DATA.readers.evm.map((r) => ({ env: r.env, contract: r.contract, args: [NB] })),
-    ...DATA.readers.utxo.map((r) => ({ env: r.env, contract: r.contract, args: [r.devFundScript] })),
-    { env: DATA.readers.stellar.env, contract: DATA.readers.stellar.contract, args: [DATA.readers.stellar.networkId, DATA.readers.stellar.devFundKey] },
-    { env: DATA.readers.xrpl.env, contract: DATA.readers.xrpl.contract, args: [DATA.readers.xrpl.devFundAccount] },
-  ];
+  const readersCfg = [{ env: "Base", contract: "BaseLockRecordVerifier", args: [set.lock] }];
   // Intended constructor arguments, exactly as baseCeremonyFlow.runBaseCeremony passes them.
   const intended = [
     { key: "vclm", name: "TokenVCLM", args: ["Vinculum Finalis VCLM", "VCLM", 10000000000n * 10n ** 18n] },
@@ -145,11 +146,14 @@ async function reconcile(o) {
         got.toLowerCase() === want.toLowerCase() ? `runtime ${(got.length - 2) / 2} bytes, keccak ${ethers.keccak256(got).slice(0, 12)}, immutables and constructor args derived` : `runtime differs (${(got.length - 2) / 2} vs ${(want.length - 2) / 2} bytes)`);
     } catch (e) { R.add(area, `${c.key} (${c.name})`, "INCOMPLETE", e.shortMessage || e.message); }
   }
-  // Non-Base lock on the six chains: masked runtime hash the ceremony pins, plus label, Dev Fund and fee (the flow's own check).
-  try {
-    const res = await FLOW.verifyAllNonBaseLocks(ethers, nonBaseProviders, Object.fromEntries(FLOW.EVM_ENVS.map((e) => [e, NB])), DATA);
-    for (const x of res) R.add("bytecode", `non-Base lock on ${x.env} at ${short(NB)}`, "PASS", `masked runtime ${String(x.runtimeHash).slice(0, 12)}, label ${x.environmentId}, Dev Fund ${short(x.devFund)}`);
-  } catch (e) { R.add("bytecode", "non-Base lock on 6 chains", /refus|mismatch|wrong|differ|not/i.test(e.message) ? "MISMATCH" : "INCOMPLETE", e.message); }
+  // Base-only: the deployed set has exactly one reader.
+  R.add("bytecode", "the set has exactly one reader (Base)", JSON.stringify(Object.keys(set.readers)) === JSON.stringify(["Base"]) ? "PASS" : "MISMATCH", Object.keys(set.readers).join(","));
+  // ceremony-data is the Base subset of Revision B.
+  R.add("bytecode", "ceremony-data is Base-only: 27 rows, 26 token addresses, 0 aliases, one reader, one Dev Fund",
+    DATA.baseOnly === true && DATA.entries.length === EXPECTED_BASE.rows && DATA.tokenAddresses.length === EXPECTED_BASE.tokenAddresses && DATA.assetRowAliases.length === EXPECTED_BASE.aliases
+      && DATA.entries.every((e) => e.environmentId === "Base") && DATA.tokenAddresses.every((t) => t.environmentId === "Base")
+      && JSON.stringify(Object.keys(DATA.readers)) === JSON.stringify(["base"]) && JSON.stringify(Object.keys(DATA.evmDevFunds)) === JSON.stringify(["Base"]) && DATA.registryRows === 487 ? "PASS" : "MISMATCH",
+    `${DATA.entries.length} rows, ${DATA.tokenAddresses.length} tokens, ${DATA.assetRowAliases.length} aliases, source ${DATA.registryRows}`);
 
   log(`  section 1b. ...`);
   // ---- 1b. creation transactions (live: the operator's real txs; dryrun: the rehearsal's txs)
@@ -199,8 +203,8 @@ async function reconcile(o) {
     R.eq("references", "Stake.launchTimestamp = Verifier launch", await g(stake, "launchTimestamp"), launch);
   } catch (e) { R.add("references", "launch", "INCOMPLETE", e.message); }
   for (const [env, a] of Object.entries(DATA.evmDevFunds)) await ref(`Verifier.devFundDestinations(${env}) = Dev Fund`, V, "devFundDestinations", A(a), env);
-  for (const env of [...DATA.readers.utxo.map((u) => u.env), DATA.readers.stellar.env, DATA.readers.xrpl.env, "Solana"])
-    await ref(`Verifier.devFundDestinations(${env}) unset (non-EVM Dev Fund lives in its reader)`, V, "devFundDestinations", ethers.ZeroAddress, env);
+  for (const env of NON_BASE_ENVS)
+    await ref(`Verifier.devFundDestinations(${env}) unset (Base-only launch)`, V, "devFundDestinations", ethers.ZeroAddress, env);
   await ref("Forge.verifier = Verifier", forge, "verifier", A(set.verifier));
   await ref("Forge.vclmToken = VCLM", forge, "vclmToken", A(set.vclm));
   await ref("Forge.chonxToken = CHONX", forge, "chonxToken", A(set.chonx));
@@ -222,25 +226,6 @@ async function reconcile(o) {
   const rd = (env) => at(readersCfg.find((r) => r.env === env).contract, set.readers[env]);
   await ref("Base reader.vault = Base lock", rd("Base"), "vault", A(set.lock));
   await ref("Base reader.ENVIRONMENT_ID = Base", rd("Base"), "ENVIRONMENT_ID", "Base");
-  for (const r of DATA.readers.evm) {
-    const c = rd(r.env);
-    await ref(`${r.env} reader.lock = non-Base lock`, c, "lock", NB);
-    await ref(`${r.env} reader.chainId = ${FLOW.EVM_RPC[r.env].chainId}`, c, "chainId", BigInt(FLOW.EVM_RPC[r.env].chainId));
-    await ref(`${r.env} reader.environmentId = ${r.env}`, c, "environmentId", r.env);
-    try {
-      const word = await retry(() => nonBaseProviders[r.env].getStorage(NB, 0));
-      R.eq("references", `${r.env} reader.environmentWord = real slot 0 of the lock on ${r.env}`, await g(c, "environmentWord"), word);
-    } catch (e) { R.add("references", `${r.env} reader.environmentWord`, "INCOMPLETE", e.shortMessage || e.message); }
-  }
-  for (const u of DATA.readers.utxo) {
-    await ref(`${u.env} reader.devFundScript`, rd(u.env), "devFundScript", u.devFundScript);
-    await ref(`${u.env} reader.environmentId`, rd(u.env), "environmentId", u.env);
-  }
-  await ref("Stellar reader.devFundKey", rd(DATA.readers.stellar.env), "devFundKey", DATA.readers.stellar.devFundKey);
-  await ref("Stellar reader.networkId", rd(DATA.readers.stellar.env), "networkId", DATA.readers.stellar.networkId);
-  await ref("Stellar reader.ENVIRONMENT_ID", rd(DATA.readers.stellar.env), "ENVIRONMENT_ID", DATA.readers.stellar.env);
-  await ref("XRPL reader.devFundAccount", rd(DATA.readers.xrpl.env), "devFundAccount", DATA.readers.xrpl.devFundAccount);
-  await ref("XRPL reader.ENVIRONMENT_ID", rd(DATA.readers.xrpl.env), "ENVIRONMENT_ID", DATA.readers.xrpl.env);
 
   log(`  section 3. ...`);
   // ---- 3. authorized readers and minters: exact sets, from events and state
@@ -253,8 +238,8 @@ async function reconcile(o) {
       for (const l of logs) { const d = iface.parseLog(l); final[d.args[0]] = A(d.args[1]); }
       const extra = Object.keys(final).filter((e) => !(e in want)), missing = Object.keys(want).filter((e) => !(e in final));
       const wrong = Object.keys(want).filter((e) => e in final && final[e] !== want[e]);
-      R.add("readers", `${src}: registration events (${logs.length}) give exactly the 15 intended readers`, extra.length || missing.length || wrong.length ? "MISMATCH" : "PASS", `extra [${extra}] missing [${missing}] wrong [${wrong}]`);
-      R.add("readers", `${src}: each environment registered exactly once`, logs.length === 15 ? "PASS" : "MISMATCH", `${logs.length} registrations`);
+      R.add("readers", `${src}: registration events (${logs.length}) give exactly the one intended reader (Base)`, extra.length || missing.length || wrong.length ? "MISMATCH" : "PASS", `extra [${extra}] missing [${missing}] wrong [${wrong}]`);
+      R.add("readers", `${src}: each environment registered exactly once`, logs.length === readersCfg.length ? "PASS" : "MISMATCH", `${logs.length} registrations`);
     };
     // Paced chunked scan of the whole range from the first ceremony block to head.
     const scan = async (address, topics) => {
@@ -276,7 +261,7 @@ async function reconcile(o) {
     try { judge(await scan(set.verifier, [topic]), "full log scan to head"); }
     catch (e) { R.add("readers", "full log scan to head (registrations)", "INCOMPLETE", e.shortMessage || e.message); }
     for (const r of readersCfg) R.eq("readers", `chainVerifiers(${r.env}) = intended ${r.contract}`, A(await g(V, "chainVerifiers", r.env)), A(set.readers[r.env]));
-    for (const env of ["Solana", "Tron", "Cardano", "Cosmos Hub", "Ethereum Classic", "base", "ethereum"])
+    for (const env of [...NON_BASE_ENVS, "Tron", "Cardano", "Cosmos Hub", "Ethereum Classic", "base", "ethereum"])
       R.eq("readers", `chainVerifiers(${env}) unset`, await g(V, "chainVerifiers", env), ethers.ZeroAddress);
     for (const [tk, name] of [[vclm, "VCLM"], [chonx, "CHONX"]]) {
       const it = tk.interface.getEvent("Initialized").topicHash;
@@ -343,7 +328,7 @@ async function reconcile(o) {
   }
 
   log(`  section 5. ...`);
-  // ---- 5. registry: 487 rows, 475 token addresses, 3 aliases; readers by chain name
+  // ---- 5. registry: the Base subset of Revision B (27 rows, 26 token addresses, 0 aliases); no non-Base row; readers by chain name
   {
     const mc = new ethers.Contract(MULTICALL3, ["function aggregate3((address target,bool allowFailure,bytes callData)[] calls) view returns ((bool success,bytes returnData)[])"], P);
     const many = async (calls) => {
@@ -386,6 +371,12 @@ async function reconcile(o) {
         const n = DATA.entries.filter((e) => e.environmentId === env).length;
         R.add("registry", `${n} ${env} rows resolve to the ${cfg.contract} at ${short(set.readers[env])}`, a === A(set.readers[env]) ? "PASS" : "MISMATCH", a === A(set.readers[env]) ? "" : `chainVerifiers -> ${short(a)}`);
       }
+      // Base-only: no non-Base row of Revision B is registered.
+      const { resolveCeremonyRegistry } = require(path.join(BC, "scripts/deploy-pages/resolveAssetRegistry.cjs"));
+      const nonBase = resolveCeremonyRegistry().entries.filter((e) => e.environmentId !== "Base");
+      const nb = await many(nonBase.map((e) => vi.encodeFunctionData("assetPrecisionTable", [key(e.environmentId, e.canonicalAssetId)])));
+      const set2 = nonBase.filter((e, i) => !nb[i].success || vi.decodeFunctionResult("assetPrecisionTable", nb[i].returnData).canonicalAssetId !== ethers.ZeroHash);
+      R.add("registry", `${nonBase.length} non-Base Revision B rows are not registered`, set2.length ? "MISMATCH" : "PASS", set2.slice(0, 5).map((e) => `${e.environmentId}/${e.symbol}`).join("; "));
     } catch (e) { R.add("registry", "registry reads", "INCOMPLETE", e.shortMessage || e.message); }
     // Every indexed token address has contract code on its intended network.
     if (o.tokenProviders) {
@@ -422,7 +413,7 @@ async function reconcile(o) {
     const dfs = by("configureDevFund").map((c) => c.d.args[0] + "|" + c.d.args[1].toLowerCase());
     R.add("ceremony txs", "Dev Fund writes = ceremony-data evmDevFunds", ms(dfs, Object.entries(DATA.evmDevFunds).map(([e, a]) => e + "|" + a.toLowerCase())) ? "PASS" : "MISMATCH", `${dfs.length} written`);
     const regs = by("registerChainVerifier").map((c) => c.d.args[0] + "|" + c.d.args[1].toLowerCase());
-    R.add("ceremony txs", "reader registrations = the 15 intended readers", ms(regs, readersCfg.map((r) => r.env + "|" + set.readers[r.env].toLowerCase())) ? "PASS" : "MISMATCH", `${regs.length} registrations`);
+    R.add("ceremony txs", "reader registrations = the one intended reader (Base)", ms(regs, readersCfg.map((r) => r.env + "|" + set.readers[r.env].toLowerCase())) ? "PASS" : "MISMATCH", `${regs.length} registrations`);
     const posters = by("setScheduledPricePoster").map((c) => A(c.d.args[0]));
     R.add("ceremony txs", "poster: operator first (price run 1), then the live poster", posters.length === 2 && operator && posters[0] === A(operator) && posters[1] === A(DATA.scheduledPricePoster) ? "PASS" : "MISMATCH", posters.map(short).join(" then "));
     const runs = by("applyScheduledPriceRun");
@@ -486,4 +477,4 @@ async function reconcile(o) {
   return { mode, verdict: scrub(verdict), counts, checks: R.checks };
 }
 
-module.exports = { reconcile, short, scrub, WRITE_CLASS };
+module.exports = { reconcile, short, scrub, WRITE_CLASS, NON_BASE_ENVS, EXPECTED_BASE };
