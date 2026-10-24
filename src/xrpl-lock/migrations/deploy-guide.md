@@ -37,7 +37,7 @@ npm test
 Tests validate:
 - Fee calculation (VF-COM-011/012/013)
 - Duration validation (VF-COM-001/002)
-- Handshake 1-use allowance (VF-COM-006/007)
+- Handshake (Revision 12): any number of Handshakes from one account are accepted; no allowance limit
 - LLS expiry (VF-COM-007/008)
 - EscrowCreate construction (VF-COM-016, VF-PRI-001)
 - EscrowFinish construction (VF-PRI-002..006, VF-SEC-006)
