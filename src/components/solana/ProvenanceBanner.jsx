@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
-import { AUTHORITY } from '@/lib/vfRevision6Authority';
+import { AUTHORITY } from '@/lib/vfSpecAuthority';
 import { SOLANA_REGISTRY_COUNT } from '@/lib/vfSolanaRegistry';
 
 export default function ProvenanceBanner() {
