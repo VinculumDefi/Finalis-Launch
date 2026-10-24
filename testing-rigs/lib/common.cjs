@@ -19,36 +19,52 @@ const ETH_PRICE = BigInt(DATA.priceUsd18);
 const short = (a) => (a ? String(a).slice(0, 6) + "..." + String(a).slice(-4) : String(a));
 const fmt = (x, d = 18) => ethers.formatUnits(x, d);
 
+// Base-only launch: ceremony-data holds only the 27 Base rows. Rigs that
+// probe non-Base rows (to show they are refused) look them up in the full
+// Revision B source.
+let FULL_REVB = null;
 const entry = (env, sym) => {
-  const e = DATA.entries.find((x) => x.environmentId === env && x.symbol === sym);
+  let e = DATA.entries.find((x) => x.environmentId === env && x.symbol === sym);
+  if (!e && env !== "Base") {
+    if (!FULL_REVB) FULL_REVB = require(path.join(BC, "scripts/deploy-pages/resolveAssetRegistry.cjs")).resolveCeremonyRegistry().entries;
+    e = FULL_REVB.find((x) => x.environmentId === env && x.symbol === sym);
+  }
   if (!e) throw new Error("no registry row " + env + " " + sym);
   return e;
 };
 
-// Full stack the way the ceremony page does it: runBaseCeremony with the
-// built ceremony.json artifacts and the 487-row ceremony-data.json. Non-Base
-// locks are local stand-ins deployed from the same CommitmentVaultLock
-// artifact (the page passes the six live addresses; here they must exist on
-// this chain for the code-hash check). The poster is impersonated after the
-// hand-over so tests can post price runs >= 2.
-async function deployStack({ newLocks, providersByEnv, log } = {}) {
+const EVM_ENVS = ["Ethereum", "Arbitrum", "Optimism", "Polygon", "BNB Smart Chain", "Avalanche"];
+const CVL_ARTIFACT = path.join(BC, "artifacts/contracts/CommitmentVaultLock.sol/CommitmentVaultLock.json");
+
+// Full stack the way the Base-only ceremony page does it: runBaseCeremony
+// with the built ceremony.json artifacts and the Base subset in
+// ceremony-data.json (one reader, Base). The poster is impersonated after
+// the hand-over so tests can post price runs >= 2.
+// nonBase: unregistered local stand-in CommitmentVaultLocks (compiled
+// artifact) for the six EVM chains, so rigs can show that a lock on a
+// non-Base chain is refused by the Verifier (no reader is registered).
+async function deployStack({ log, withNonBaseStandIns = true } = {}) {
   const signers = await ethers.getSigners();
   const signer = signers[0];
   const logs = [];
-  if (!newLocks) {
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, signer);
-    newLocks = {};
-    for (const env of FLOW.EVM_ENVS) newLocks[env] = await (await L.deploy(env, DATA.evmDevFunds[env])).getAddress();
-  }
   const r = await FLOW.runBaseCeremony({
-    ethers, signer, art, data: DATA, newLocks, providersByEnv,
+    ethers, signer, art, data: DATA,
     log: (s) => { logs.push(...String(s).split("\n")); if (log) log(s); },
   });
   await network.provider.send("hardhat_impersonateAccount", [DATA.scheduledPricePoster]);
   await network.provider.send("hardhat_setBalance", [DATA.scheduledPricePoster, "0x56BC75E2D63100000"]);
   const poster = await ethers.getSigner(DATA.scheduledPricePoster);
   const nonBase = {};
-  for (const env of FLOW.EVM_ENVS) nonBase[env] = new ethers.Contract(newLocks[env], art.CommitmentVaultLock.abi, signer);
+  const newLocks = {};
+  if (withNonBaseStandIns) {
+    const cvl = require(CVL_ARTIFACT);
+    const L = new ethers.ContractFactory(cvl.abi, cvl.bytecode, signer);
+    for (const env of EVM_ENVS) {
+      nonBase[env] = await L.deploy(env, DATA.devFund);
+      await nonBase[env].waitForDeployment();
+      newLocks[env] = await nonBase[env].getAddress();
+    }
+  }
   let run = 1n;
   const postPrices = async (rows) => {
     run += 1n;
@@ -102,5 +118,5 @@ function reason(e) {
 const now = async () => BigInt((await ethers.provider.getBlock("latest")).timestamp);
 const advance = async (secs) => { await network.provider.send("evm_increaseTime", [Number(secs)]); await network.provider.send("evm_mine"); };
 
-module.exports = { BC, ethers, network, art, DATA, FLOW, PROOF, SCALE, DAY7, YEAR10, coder, ETH_ID, ETH_PRICE,
+module.exports = { BC, ethers, network, art, DATA, FLOW, PROOF, EVM_ENVS, SCALE, DAY7, YEAR10, coder, ETH_ID, ETH_PRICE,
   short, fmt, entry, deployStack, basePkg, evmPkg, reason, now, advance };
