@@ -6,8 +6,6 @@ import { ENVIRONMENTS, ENVIRONMENT_COUNT } from '@/lib/vfBaseRegistry';
 export default function VerifierArchitecture() {
   const evmCount = ENVIRONMENTS.filter((e) => e.family === 'EVM').length;
   const utxoCount = ENVIRONMENTS.filter((e) => e.family === 'UTXO').length;
-  const threeUse = ENVIRONMENTS.filter((e) => e.handshakeAllowance === 3).length;
-  const oneUse = ENVIRONMENTS.filter((e) => e.handshakeAllowance === 1).length;
 
   return (
     <div className="rounded-lg border border-[#18324b]/20 bg-white p-4 space-y-3">
@@ -38,7 +36,7 @@ export default function VerifierArchitecture() {
             <div>5. Duration (VF-COM-001)</div>
             <div>6. USD bounds (VF-COM-003/009)</div>
             <div>7. Output (VF-COM-020/025)</div>
-            <div>8. Handshake (VF-COM-006)</div>
+            <div>8. Handshake (Revision 12, no allowance limit)</div>
             <div>9. Recipient (VF-ARC-006)</div>
             <div>10. Dev Fund (VF-FEE-009)</div>
             <div>11. Finality (VF-XCH-006)</div>
@@ -52,8 +50,7 @@ export default function VerifierArchitecture() {
         <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{ENVIRONMENT_COUNT} environments</span>
         <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{evmCount} EVM</span>
         <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{utxoCount} UTXO</span>
-        <span className="px-2 py-0.5 bg-emerald-50 rounded text-emerald-700">{threeUse} three-use (source-enforced)</span>
-        <span className="px-2 py-0.5 bg-amber-50 rounded text-amber-700">{oneUse} one-use (Base-enforced)</span>
+        <span className="px-2 py-0.5 bg-emerald-50 rounded text-emerald-700">Handshake: no allowance limit (Revision 12)</span>
       </div>
       <div className="text-[10px] text-[#6b6b65] font-mono">
         Authority: {AUTHORITY.revision} ({AUTHORITY.revision_date}) · SHA-256: {AUTHORITY.governing_source_sha256.slice(0, 16)}…
