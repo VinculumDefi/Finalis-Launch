@@ -12,7 +12,7 @@ https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
 Revision 18 of the Master Specification was added to main at e96d102.
 Registry Revision C was added to main at 90ac322. This session start
-(Revision 6) was added to main at (recorded in the next commit). Check
+(Revision 6) was added to main at c79fc74. Check
 `git log -1 origin/main` for the newest commit.
 
 Start with these files:
