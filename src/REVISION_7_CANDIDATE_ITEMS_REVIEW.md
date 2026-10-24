@@ -1,5 +1,7 @@
 # Revision 7 Candidate Items — Review Against Revision 6
 
+> **Historical document (Revision 6 review).** Its Handshake allowance, Handshake fee and Handshake band discussion is superseded by Revision 12 (`docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`): 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit, and no handshakeIdentity or allowance counter in the lock contract. Kept for the record only.
+
 **Purpose:** Re-examine each original candidate (VF-R7-001 … VF-R7-016) against the Revision 6 Master Specification to determine whether it is a genuine specification defect, already addressed, an implementation misunderstanding, or a design proposal.
 
 **Method:** A candidate survives only if Revision 6 is genuinely silent or ambiguous on a point required for deterministic implementation. A candidate is dismissed when Revision 6 either states the rule, delegates the input to the deployment package, or when the observation concerns how the implementer organized code rather than what the specification requires.
