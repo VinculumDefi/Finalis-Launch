@@ -219,12 +219,18 @@ async function main() {
 }
 
 // ---------------------------------------------------------------------------
-// Ceremony registry resolver (Revision B). The live ceremony, deploy pages,
-// and build_ceremony_artifacts.cjs call this. Never a folder glob.
+// Ceremony registry resolver (Revision C, operator decision t367u). The
+// Base-only ceremony, the deploy page and build_ceremony_artifacts.cjs call
+// this. Never a folder glob. Revision C is a full copy of Revision B (still
+// pinned and unchanged) with row 454 USDC_BASE as S1.
 // deployment/assetRegistry.resolved.json remains the prior revision written
 // by main() above; it is not the ceremony source.
 // ---------------------------------------------------------------------------
-const { REGISTRY_FILE, REGISTRY_NAME, loadRegistry } = require("../registryFile.cjs");
+const { CEREMONY_REGISTRY_FILE, CEREMONY_REGISTRY_NAME, loadRegistry } = require("../registryFile.cjs");
+// The ceremony registry. Exported as REGISTRY_FILE / REGISTRY_NAME for the
+// ceremony callers.
+const REGISTRY_FILE = CEREMONY_REGISTRY_FILE;
+const REGISTRY_NAME = CEREMONY_REGISTRY_NAME;
 
 const EXPECTED_CEREMONY_ROWS = 487;
 
