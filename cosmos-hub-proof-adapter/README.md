@@ -1,5 +1,7 @@
 # cosmos-hub-proof-adapter — RED-TEAM / NON-PRODUCTION
 
+> **Historical, Revision 6 Handshake rules.** Cosmos Hub is dropped from this deployment (see `src/tests/cosmos-removed.test.js`). The Handshake allowance, per-identity counter, 2.50% Handshake fee and $0.95 to $1.05 Handshake band in this Cosmos code and its reports are Revision 6 rules, superseded by Revision 12 (`docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`): 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit, and no handshakeIdentity or allowance counter in the lock contract. Kept for the record only.
+
 > **RED-TEAM / NON-PRODUCTION.** Off-chain Base-side CometBFT/ICS-23 proof normalizer and verifier
 > for the Vinculum Finalis Cosmos Hub Commitment Vault. Plain JavaScript (Node), no dependencies.
 
