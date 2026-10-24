@@ -26,12 +26,9 @@ pub enum ErrorCode {
     #[msg("VF-COM-013: Rounding produced zero fee or zero principal")]
     ZeroFeeOrPrincipal,
 
-    // VF-COM-006/007: Revision 6 allowance. Rev 12 removed the limit, so this
-    // code is no longer returned; kept so the error numbers do not shift.
-    #[msg("VF-COM-007: Identity has used all qualifying Handshake allowance")]
-    HandshakeAllowanceExhausted,
-
-    // VF-COM-008: Revision 6 only, superseded by Revision 12 (no allowance to consume)
+    // Revision 12: there is no Handshake allowance, so there is no
+    // allowance error. (The Revision 6 VF-COM-006/007/008 allowance rules are
+    // superseded by Revision 12.)
 
     // VF-COM-020: Invalid output token
     #[msg("VF-COM-020: Output token must be VCLM or activated CHONX")]
