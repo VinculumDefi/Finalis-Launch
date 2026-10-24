@@ -38,7 +38,7 @@ Tests validate:
 - Fee calculation (VF-COM-011/012/013)
 - Duration validation (VF-COM-001/002)
 - Handshake (Revision 12): any number of Handshakes from one account are accepted; no allowance limit
-- LLS expiry (VF-COM-007/008)
+- LLS expiry (VF-COM-007/008, pending-attempt disposition only; the Revision 6 Handshake allowance part is superseded by Revision 12)
 - EscrowCreate construction (VF-COM-016, VF-PRI-001)
 - EscrowFinish construction (VF-PRI-002..006, VF-SEC-006)
 - Atomic batch linked Sequence + shared LLS (VF-COM-004)
