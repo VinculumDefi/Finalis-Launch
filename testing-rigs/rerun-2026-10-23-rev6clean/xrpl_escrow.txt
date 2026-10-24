@@ -1,0 +1,21 @@
+
+=== XRPL Commitment Vault Lock — Integration Tests ===
+
+  ✓ T-01: XRPL address format validation
+  ✓ T-02: Standard lock fee calculation (VF-COM-009/011/012)
+  ✓ T-03: Handshake fee calculation (VF-COM-003/004)
+  ✓ T-04: Zero gross amount rejected (VF-COM-010)
+  ✓ T-05: Invalid duration rejected (VF-COM-002)
+  ✓ T-06: Source account label construction (VF-COM-005)
+  ✓ T-07: Full preflight validation (VF-ARC-004)
+  ✓ T-08: EscrowCreate transaction construction (VF-COM-016, VF-PRI-001)
+  ✓ T-09: Fee Payment transaction construction (VF-FEE-001..006)
+  ✓ T-10: EscrowFinish transaction construction (VF-PRI-002..006, VF-SEC-006)
+  ✓ T-11: Atomic batch — linked Sequence + shared LLS (VF-COM-004)
+  ✓ T-12: Mock adapter accepts any number of Handshakes from one account (Revision 12)
+  ✓ T-13: LLS expiry — NOT_RECOGNIZED, next Handshake accepted (VF-COM-007/008, Revision 12)
+  ✓ T-14: FinishAfter = XRPL epoch + duration (VF-PRI-001)
+
+=== Results: 14 passed, 0 failed ===
+
+XRPL_ESC_EXIT=0
