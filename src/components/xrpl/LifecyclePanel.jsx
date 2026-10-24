@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Lock, Unlock, ArrowRight } from 'lucide-react';
-import { LOCK_STATES, ATTEMPT_STATES, XRPL_HANDSHAKE_ALLOWANCE } from '@/lib/vfXrplAuthority';
+import { LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfXrplAuthority';
 import { XRPL_DROPS_PER_XRP } from '@/lib/vfXrplAuthority';
 
 function StatusBadge({ state, active }) {
@@ -14,7 +14,7 @@ function fmtDrops(drops) {
 }
 
 export default function LifecyclePanel({
-  lockState, attemptState, output, identity, handshakeUsed,
+  lockState, attemptState, output, identity,
   onSubmit, onDisposition, onIssue, onMature, onRelease,
 }) {
   const canSubmit = lockState === LOCK_STATES.PREFLIGHT_PASSED;
@@ -36,17 +36,12 @@ export default function LifecyclePanel({
         </div>
       </div>
 
-      {/* Handshake usage */}
+      {/* Source account */}
       {identity && (
         <div className="rounded-md border border-[#18324b]/20 bg-[#18324b]/[0.02] p-3 text-xs space-y-1">
-          <div className="font-medium text-[#18324b]">Handshake Identity (VF-COM-005)</div>
+          <div className="font-medium text-[#18324b]">Source account</div>
           <div className="font-mono text-[#6b6b65] break-all">{identity}</div>
-          <div className="font-mono text-[#0a0a0a]">
-            Usage: {handshakeUsed} / {XRPL_HANDSHAKE_ALLOWANCE}
-            {handshakeUsed >= XRPL_HANDSHAKE_ALLOWANCE && (
-              <span className="text-rose-600 ml-2">— EXHAUSTED (1-use, Q.2)</span>
-            )}
-          </div>
+          <div className="text-[10px] text-[#6b6b65]">Handshake (Revision 12): 1 hour, $0.01 to $0.02, 5% fee, no allowance limit.</div>
         </div>
       )}
 
