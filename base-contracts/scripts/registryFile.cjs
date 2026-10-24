@@ -1,13 +1,22 @@
-// The registry file the live path reads: ceremony, verifier registration,
-// token address index, price fetch and price runs, deploy pages.
-// Current: deployment/assetRegistry.revB.json (Revision B, 487 entries).
+// Registry files. REGISTRY_FILE (the loadRegistry() default) is read by the
+// token address index, price fetch and price runs, and the test-chain rigs:
+// deployment/assetRegistry.revB.json (Revision B, 487 entries). The Base-only
+// ceremony reads CEREMONY_REGISTRY_FILE (Revision C), see below.
 // deployment/assetRegistry.resolved.json is the prior revision (961 written
 // rows + Base ETH) and is kept unchanged; it is not read by the live path.
 // See deployment/ASSET_REGISTRY_REVISIONS.md.
 //
+// Base-only ceremony package (operator decision t367u, 2026-10-24): the
+// ceremony reads Revision C (deployment/assetRegistry.revC.json, 487 entries).
+// Revision C is a full copy of Revision B with one change: row 454 USDC_BASE
+// is S1 (Master Specification Revision 18, Section 6.1). CEREMONY_REGISTRY_FILE
+// below is the ceremony source; resolveCeremonyRegistry() and
+// build_ceremony_artifacts.cjs use it. Revision B stays pinned and unchanged;
+// it remains the record of the finalized Oct 22 set.
+//
 // Fail closed: there is no fallback to assetRegistry.resolved.json, no folder
-// glob, and no alternate default path. If Revision B is missing or the path
-// is not exactly assetRegistry.revB.json, loadRegistry throws.
+// glob, and no alternate default path. If the requested file is missing, or
+// a default path is not exactly its expected basename, loadRegistry throws.
 const fs = require("fs");
 const path = require("path");
 
@@ -15,13 +24,16 @@ const DEP = path.join(__dirname, "..", "deployment");
 const REGISTRY_FILE = path.join(DEP, "assetRegistry.revB.json");
 const REGISTRY_NAME = "deployment/assetRegistry.revB.json";
 const REGISTRY_BASENAME = "assetRegistry.revB.json";
+const CEREMONY_REGISTRY_FILE = path.join(DEP, "assetRegistry.revC.json");
+const CEREMONY_REGISTRY_NAME = "deployment/assetRegistry.revC.json";
+const CEREMONY_REGISTRY_BASENAME = "assetRegistry.revC.json";
 const HISTORICAL_FILE = path.join(DEP, "assetRegistry.resolved.json");
 const HISTORICAL_BASENAME = "assetRegistry.resolved.json";
 
 const isBaseEth = (e) => e.environmentId === "Base" && e.row === 2;
 
 // { reg, written, baseEth, all }
-//   written: every Revision B entry except Base ETH (its own environment, own row)
+//   written: every registry entry except Base ETH (its own environment, own row)
 //   baseEth: row 2 (native ETH) registered under Base
 //   all:     written + baseEth = every registered line
 function loadRegistry(file = REGISTRY_FILE) {
@@ -30,7 +42,7 @@ function loadRegistry(file = REGISTRY_FILE) {
   if (base === HISTORICAL_BASENAME || resolved === path.resolve(HISTORICAL_FILE)) {
     throw new Error(
       "REGISTRY GUARD REFUSAL: refusing historical " + HISTORICAL_BASENAME +
-      " as the ceremony registry. Expected " + REGISTRY_BASENAME + " (Revision B, 487 rows)."
+      " as the ceremony registry. Expected " + CEREMONY_REGISTRY_BASENAME + " (Revision C, 487 rows)."
     );
   }
   if (file === REGISTRY_FILE || resolved === path.resolve(REGISTRY_FILE)) {
@@ -38,9 +50,14 @@ function loadRegistry(file = REGISTRY_FILE) {
       throw new Error("REGISTRY GUARD REFUSAL: ceremony registry basename must be " + REGISTRY_BASENAME + ", got " + base);
     }
   }
+  if (file === CEREMONY_REGISTRY_FILE || resolved === path.resolve(CEREMONY_REGISTRY_FILE)) {
+    if (base !== CEREMONY_REGISTRY_BASENAME) {
+      throw new Error("REGISTRY GUARD REFUSAL: ceremony registry basename must be " + CEREMONY_REGISTRY_BASENAME + ", got " + base);
+    }
+  }
   if (!fs.existsSync(resolved)) {
     throw new Error(
-      "REGISTRY GUARD REFUSAL: Revision B registry missing at " + resolved +
+      "REGISTRY GUARD REFUSAL: registry missing at " + resolved +
       ". No fallback to " + HISTORICAL_BASENAME + " or any other file."
     );
   }
@@ -63,6 +80,9 @@ module.exports = {
   REGISTRY_FILE,
   REGISTRY_NAME,
   REGISTRY_BASENAME,
+  CEREMONY_REGISTRY_FILE,
+  CEREMONY_REGISTRY_NAME,
+  CEREMONY_REGISTRY_BASENAME,
   HISTORICAL_FILE,
   HISTORICAL_BASENAME,
   loadRegistry,
