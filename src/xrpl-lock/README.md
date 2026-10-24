@@ -29,14 +29,14 @@ XRPL does not have native batch atomicity (all-or-nothing) in the EVM/Solana sen
 
 This is classified as **DESIGN DEFINED — DEPLOYABILITY EVIDENCE REQUIRED** in the requirement traceability CSV (VF-COM-004, VF-XCH-005).
 
-## Handshake Allowance (VF-COM-006, Section Q.2)
+## Handshake (Revision 12)
 
-XRPL is classified alongside UTXO/Stellar for a **1-use** Handshake allowance:
-- Only **one** qualifying Handshake per bound identity (XRPL account address)
-- The official application must block the second qualifying attempt before broadcast (Q.4.2)
-- The Base recognition path rejects the second qualifying Handshake by the same identity
+Revision 12 (`docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`) governs the Handshake: 1 hour, $0.01 to $0.02 band, 5% fee, and no allowance limit.
+- A wallet may create any number of 1-hour Handshakes.
+- There is no Handshake identity and no allowance counter, on XRPL or on Base.
+- The application never blocks a Handshake because the same account made one before or has one pending.
 
-This differs from Solana (3-use) because XRPL does not maintain the same type of atomic persistent per-identity on-chain state counter.
+The Revision 6 one-use XRPL allowance (VF-COM-006/007, Section Q.2) is superseded.
 
 ## Pending Attempt Resolution (§4.7)
 
@@ -45,7 +45,7 @@ XRPL has **three** terminal disposition paths:
 | Disposition | Result | Requirement |
 |---|---|---|
 | Finalized success | RECOGNIZED | VF-COM-006 |
-| Finalized failure | NOT_RECOGNIZED (no allowance consumed) | VF-COM-008 |
+| Finalized failure | NOT_RECOGNIZED | VF-COM-008 |
 | LastLedgerSequence expiry | NOT_RECOGNIZED (objective invalidation) | VF-COM-007/008, VF-VER-003 |
 
 Elapsed time, mempool disappearance, endpoint non-observation, or application timers **never** clear a still-valid pending attempt.
@@ -116,7 +116,7 @@ See `src/solana-vault/TRACEABILITY_MATRIX.md` for the complete 209-requirement t
 
 - **VF-COM-001..026**: Same protocol constants as Solana; XRPL transaction construction differs
 - **VF-COM-004**: DESIGN DEFINED (XRPL atomic batch — linked Sequence + shared LLS)
-- **VF-COM-006**: 1-use allowance (Q.2 — UTXO/XRPL/Stellar family)
+- **VF-COM-005..008, VF-COM-024**: superseded by Revision 12 (no Handshake allowance limit)
 - **VF-COM-016**: RESOLVED — EscrowCancel removed from recognized design
 - **VF-PRI-001..006**: Implemented via EscrowCreate (FinishAfter) + EscrowFinish
 - **VF-SEC-006**: Permissionless EscrowFinish — callable by anyone
