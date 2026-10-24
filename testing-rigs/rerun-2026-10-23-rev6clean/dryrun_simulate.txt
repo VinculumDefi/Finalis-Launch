@@ -2,16 +2,16 @@
 > vfh@1.0.0 ceremony:dryrun:simulate
 > bash ../testing-rigs/ceremony-dryrun/dryrun.sh --simulate-non-base-locks
 
-dry-run: local Base fork at block 53006576, block gas limit 400000000
+dry-run: local Base fork at block 53025838, block gas limit 400000000
 dry-run: SIMULATE mode, non-Base locks are simulated on local forks (not the live locks)
 [step 0] inputs and artifacts
   registry rows 487, token addresses 475, registry sha256 1bdcb8346ab9
 [step 1] fork is Base mainnet
-  forked Base block 53006576, block gas limit 400000000
+  forked Base block 53025838, block gas limit 400000000
 [step 2] SIMULATED non-Base locks: deploy the fixed CommitmentVaultLock on local forks of the six chains, masked hash, slot 0, devFund, 5% fee
   SIMULATED non-Base locks (local forks), not live: the operator must still redeploy the fixed CommitmentVaultLock on the six chains
-  simulated fixed lock 0x2A0A...7947 on 6 local forks, masked runtime hash 0x96b6...c6b0 on every chain
-  simulated non-Base lock 0x2A0A...7947 passes on all 6 local forks
+  simulated fixed lock 0xab82...65FD on 6 local forks, masked runtime hash 0x96b6...c6b0 on every chain
+  simulated non-Base lock 0xab82...65FD passes on all 6 local forks
 [step 3] deploy VCLM, CHONX, Verifier, Forge, Stake
   VCLM 0x489F...3650
   CHONX 0xa86F...744e
@@ -61,7 +61,7 @@ dry-run: SIMULATE mode, non-Base locks are simulated on local forks (not the liv
   token addresses 475/475
   Finalized.
 [step 9] post-finalize state
-  finalized; launch 1792802743; live poster set; Solana not registered
+  finalized; launch 1792841317; live poster set; Solana not registered
 [step 10] Base reader with a real lock on the fork
   0.5 ETH 7-day lock: fee 0.025 ETH, minted 15412.41 VCLM
 [step 11] EVM readers bound to the simulated locks and their slot 0
@@ -69,7 +69,7 @@ dry-run: SIMULATE mode, non-Base locks are simulated on local forks (not the liv
 [step 12] EVM readers on real mainnet receipts
   6 EVM readers prove real mainnet receipts against real headers (headers confirmed on each live chain)
 [step 13] Ethereum reader on a real finalized header (fails closed, AG-01 to AG-07)
-  real finalized Ethereum block 26258918 re-encodes to its hash; the reader fails closed on it (VF-XCH-006, environment disabled)
+  real finalized Ethereum block 26262110 re-encodes to its hash; the reader fails closed on it (VF-XCH-006, environment disabled)
   a made-up header at the same height is refused the same way (FINDING-HH-003 closed)
 [step 14] UTXO, Stellar and XRPL reader wiring
   6 UTXO readers, Stellar and XRPL carry the ceremony-data Dev Fund wiring
