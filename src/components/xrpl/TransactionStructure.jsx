@@ -11,7 +11,7 @@ const TRANSACTIONS = [
 const DESIGN_RULES = [
   { rule: 'Atomic batch', desc: 'Payment + EscrowCreate with linked Sequence + shared LastLedgerSequence', status: 'DESIGN DEFINED' },
   { rule: 'No EscrowCancel', desc: 'VF-COM-016: early-cancel path removed from recognized design', status: 'RESOLVED' },
-  { rule: '1-use Handshake', desc: 'VF-COM-006 Q.2: 1-use Base recognition counter for XRPL', status: 'RESOLVED' },
+  { rule: 'Handshake (Revision 12)', desc: '1 hour, $0.01 to $0.02, 5% fee, no allowance limit and no per-account counter', status: 'RESOLVED' },
   { rule: 'LLS expiry', desc: 'VF-COM-007/008: LastLedgerSequence expiry = objective invalidation', status: 'RESOLVED' },
   { rule: 'Validated finality', desc: 'VF-XCH-006/010: XRPL validated ledger = immutable, no reorgs', status: 'RESOLVED' },
 ];
