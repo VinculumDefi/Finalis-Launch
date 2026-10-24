@@ -2,7 +2,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { COMMITMENT_DURATIONS } from '@/lib/vfRevision6Authority';
+import { COMMITMENT_DURATIONS } from '@/lib/vfSpecAuthority';
 import { SOLANA_REGISTRY } from '@/lib/vfSolanaRegistry';
 import { filterOfferable } from '@/lib/vfActiveAssetAllowlist';
 
