@@ -67,7 +67,7 @@ export const STATUS_META = {
 // 209 requirements — category, id, description, status, implementation trace
 export const REQUIREMENTS = [
   // VF-DOC (10)
-  { id: 'VF-DOC-001', category: 'Governance', title: 'Master Spec is sole governing expression', status: STATUS.IMPLEMENTED, trace: 'vfRevision6Authority.js AUTHORITY + CLAUDE.md' },
+  { id: 'VF-DOC-001', category: 'Governance', title: 'Master Spec is sole governing expression', status: STATUS.IMPLEMENTED, trace: 'vfSpecAuthority.js AUTHORITY + CLAUDE.md' },
   { id: 'VF-DOC-002', category: 'Governance', title: 'Conformity rule — all code cites governing source', status: STATUS.IMPLEMENTED, trace: 'Provenance headers in all modules' },
   { id: 'VF-DOC-003', category: 'Governance', title: 'Later-revision incorporation', status: STATUS.IMPLEMENTED, trace: 'AUTHORITY.revision = Revision 6' },
   { id: 'VF-DOC-004', category: 'Governance', title: 'Silence/ambiguity identified not assumed', status: STATUS.IMPLEMENTED, trace: 'CLAUDE.md directives' },
@@ -302,7 +302,7 @@ export const REQUIREMENTS = [
   { id: 'VF-VER-008', category: 'Verification', title: 'Spec precedence', status: STATUS.IMPLEMENTED, trace: 'All code cites governing source; CLAUDE.md enforces' },
 
   // VF-PUB (3)
-  { id: 'VF-PUB-001', category: 'Public App', title: 'Public representations consistent with Master Spec', status: STATUS.IMPLEMENTED, trace: 'UI displays protocol constants from vfRevision6Authority.js' },
+  { id: 'VF-PUB-001', category: 'Public App', title: 'Public representations consistent with Master Spec', status: STATUS.IMPLEMENTED, trace: 'UI displays protocol constants from vfSpecAuthority.js' },
   { id: 'VF-PUB-002', category: 'Public App', title: 'Price displays identify source, not guaranteed trading price', status: STATUS.IMPLEMENTED, trace: 'UI shows reference language' },
   { id: 'VF-PUB-003', category: 'Public App', title: 'Exchange activity cannot modify protocol', status: STATUS.IMPLEMENTED, trace: 'UI is read-only; all calculations use constants' },
 
