@@ -14,7 +14,7 @@ import { buildMockEvent, buildFinalityProof, UTXO_PRACTICE_HANDSHAKE_GROSS, UTXO
 import { VerifierState, verifyProof, computeIssuanceFromUsd, checkUsdBounds } from '../lib/vfVerifierEngine.js';
 import { normalizeUtxoEvidence, normalizeEvmEvidence } from '../lib/vfProofNormalizer.js';
 import { findAssetPrecision } from '../lib/vfBaseRegistry.js';
-import { FIXED_RULES } from '../lib/vfRevision6Authority.js';
+import { FIXED_RULES } from '../lib/vfSpecAuthority.js';
 import { feeBpsForDuration } from '../lib/vfLiveRules.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
