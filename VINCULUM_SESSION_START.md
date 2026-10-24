@@ -10,7 +10,8 @@ build, commit, change, deploy or send anything until the operator asks.
 ## Repository
 https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
-Revision 17 of the Master Specification was added to main at 7e45d3f. Check
+Revision 17 of the Master Specification was added to main at 7e45d3f. This
+session start (Revision 5) was added to main at f31ac6f. Check
 `git log -1 origin/main` for the newest commit.
 
 Start with these files:
