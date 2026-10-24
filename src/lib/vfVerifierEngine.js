@@ -48,7 +48,7 @@ import { HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP, feeBps
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// State: consumed replay set, RAC set, Handshake counters, lifetime caps
+// State: consumed replay set, RAC set, lifetime caps (no Handshake counter, Revision 12)
 // In the Solidity contract these are storage mappings; here they are Maps.
 // ---------------------------------------------------------------------------
 
@@ -58,8 +58,6 @@ export class VerifierState {
     this.consumedLocks = new Set();
     // VF-RAC-001: RAC exact-once — keyed by rac_identity
     this.recordedRacs = new Set();
-    // VF-COM-006/007: Handshake allowance counter for Base-enforced environments
-    this.handshakeUsage = new Map(); // identity → count used
     // Lifetime issuance tracking (BASE-CAP)
     this.cumulativeVclmIssued = 0n;
     this.cumulativeChonxIssued = 0n;
@@ -73,7 +71,6 @@ export class VerifierState {
   reset() {
     this.consumedLocks.clear();
     this.recordedRacs.clear();
-    this.handshakeUsage.clear();
     this.cumulativeVclmIssued = 0n;
     this.cumulativeChonxIssued = 0n;
     this.chonxActivated = false;
@@ -236,29 +233,13 @@ export function checkOutputEligibility(state, pkg) {
 }
 
 // ---------------------------------------------------------------------------
-// Step 8: Handshake allowance check (VF-COM-006/007/008)
-// For source-enforced environments (EVM, Solana), the source consumed the
-// allowance atomically. For Base-enforced environments (UTXO, XRPL, Stellar),
-// BASE-VERIFY maintains the counter.
+// Step 8: Handshake (Revision 12)
+// The Handshake (1 hour, $0.01 to $0.02, 5% fee) has no allowance limit. There
+// is no per-identity counter, nothing is consumed, and a package is never
+// refused for the number of Handshakes an identity has made. The band and the
+// fee are checked with the other USD and fee rules. handshake_allowance_count,
+// if a package carries it, is ignored (the Base Verifier ignores it too, AG-20).
 // ---------------------------------------------------------------------------
-
-export function checkHandshakeAllowance(state, pkg, env) {
-  // Fail closed: an environment with no defined allowance is refused.
-  if (env.handshakeAllowance === null) {
-    return { ok: false, reason: 'VF-COM-006: Handshake allowance undefined (mechanism incomplete)' };
-  }
-  // Source-enforced: trust the source counter (EVM, Solana)
-  if (env.handshakeEnforcement === 'source') {
-    return { ok: true, enforcement: 'source', allowance: env.handshakeAllowance };
-  }
-  // Base-enforced: check and consume the counter (UTXO, XRPL, Stellar)
-  const identity = pkg.handshake_identity;
-  const used = state.handshakeUsage.get(identity) || 0;
-  if (used >= env.handshakeAllowance) {
-    return { ok: false, reason: `VF-COM-007: Handshake allowance exhausted (${used}/${env.handshakeAllowance} for ${identity})` };
-  }
-  return { ok: true, enforcement: 'base', allowance: env.handshakeAllowance, used, remaining: env.handshakeAllowance - used };
-}
 
 // ---------------------------------------------------------------------------
 // Step 9: Base recipient check (VF-ARC-006)
@@ -525,10 +506,7 @@ export function verifyProof(state, pkg, { verifiedGrossUsdMicro, daysSinceLaunch
   checks.push({ step: 'VF-COM-020/025: Output eligibility', pass: output.ok, detail: output.ok ? outputTokenToString(pkg.selected_output_token) : output.reason });
   if (!output.ok) return reject(checks, output.reason);
 
-  // Step 8: Handshake allowance
-  const handshake = checkHandshakeAllowance(state, pkg, envAsset.env);
-  checks.push({ step: 'VF-COM-006/007: Handshake allowance', pass: handshake.ok, detail: handshake.ok ? `${handshake.enforcement} enforcement (${handshake.allowance}-use)` : handshake.reason });
-  if (!handshake.ok) return reject(checks, handshake.reason);
+  // Step 8: Handshake (Revision 12): no allowance limit, nothing to check or count.
 
   // Step 9: Base recipient
   const recipient = checkBaseRecipient(pkg);
@@ -566,12 +544,6 @@ export function verifyProof(state, pkg, { verifiedGrossUsdMicro, daysSinceLaunch
   if (!cap.ok) return reject(checks, cap.reason);
 
   // ---- All checks passed — authorize issuance ----
-
-  // Consume Handshake allowance (Base-enforced only)
-  if (handshake.enforcement === 'base') {
-    const used = state.handshakeUsage.get(pkg.handshake_identity) || 0;
-    state.handshakeUsage.set(pkg.handshake_identity, used + 1);
-  }
 
   // Mint tokens (BASE-EMIT) — RAC already recorded at fee verification (step 6)
   if (pkg.selected_output_token === OUTPUT_TOKEN.VCLM) {
