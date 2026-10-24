@@ -6,15 +6,17 @@ transaction is a MetaMask prompt you sign. No key is typed, pasted or stored.
 
 Founder directive t357u: the launch is Base-only. No lock is deployed on any
 other chain, no other reader is registered, and only the 27 Base rows of
-Revision B are registered (26 token addresses, no aliases). The sixteen lock
+registry Revision C are registered (26 token addresses, no aliases). Operator
+decision t367u: Revision C is Revision B with row 454 Base USDC as S1 (1.5x). The sixteen lock
 contracts and their readers stay in the source tree and are not deployed.
 
 ## A. Build and checks (from `base-contracts`, fresh copy of `main`)
 - [ ] `git fetch` then `git checkout main` and `git pull`, then
       `npm install --legacy-peer-deps`
 - [ ] `npx hardhat compile --force`
-- [ ] `node scripts/build_ceremony_artifacts.cjs`: check the Base ETH price it
-      prints is today's. No price: stop.
+- [ ] `node scripts/build_ceremony_artifacts.cjs --keep-price`: keeps the
+      committed Base ETH price (t364u: no price refresh before the ceremony).
+      It must print Revision C and `assetRegistry.revC.json`. Any refusal: stop.
 - [ ] `git status`: only `ceremony-data.json` changed. `ceremony.json`
       unchanged (the test `ceremony_artifacts_match_compile` fails if it
       differs from the compile). Anything else: stop.
