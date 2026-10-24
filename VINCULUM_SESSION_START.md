@@ -10,8 +10,9 @@ build, commit, change, deploy or send anything until the operator asks.
 ## Repository
 https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
-Main at the merge of this pass (base commit 50851dd). Main at 50851dd has the
-Handshake cleanup and the full Hardhat suite at 849 passing, 0 failing.
+The document control pass merged to main at 69e069a. Main at 50851dd has the
+Handshake cleanup and the full Hardhat suite at 849 passing, 0 failing. Check
+`git log -1 origin/main` for the newest commit.
 
 Start with these files:
 1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision
