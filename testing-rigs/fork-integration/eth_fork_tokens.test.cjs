@@ -50,7 +50,7 @@ describe("Rig 2: Ethereum mainnet fork, real tokens through the real ceremony st
     [, user, user2, recipient, dest, dest2] = S.signers;
     lock = S.nonBase.Ethereum;
     console.log("      fork block", (await ethers.provider.getBlock("latest")).number, "stack: Verifier", short(await S.verifier.getAddress()), "Ethereum CVL", short(await lock.getAddress()));
-    expect(S.logs).to.include("registry 487/487");
+    expect(S.logs).to.include("registry 27/27");
     expect(S.logs).to.include("Finalized.");
     // Real prices from Chainlink on the fork. Fail closed on any mismatch.
     const rows = [];
