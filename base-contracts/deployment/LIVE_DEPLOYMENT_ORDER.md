@@ -40,7 +40,7 @@ contract, or equal to the wallet or the Dev Fund. It then runs
 2. Deploy the new 5% Base lock `BaseCommitmentVaultLock("Base", 0xFD21…3e9a, VCLM, CHONX, Forge)`, read back a 5% fee, and read back that it refuses VCLM, CHONX and SYNTH as lock inputs (VF-TOK-007). The old Base lock is left as it is.
 3. `VCLM.initialize(Verifier, Stake)`, so Stake is on from the start. Then `CHONX.initialize(Verifier, 0)`. The Verifier is the only VCLM and CHONX minter (Stake also mints VCLM rewards).
 4. Deploy and register **one reader**, BaseLockRecordVerifier bound to the new Base lock, and read it back. No other environment is registered.
-5. Write the Base subset of Revision B (`deployment/assetRegistry.revB.json`, 487 rows, unchanged): 27 Base rows (26 tokens plus Base ETH) in one batch, then the 26 Base token addresses. No aliases.
+5. Write the Base subset of Revision C (`deployment/assetRegistry.revC.json`, 487 rows; row 454 Base USDC is S1, operator decision t367u): 27 Base rows (26 tokens plus Base ETH) in one batch, then the 26 Base token addresses. No aliases.
 6. Set the Base Dev Fund.
 7. Set the price poster to the deployer wallet for the first Base ETH price only (run 1). Write that price, then read it back as usable.
 8. Hand the price poster to `0x6001…0DB4` and read it back.
