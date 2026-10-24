@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { STATUS, STATUS_META, getStatusCounts, REQUIREMENTS } from '@/lib/vfComplianceData';
-import { CheckCircle2, AlertCircle, Clock, Lock, Database, FileWarning } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, Lock, Database, FileWarning, Archive } from 'lucide-react';
 
 const STATUS_ICONS = {
   [STATUS.IMPLEMENTED]: CheckCircle2,
@@ -9,6 +9,7 @@ const STATUS_ICONS = {
   [STATUS.EXTERNAL]: Lock,
   [STATUS.DEPLOYMENT]: Clock,
   [STATUS.DATA]: Database,
+  [STATUS.SUPERSEDED]: Archive,
 };
 
 export default function ComplianceSummary() {
@@ -23,6 +24,7 @@ export default function ComplianceSummary() {
     { status: STATUS.EXTERNAL, count: counts[STATUS.EXTERNAL] },
     { status: STATUS.DEPLOYMENT, count: counts[STATUS.DEPLOYMENT] },
     { status: STATUS.DATA, count: counts[STATUS.DATA] },
+    { status: STATUS.SUPERSEDED, count: counts[STATUS.SUPERSEDED] },
   ];
 
   return (
