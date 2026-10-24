@@ -17,7 +17,7 @@ import {
   isPermittedDuration,
   isHandshakeDuration,
   validateXrplAddress,
-  buildHandshakeIdentity,
+  buildSourceIdentity,
   computeOutput,
 } from '../../lib/vfXrplLockEngine.js';
 
@@ -30,7 +30,6 @@ import {
 } from '../../lib/vfXrplTransactionBuilder.js';
 
 import {
-  XRPL_HANDSHAKE_ALLOWANCE,
   XRPL_DROPS_PER_XRP,
   XRPL_EPOCH_OFFSET,
   computeFinishAfter,
@@ -101,9 +100,9 @@ test('T-05: Invalid duration rejected (VF-COM-002)', () => {
   assert.strictEqual(isPermittedDuration(604800), true);
 });
 
-// T-06: Handshake identity
-test('T-06: Handshake identity construction (VF-COM-005)', () => {
-  const ident = buildHandshakeIdentity(TEST_ACCOUNT);
+// T-06: Source account label (Revision 12: not a Handshake identity)
+test('T-06: Source account label construction (VF-COM-005)', () => {
+  const ident = buildSourceIdentity(TEST_ACCOUNT);
   assert.strictEqual(ident, `(XRPL, ${TEST_ACCOUNT})`);
 });
 
@@ -213,24 +212,33 @@ test('T-11: Atomic batch — linked Sequence + shared LLS (VF-COM-004)', () => {
   assert.strictEqual(batch.lastLedgerSequence, 12345688); // 12345678 + 10
 });
 
-// T-12: Mock adapter — 1-use Handshake allowance
-test('T-12: Mock adapter 1-use Handshake (VF-COM-006/007)', () => {
+// T-12: Mock adapter — Revision 12, no Handshake allowance limit
+test('T-12: Mock adapter accepts any number of Handshakes from one account (Revision 12)', () => {
   const adapter = new XrplMockAdapter();
   const ident = '(XRPL, rTestAccount)';
-  // First Handshake: allowed
-  let r = adapter.submitSimulation({ lockId: 'lock-1', identity: ident, isHandshake: true });
+  assert.strictEqual('handshakeUsage' in adapter, false);
+  assert.strictEqual('checkHandshakeEligibility' in adapter, false);
+  // Five Handshakes from the same account, each recognized; none is refused.
+  for (let i = 1; i <= 5; i++) {
+    let r = adapter.submitSimulation({ lockId: `lock-${i}`, identity: ident, isHandshake: true });
+    assert.strictEqual(r.ok, true, `Handshake ${i} refused`);
+    r = adapter.finalizeSuccess(`lock-${i}`);
+    assert.strictEqual(r.state, 'RECOGNIZED');
+  }
+  // A Handshake while another from the same account is still pending is also accepted.
+  let r = adapter.submitSimulation({ lockId: 'lock-6', identity: ident, isHandshake: true });
   assert.strictEqual(r.ok, true);
-  // Finalize success
-  r = adapter.finalizeSuccess('lock-1');
-  assert.strictEqual(r.state, 'RECOGNIZED');
-  // Second Handshake by same identity: rejected (1-use)
-  r = adapter.submitSimulation({ lockId: 'lock-2', identity: ident, isHandshake: true });
-  assert.strictEqual(r.ok, false);
-  assert.ok(r.reason.includes('VF-COM-007'));
+  r = adapter.submitSimulation({ lockId: 'lock-7', identity: ident, isHandshake: true });
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(adapter.isPending('lock-6'), true);
+  assert.strictEqual(adapter.isPending('lock-7'), true);
+  // The lock memo carries no Handshake identity or allowance count.
+  const memo = JSON.stringify(buildLockMemo({ lockId: 'm', sourceAccount: 'rTestAccount' }));
+  assert.ok(!/handshake_identity|handshake_allowance_count/.test(Buffer.from(JSON.parse(memo).Memo.MemoData, 'hex').toString()), 'memo still has Handshake identity or count');
 });
 
-// T-13: Mock adapter — LLS expiry (no allowance consumed)
-test('T-13: LLS expiry — NOT_RECOGNIZED, no allowance consumed (VF-COM-007/008)', () => {
+// T-13: Mock adapter — LLS expiry (objective disposition; Revision 12, nothing to consume)
+test('T-13: LLS expiry — NOT_RECOGNIZED, next Handshake accepted (VF-COM-007/008, Revision 12)', () => {
   const adapter = new XrplMockAdapter();
   const ident = '(XRPL, rTestAccount2)';
   let r = adapter.submitSimulation({ lockId: 'lock-3', identity: ident, isHandshake: true });
@@ -238,7 +246,7 @@ test('T-13: LLS expiry — NOT_RECOGNIZED, no allowance consumed (VF-COM-007/008
   r = adapter.expireLastLedgerSequence('lock-3');
   assert.strictEqual(r.state, 'NOT_RECOGNIZED');
   assert.strictEqual(r.disposition, 'LASTLEDGERSEQUENCE_EXPIRY');
-  // Allowance NOT consumed (VF-COM-008) — second Handshake should still be allowed
+  // Revision 12: no allowance exists, so the next Handshake is accepted
   r = adapter.submitSimulation({ lockId: 'lock-4', identity: ident, isHandshake: true });
   assert.strictEqual(r.ok, true);
 });
