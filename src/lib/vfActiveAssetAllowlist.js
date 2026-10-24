@@ -13,7 +13,8 @@
 // Every entry path (asset pickers, saved or initial state, URL values, manual
 // addresses, proof packages) goes through resolveOfferable or
 // isOfferablePackageAsset, so a value that did not come from the picker is
-// refused the same way.
+// refused the same way. Assets in HIDDEN_ASSETS are left out of every lookup,
+// so they are hidden on all of those paths too.
 import ALLOWLIST from '../data/activeAssetAllowlist.json' with { type: 'json' };
 import { findAssetPrecision } from './vfBaseRegistry.js';
 
@@ -30,10 +31,37 @@ const ADDR = /^0x[0-9a-fA-F]{40}$/;
 const ZERO = /^0x0{40}$/;
 const HASH = /^0x[0-9a-fA-F]{64}$/;
 
+// Operator-hidden assets: on Revision B and verified, but never shown or
+// offered by the app. This is an app-level filter only. Revision B, its hash
+// lock, the registry pin, the Verifier and the price poster are unchanged.
+// Matching is environment + contract address (or native id), never a ticker.
+export const HIDDEN_ASSETS = Object.freeze([
+  Object.freeze({
+    environmentId: 'Base',
+    kind: 'token',
+    address: '0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22',
+    symbol: 'CBETH',
+    row: 25,
+    finding: 'HH-013',
+    reason: 'hidden by operator decision 2026-10-24 pending Chainlink label-match fix (HH-013) or permanent drop',
+  }),
+]);
+const HIDDEN_KEYS = new Set(HIDDEN_ASSETS.map((h) => (h.kind === 'token'
+  ? `${h.environmentId}|${h.address.toLowerCase()}`
+  : `${h.environmentId}|${h.nativeId}`)));
+export function isOperatorHidden(entry) {
+  if (!entry) return false;
+  const key = entry.kind === 'token' || entry.address
+    ? `${entry.environmentId}|${String(entry.address ?? '').toLowerCase()}`
+    : `${entry.environmentId}|${entry.nativeId}`;
+  return HIDDEN_KEYS.has(key);
+}
+
 const TOKENS = new Map();
 const NATIVES = new Map();
 const BY_CANONICAL = new Map();
 for (const e of ALLOWLIST.entries) {
+  if (isOperatorHidden(e)) continue;
   if (e.kind === 'token') TOKENS.set(`${e.environmentId}|${e.address.toLowerCase()}`, e);
   else NATIVES.set(`${e.environmentId}|${e.nativeId}`, e);
   BY_CANONICAL.set(`${e.environmentId}|${e.canonicalAssetId.toLowerCase()}`, e);
@@ -45,6 +73,9 @@ for (const l of ALLOWLIST.nativeLinks) {
 
 export const ACTIVE_ALLOWLIST = ALLOWLIST;
 export const ACTIVE_ALLOWLIST_COUNT = ALLOWLIST.entries.length;
+// Entries the app actually offers: the allowlist minus HIDDEN_ASSETS.
+export const OFFERED_ENTRIES = Object.freeze(ALLOWLIST.entries.filter((e) => !isOperatorHidden(e)));
+export const OFFERED_COUNT = OFFERED_ENTRIES.length;
 
 export function findAllowedToken(env, address) {
   const e = normalizeEnvironment(env);
