@@ -1,25 +1,25 @@
 Warning: running non-release version stellar-core 22.2.0 (e6c1f3bfcf9ef7b07b718b4984283c1c0bb91acd) of stellar-core
-2026-10-23T20:40:41.017 [default INFO] Config from /tmp/vf-stellar-rev8-final/stellar-core.cfg
-2026-10-23T20:40:41.018 [default INFO] 'MANUAL_CLOSE' enabled in configuration file - node will not function properly with most networks
-2026-10-23T20:40:41.018 [default INFO] 'RUN_STANDALONE' enabled in configuration file - node will not function properly with most networks
-2026-10-23T20:40:41.018 [default INFO] Using QUORUM_SET: {
+2026-10-24T07:18:57.747 [default INFO] Config from /tmp/vf-stellar-rev8-final/stellar-core.cfg
+2026-10-24T07:18:57.747 [default INFO] 'MANUAL_CLOSE' enabled in configuration file - node will not function properly with most networks
+2026-10-24T07:18:57.747 [default INFO] 'RUN_STANDALONE' enabled in configuration file - node will not function properly with most networks
+2026-10-24T07:18:57.750 [default INFO] Using QUORUM_SET: {
    "t" : 1,
    "v" : [ "GBSYK" ]
 }
 
 boot ledger {"age":0,"baseFee":100,"baseReserve":100000000,"closeTime":0,"hash":"63d98f536ee68d1b27b5b89f23af5311b7569a24faf1403ad0b52b633b07be99","maxTxSetSize":100,"num":1,"version":0} state Synced!
 PASS: fresh core starts at protocol 0
-closed Manually closed ledger with sequence number 2 and closeTime 3006240 info.closeTime 3006240 version 0
-closed Manually closed ledger with sequence number 3 and closeTime 6007154 info.closeTime 6007154 version 14
+closed Manually closed ledger with sequence number 2 and closeTime 3007705 info.closeTime 3007705 version 0
+closed Manually closed ledger with sequence number 3 and closeTime 6008513 info.closeTime 6008513 version 14
 PASS: protocol upgraded to 14 (claimable balances) without Timer abort
 FIXTURE source GASANZ…SUZS
 FIXTURE devFund GAG4N5…LYRB
 FIXTURE release GAP2UU…MWHO
 fund PENDING 85987c34266059763c60b1a247a405074eb5029b2ee5931f6848146ac813633e
-closed Manually closed ledger with sequence number 4 and closeTime 9016384 info.closeTime 9016384 version 14
+closed Manually closed ledger with sequence number 4 and closeTime 9017179 info.closeTime 9017179 version 14
 created source seq 17179869184
 created release seq 17179869184
-virtualNow 9017944 maturity 209017944
+virtualNow 9018499 maturity 209018499
 PASS: fee 50000 stroops
 PASS: principal 950000 stroops
 PASS: lock id 32
@@ -30,26 +30,26 @@ PASS: payload exactly 117 bytes
 PASS: tampered memo differs
 PASS: memo matches rebuilt payload
 PASS: memo mismatch rejected by checker
-lock PENDING 99b5fe34d8f386e7a1f8f814d7d089bdc01230ea7dbf5f158333028b29d5f765
-closed-before Manually closed ledger with sequence number 5 and closeTime 12019322 closeTime 12019322 maturity 209017944
-PASS: ledger closeTime 12019322 is before maturity 209017944
+lock PENDING 4ca180e36b156ed7f71be8173c2c7b3eb53a1f315f7309aeec4a03405297d181
+closed-before Manually closed ledger with sequence number 5 and closeTime 12019579 closeTime 12019579 maturity 209018499
+PASS: ledger closeTime 12019579 is before maturity 209018499
 balanceId 00000000783e948aeacc79e740df46c4cd4f441cf2bf0e441cd81f6f8e71eb5682fffb46 lockSeq 17179869185 ledger 5
 early-claim PENDING aca3b1c3d07b8f35834e9b8db599e60bc4c8455886cd442569707c0d31a0d37b
-closed-before Manually closed ledger with sequence number 6 and closeTime 15020588 closeTime 15020588 maturity 209017944
-PASS: ledger closeTime 15020588 is before maturity 209017944
+closed-before Manually closed ledger with sequence number 6 and closeTime 15020624 closeTime 15020624 maturity 209018499
+PASS: ledger closeTime 15020624 is before maturity 209018499
 non-claimant PENDING a848bdc71df7b920f306ab727cb01dfed6c352157a9282195b24dcc529305966
-closed-before Manually closed ledger with sequence number 7 and closeTime 18021354 closeTime 18021354 maturity 209017944
-PASS: ledger closeTime 18021354 is before maturity 209017944
-closed Manually closed ledger with sequence number 8 and closeTime 209017944 info.closeTime 209017944 version 14
+closed-before Manually closed ledger with sequence number 7 and closeTime 18021349 closeTime 18021349 maturity 209018499
+PASS: ledger closeTime 18021349 is before maturity 209018499
+closed Manually closed ledger with sequence number 8 and closeTime 209018499 info.closeTime 209018499 version 14
 PASS: mature ledger closeTime >= maturity
 mature-claim PENDING eb13a8abcbed08543a5f854cf3adb3a0cae43fae1bc21bb3d34d066cbf8b9618
-closed Manually closed ledger with sequence number 9 and closeTime 212018882 info.closeTime 212018882 version 14
+closed Manually closed ledger with sequence number 9 and closeTime 212019209 info.closeTime 212019209 version 14
 second-claim PENDING e82ea525acb45631bc483e5f7627e1b24108bcb61514531df7a81e90137fe348
-closed Manually closed ledger with sequence number 10 and closeTime 215019578 info.closeTime 215019578 version 14
+closed Manually closed ledger with sequence number 10 and closeTime 215020064 info.closeTime 215020064 version 14
 bad-memo PENDING 4b33cc1d851c07a485889545950a0d455ad50fca1fb7abb8edf35c02666ae82a
-closed Manually closed ledger with sequence number 11 and closeTime 218020468 info.closeTime 218020468 version 14
+closed Manually closed ledger with sequence number 11 and closeTime 218020800 info.closeTime 218020800 version 14
 PASS: core state is Synced (last closed ledger externalized)
-LCL 11 091e74fae99512c45a31fd7a99014c2e117bf92d8f0edac0900559b8b837fdfc externalized slots 2,3,4,5,6,7,8,9,10,11
+LCL 11 089e6f5625a565bc7dcb90574b08bfd7d6ee4c12f14a2acb7d71794e534f5cd7 externalized slots 2,3,4,5,6,7,8,9,10,11
 PASS: lock tx is in core metadata
 lock result {"fee_charged":"400","result":{"tx_success":[{"op_inner":{"payment":"success"}},{"op_inner":{"create_claimable_balance":{"success":"BAAHQPUURLVMY6PHIDPUNRGNJ5CBZ4V7BZCBZWA7N6HHD22WQL77WRUCB4"}}}]},"ext":"v0"}
 PASS: lock tx result success
@@ -67,7 +67,7 @@ second result {"fee_charged":"100","result":{"tx_failed":[{"op_inner":{"claim_cl
 PASS: second claim fails
 PASS: second claim result names the failure
 PASS: checker accepts lock in externalized ledger
-PROOF ledger 5 hash 77afcdcace9e157e0ca330b3a823ebb532efa96e44f08dcc557a6e6a3b71fb23 prev 9fb4f34f0171d3d8fae0c0de6932079076611becd0e10ca269a5abe8d32d4d4a
+PROOF ledger 5 hash 7f6acb7d3c34b67144a0662118830cbf4018acd2fb781530f04fa1cd740f08d9 prev 2ee467c13d6bb76ea7e9c85c6220420a392f3be8d81eff04e83c7fb8b0aafd7f
 mutated hash: REFUSE: ledger hash does not match core (mutated or unknown)
 PASS: mutated ledger hash is refused
 absent tx: REFUSE: transaction is not in this externalized ledger
@@ -77,3 +77,4 @@ PASS: memo mismatch is rejected
 not externalized: REFUSE: ledger 16 is not externalized (LCL 11)
 PASS: checker refuses a ledger that is not externalized
 STELLAR_HOLD_RELEASE_OK
+STELLAR_MJS_EXIT=0
