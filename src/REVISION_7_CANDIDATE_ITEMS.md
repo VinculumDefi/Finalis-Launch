@@ -1,5 +1,7 @@
 # Revision 7 Candidate Items
 
+> **Historical document (Revision 6 review).** Its Handshake allowance, Handshake fee and Handshake band discussion is superseded by Revision 12 (`docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md`): 5% fee, $0.01 to $0.02 band, 1 hour, no allowance limit, and no handshakeIdentity or allowance counter in the lock contract. Kept for the record only.
+
 **Status:** Post-implementation engineering review — documentation only.
 **Scope:** Observations discovered during the implementation and verification of Revision 6.
 **Constraint:** No code modified. No Master Specification modified. No recommendation assumed accepted.
