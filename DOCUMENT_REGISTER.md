@@ -1,6 +1,6 @@
 # Document register
 
-Revision 4, 2026-10-24 (ET). This register is the single source of truth for
+Revision 5, 2026-10-24 (ET). This register is the single source of truth for
 which edition of each controlled document governs. One live copy per document.
 Superseded editions are in `archive/specifications/`. Nothing is deleted.
 
@@ -9,9 +9,9 @@ Superseded editions are in `archive/specifications/`. Nothing is deleted.
 | Document | Current revision | Date | Path | Status |
 |---|---|---|---|---|
 | Master Specification | Revision 17 | 2026-10-24 | `docs/Vinculum_Finalis_Master_Specification_Revision_17_2026-10-24.md` | CURRENT GOVERNING EDITION. SHA-256 `3b45aeeb25881c7f2465b2bf78400bfd94626df9fe0e3456d72cbe9e1452dace` |
-| Session start | Revision 4 | 2026-10-24 | `VINCULUM_SESSION_START.md` | Current |
-| Document register | Revision 4 | 2026-10-24 | `DOCUMENT_REGISTER.md` | Current (this file) |
-| Specification archive index | Revision 4 | 2026-10-24 | `archive/specifications/README.md` | Current |
+| Session start | Revision 5 | 2026-10-24 | `VINCULUM_SESSION_START.md` | Current |
+| Document register | Revision 5 | 2026-10-24 | `DOCUMENT_REGISTER.md` | Current (this file) |
+| Specification archive index | Revision 5 | 2026-10-24 | `archive/specifications/README.md` | Current |
 
 ## Superseded editions kept in place
 
@@ -38,9 +38,11 @@ None. No file in the repository reads a superseded edition by path.
 | Session start | Revision 1 | 2026-10-12 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_1_2026-10-12.md` | From commit 31c237a. |
 | Session start | Revision 2 | 2026-10-20 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_2_2026-10-20.md` | From commit a989ee2. |
 | Session start | Revision 3 | 2026-10-24 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_3_2026-10-24.md` | SHA-256 `8c63b5c82941695ecae74a6aea976a4fb13018b7f0d0f10536146181cbca70ef`. |
+| Session start | Revision 4 | 2026-10-24 | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_4_2026-10-24.md` | SHA-256 `33e5dae3cd31fc775f8812cc48977b065e5cd86f749fcba256575133ec68e3bf`. |
 | Document register | Revision 1 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_1_2026-10-24.md` | SHA-256 `4941b6c9c10d976ba7575d92973641bebb9a593697e37741b3c4d18ea1e822c1`. |
 | Document register | Revision 2 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_2_2026-10-24.md` | SHA-256 `5eeccf0791992b93e263330f210a81b4d2f900e086ae4c7eac65dc3f31abb279`. |
 | Document register | Revision 3 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_3_2026-10-24.md` | SHA-256 `030a2eec6772f304c5a1e6513aea1cf9628dd6e4e3fcb7cf8fe216924ae0a79f`. |
+| Document register | Revision 4 | 2026-10-24 | `archive/specifications/document-register/DOCUMENT_REGISTER_Revision_4_2026-10-24.md` | SHA-256 `b6f42ae04fc110336a0bb65503de4269d7af650c8e5aba3d1eb96dd7131d7a42`. |
 
 ## Files that name the Revision 6 file
 
