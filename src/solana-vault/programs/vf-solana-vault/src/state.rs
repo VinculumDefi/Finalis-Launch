@@ -101,36 +101,6 @@ impl LockRecord {
         + 1; // bump
 }
 
-/// Kept for account layout only. Revision 12 has no Handshake allowance limit
-/// and no per-account counter: a wallet may create any number of 1-hour
-/// Handshakes. The program never refuses a Handshake based on these fields
-/// (FIX_LOG note 13). One PDA per source_account.
-#[account]
-pub struct HandshakeAllowance {
-    /// Source account label "(Solana, source_account)". Not a limit key.
-    pub identity: String,
-    /// The bound source account.
-    pub source_account: Pubkey,
-    /// Record of 1-hour Handshakes created. Never checked against a limit.
-    pub used: u32,
-    /// Layout field from Revision 6. Never checked against a limit.
-    pub remaining: u32,
-    /// Layout field from Revision 6 (was 3). Revision 12 has no limit.
-    pub allowance: u32,
-    pub bump: u8,
-}
-
-impl HandshakeAllowance {
-    pub const IDENTITY_MAX: usize = 64; // "(Solana, " + 44-char pubkey + ")"
-    pub const LEN: usize = 8 // discriminator
-        + 4 + Self::IDENTITY_MAX // identity
-        + 32 // source_account
-        + 4 // used
-        + 4 // remaining
-        + 4 // allowance
-        + 1; // bump
-}
-
 /// VF-COM-020: Selected output token.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum OutputToken {
@@ -167,20 +137,4 @@ pub struct CommitVaultLockParams {
     pub verified_gross_usd_micro: u128,
     /// VF-COM-025: CHONX activation receipt ("not_applicable" for VCLM).
     pub chonx_activation_receipt: String,
-}
-
-/// Default for HandshakeAllowance — init_if_needed uses this when creating the account.
-/// Allowance is handshake_allowance(COUNTS_PER_IDENTITY), not a stored 3.
-impl Default for HandshakeAllowance {
-    fn default() -> Self {
-        let allowance = crate::constants::handshake_allowance(crate::constants::COUNTS_PER_IDENTITY);
-        Self {
-            identity: String::new(),
-            source_account: Pubkey::default(),
-            used: 0,
-            remaining: allowance,
-            allowance,
-            bump: 0,
-        }
-    }
 }
