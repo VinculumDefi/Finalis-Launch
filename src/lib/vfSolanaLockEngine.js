@@ -27,7 +27,7 @@ import {
   TOKEN_HARD_CAPS,
   LOCK_STATES,
   ATTEMPT_STATES,
-} from './vfRevision6Authority.js';
+} from './vfSpecAuthority.js';
 import { LIVE_RULES, HANDSHAKE_USD_MIN_FP, HANDSHAKE_USD_MAX_FP, STANDARD_USD_MIN_FP } from './vfLiveRules.js';
 import { SOLANA_REGISTRY } from './vfSolanaRegistry.js';
 import { isOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
