@@ -27,6 +27,5 @@ Rebuild the current revision and what depends on it:
 ```
 node scripts/buildRevisionB.cjs            # deployment/assetRegistry.revB.json
 node scripts/buildTokenAddressIndex.cjs    # deployment/tokenAddressIndex.json
-node scripts/build_ceremony_artifacts.cjs  # scripts/deploy-pages/ceremony-data.json (fetches the ETH price)
-node scripts/deploy-pages/buildDeployPages.cjs
+node scripts/build_ceremony_artifacts.cjs  # scripts/deploy-pages/ceremony-data.json: the Base subset (27 rows, 26 token addresses, 0 aliases); fetches the ETH price
 ```
