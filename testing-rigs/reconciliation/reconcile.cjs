@@ -297,7 +297,17 @@ async function reconcile(o) {
   await K(lock, "Lock", "STANDARD_FEE_BPS", 500n); await K(lock, "Lock", "BPS_DENOMINATOR", 10000n);
   await K(lock, "Lock", "HANDSHAKE_DURATION", 3600n); await K(lock, "Lock", "HANDSHAKE_USD_MIN", 10n ** 16n);
   await K(lock, "Lock", "HANDSHAKE_USD_MAX", 2n * 10n ** 16n); await K(lock, "Lock", "STANDARD_USD_MIN", 10n ** 16n);
-  await K(lock, "Lock", "countsPerIdentity", true);
+  // Rev 12: the lock keeps no Handshake allowance and no identity counter, so
+  // neither old getter may answer.
+  for (const sig of ["handshakeAllowance()", "countsPerIdentity()"]) {
+    try {
+      const ret = await retry(() => P.call({ to: set.lock, data: ethers.id(sig).slice(0, 10) }));
+      R.add("references", `Lock does not expose ${sig} (Rev 12, no Handshake allowance)`, ret === "0x" ? "PASS" : "MISMATCH", ret === "0x" ? "empty return" : "answered " + ret.slice(0, 18));
+    } catch (e) {
+      const reverted = e.code === "CALL_EXCEPTION" || /revert/i.test(e.shortMessage || e.message);
+      R.add("references", `Lock does not expose ${sig} (Rev 12, no Handshake allowance)`, reverted ? "PASS" : "INCOMPLETE", reverted ? "call reverts" : (e.shortMessage || e.message));
+    }
+  }
   await K(V, "Verifier", "STANDARD_FEE_BPS", 500n); await K(V, "Verifier", "HANDSHAKE_USD_MIN", 10n ** 16n);
   await K(V, "Verifier", "HANDSHAKE_USD_MAX", 2n * 10n ** 16n); await K(V, "Verifier", "HANDSHAKE_DURATION_SECS", 3600n);
   await K(V, "Verifier", "USD_STABLE_MIN_PRICE", 95n * 10n ** 16n); await K(V, "Verifier", "CHONX_ACTIVATION_THRESHOLD", 10000000n * 10n ** 18n);
