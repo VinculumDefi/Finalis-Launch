@@ -13,7 +13,7 @@ const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const DATA = require("../scripts/deploy-pages/ceremony-data.json");
-const { runBaseCeremony, EVM_ENVS } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
+const { runBaseCeremony } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 
 const SCALE = 10n ** 18n;
 const DAY7 = 604800n;
@@ -50,9 +50,6 @@ function harness(mode) {
   };
   h.setup = async () => {
     [h.signer, h.user, h.recipient, h.dest, h.other] = await ethers.getSigners();
-    const L = new ethers.ContractFactory(art.CommitmentVaultLock.abi, art.CommitmentVaultLock.bytecode, h.signer);
-    const newLocks = {};
-    for (const env of EVM_ENVS) newLocks[env] = await (await L.deploy(env, DATA.evmDevFunds[env])).getAddress();
     const log = (s) => {
       h.logs.push(...String(s).split("\n"));
       for (const n of ["VCLM", "CHONX", "Forge"]) {
@@ -60,7 +57,7 @@ function harness(mode) {
         if (m) h.addr[n] = ethers.getAddress(m[1]);
       }
     };
-    h.r = await runBaseCeremony({ ethers, signer: h.signer, art, data: h.data, newLocks, log });
+    h.r = await runBaseCeremony({ ethers, signer: h.signer, art, data: h.data, log });
     await network.provider.send("hardhat_impersonateAccount", [DATA.scheduledPricePoster]);
     await network.provider.send("hardhat_setBalance", [DATA.scheduledPricePoster, "0x56BC75E2D63100000"]);
     h.poster = await ethers.getSigner(DATA.scheduledPricePoster);
@@ -137,7 +134,7 @@ async function closeAndAllocate(h, upTo) {
   for (let n = 1n; n <= upTo; n++) if (!(await h.r.stake.epochs(n)).closed) await (await h.r.stake.closeEpoch(n)).wait();
 }
 
-describe("t262u TRS rewards on the real ceremony flow (487 rows, test chain)", function () {
+describe("t262u TRS rewards on the real ceremony flow (Base-only, 27 Base rows, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
   let T0, s;
@@ -151,8 +148,8 @@ describe("t262u TRS rewards on the real ceremony flow (487 rows, test chain)", f
   it("ceremony order: tokens, Verifier, Forge, Stake before the Base lock; Base lock holds the three protocol token addresses; Stake T0 = Verifier launch", async () => {
     const order = h.logs.map((x) => x.split(" ")[0]);
     expect(order.indexOf("Forge")).to.be.lessThan(order.indexOf("Base"));
-    expect(h.logs).to.include("registry 487/487");
-    expect(h.logs).to.include("token addresses 475/475");
+    expect(h.logs).to.include("registry 27/27");
+    expect(h.logs).to.include("token addresses 26/26");
     expect(await h.r.lock.vclmToken()).to.equal(await h.r.vclm.getAddress());
     expect(await h.r.lock.chonxToken()).to.equal(await h.r.chonx.getAddress());
     expect(await h.r.lock.synthToken()).to.equal(await h.r.forge.getAddress());
