@@ -28,9 +28,6 @@ export const PROOF_PACKAGE_FIELDS = [
   // Source identity
   'source_environment_id',
   'commitment_vault_lock_id',
-  // Handshake
-  'handshake_identity',
-  'handshake_allowance_count',
   // Asset identity + quantity
   'canonical_asset_id',
   'canonical_asset_symbol',
@@ -159,9 +156,6 @@ export function normalizeProofPackage(raw) {
       // source_finality_proof is opaque to the normalizer and judged by
       // BASE-VERIFY (VF-XCH-006 "finality proof missing"), not here.
       if (field === 'source_finality_proof') continue;
-      // null allowance is the registry's own value for an environment whose
-      // mechanism cannot count; checked against env below (fail closed).
-      if (field === 'handshake_allowance_count' && env && env.handshakeAllowance === null) continue;
       errors.push(`VF-XCH-011: missing field "${field}"`);
     }
   }
@@ -213,15 +207,9 @@ export function normalizeProofPackage(raw) {
     }
   }
 
-  // Handshake allowance count must be 1 or 3 (null only where the registry has no allowance)
-  if (raw.handshake_allowance_count != null && env) {
-    const count = Number(raw.handshake_allowance_count);
-    if (env.handshakeAllowance !== null && count !== env.handshakeAllowance) {
-      errors.push(
-        `VF-COM-006: handshake_allowance_count ${count} does not match environment allowance ${env.handshakeAllowance}`,
-      );
-    }
-  }
+  // Revision 12: the Handshake has no allowance limit and no identity. A
+  // handshake_identity or handshake_allowance_count field on a raw package is
+  // not required, not checked and not copied into the normalized package.
 
   if (errors.length > 0) {
     return { ok: false, errors };
@@ -259,8 +247,6 @@ export function normalizeSolanaEvidence(event, finalityProof) {
   return normalizeProofPackage({
     source_environment_id: 'Solana',
     commitment_vault_lock_id: event.lock_id,
-    handshake_identity: event.handshake_identity,
-    handshake_allowance_count: 3, // Solana is source-enforced 3-use
     canonical_asset_id: event.lock_type === 'Native' ? 'native-SOL' : event.mint,
     canonical_asset_symbol: event.canonical_asset === 'SOL' ? 'SOL' : event.canonical_asset,
     asset_precision: event.lock_type === 'Native' ? 9 : null, // resolved from table
@@ -304,8 +290,6 @@ export function normalizeXrplEvidence(escrowTx, paymentTx, finalityProof) {
   return normalizeProofPackage({
     source_environment_id: 'XRPL',
     commitment_vault_lock_id: metadata.lock_id || escrowTx.Account + ':' + escrowTx.Sequence,
-    handshake_identity: `(XRPL, ${escrowTx.Account})`,
-    handshake_allowance_count: 1, // XRPL is Base-enforced 1-use
     canonical_asset_id: 'native-XRP',
     canonical_asset_symbol: 'XRP',
     asset_precision: 6,
@@ -335,8 +319,6 @@ export function normalizeUtxoEvidence(envId, txData, finalityProof) {
   return normalizeProofPackage({
     source_environment_id: envId,
     commitment_vault_lock_id: txData.lock_id,
-    handshake_identity: `(${envId}, ${txData.canonical_release_public_key})`,
-    handshake_allowance_count: 1, // UTXO is Base-enforced 1-use per canonical release public key
     canonical_asset_id: `native-${txData.asset_symbol}`,
     canonical_asset_symbol: txData.asset_symbol,
     asset_precision: 8,
@@ -366,8 +348,6 @@ export function normalizeStellarEvidence(txData, finalityProof) {
   return normalizeProofPackage({
     source_environment_id: 'Stellar',
     commitment_vault_lock_id: txData.lock_id,
-    handshake_identity: `(Stellar, ${txData.source_account})`,
-    handshake_allowance_count: 1, // Stellar is Base-enforced 1-use
     canonical_asset_id: 'native-XLM',
     canonical_asset_symbol: 'XLM',
     asset_precision: 7,
@@ -397,8 +377,6 @@ export function normalizeEvmEvidence(envId, event, finalityProof) {
   return normalizeProofPackage({
     source_environment_id: envId,
     commitment_vault_lock_id: event.lockId,
-    handshake_identity: `(${envId}, ${event.sourceAccount})`,
-    handshake_allowance_count: 3, // EVM is source-enforced 3-use
     canonical_asset_id: event.isNative ? `native-${event.assetSymbol}` : event.assetSymbol,
     canonical_asset_symbol: event.assetSymbol,
     asset_precision: event.assetDecimals,
