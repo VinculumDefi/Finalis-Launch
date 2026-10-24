@@ -1,9 +1,8 @@
 {
  "about": "Hand-written assumption table. Each row names what the protocol treats as proven, the spec rule, and the check evidence that would satisfy each required property. build_gaps.py matches these against inputs.json.",
  "spec_sources": {
-  "Rev 6": "Vinculum_Finalis_Requirement_Traceability.csv (the Rev 6 docx is not in the repo) and src/lib/vfRevision6Authority.js",
-  "Rev 12": "docs/Vinculum_Finalis_Master_Specification_Revision_12_2026-10-16.md",
-  "Rev 13": "docs/Vinculum_Finalis_Master_Specification_Revision_13_2026-10-22.md"
+  "Master Specification": "Vinculum Finalis Master Specification (the current edition is the one DOCUMENT_REGISTER.md lists as current)",
+  "Requirement traceability": "Vinculum_Finalis_Requirement_Traceability.csv and src/lib/vfRevision6Authority.js"
  },
  "poc_file": "testing-rigs/assumption-gap/poc/assumption_gap_poc.test.cjs",
  "assumptions": [

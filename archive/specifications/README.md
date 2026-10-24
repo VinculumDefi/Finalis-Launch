@@ -5,25 +5,27 @@ Nothing here governs. Nothing here is deleted.
 
 - The current edition of each document is the one listed in
   `DOCUMENT_REGISTER.md` at the repository root.
-- The current governing specification is Revision 14:
-  `docs/Vinculum_Finalis_Master_Specification_Revision_14_2026-10-24.md`.
+- The current governing specification is Revision 16:
+  `docs/Vinculum_Finalis_Master_Specification_Revision_16_2026-10-24.md`.
+  Its SHA-256 is recorded in `DOCUMENT_REGISTER.md`.
 - Files are kept as they were. Moved files keep their git history
   (`git log --follow <path>`).
 
 ## Folders
-- `master-specification/`: Master Specification Revisions 6, 8, 9, 10 and 11,
-  and the Revision 8 lock report.
+- `master-specification/`: Master Specification Revisions 6, 8, 9, 10, 11,
+  12, 13, 14 and 15, and the Revision 8 lock report. Hashes are in
+  `DOCUMENT_REGISTER.md`.
   - Revision 6 (`Vinculum_Finalis_Master_Specification_Revision_6_2026-07-28.docx`)
     SHA-256 `5a9350618d81005d53b4d05628e7403e8c39fe63847a46576a5fadfbd4ef0bf9`.
-    Its text is carried forward in Revision 14.
+    Its text is carried forward in Revision 14 and every later revision.
   - Revisions 6 and 11 are copies of the files on branch redteam/prep, which is
     unchanged.
   - Revision 7 was never committed to this repository.
-  - Revisions 12 and 13 are not here. They stay in `docs/` because
-    `testing-rigs/assumption-gap/assumptions.json` (lines 5 and 6) names their
-    paths. Each carries a superseded header.
+  - Revisions 12, 13, 14 and 15 moved here from `docs/` on 2026-10-24, in
+    the same commit that added Revision 16.
 - `revision-7-candidates/`: the Revision 7 candidate list and its review.
   Neither was adopted.
+- `document-register/`: earlier editions of `DOCUMENT_REGISTER.md`.
 - `session-start/`: earlier editions of `VINCULUM_SESSION_START.md`
   (Revision 1 of 2026-10-12 and Revision 2 of 2026-10-20).
 
