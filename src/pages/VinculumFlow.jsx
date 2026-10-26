@@ -13,7 +13,7 @@ import {
 } from '@/lib/vfBaseEthLock';
 import { useApprovedAssetRegistry } from '@/hooks/useApprovedAssetRegistry';
 
-// The asset this page locks: Base native ETH (Revision B row 2), from the active list.
+// The asset this page locks: Base native ETH (Revision D row 2), from the active list.
 
 function StatusPill({ ok, children }) {
   return ok
@@ -78,7 +78,7 @@ export default function VinculumFlow() {
             <p className="text-sm text-muted-foreground">
               Mode: <b>{DEPLOYMENT_STATE}</b>. This page builds the exact Base lock call and shows it. Nothing is
               broadcast, and no hash, balance, receipt, lock record or mint result is made up. The new 5% Base lock
-              and the Revision B Verifier are not deployed yet, so sending is blocked and the missing setting is shown.
+              and the Base Verifier are not deployed yet, so sending is blocked and the missing setting is shown.
             </p>
           </div>
         </div>
@@ -88,14 +88,13 @@ export default function VinculumFlow() {
           <p className="text-sm text-muted-foreground">
             Source environment: <span className="font-mono">{BASE_CHAIN.environment_id}</span> (chain id {BASE_CHAIN.chain_id}) · asset{' '}
             {pageAsset.ok
-              ? <span className="font-mono">ETH, Revision B row {pageAsset.entry.row}</span>
+              ? <span className="font-mono">ETH, Revision D row {pageAsset.entry.row}</span>
               : <span className="text-rose-600">{pageAsset.reason}</span>}
           </p>
           <div className="flex flex-wrap gap-2 pt-2">
             <Link to="/base-verifier"><Button variant="outline" size="sm">Base Verifier</Button></Link>
             <Link to="/token-layer"><Button variant="outline" size="sm">Token Layer</Button></Link>
             <Link to="/stake-layer"><Button variant="outline" size="sm">Stake Layer</Button></Link>
-            <Link to="/xrpl-lock"><Button variant="outline" size="sm">XRPL Lock</Button></Link>
           </div>
         </header>
 
@@ -237,7 +236,7 @@ export default function VinculumFlow() {
             <ShieldAlert className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
             <div className="text-sm text-muted-foreground">
               After a lock confirms, the app reads the lock record, then calls recordFeeAndRac and verifyAndMint on the
-              Verifier with one package built from that record. The Revision B Verifier is{' '}
+              Verifier with one package built from that record. The Base Verifier is{' '}
               <StatusPill ok={verifierPresent}>{verifierPresent ? 'deployed' : 'pending deployment'}</StatusPill>, so this step is not available.
             </div>
           </div>
