@@ -7,8 +7,8 @@
 // (2) as soon as CHONX is available, SYNTH forging can begin, no extra CHONX threshold;
 // (3) one SYNTH = 1,000 VCLM + 10,000 CHONX.
 //
-// Path A: the ceremony as built (Base-only launch, t430u: the 129 Base rows of
-// the 589-row Revision D, no protocol-token rows).
+// Path A: the ceremony as built (Base-only launch, t430u: the 130 Base rows of
+// the 590-row Revision D, no protocol-token rows).
 // Path B (t258u): three extra rows after the Base rows, before finalize:
 //   488 VCLM (fixed $0.10), 489 CHONX (fixed $0.01), 490 SYNTH (fixed $200).
 //   Rows use custodyClass 3 / custodyPath 1 (S3, token), decimals 18, the same as
@@ -183,14 +183,14 @@ async function forgeChecks(h, label) {
   console.log(`      [${label}] 999.99 VCLM or 9,999.99 CHONX refused (VFT: insufficient balance); forge(2) burned exactly 2,000 VCLM + 20,000 CHONX`);
 }
 
-describe("Path A (129 Base rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH forge (proof, test chain)", function () {
+describe("Path A (130 Base rows, ceremony as built): ETH -> VCLM -> CHONX -> SYNTH forge (proof, test chain)", function () {
   this.timeout(900000);
   const h = harness(false);
   before(async () => { await h.setup(); });
 
-  it("A0: ceremony writes the 129 Base rows and 128 Base token addresses, no protocol-token row, and finalizes", async () => {
-    expect(h.logs).to.include("registry 129/129");
-    expect(h.logs).to.include("token addresses 128/128");
+  it("A0: ceremony writes the 130 Base rows and 129 Base token addresses, no protocol-token row, and finalizes", async () => {
+    expect(h.logs).to.include("registry 130/130");
+    expect(h.logs).to.include("token addresses 129/129");
     expect((await h.r.verifier.assetPrecisionTable(key("Base", VCLM_ID))).canonicalAssetId).to.equal(ethers.ZeroHash);
     expect(await h.r.verifier.configurationFinalized()).to.equal(true);
     expect(await h.r.forge.verifier()).to.equal(await h.r.verifier.getAddress());
@@ -264,10 +264,10 @@ describe("Rows 488-490 with their token addresses are refused by the ceremony (t
   it("the Verifier refuses to index VCLM, CHONX or SYNTH, so the ceremony stops before finalize", async () => {
     const h = harness(true);
     await expect(h.setup()).to.be.revertedWith("VF-REG-008: protocol token is not a lock input");
-    expect(h.logs).to.include("registry 132/132"); // 129 Base rows plus the three
-    // 128 Base token addresses plus the three: the last batch of 50 holds the
-    // three and is refused whole, so the index never reaches 131/131.
-    expect(h.logs).to.not.include("token addresses 131/131");
+    expect(h.logs).to.include("registry 133/133"); // 130 Base rows plus the three
+    // 129 Base token addresses plus the three: the last batch of 50 holds the
+    // three and is refused whole, so the index never reaches 132/132.
+    expect(h.logs).to.not.include("token addresses 132/132");
     expect(h.logs).to.not.include("Finalized.");
   });
 });
