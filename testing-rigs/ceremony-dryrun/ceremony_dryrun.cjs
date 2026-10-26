@@ -1,7 +1,7 @@
 // Ceremony dry-run, Base-only launch (founder directive t357u). Runs the
 // Base ceremony exactly as base.html does (baseCeremonyFlow.runBaseCeremony,
 // built ceremony.json artifacts, the Base subset of registry Revision D in
-// ceremony-data.json: 129 rows, 128 token addresses, 0 aliases, one reader)
+// ceremony-data.json: 130 rows, 129 token addresses, 0 aliases, one reader)
 // against a LOCAL fork of Base mainnet, then reconciles the deployed set
 // (Rig 10), then checks Base USDC (row 454): registered as S1 and a real
 // USDC lock on the fork mints at 1.5x the S3 amount (operator decision
@@ -34,13 +34,13 @@ const err = (...a) => process.stderr.write(scrub(a.join(" ")) + "\n");
 const coder = ethers.AbiCoder.defaultAbiCoder();
 
 const STEPS = [
-  "inputs and artifacts (Base subset: 129 rows, 128 token addresses, 0 aliases)",
+  "inputs and artifacts (Base subset: 130 rows, 129 token addresses, 0 aliases)",
   "fork is Base mainnet",
   "deploy VCLM, CHONX, Verifier, Forge, Stake",
   "deploy Base lock",
   "initialize VCLM and CHONX, deploy and register the Base reader",
-  "registry rows (129 Base rows)",
-  "token address index (128 Base token addresses)",
+  "registry rows (130 Base rows)",
+  "token address index (129 Base token addresses)",
   "Dev Fund, price run 1, poster hand-over, finalize",
   "post-finalize state (one reader, no other environment wired)",
   "Base reader with a real lock on the fork",
@@ -63,9 +63,9 @@ async function main() {
   const extra = Object.keys(art).filter((n) => !["TokenVCLM", "TokenCHONX", "VinculumFinalisVerifier", "VinculumFinalisSynth", "VinculumFinalisStake", "BaseCommitmentVaultLock", "BaseLockRecordVerifier"].includes(n));
   if (extra.length) throw new Error(`ceremony.json carries non-Base contracts: ${extra.join(", ")}`);
   if (DATA.baseOnly !== true) throw new Error("ceremony-data is not marked baseOnly");
-  if (DATA.registryRows !== 589) throw new Error(`registry source has ${DATA.registryRows} rows, expected 589 (Revision D)`);
-  if (DATA.entries.length !== 129) throw new Error(`registry has ${DATA.entries.length} rows, expected 129 Base rows`);
-  if (DATA.tokenAddresses.length !== 128) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 128`);
+  if (DATA.registryRows !== 590) throw new Error(`registry source has ${DATA.registryRows} rows, expected 590 (Revision D)`);
+  if (DATA.entries.length !== 130) throw new Error(`registry has ${DATA.entries.length} rows, expected 130 Base rows`);
+  if (DATA.tokenAddresses.length !== 129) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 129`);
   if (DATA.assetRowAliases.length !== 0) throw new Error(`${DATA.assetRowAliases.length} aliases, expected 0`);
   if (!DATA.entries.every((e) => e.environmentId === "Base") || !DATA.tokenAddresses.every((t) => t.environmentId === "Base")) throw new Error("a non-Base row is in ceremony-data");
   if (JSON.stringify(Object.keys(DATA.readers)) !== JSON.stringify(["base"])) throw new Error("ceremony-data readers are not Base only");
@@ -98,8 +98,8 @@ async function main() {
         else if (/^reader Base/.test(line)) at(4);
         else if (/^registry /.test(line) && step < 5) at(5);
         else if (/^token addresses /.test(line) && step < 6) at(6);
-        if (/^token addresses 128\/128/.test(line)) at(7);
-        if (/^(registry|token addresses) /.test(line) && !/\/(129|128)$/.test(line)) continue;
+        if (/^token addresses 129\/129/.test(line)) at(7);
+        if (/^(registry|token addresses) /.test(line) && !/\/(130|129)$/.test(line)) continue;
         err("  " + line);
       }
     },
@@ -267,6 +267,16 @@ async function main() {
     if (DATA.entries.some((x) => x.row === row) || DATA.tokenAddresses.some((x) => x.token.toLowerCase() === tok.toLowerCase())) throw new Error(`${sym} is removed under t431u but is in ceremony-data`);
     if ((await tIdx(tok)) !== ethers.ZeroHash) throw new Error(`${sym} contract is indexed`);
     ogLines.push(`${sym} row ${row} not registered (t431u)`);
+  }
+  // doginme (operator t438u): new S3 row 1103, registered and indexed by its exact Base contract.
+  {
+    const DOG = "0x6921B130D297cc43754afba22e5EAc0FBf8Db75b";
+    const e = DATA.entries.find((x) => x.row === 1103);
+    if (!e || e.symbol !== "doginme" || e.custodyClass !== 3) throw new Error("ceremony-data has no S3 doginme row 1103");
+    const k = ethers.keccak256(ethers.solidityPacked(["string", "bytes32"], ["Base", e.canonicalAssetId]));
+    if ((await V.assetPrecisionTable(k)).canonicalAssetId !== e.canonicalAssetId) throw new Error("doginme row 1103 not registered");
+    if ((await tIdx(DOG)) !== e.canonicalAssetId) throw new Error("doginme contract not indexed to row 1103");
+    ogLines.push(`added doginme row 1103 ${short(DOG)} (t438u)`);
   }
   const stableFlagged = [];
   for (const e of DATA.entries) {
