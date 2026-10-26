@@ -134,7 +134,7 @@ async function closeAndAllocate(h, upTo) {
   for (let n = 1n; n <= upTo; n++) if (!(await h.r.stake.epochs(n)).closed) await (await h.r.stake.closeEpoch(n)).wait();
 }
 
-describe("t262u TRS rewards on the real ceremony flow (Base-only, 27 Base rows, test chain)", function () {
+describe("t262u TRS rewards on the real ceremony flow (Base-only, 131 Base rows, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
   let T0, s;
@@ -148,8 +148,8 @@ describe("t262u TRS rewards on the real ceremony flow (Base-only, 27 Base rows, 
   it("ceremony order: tokens, Verifier, Forge, Stake before the Base lock; Base lock holds the three protocol token addresses; Stake T0 = Verifier launch", async () => {
     const order = h.logs.map((x) => x.split(" ")[0]);
     expect(order.indexOf("Forge")).to.be.lessThan(order.indexOf("Base"));
-    expect(h.logs).to.include("registry 27/27");
-    expect(h.logs).to.include("token addresses 26/26");
+    expect(h.logs).to.include("registry 131/131");
+    expect(h.logs).to.include("token addresses 130/130");
     expect(await h.r.lock.vclmToken()).to.equal(await h.r.vclm.getAddress());
     expect(await h.r.lock.chonxToken()).to.equal(await h.r.chonx.getAddress());
     expect(await h.r.lock.synthToken()).to.equal(await h.r.forge.getAddress());
