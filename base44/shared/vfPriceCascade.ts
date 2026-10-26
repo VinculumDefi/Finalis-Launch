@@ -17,8 +17,12 @@
 // (VF-ORC-006: no override applies, and a displayed registry contract is never
 // replaced with a different lookup contract). The four former price-source
 // overrides (TigerOG, LionOG, FrogOG, WKC) are removed. TigerOG is on the Base
-// registry by founder override (t430u, t431u), which supplies no price; it is
-// priced by this cascade like any other row.
+// registry by founder override (t430u, t431u). The override never supplies a
+// price. Under operator decision t436u its Tier 2 lookup takes a DexScreener
+// pool for its exact registry contract on any chain (TigerOG is an Axelar ITS
+// token, so the same address exists on other chains), the pool with the most
+// liquidity, and no market-activity, trading-recency or pool-age test applies
+// to it. Every other row uses its own chain's pools only.
 //
 // If no price is found, returns { usd: null } and never fabricates a value.
 // =============================================================================
@@ -108,16 +112,28 @@ export function tokenUsdFromPair(pair, contract) {
   return null;
 }
 
-export function bestDsPrice(pairs, dsChain, contract) {
+// Founder override rows (operator t430u item 5, narrowed to TigerOG by t431u).
+// Exact identity: registry environment and exact contract, never a ticker.
+export const FOUNDER_OVERRIDE = Object.freeze([
+  Object.freeze({ environment: "Base", contract: "0xCF7Fc0De71238c9EC45EC2Fd24FDc8521345dbB5" }),
+]);
+export function isFounderOverride(environment, contract) {
+  return FOUNDER_OVERRIDE.some((f) => f.environment === environment && sameAddr(f.contract, contract));
+}
+
+// Price from the usable pair with the most liquidity. Only pairs on dsChain
+// count unless anyChain is set (founder override rows only). No volume,
+// trade-count, recency or pool-age test is applied.
+export function bestDsPrice(pairs, dsChain, contract, anyChain = false) {
   let best = null;
   for (const p of pairs || []) {
-    if (!p || p.chainId !== dsChain) continue;
+    if (!p || (!anyChain && p.chainId !== dsChain)) continue;
     const t = tokenUsdFromPair(p, contract);
     if (!t) continue;
     const liq = parseFloat((p.liquidity || {}).usd || "0") || 0;
-    if (!best || liq > best.liq) best = { ...t, liq, pair: p.pairAddress || null };
+    if (!best || liq > best.liq) best = { ...t, liq, pair: p.pairAddress || null, chain: p.chainId || null };
   }
-  return best ? { usd: best.usd, source: "DexScreener", pairSide: best.side, pair: best.pair } : null;
+  return best ? { usd: best.usd, source: "DexScreener", pairSide: best.side, pair: best.pair, pairChain: best.chain } : null;
 }
 
 export async function dsByContract(environment, contract) {
@@ -127,8 +143,15 @@ export async function dsByContract(environment, contract) {
   // Chain-scoped endpoint first: it lists the token's pools on its own chain.
   // The older all-chain endpoint returns a capped list that can leave out the
   // token's own-chain pools, so it is only a fallback.
-  const scoped = await fetchJson(`https://api.dexscreener.com/token-pairs/v1/${dsChain}/${contract}`);
-  const r = Array.isArray(scoped) ? bestDsPrice(scoped, dsChain, contract) : null;
+  const scopedRaw = await fetchJson(`https://api.dexscreener.com/token-pairs/v1/${dsChain}/${contract}`);
+  const scoped = Array.isArray(scopedRaw) ? scopedRaw : [];
+  if (isFounderOverride(environment, contract)) {
+    // Operator t436u: any pool for this exact contract on any chain, the most
+    // liquid one, with no market-activity requirement.
+    const all = await fetchJson(`https://api.dexscreener.com/latest/dex/tokens/${contract}`);
+    return bestDsPrice([...scoped, ...((all && all.pairs) || [])], dsChain, contract, true);
+  }
+  const r = bestDsPrice(scoped, dsChain, contract);
   if (r) return r;
   const data = await fetchJson(`https://api.dexscreener.com/latest/dex/tokens/${contract}`);
   if (!data || !data.pairs) return null;
