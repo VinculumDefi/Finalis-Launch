@@ -1,8 +1,8 @@
 // Builds src/data/activeAssetAllowlist.json: the only assets the app may offer.
 //
 // Base-only launch (operator decision t430u item 2, 2026-10-26). The source is
-// the ceremony registry, Revision D (deployment/assetRegistry.revD.json, 589
-// rows), and only its Base rows are offered: Base ETH plus the 128 Base
+// the ceremony registry, Revision D (deployment/assetRegistry.revD.json, 590
+// rows), and only its Base rows are offered: Base ETH plus the 129 Base
 // tokens. Rows of every other chain stay in Revision D as history and are not
 // offered; they are counted under "notOffered", not listed.
 //
