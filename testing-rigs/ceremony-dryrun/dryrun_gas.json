@@ -72,28 +72,28 @@
  {
   "step": 4,
   "gasLimit": "16777216",
-  "gasUsed": "3541552",
+  "gasUsed": "3541516",
   "to": "0x5678...07D2",
   "created": null
  },
  {
   "step": 5,
   "gasLimit": "16777216",
-  "gasUsed": "3540964",
+  "gasUsed": "3540952",
   "to": "0x5678...07D2",
   "created": null
  },
  {
   "step": 5,
   "gasLimit": "16777216",
-  "gasUsed": "2205053",
+  "gasUsed": "2064449",
   "to": "0x5678...07D2",
   "created": null
  },
  {
   "step": 5,
   "gasLimit": "16777216",
-  "gasUsed": "1618464",
+  "gasUsed": "1618488",
   "to": "0x5678...07D2",
   "created": null
  },
@@ -107,7 +107,7 @@
  {
   "step": 6,
   "gasLimit": "16777216",
-  "gasUsed": "994120",
+  "gasUsed": "931709",
   "to": "0x5678...07D2",
   "created": null
  },
