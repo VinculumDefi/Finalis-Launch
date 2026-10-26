@@ -9,9 +9,9 @@
 //   -> CHONX.initialize(Verifier, 0)
 //   -> ONE reader deployed and registered: BaseLockRecordVerifier bound to the
 //      new Base lock. No other environment gets a reader (Base-only launch).
-//   -> registry: the Base rows of Revision C only (26 Base rows + Base ETH as
-//      row 2 = 27; row 454 USDC_BASE is S1), the Base token address index
-//      (26 addresses), no aliases
+//   -> registry: the Base rows of Revision D only (130 Base tokens + Base ETH
+//      as row 2 = 131; Base USDC is S1), the Base token address index
+//      (130 addresses), no aliases
 //   -> Dev Fund for Base only -> poster = this wallet, price run 1, read usable
 //   -> poster handed to the live poster -> finalize.
 (function (root) {
@@ -79,7 +79,7 @@
     log("reader Base " + await at(readers.Base));
 
     const items = data.entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath }));
-    // ceremony-data.entries is the Base subset of Revision C (26 + Base ETH = 27).
+    // ceremony-data.entries is the Base subset of Revision D (130 + Base ETH = 131).
     // Append row 2 only when an older data file omitted it.
     const hasBaseEth = items.some((e) => e.environmentId === "Base" && String(e.canonicalAssetId).toLowerCase() === String(data.row2.canonicalAssetId).toLowerCase());
     if (!hasBaseEth) {
