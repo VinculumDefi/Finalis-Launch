@@ -23,22 +23,22 @@ const CVL_ABI = existsSync(ART) ? JSON.parse(readFileSync(ART, 'utf8')).abi : [
   'function release(bytes32 lockId)',
 ];
 const CVL = new ethers.Interface(CVL_ABI);
-const REVB = JSON.parse(readFileSync(path.join(ROOT, 'base-contracts', 'deployment', 'assetRegistry.revB.json'), 'utf8'));
+const REVD = JSON.parse(readFileSync(path.join(ROOT, 'base-contracts', 'deployment', 'assetRegistry.revD.json'), 'utf8'));
 
 const A = '0x' + '11'.repeat(20);
 const B = '0x' + '22'.repeat(20);
 const ID = '0x' + 'ab'.repeat(32);
 const ok = { lockId: ID, baseRecipient: A, releaseDestination: B, outputToken: 'VCLM', durationSecs: 604800, grossEth: '0.01', priceUsd: '2500' };
 
-test('page asset is Base ETH from the active list, with the Revision B Base ETH asset id', () => {
+test('page asset is Base ETH from the active list, with the Revision D Base ETH asset id', () => {
   const r = resolvePageAsset();
   assert.equal(r.ok, true);
   assert.equal(r.entry.environmentId, 'Base');
   assert.equal(r.entry.symbol, 'ETH');
   assert.equal(r.entry.row, 2);
-  const entries = REVB.entries || REVB;
-  const revbEth = (Array.isArray(entries) ? entries : []).find((e) => e.environmentId === 'Base' && /eth/i.test(e.symbol || ''));
-  if (revbEth && revbEth.canonicalAssetId) assert.equal(revbEth.canonicalAssetId.toLowerCase(), r.entry.canonicalAssetId.toLowerCase());
+  const revdEth = REVD.entries.find((e) => e.environmentId === 'Base' && e.kind === 'native');
+  assert.equal(revdEth.row, 2);
+  assert.equal(revdEth.canonicalAssetId.toLowerCase(), r.entry.canonicalAssetId.toLowerCase());
 });
 
 test('no Cosmos anywhere on the page or its config; Cosmos-only libraries removed', () => {
