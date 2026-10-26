@@ -2,7 +2,7 @@
 // same code base.html runs), driven on the in-process Hardhat chain with the
 // real ceremony.json and ceremony-data.json. Nothing is broadcast.
 // Base-only launch (t357u): one reader (Base), the Base subset of registry
-// Revision D (t430u: 129 Base rows, 128 Base token addresses; row 454
+// Revision D (t430u: 130 Base rows, 129 Base token addresses; row 454
 // USDC_BASE is S1).
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
@@ -44,10 +44,10 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     for (const env of NON_BASE_ENVS) expect(await r.verifier.devFundDestinations(env), env).to.equal(ethers.ZeroAddress);
   });
 
-  it("registers the Base subset of Revision D only: 129 rows, 128 token addresses, no non-Base row", async () => {
-    expect(data.registryRows).to.equal(589);
-    expect(data.entries.length).to.equal(129);
-    expect(data.tokenAddresses.length).to.equal(128);
+  it("registers the Base subset of Revision D only: 130 rows, 129 token addresses, no non-Base row", async () => {
+    expect(data.registryRows).to.equal(590);
+    expect(data.entries.length).to.equal(130);
+    expect(data.tokenAddresses.length).to.equal(129);
     expect(data.assetRowAliases.length).to.equal(0);
     for (const e of data.entries) {
       const k = ethers.solidityPackedKeccak256(["string", "bytes32"], [e.environmentId, e.canonicalAssetId]);
@@ -55,7 +55,7 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     }
     const { resolveCeremonyRegistry } = require("../scripts/deploy-pages/resolveAssetRegistry.cjs");
     const nonBase = resolveCeremonyRegistry().entries.filter((e) => e.environmentId !== "Base");
-    expect(nonBase.length).to.equal(589 - 129);
+    expect(nonBase.length).to.equal(590 - 130);
     for (const e of nonBase.slice(0, 40)) {
       const k = ethers.solidityPackedKeccak256(["string", "bytes32"], [e.environmentId, e.canonicalAssetId]);
       expect((await r.verifier.assetPrecisionTable(k)).canonicalAssetId, e.environmentId + " " + e.symbol).to.equal(ethers.ZeroHash);
