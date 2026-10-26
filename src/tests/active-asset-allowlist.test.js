@@ -45,12 +45,12 @@ test('this deployment is Base only', () => {
   assert.equal(SOLANA_LOCKS_ENABLED, false);
 });
 
-test('allowlist equals the Base rows of Revision D exactly (129 entries: 128 tokens + Base ETH, no native links, nothing excluded)', () => {
+test('allowlist equals the Base rows of Revision D exactly (130 entries: 129 tokens + Base ETH, no native links, nothing excluded)', () => {
   const key = (e) => `${e.environmentId}|${e.row}|${e.canonicalAssetId}`;
   assert.equal(REVD.revision, 'D');
-  assert.equal(REVD.entries.length, 589);
-  assert.equal(BASE.length, 129);
-  assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 129, tokens: 128, natives: 1, nativeLinks: 0, excluded: 0, founderOverride: 1, notOffered: 460 });
+  assert.equal(REVD.entries.length, 590);
+  assert.equal(BASE.length, 130);
+  assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 130, tokens: 129, natives: 1, nativeLinks: 0, excluded: 0, founderOverride: 1, notOffered: 460 });
   assert.deepEqual(new Set(ACTIVE_ALLOWLIST.entries.map(key)), new Set(BASE.map(key)));
   for (const e of BASE) {
     const a = ACTIVE_ALLOWLIST.entries.find((x) => key(x) === key(e));
@@ -100,6 +100,17 @@ test('t431u: LionOG and FrogOG are removed and not offered', () => {
     assert.equal(findAllowedToken('Base', addr), null, sym);
     assert.equal(isOfferable({ environment: 'Base', symbol: sym, contract_or_native_identifier: addr }), false, sym);
   }
+});
+
+test('t438u: doginme is offered as Base row 1103 by its exact contract', () => {
+  const addr = '0x6921b130d297cc43754afba22e5eac0fbf8db75b';
+  const e = ACTIVE_ALLOWLIST.entries.filter((x) => String(x.address).toLowerCase() === addr);
+  assert.equal(e.length, 1);
+  assert.equal(e[0].row, 1103);
+  assert.equal(e[0].symbol, 'doginme');
+  assert.ok(findAllowedToken('Base', addr));
+  assert.ok(OFFERED_ENTRIES.some((x) => x.row === 1103));
+  assert.equal(isOfferable({ environment: 'Base', symbol: 'doginme', contract_or_native_identifier: '0x' + '6'.repeat(40) }), false);
 });
 
 test('TEL is offered on the upgraded Base contract only (t430u item 3)', () => {
