@@ -242,10 +242,11 @@ contract VinculumFinalisVerifier {
     bytes32 public constant BCH_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Bitcoin Cash", "native-BCH"));
     bytes32 public constant LTC_NATIVE_ASSET_ID = keccak256(abi.encodePacked("Litecoin", "native-LTC"));
 
-    // USDC/USDT rows on every chain (see _isUsdStable): a last successful
-    // scheduled price below $0.95 makes the asset unavailable for every new
-    // valuation, at every duration, until a later run is >= $0.95. Exactly
-    // $0.95 is allowed. A lock already bound keeps its creation price.
+    // Verified USDC/USDT identities (see isUsdStableIdentity, matched by
+    // environment and contract, never by symbol): a last successful scheduled
+    // price below $0.95 makes the asset unavailable for every new valuation,
+    // at every duration, until a later run is >= $0.95. Exactly $0.95 is
+    // allowed. A lock already bound keeps its creation price.
     uint256 public constant USD_STABLE_MIN_PRICE = 0.95e18;
 
     // VF-COM-019: decay
@@ -557,7 +558,61 @@ contract VinculumFinalisVerifier {
             bytes32 k = tokenAddressKey(it.environmentId, it.token);
             require(tokenAssetIndex[k] == bytes32(0), "VF-REG: address already indexed");
             tokenAssetIndex[k] = it.canonicalAssetId;
+            // $0.95 cutoff scope: the row this exact (environment, contract)
+            // identity is indexed to. The row's symbol plays no part.
+            if (isUsdStableIdentity(it.environmentId, it.token)) {
+                usdStableRow[keccak256(abi.encodePacked(it.environmentId, it.canonicalAssetId))] = true;
+            }
         }
+    }
+
+    // ===== $0.95 stablecoin cutoff scope (D-56, D-68; t430u item 4) =====
+    //
+    // Registry row key keccak256(abi.encodePacked(env, canonicalAssetId)) ->
+    // true when a verified USDC/USDT identity is indexed to that row. Written
+    // only by registerTokenAddressBatch, so only in the ceremony.
+    mapping(bytes32 => bool) public usdStableRow;
+
+    /// @notice The verified USDC and USDT identities that take the $0.95
+    ///         new-lock cutoff (design D.4, STABLECOIN_IDENTITIES_2026-10-25.json):
+    ///         exact environment and contract, never a ticker. A token that only
+    ///         calls itself USDC or USDT is not on this list. Avalanche USDT.e is
+    ///         not on the list (D-74).
+    function isUsdStableIdentity(string memory environmentId, address token) public pure returns (bool) {
+        bytes32 e = keccak256(bytes(environmentId));
+        if (e == keccak256("Base")) {
+            return token == 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 // USDC (Circle)
+                || token == 0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2; // USDT (bridged, OP standard)
+        }
+        if (e == keccak256("Ethereum")) {
+            return token == 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 // USDC
+                || token == 0xdAC17F958D2ee523a2206206994597C13D831ec7; // USDT
+        }
+        if (e == keccak256("Arbitrum")) {
+            return token == 0xaf88d065e77c8cC2239327C5EDb3A432268e5831 // USDC
+                || token == 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8 // USDC.e (bridged)
+                || token == 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9; // USDT0
+        }
+        if (e == keccak256("Optimism")) {
+            return token == 0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85 // USDC
+                || token == 0x7F5c764cBc14f9669B88837ca1490cCa17c31607 // USDC.e (bridged)
+                || token == 0x94b008aA00579c1307B0EF2c499aD98a8ce58e58 // USDT (bridged)
+                || token == 0x01bFF41798a0BcF287b996046Ca68b395DbC1071; // USDT0
+        }
+        if (e == keccak256("Polygon")) {
+            return token == 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359 // USDC
+                || token == 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174 // USDC.e (bridged)
+                || token == 0xc2132D05D31c914a87C6611C10748AEb04B58e8F; // USDT0
+        }
+        if (e == keccak256("BNB Smart Chain")) {
+            return token == 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d // USDC (Binance-Peg)
+                || token == 0x55d398326f99059fF775485246999027B3197955; // USDT (Binance-Peg)
+        }
+        if (e == keccak256("Avalanche")) {
+            return token == 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E // USDC
+                || token == 0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7; // USDT
+        }
+        return false;
     }
 
     /// @notice Sets the address authorized to write scheduled price runs (VF-ORC-007).
@@ -997,20 +1052,8 @@ contract VinculumFinalisVerifier {
     // Every asset, including USDC/USDT: registry last successful scheduled
     // price, read and bound at first lock valuation (VF-ORC-008/009/010). No
     // deployment price hash. No admin invent-price setter. No $1 substitute.
-    // The $0.95 floor applies to every new USDC/USDT valuation, every duration.
-
-    /// @dev USDC/USDT stablecoin rows on every chain, by registry symbol:
-    ///      "USDC", "USDT", "USDC_<chain>", "USDT_<chain>" (USDC_ARB, USDT_OP,
-    ///      USDC_BASE, ...) and "USDTE" (Avalanche USDT.e). Other symbols that
-    ///      merely contain USDC (for example CUSDC) are not stablecoin rows.
-    function _isUsdStable(string memory symbol) internal pure returns (bool) {
-        bytes memory b = bytes(symbol);
-        if (b.length < 4 || b[0] != "U" || b[1] != "S" || b[2] != "D") return false;
-        if (b[3] != "C" && b[3] != "T") return false;
-        if (b.length == 4) return true;
-        if (b[4] == "_") return b.length > 5;
-        return b.length == 5 && b[3] == "T" && b[4] == "E";
-    }
+    // The $0.95 cutoff applies to every new valuation of a verified USDC/USDT
+    // identity, every duration.
 
     function _resolveVerifiedGrossUsd(
         ProofPackage calldata pkg,
@@ -1034,9 +1077,10 @@ contract VinculumFinalisVerifier {
             bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
             priceUsd18 = _priceInEffectAt(assetKey, createdAt);
             require(priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
-            // USDC/USDT below $0.95 at lock creation: unavailable. Fail closed;
-            // never substitute $1.
-            if (_isUsdStable(entry.symbol)) {
+            // Verified USDC/USDT identity below $0.95 at lock creation:
+            // unavailable. Fail closed; never substitute $1. The row is matched
+            // by the exact (environment, contract) indexed to it, not by symbol.
+            if (usdStableRow[keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId))]) {
                 require(
                     priceUsd18 >= USD_STABLE_MIN_PRICE,
                     "VF-ORC-005: USDC/USDT scheduled price below $0.95"
