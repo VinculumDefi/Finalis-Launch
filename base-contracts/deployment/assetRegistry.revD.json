@@ -3,14 +3,14 @@
  "revision": "D",
  "date": "2026-10-26",
  "rules": {
-  "membership": "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG by founder override (t430u item 5). LionOG and FrogOG removed (t431u). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
-  "pricing": "Unchanged scheduled pricing rules: CoinGecko by the row's pricingIdentifier, then DexScreener by the row's own Base contract. A row with no usable price has no valuation for that run (VF-ORC-005). No substitute price.",
+  "membership": "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG by founder override (t430u item 5). LionOG and FrogOG removed (t431u). doginme added as a new S3 row (operator t438u). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
+  "pricing": "Unchanged scheduled pricing rules: CoinGecko by the row's pricingIdentifier, then DexScreener by the row's own Base contract. TigerOG (founder override, t436u) may take the most liquid DexScreener pool for its exact registry contract on any chain, with no market-activity or trading-recency test. A row with no usable price has no valuation for that run (VF-ORC-005). No substitute price.",
   "tel": "TEL uses the upgraded Base contract 0x7E13B43065380aCdeC1c2d138c579cbBbafA0731 (t430u item 3); the old Base contract 0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1 is not registered."
  },
  "onchainFacts": {
   "file": "deployment/revD_onchain_2026-10-26.json",
-  "block": 53120088,
-  "readAt": "2026-10-26T15:45:23.534Z"
+  "block": 53124689,
+  "readAt": "2026-10-26T18:18:46.570Z"
  },
  "registry": {
   "url": "https://media.base44.com/files/public/6a681653c38a6746b2a90eb3/7fa74f87b_Vinculum_Finalis_Approved_Asset_Registry.json",
@@ -27,16 +27,16 @@
   ]
  },
  "counts": {
-  "total": 589,
-  "base": 129,
-  "baseTokens": 128,
+  "total": 590,
+  "base": 130,
+  "baseTokens": 129,
   "baseNative": 1,
-  "baseNewRows": 101,
+  "baseNewRows": 102,
   "founderOverride": 1,
   "historicalOtherEnvironments": 460,
   "byChain": {
    "Ethereum": 265,
-   "Base": 129,
+   "Base": 130,
    "Bitcoin": 1,
    "Dogecoin": 1,
    "Arbitrum": 22,
@@ -695,7 +695,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Coinbase Wrapped Staked ETH",
     "symbol": "cbETH",
     "codeBytes": 2096
@@ -777,7 +777,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Coinbase Wrapped BTC",
     "symbol": "cbBTC",
     "codeBytes": 1550
@@ -860,7 +860,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Aerodrome",
     "symbol": "AERO",
     "codeBytes": 4736
@@ -1805,7 +1805,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Virtual Protocol",
     "symbol": "VIRTUAL",
     "codeBytes": 14849
@@ -1833,7 +1833,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Brett",
     "symbol": "BRETT",
     "codeBytes": 23271
@@ -2352,7 +2352,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Degen",
     "symbol": "DEGEN",
     "codeBytes": 11608
@@ -3187,7 +3187,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "TigerOG",
     "symbol": "TIGEROG",
     "codeBytes": 45
@@ -3298,7 +3298,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Toshi",
     "symbol": "TOSHI",
     "codeBytes": 11948
@@ -3950,7 +3950,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "higher",
     "symbol": "HIGHER",
     "codeBytes": 2680
@@ -4819,7 +4819,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Pendle",
     "symbol": "PENDLE",
     "codeBytes": 4932
@@ -5011,7 +5011,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Mochi",
     "symbol": "MOCHI",
     "codeBytes": 11915
@@ -5282,7 +5282,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "aixbt by Virtuals",
     "symbol": "AIXBT",
     "codeBytes": 45
@@ -5311,7 +5311,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "tokenbot",
     "symbol": "CLANKER",
     "codeBytes": 1620
@@ -5664,7 +5664,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Base God",
     "symbol": "TYBG",
     "codeBytes": 11952
@@ -5888,7 +5888,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "BUILD",
     "symbol": "BUILD",
     "codeBytes": 7722
@@ -6079,7 +6079,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Ponke",
     "symbol": "PONKE",
     "codeBytes": 8380
@@ -6458,7 +6458,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "HeyAnon",
     "symbol": "Anon",
     "codeBytes": 14545
@@ -6541,7 +6541,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "BASED",
     "symbol": "BASED",
     "codeBytes": 5986
@@ -6651,7 +6651,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Luna by Virtuals",
     "symbol": "LUNA",
     "codeBytes": 45
@@ -6679,7 +6679,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SKI MASK DOG",
     "symbol": "SKI",
     "codeBytes": 14554
@@ -6707,7 +6707,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Mister Miggles",
     "symbol": "MIGGLES",
     "codeBytes": 2603
@@ -6982,7 +6982,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Keyboard Cat",
     "symbol": "KEYCAT",
     "codeBytes": 7022
@@ -7149,7 +7149,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "USD Coin",
     "symbol": "USDC",
     "codeBytes": 1852
@@ -7559,7 +7559,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Keeta",
     "symbol": "KTA",
     "codeBytes": 9001
@@ -7857,7 +7857,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SoSoValue",
     "symbol": "SOSO",
     "codeBytes": 4932
@@ -7912,7 +7912,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Ribbita by Virtuals",
     "symbol": "TIBBIR",
     "codeBytes": 45
@@ -8048,7 +8048,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Venice Token",
     "symbol": "VVV",
     "codeBytes": 2968
@@ -13325,7 +13325,7 @@
    "canonicalAssetId": "0x9f92aff95bc6ae6d9280f6329fafc2a1e9464169f0d8bddaa664bdfc36dd2193",
    "symbol": "MFER",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13335,7 +13335,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "mfercoin",
     "symbol": "$mfer",
     "codeBytes": 2835
@@ -13354,7 +13354,7 @@
    "canonicalAssetId": "0x41501983f4cbdd788942df239dc300d63436ee1840c3f95cde3ab6ae7ea772a0",
    "symbol": "1INCH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13364,7 +13364,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "1INCH Token",
     "symbol": "1INCH",
     "codeBytes": 5835
@@ -13382,7 +13382,7 @@
    "canonicalAssetId": "0x71dcbee19bac0360cda567d04206560a73a82a13887da7feb0ae9b2a5596135b",
    "symbol": "AAVE",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13392,7 +13392,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Aave Token",
     "symbol": "AAVE",
     "codeBytes": 4932
@@ -13410,7 +13410,7 @@
    "canonicalAssetId": "0x5553751edf397dab8f728f7f91ada32c492da93a09ccdd1b5f906cb4d0a90233",
    "symbol": "ADS",
    "decimals": 11,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13420,7 +13420,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Adshares",
     "symbol": "ADS",
     "codeBytes": 45
@@ -13438,7 +13438,7 @@
    "canonicalAssetId": "0x8e27648d8176c0158722c647734d51775c2255b984daa578536158b375bcc50b",
    "symbol": "ADX",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13448,7 +13448,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "AdEx Network",
     "symbol": "ADX",
     "codeBytes": 4932
@@ -13466,7 +13466,7 @@
    "canonicalAssetId": "0x693fa93655c3133fae47fcf0d02fd2ebcc5423b3599d8b0da33ca9ce0326a04b",
    "symbol": "ALEPH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13476,7 +13476,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Aleph.im V2 SuperToken",
     "symbol": "ALEPH",
     "codeBytes": 2229
@@ -13494,7 +13494,7 @@
    "canonicalAssetId": "0x8ea7abed42f3f4068aee5b9e3dcb8e60115f67ef7fb462490d50accc69a088f8",
    "symbol": "ALT",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13504,7 +13504,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "AltLayer",
     "symbol": "ALT",
     "codeBytes": 4932
@@ -13522,7 +13522,7 @@
    "canonicalAssetId": "0xc55dcdd9c3d665f25a84ac6fa795b18dae8a307504d26c48c40989eccaed0513",
    "symbol": "ALU",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13532,7 +13532,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Altura",
     "symbol": "ALU",
     "codeBytes": 12764
@@ -13550,7 +13550,7 @@
    "canonicalAssetId": "0xb74a3916ed81f8ff57f4712c211d4f57e5a30416c08ccb135588a454ac81c4c5",
    "symbol": "AMP",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13560,7 +13560,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Amp",
     "symbol": "AMP",
     "codeBytes": 4932
@@ -13578,7 +13578,7 @@
    "canonicalAssetId": "0x94287af67d15f403546b8f477242e3c41cb690d970c2251cb0652b496bccb656",
    "symbol": "AWETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13588,7 +13588,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Aave Base WETH",
     "symbol": "aBasWETH",
     "codeBytes": 1933
@@ -13606,7 +13606,7 @@
    "canonicalAssetId": "0xfea3bc502963f4ead480454f17c18ba08870d2e21d66e305b34338f4e99fea11",
    "symbol": "AXL",
    "decimals": 6,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13616,7 +13616,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Axelar",
     "symbol": "AXL",
     "codeBytes": 5200
@@ -13634,7 +13634,7 @@
    "canonicalAssetId": "0x4b3fe193ea0ec7c68723932548ca8b23b581a40d1b4007b42be34b0e4bcdbf66",
    "symbol": "BABYDOGE",
    "decimals": 9,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13644,7 +13644,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Baby Doge Coin",
     "symbol": "BabyDoge",
     "codeBytes": 2164
@@ -13662,7 +13662,7 @@
    "canonicalAssetId": "0xe0c0147120d7153ae68c7a79e8becaa90090b60ee17e4e287c76944fb47bb387",
    "symbol": "BAL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13672,7 +13672,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Balancer",
     "symbol": "BAL",
     "codeBytes": 5835
@@ -13690,7 +13690,7 @@
    "canonicalAssetId": "0x7dbb6c3c5282a4c6e85a7260d1b1d3e1955c82e81f683d13a86d84673d72e611",
    "symbol": "BEAM",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13700,7 +13700,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Beam",
     "symbol": "BEAM",
     "codeBytes": 1554
@@ -13718,7 +13718,7 @@
    "canonicalAssetId": "0x6002e2265bee1eca3793635db834e8890ab6d3c786b441dbc7b8de70ca68b8ee",
    "symbol": "BICO",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13728,7 +13728,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Biconomy",
     "symbol": "BICO",
     "codeBytes": 4932
@@ -13746,7 +13746,7 @@
    "canonicalAssetId": "0xbabdd6c85b7e55ff4773cf25bf01dc1c71eb22f1a2d0a6cd105ed5d729831d3d",
    "symbol": "BTRST",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13756,7 +13756,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "BTRST",
     "symbol": "BTRST",
     "codeBytes": 5835
@@ -13774,7 +13774,7 @@
    "canonicalAssetId": "0xdb196182e6f423f87141c3722f4adfd46a3a6793736ae2b2985f72ac8a728780",
    "symbol": "CAKE",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13784,7 +13784,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "PancakeSwap Token",
     "symbol": "Cake",
     "codeBytes": 20237
@@ -13802,7 +13802,7 @@
    "canonicalAssetId": "0x372c87c5459e276c32e34716da74f963027162479837df74cbdb50ed5624f962",
    "symbol": "CARV",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13812,7 +13812,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "CARV",
     "symbol": "CARV",
     "codeBytes": 12532
@@ -13830,7 +13830,7 @@
    "canonicalAssetId": "0xa275a67e324cd5fcd5e1a56189925d5644d397f742c03020429c8988f7b8a23a",
    "symbol": "CHZ",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13840,7 +13840,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Chiliz",
     "symbol": "CHZ",
     "codeBytes": 170
@@ -13858,7 +13858,7 @@
    "canonicalAssetId": "0x3b242fd36e447af30b66b820a0840ad122d06c0fe61abfc9c2cd13f6db1f3189",
    "symbol": "COMP",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13868,7 +13868,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Compound",
     "symbol": "COMP",
     "codeBytes": 5835
@@ -13886,7 +13886,7 @@
    "canonicalAssetId": "0x388fccaebc51ef3500be8aebb1d81a5d1694cdd7f74a869fded7986dc0ead68b",
    "symbol": "COW",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13896,7 +13896,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "CoW Protocol Token",
     "symbol": "COW",
     "codeBytes": 5835
@@ -13914,7 +13914,7 @@
    "canonicalAssetId": "0x0ae465b7ba6bf4d98ba038fa7df25887132d6f40bdb0d76d9c3e0a975fff4c4c",
    "symbol": "CRV",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13924,7 +13924,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Curve DAO Token",
     "symbol": "CRV",
     "codeBytes": 5835
@@ -13942,7 +13942,7 @@
    "canonicalAssetId": "0x91954a53554445b2573d6e89e7779549f71c4edf8f26d7bb82a2fad69a8b1678",
    "symbol": "CTSI",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13952,7 +13952,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Cartesi Token",
     "symbol": "CTSI",
     "codeBytes": 5835
@@ -13970,7 +13970,7 @@
    "canonicalAssetId": "0x4139aec9e1e55012d4cfeefbde29404233b1529b6875fdee5fb46cd41b4933fc",
    "symbol": "CTX",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -13980,7 +13980,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Cryptex",
     "symbol": "CTX",
     "codeBytes": 4932
@@ -13998,7 +13998,7 @@
    "canonicalAssetId": "0x446c977ca19b57d5f4bb274252145710343e590e9d3d92a1a29bc2e83ce0b344",
    "symbol": "DOG",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14008,7 +14008,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "The Doge NFT",
     "symbol": "DOG",
     "codeBytes": 5835
@@ -14026,7 +14026,7 @@
    "canonicalAssetId": "0x91db467244fcbace4bf7a772d0538722647c43f0501a95910e8ed58e544115b6",
    "symbol": "EIGEN",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14036,7 +14036,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Eigen",
     "symbol": "EIGEN",
     "codeBytes": 5835
@@ -14054,7 +14054,7 @@
    "canonicalAssetId": "0x64c8c97d72f2cc3c7de2ee80a580e04b20b64d8a311c9d767df5f962205c6010",
    "symbol": "ELON",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14064,7 +14064,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Dogelon",
     "symbol": "ELON",
     "codeBytes": 4932
@@ -14082,7 +14082,7 @@
    "canonicalAssetId": "0x622279b2ca86e832109978d4e6b962a47b3043dce9695e24f2d1373a05b3d8d2",
    "symbol": "ENA",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14092,7 +14092,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "ENA",
     "symbol": "ENA",
     "codeBytes": 13886
@@ -14110,7 +14110,7 @@
    "canonicalAssetId": "0x91c67df8fdcd891dfb9e3894fd65b3ed7e806458a3d9d658fb1dfc7cc9458451",
    "symbol": "ETHFI",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14120,7 +14120,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "ether.fi governance token",
     "symbol": "ETHFI",
     "codeBytes": 177
@@ -14138,7 +14138,7 @@
    "canonicalAssetId": "0x5a0c16b0a6ffd4c1b9ed80e6250a8325c2b06b1a4f9178c6b14c2884542f6b9c",
    "symbol": "EULER",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14148,7 +14148,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Euler",
     "symbol": "EUL",
     "codeBytes": 7768
@@ -14166,7 +14166,7 @@
    "canonicalAssetId": "0xf3b20a65f42ef0d8264393f0b1c21d03a7a5d59c9d9ba275c473d28adc813b88",
    "symbol": "FARM",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14176,7 +14176,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "FARM Reward Token",
     "symbol": "FARM",
     "codeBytes": 5835
@@ -14194,7 +14194,7 @@
    "canonicalAssetId": "0x265e00587d3ac4506f2d17b3b687cd8ea60b3ca2104d153c03e8ec6c3638f1aa",
    "symbol": "FET",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14204,7 +14204,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Fetch",
     "symbol": "FET",
     "codeBytes": 4932
@@ -14222,7 +14222,7 @@
    "canonicalAssetId": "0x9ef62525970a5df1a406f285ca0e1b449e6a499c88fc9c5033e9ecd2e6ef094b",
    "symbol": "FLUID",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14232,7 +14232,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Fluid",
     "symbol": "FLUID",
     "codeBytes": 122
@@ -14250,7 +14250,7 @@
    "canonicalAssetId": "0xaeb52c819353c5eaa5d9025c62f3ffd345720026385391bfbcc0236249e416a2",
    "symbol": "FUSE",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14260,7 +14260,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Fuse Token",
     "symbol": "FUSE",
     "codeBytes": 3064
@@ -14278,7 +14278,7 @@
    "canonicalAssetId": "0x299e1fcc95c399c8afd55ff71339084379d775f1d0f9ee46296d3db0d3d45f2f",
    "symbol": "GHST",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14288,7 +14288,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Aavegotchi GHST Token",
     "symbol": "GHST",
     "codeBytes": 5835
@@ -14306,7 +14306,7 @@
    "canonicalAssetId": "0x2f318a9372abf9094e0eb8d6ecacf4c5e6fc620d5662d64d1ba1387d0fdd9b62",
    "symbol": "GNS",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14316,7 +14316,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Gains Network",
     "symbol": "GNS",
     "codeBytes": 6236
@@ -14334,7 +14334,7 @@
    "canonicalAssetId": "0x65d2c46bc3d7d59bc723b60346574644a148b165def927a2349a6363d45ed74a",
    "symbol": "GRT",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14344,7 +14344,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Graph Token",
     "symbol": "GRT",
     "codeBytes": 4932
@@ -14362,7 +14362,7 @@
    "canonicalAssetId": "0xc27177d01aa60b440882f8964cc9276199c995dcd9edfe673c86163cccc6e4f7",
    "symbol": "HEX",
    "decimals": 8,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14372,7 +14372,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "HEX",
     "symbol": "HEX",
     "codeBytes": 4932
@@ -14390,7 +14390,7 @@
    "canonicalAssetId": "0x28ec65bfe6b61074e5e8f915d9a2b9f6c8e91734ef5ad2582c12d5235cb5f850",
    "symbol": "HOP",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14400,7 +14400,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Hop",
     "symbol": "HOP",
     "codeBytes": 16498
@@ -14418,7 +14418,7 @@
    "canonicalAssetId": "0x8b0a0395b5fb4622d44f1ab4cd5b18ff2fb99f3794bc587327825f46ce19c26d",
    "symbol": "HOT",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14428,7 +14428,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "HoloToken",
     "symbol": "HOT",
     "codeBytes": 12493
@@ -14446,7 +14446,7 @@
    "canonicalAssetId": "0xba13bf6030faf82cf2fa26009fee88625f93a3623ecf5d2036abf52a88666538",
    "symbol": "IOTX",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14456,7 +14456,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "IoTeX Network",
     "symbol": "IOTX",
     "codeBytes": 5835
@@ -14474,7 +14474,7 @@
    "canonicalAssetId": "0xb0c393134b7a48ec503200ca3f8412ca051b1e2c4c427e82f677e50f7af80f11",
    "symbol": "KLIMA",
    "decimals": 9,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14484,7 +14484,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Klima DAO",
     "symbol": "KLIMA",
     "codeBytes": 45
@@ -14502,7 +14502,7 @@
    "canonicalAssetId": "0x828896c5742406de3f6e0b35f00d8ac808bba0213e5df319a33b3e22e6e7a769",
    "symbol": "LAYER3",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14512,7 +14512,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Layer3",
     "symbol": "L3",
     "codeBytes": 183
@@ -14530,7 +14530,7 @@
    "canonicalAssetId": "0x5061acd75c895d133b6d3a0b0bf4c269f8e71fc349661670daf2e80183b225ac",
    "symbol": "LINK",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14540,7 +14540,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "ChainLink Token",
     "symbol": "LINK",
     "codeBytes": 7756
@@ -14558,7 +14558,7 @@
    "canonicalAssetId": "0x4db0c47426521726a027393d406aefb2296c3c25223cbdd6e7dddb0879adf5b4",
    "symbol": "LQTY",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14568,7 +14568,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "LQTY",
     "symbol": "LQTY",
     "codeBytes": 5835
@@ -14586,7 +14586,7 @@
    "canonicalAssetId": "0xd5c5e2d310230d934071f7285698feedb65b7d691bcff0164d7aadebcea9c43a",
    "symbol": "LRC",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14596,7 +14596,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "LoopringCoin V2",
     "symbol": "LRC",
     "codeBytes": 5835
@@ -14614,7 +14614,7 @@
    "canonicalAssetId": "0x1b1c1be3e054b2a57194478f22cf411d04b8c23764745440023a674f9929e67f",
    "symbol": "LSETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14624,7 +14624,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Liquid Staked ETH",
     "symbol": "LsETH",
     "codeBytes": 2421
@@ -14642,7 +14642,7 @@
    "canonicalAssetId": "0x2e40c59a15dfafbe68186f6c063f0df51c5171d6c07184a6f5b8945b2bf07586",
    "symbol": "LSK",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14652,7 +14652,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Lisk",
     "symbol": "LSK",
     "codeBytes": 5100
@@ -14670,7 +14670,7 @@
    "canonicalAssetId": "0x77d45a7a3c9740b0205f0486c8a1eba57ed1fa922251207bbd1170f94eb8c698",
    "symbol": "MAGA",
    "decimals": 9,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14680,7 +14680,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "MAGA",
     "symbol": "TRUMP",
     "codeBytes": 831
@@ -14698,7 +14698,7 @@
    "canonicalAssetId": "0xa0b42a845262ea64368de4ddf6441880f4a80cdb2cbab4cff812d2e0374413b5",
    "symbol": "MAGIC",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14708,7 +14708,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "MAGIC",
     "symbol": "MAGIC",
     "codeBytes": 855
@@ -14726,7 +14726,7 @@
    "canonicalAssetId": "0xc5be72068f6d2a89debe04a2e19f49424ca9a40e7e8ec5e64745af081f57eae3",
    "symbol": "MASK",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14736,7 +14736,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Mask Network",
     "symbol": "MASK",
     "codeBytes": 4932
@@ -14754,7 +14754,7 @@
    "canonicalAssetId": "0x204eb731e348a79c95b29aefed0d21022a5cac76fe7eded8a2bdd5cfa6468328",
    "symbol": "MASQ",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14764,7 +14764,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "MASQ",
     "symbol": "MASQ",
     "codeBytes": 4932
@@ -14782,7 +14782,7 @@
    "canonicalAssetId": "0x1ef90c3afd8e5345f228c2c85cb21a110d115984e3cee7fe1d0ac3a431d4ebb1",
    "symbol": "MATH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14792,7 +14792,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "MATH Token",
     "symbol": "MATH",
     "codeBytes": 6963
@@ -14810,7 +14810,7 @@
    "canonicalAssetId": "0x85a18423cc2fd25c72be9d779386a58cdd8c8dbd78992024811c366653380ca6",
    "symbol": "MLN",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14820,7 +14820,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Melon Token",
     "symbol": "MLN",
     "codeBytes": 4932
@@ -14838,7 +14838,7 @@
    "canonicalAssetId": "0xfa4f4e2fefebc4a11310bdbb75de87587333120e315c0639ae8575eefc386c42",
    "symbol": "MODE",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14848,7 +14848,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "MODE",
     "symbol": "MODE",
     "codeBytes": 12492
@@ -14866,7 +14866,7 @@
    "canonicalAssetId": "0x2f203ab79559d334a3606e734c66a330730374c73378fdab57157a2b9b320cda",
    "symbol": "MOG",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14876,7 +14876,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Mog Coin",
     "symbol": "Mog",
     "codeBytes": 5835
@@ -14894,7 +14894,7 @@
    "canonicalAssetId": "0xde1d5dce6092d1f594a11b30c16fc0c1809b70f623ffad46c30f4345f3dc14bc",
    "symbol": "MORPHO",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14904,7 +14904,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Morpho Token",
     "symbol": "MORPHO",
     "codeBytes": 141
@@ -14922,7 +14922,7 @@
    "canonicalAssetId": "0x6d031d0d2386ceb1cfab9d5731902d9027f6ccbee9921a8d6a43215951cd2834",
    "symbol": "NCT",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14932,7 +14932,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "PolySwarm",
     "symbol": "NCT",
     "codeBytes": 4932
@@ -14950,7 +14950,7 @@
    "canonicalAssetId": "0x910615500154afbc04c16098021e17a9a5ef009c65f62fc78455933638965977",
    "symbol": "OGN",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14960,7 +14960,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "OriginToken",
     "symbol": "OGN",
     "codeBytes": 4932
@@ -14978,7 +14978,7 @@
    "canonicalAssetId": "0xdc69853ee7f9f94361ea60a19a39a5940083d4fb0ed0dd7dc5f246269974fd71",
    "symbol": "OHM",
    "decimals": 9,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -14988,7 +14988,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Olympus",
     "symbol": "OHM",
     "codeBytes": 5597
@@ -15006,7 +15006,7 @@
    "canonicalAssetId": "0x1adca3685441e923ab6fa03bfa317a728735f4180aaf3dd374ca88a05f3f5040",
    "symbol": "OLAS",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15016,7 +15016,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Autonolas",
     "symbol": "OLAS",
     "codeBytes": 5835
@@ -15034,7 +15034,7 @@
    "canonicalAssetId": "0x1b5c999d399811f4b45c60e6eed6afdb16475a2e5f6ba215624ee824246005aa",
    "symbol": "PAAL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15044,7 +15044,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "PAAL AI",
     "symbol": "$PAAL",
     "codeBytes": 7275
@@ -15062,7 +15062,7 @@
    "canonicalAssetId": "0xcadc504d251324753b3a34e7f552be1863136af7a53e5a67de272fad4e7cb843",
    "symbol": "PEPE",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15072,7 +15072,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Pepe",
     "symbol": "PEPE",
     "codeBytes": 5835
@@ -15090,7 +15090,7 @@
    "canonicalAssetId": "0xeb2dad86a02daa543820095e3a938543353f87ede44b8d60d26fc0f90ac7ba8a",
    "symbol": "POLS",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15100,7 +15100,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Polkastarter",
     "symbol": "POLS",
     "codeBytes": 6627
@@ -15118,7 +15118,7 @@
    "canonicalAssetId": "0x4a116aaa576f16ae60cb7e482a001da673f2499fc4c765d35247ee8188cfbf4e",
    "symbol": "POOL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15128,7 +15128,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "PoolTogether",
     "symbol": "POOL",
     "codeBytes": 5835
@@ -15146,7 +15146,7 @@
    "canonicalAssetId": "0x30c184ef8774b1f8b3383ff5ee4e8dc717cd1af7089baa6c1fe5a4a82cf5874c",
    "symbol": "PRIME",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15156,7 +15156,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Prime",
     "symbol": "PRIME",
     "codeBytes": 15968
@@ -15174,7 +15174,7 @@
    "canonicalAssetId": "0x7585efc7113612d57f395d47de24260c58d43c2ab25d6da17bec1d93be1e6874",
    "symbol": "RARI",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15184,7 +15184,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Rarible",
     "symbol": "RARI",
     "codeBytes": 13796
@@ -15202,7 +15202,7 @@
    "canonicalAssetId": "0xf0f3afb7c95fe64ec86c9cb093aba68978b7e26fd75d588edbbdb4be308414ce",
    "symbol": "RPL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15212,7 +15212,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Rocket Pool Protocol",
     "symbol": "RPL",
     "codeBytes": 5835
@@ -15230,7 +15230,7 @@
    "canonicalAssetId": "0x630b7815cee71cb71f3eb49174b104f4062952ca2f976846ad6291b9ea7eec1a",
    "symbol": "RSR",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15240,7 +15240,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Reserve Rights",
     "symbol": "RSR",
     "codeBytes": 5835
@@ -15258,7 +15258,7 @@
    "canonicalAssetId": "0x26467e949e54910d080432ce027ed8e61e1b43949160f9c8712856a9fcdf0950",
    "symbol": "SAND",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15268,7 +15268,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SAND",
     "symbol": "SAND",
     "codeBytes": 17295
@@ -15286,7 +15286,7 @@
    "canonicalAssetId": "0x9525a92ed0192a4b53286accba6f9944282466e2c8f5bd0e9e5214ade63d9a7c",
    "symbol": "SKL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15296,7 +15296,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SKALE",
     "symbol": "SKL",
     "codeBytes": 4932
@@ -15314,7 +15314,7 @@
    "canonicalAssetId": "0x33bc18a23545bf9636c6a87f848692a4b4a8e7db2e793686a679a698436f9f74",
    "symbol": "SNT",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15324,7 +15324,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Status Network Token",
     "symbol": "SNT",
     "codeBytes": 4932
@@ -15342,7 +15342,7 @@
    "canonicalAssetId": "0x76b86895c1dbc9fc313b7aa62911c4b0e0330822913c54a59602470f219e3354",
    "symbol": "SNX",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15352,7 +15352,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Synthetix Network Token",
     "symbol": "SNX",
     "codeBytes": 5835
@@ -15370,7 +15370,7 @@
    "canonicalAssetId": "0xee4b26464033960331f36bed230d7af2af0f88fee98fc0a618107beedf9fcd93",
    "symbol": "SPECTRA",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15380,7 +15380,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Spectra Token",
     "symbol": "SPECTRA",
     "codeBytes": 1115
@@ -15398,7 +15398,7 @@
    "canonicalAssetId": "0x377db097770ecdfeebdf6e53862e91ed96e26cc3708179cdfbb796ed207eb7fc",
    "symbol": "SPX",
    "decimals": 8,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15408,7 +15408,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SPX6900",
     "symbol": "SPX",
     "codeBytes": 831
@@ -15426,7 +15426,7 @@
    "canonicalAssetId": "0x58b74fc6f3ae08e9e6b2167bf9cb3eca3fe4670a9e4a536d92e4d0b7c871c33c",
    "symbol": "STG",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15436,7 +15436,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "StargateToken",
     "symbol": "STG",
     "codeBytes": 9379
@@ -15454,7 +15454,7 @@
    "canonicalAssetId": "0x826d855015e14bb59852df1e02c32d83049f35adf2a14a15a46d71fc04b183d7",
    "symbol": "SUPER",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15464,7 +15464,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SuperVerse",
     "symbol": "SUPER",
     "codeBytes": 5835
@@ -15482,7 +15482,7 @@
    "canonicalAssetId": "0xa1c01240fae0c76b3d271739cac891207f6dce0fd62ec803a7597cf9a19dde6e",
    "symbol": "SUSHI",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15492,7 +15492,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "SushiToken",
     "symbol": "SUSHI",
     "codeBytes": 5835
@@ -15510,7 +15510,7 @@
    "canonicalAssetId": "0xccee85e20da638a47e1f2b6200961654f948e5c2dd9904a104c99dd5b9a1f419",
    "symbol": "SYN",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15520,7 +15520,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Synapse",
     "symbol": "SYN",
     "codeBytes": 8723
@@ -15538,7 +15538,7 @@
    "canonicalAssetId": "0x4c07d8695f8ae792f6646e4b9e225018af0e6824325333ee4105bb406093ceb7",
    "symbol": "T",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15548,7 +15548,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Threshold Network Token",
     "symbol": "T",
     "codeBytes": 5835
@@ -15566,7 +15566,7 @@
    "canonicalAssetId": "0xa5c166f2931f971b18e1d8bf2468b2351a2f6d2b8a7588c9234e13407df60545",
    "symbol": "TEL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15576,7 +15576,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Telcoin",
     "symbol": "TEL",
     "codeBytes": 16172
@@ -15596,7 +15596,7 @@
    "canonicalAssetId": "0xff7423070cfe81c9e1ef4374e0ef4e699232654301a314a38ea49a8783fa87e7",
    "symbol": "TRAC",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15606,7 +15606,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Trace Token",
     "symbol": "TRAC",
     "codeBytes": 5835
@@ -15624,7 +15624,7 @@
    "canonicalAssetId": "0x5c68d80f5bf8ae1eec7d2d39a8410daae8547a425100e5f948dd032906bcd4ab",
    "symbol": "TRB",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15634,7 +15634,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Tellor Tributes",
     "symbol": "TRB",
     "codeBytes": 4932
@@ -15652,7 +15652,7 @@
    "canonicalAssetId": "0xedffb021726960000f88c11fdac1c6f2ab583ab7cc72457e8a504d55a37eb416",
    "symbol": "UNI",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15662,7 +15662,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Uniswap",
     "symbol": "UNI",
     "codeBytes": 5835
@@ -15680,7 +15680,7 @@
    "canonicalAssetId": "0x1793fc9d7ab16f183e0a4c762bd57773e4b3438d9747dc9b82ced8af1a6035aa",
    "symbol": "USDT",
    "decimals": 6,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15690,7 +15690,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Tether USD",
     "symbol": "USDT",
     "codeBytes": 6774
@@ -15708,7 +15708,7 @@
    "canonicalAssetId": "0x0be6bb604b94e6f2daf6d7334fd34c7d47cce60ea5fcb2b86332b1d3f4b6c301",
    "symbol": "USUAL",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15718,7 +15718,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "USUAL",
     "symbol": "USUAL",
     "codeBytes": 1129
@@ -15736,7 +15736,7 @@
    "canonicalAssetId": "0x685a675659b34139641e5cc67fa9190b7d149d529e5818525d17b9cad4d48bdb",
    "symbol": "W",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15746,7 +15746,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Wormhole Token",
     "symbol": "W",
     "codeBytes": 209
@@ -15764,7 +15764,7 @@
    "canonicalAssetId": "0xa165ba954c4ab6cc1c8f7ab342e6b359a74e787292c4cff601bdf9d8306d4c28",
    "symbol": "WBTC",
    "decimals": 8,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15774,7 +15774,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Wrapped BTC",
     "symbol": "WBTC",
     "codeBytes": 13649
@@ -15792,7 +15792,7 @@
    "canonicalAssetId": "0xbab99395fcece19c784430c2b0b102b7c13946fe481014daad393027dc67e0f1",
    "symbol": "WEETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15802,7 +15802,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Wrapped eETH",
     "symbol": "weETH",
     "codeBytes": 1159
@@ -15820,7 +15820,7 @@
    "canonicalAssetId": "0xeae798e3d3f4ab3e45f2e3a1439727a9c06e28bb26746a729f3c9c4a0b130178",
    "symbol": "WILD",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15830,7 +15830,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Wilder World Token",
     "symbol": "WILD",
     "codeBytes": 12493
@@ -15848,7 +15848,7 @@
    "canonicalAssetId": "0xcf3377cc9904cedbd72ca9bd7befc4fd0fe7ec3e900d265c4c7245e5fd1b3dd2",
    "symbol": "WOO",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15858,7 +15858,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "WOO",
     "symbol": "WOO",
     "codeBytes": 12244
@@ -15876,7 +15876,7 @@
    "canonicalAssetId": "0x711c6a10bb995f028d650b8940c648027423f13693f4b4f164b4f7062e723af1",
    "symbol": "XVS",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15886,7 +15886,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Venus XVS",
     "symbol": "XVS",
     "codeBytes": 5949
@@ -15904,7 +15904,7 @@
    "canonicalAssetId": "0xdb202a8e733ad3ce3869b43a06857f1c9b1251d5b7f368be919213c557b60d20",
    "symbol": "XYO",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15914,7 +15914,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "XY Oracle",
     "symbol": "XYO",
     "codeBytes": 4932
@@ -15932,7 +15932,7 @@
    "canonicalAssetId": "0x29a89b85c1f9fa3f71b0d80a7c6c7a4c26de770f335f6a26f1767e4935db9cd5",
    "symbol": "YFI",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15942,7 +15942,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "yearn.finance",
     "symbol": "YFI",
     "codeBytes": 5835
@@ -15960,7 +15960,7 @@
    "canonicalAssetId": "0x96afc2e94bceac8c7254cdc0998335ec7b9c09cb7b72fd369b1d3f4f10466a94",
    "symbol": "YGG",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15970,7 +15970,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Yield Guild Games Token",
     "symbol": "YGG",
     "codeBytes": 4932
@@ -15988,7 +15988,7 @@
    "canonicalAssetId": "0x0c1d85ee95d84619ddf226a118a6fab3ba7fb4b4091afb33e2fdfcdaec067090",
    "symbol": "ZRX",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -15998,7 +15998,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "0x Protocol Token",
     "symbol": "ZRX",
     "codeBytes": 5835
@@ -16016,7 +16016,7 @@
    "canonicalAssetId": "0x999e5343eb3f5690cbe71c23291a86862b7d7ab8c5bbf0b850bf329baf00f4a3",
    "symbol": "ezETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -16026,7 +16026,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Renzo Restaked ETH",
     "symbol": "ezETH",
     "codeBytes": 2188
@@ -16044,7 +16044,7 @@
    "canonicalAssetId": "0x8a2fcc9d598e03fc74bd4cba144aaf00cea53350987f83b9a316b9ea69cfa2bc",
    "symbol": "rETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -16054,7 +16054,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Rocket Pool ETH",
     "symbol": "rETH",
     "codeBytes": 5835
@@ -16072,7 +16072,7 @@
    "canonicalAssetId": "0xd131232976ce0f834ab5d20753077633afcdda30d5fe9215810605543a36e132",
    "symbol": "rsETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -16082,7 +16082,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "KelpDao Restaked ETH",
     "symbol": "rsETH",
     "codeBytes": 12363
@@ -16100,7 +16100,7 @@
    "canonicalAssetId": "0x8544e8b2246c89f8f49c0ef51444bb743a5861e1f7192a9418ac3e0178bf71d9",
    "symbol": "tBTC",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -16110,7 +16110,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Base tBTC v2",
     "symbol": "tBTC",
     "codeBytes": 2227
@@ -16128,7 +16128,7 @@
    "canonicalAssetId": "0x141baa5c8b9d6640d53b1e2339ed6828e73bd970e6e6429d466f8b736a4c77f4",
    "symbol": "wstETH",
    "decimals": 18,
-   "decimalsFrom": "decimals() eth_call at Base block 53120088",
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
    "unresolvedReason": null,
    "custodyClass": 3,
    "custodyPath": 1,
@@ -16138,7 +16138,7 @@
    "kind": "token",
    "onchain": {
     "status": "verified",
-    "block": 53120088,
+    "block": 53124689,
     "name": "Wrapped liquid staked Ether 2.0",
     "symbol": "wstETH",
     "codeBytes": 3296
@@ -16147,6 +16147,34 @@
     "source": "candidate #132 (addition wstETH@Base (from rows 24))",
     "candidateStatus": "ACTIVE",
     "basis": "priced in 2026-10-25 check"
+   }
+  },
+  {
+   "row": 1103,
+   "environmentId": "Base",
+   "assetId": "doginme",
+   "canonicalAssetId": "0x32f3c717f15eb2fb26288c2160d3616f825e0729d518e2982dab16b38c0e3f3a",
+   "symbol": "doginme",
+   "decimals": 18,
+   "decimalsFrom": "decimals() eth_call at Base block 53124689",
+   "unresolvedReason": null,
+   "custodyClass": 3,
+   "custodyPath": 1,
+   "identifier": "0x6921B130D297cc43754afba22e5EAc0FBf8Db75b",
+   "pricingIdentifier": "doginme",
+   "sameKeyAsRow": null,
+   "kind": "token",
+   "onchain": {
+    "status": "verified",
+    "block": 53124689,
+    "name": "doginme",
+    "symbol": "doginme",
+    "codeBytes": 2243
+   },
+   "revD": {
+    "source": "candidate #135 (addition doginme@Base (operator t438u))",
+    "candidateStatus": "ACTIVE",
+    "basis": "operator t438u (2026-10-26): added as a new S3 row; Base code, name, symbol, decimals and totalSupply read on chain and a CoinGecko price confirmed"
    }
   }
  ]
