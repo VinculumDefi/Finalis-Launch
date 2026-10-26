@@ -16,7 +16,7 @@ const STATE_STYLES = {
 };
 
 export default function PendingAttemptPanel({ lifecycle, onRegister, onConfirm, onResolve }) {
-  const [envId, setEnvId] = useState('Ethereum');
+  const [envId, setEnvId] = useState('Base');
   const [sourceIdentity, setSourceIdentity] = useState('');
   const [lockId, setLockId] = useState('');
   const [resolveLockId, setResolveLockId] = useState('');
