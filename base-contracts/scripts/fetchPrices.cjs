@@ -3,8 +3,8 @@
 //
 // Input : the ceremony registry, Revision D (deployment/assetRegistry.revD.json,
 //         via scripts/registryFile.cjs CEREMONY_REGISTRY_FILE). By default only
-//         its Base rows, the rows the Base-only ceremony registers: 130 Base
-//         tokens plus Base ETH (row 2) = 131.
+//         its Base rows, the rows the Base-only ceremony registers: 128 Base
+//         tokens plus Base ETH (row 2) = 129.
 // Output: [{ environmentId, canonicalAssetId, usd | null, source, reason, row, symbol }]
 //         usd is the fetched decimal string; null = confirmed fail with reason.
 //         Feeds scripts/priceRun.cjs unchanged (it reads environmentId,
@@ -30,8 +30,8 @@
 // (VF-ORC-002). API errors are retried; a row that cannot be priced because
 // an API stayed down fails "fetch_error".
 //
-// Founder override rows (TigerOG, LionOG, FrogOG; scripts/founderOverride.cjs,
-// t430u item 5) go through the same cascade. No price is invented for them.
+// Founder override row (TigerOG only after t431u; scripts/founderOverride.cjs,
+// t430u item 5) goes through the same cascade. No price is invented for it.
 //
 // CLI: node scripts/fetchPrices.cjs --out <file.json>
 const fs = require("fs");
@@ -56,7 +56,7 @@ const EVM_ADDR = /^0x[0-9a-fA-F]{40}$/;
 const B58_ADDR = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 // Rows to price. Base-only launch: by default only the Base rows of the
-// ceremony registry (Revision D, 131 rows). { baseOnly: false } gives every
+// ceremony registry (Revision D, 129 rows). { baseOnly: false } gives every
 // Revision D row (Base rows plus the historical rows of other chains).
 function registryRows(regFile = CEREMONY_REGISTRY_FILE, { baseOnly = true } = {}) {
   return loadRegistry(regFile).all.filter((r) => !baseOnly || r.environmentId === "Base");
