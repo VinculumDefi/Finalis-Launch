@@ -17,7 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 const { ethers } = require("ethers");
-const { loadRegistry } = require("./registryFile.cjs");
+const { loadRegistry, CEREMONY_REGISTRY_FILE } = require("./registryFile.cjs");
 
 const LIVE = require("../deployment/liveConfig.json");
 const MIN_RUN_ID = 2n;
@@ -35,11 +35,11 @@ function toUsd18(usd) {
 }
 
 // Every line the Verifier has registered, as "environment|canonicalAssetId".
-// Base-only launch (t357u): the ceremony registers only the Base rows of
-// Revision B (26 tokens plus Base ETH = 27), and the Verifier refuses a price
-// line for an unregistered row (VF-REG-001), so by default only Base rows are
-// kept. { baseOnly: false } gives all 487 Revision B rows.
-function registryKeys(regFile, { baseOnly = true } = {}) {
+// Base-only launch: the ceremony registers only the Base rows of the ceremony
+// registry, Revision D (130 tokens plus Base ETH = 131), and the Verifier
+// refuses a price line for an unregistered row (VF-REG-001), so by default
+// only Base rows are kept. { baseOnly: false } gives all 591 Revision D rows.
+function registryKeys(regFile = CEREMONY_REGISTRY_FILE, { baseOnly = true } = {}) {
   return new Set(loadRegistry(regFile).all.filter((e) => !baseOnly || e.environmentId === "Base")
     .map((e) => e.environmentId + "|" + e.canonicalAssetId.toLowerCase()));
 }
