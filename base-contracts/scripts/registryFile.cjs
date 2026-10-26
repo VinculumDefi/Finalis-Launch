@@ -1,18 +1,26 @@
 // Registry files. REGISTRY_FILE (the loadRegistry() default) is read by the
 // token address index, price fetch and price runs, and the test-chain rigs:
-// deployment/assetRegistry.revB.json (Revision B, 487 entries). The Base-only
-// ceremony reads CEREMONY_REGISTRY_FILE (Revision C), see below.
+// deployment/assetRegistry.revB.json (Revision B, 487 entries), kept as the
+// multi-chain historical record. The Base-only ceremony reads
+// CEREMONY_REGISTRY_FILE (Revision D), see below.
 // deployment/assetRegistry.resolved.json is the prior revision (961 written
 // rows + Base ETH) and is kept unchanged; it is not read by the live path.
 // See deployment/ASSET_REGISTRY_REVISIONS.md.
 //
 // Base-only ceremony package (operator decision t367u, 2026-10-24): the
-// ceremony reads Revision C (deployment/assetRegistry.revC.json, 487 entries).
+// ceremony read Revision C (deployment/assetRegistry.revC.json, 487 entries).
 // Revision C is a full copy of Revision B with one change: row 454 USDC_BASE
 // is S1 (Master Specification Revision 18, Section 6.1). CEREMONY_REGISTRY_FILE
-// below is the ceremony source; resolveCeremonyRegistry() and
-// build_ceremony_artifacts.cjs use it. Revision B stays pinned and unchanged;
-// it remains the record of the finalized Oct 22 set.
+// Revision C is kept unchanged as the prior ceremony source.
+//
+// Base-only launch candidate (operator t430u, 2026-10-26): the ceremony reads
+// Revision D (deployment/assetRegistry.revD.json, 591 entries). Revision D is
+// Revision C with its Base rows replaced by the expanded Base registry
+// (131 Base rows: 130 tokens plus Base ETH), built by scripts/buildRevisionD.cjs.
+// Non-Base rows are carried unchanged as history; the ceremony registers only
+// the Base rows. CEREMONY_REGISTRY_FILE below is the ceremony source;
+// resolveCeremonyRegistry() and build_ceremony_artifacts.cjs use it. Revision B
+// stays pinned and unchanged; it remains the record of the finalized Oct 22 set.
 //
 // Fail closed: there is no fallback to assetRegistry.resolved.json, no folder
 // glob, and no alternate default path. If the requested file is missing, or
@@ -24,9 +32,9 @@ const DEP = path.join(__dirname, "..", "deployment");
 const REGISTRY_FILE = path.join(DEP, "assetRegistry.revB.json");
 const REGISTRY_NAME = "deployment/assetRegistry.revB.json";
 const REGISTRY_BASENAME = "assetRegistry.revB.json";
-const CEREMONY_REGISTRY_FILE = path.join(DEP, "assetRegistry.revC.json");
-const CEREMONY_REGISTRY_NAME = "deployment/assetRegistry.revC.json";
-const CEREMONY_REGISTRY_BASENAME = "assetRegistry.revC.json";
+const CEREMONY_REGISTRY_FILE = path.join(DEP, "assetRegistry.revD.json");
+const CEREMONY_REGISTRY_NAME = "deployment/assetRegistry.revD.json";
+const CEREMONY_REGISTRY_BASENAME = "assetRegistry.revD.json";
 const HISTORICAL_FILE = path.join(DEP, "assetRegistry.resolved.json");
 const HISTORICAL_BASENAME = "assetRegistry.resolved.json";
 
@@ -42,7 +50,7 @@ function loadRegistry(file = REGISTRY_FILE) {
   if (base === HISTORICAL_BASENAME || resolved === path.resolve(HISTORICAL_FILE)) {
     throw new Error(
       "REGISTRY GUARD REFUSAL: refusing historical " + HISTORICAL_BASENAME +
-      " as the ceremony registry. Expected " + CEREMONY_REGISTRY_BASENAME + " (Revision C, 487 rows)."
+      " as the ceremony registry. Expected " + CEREMONY_REGISTRY_BASENAME + " (Revision D, 591 rows)."
     );
   }
   if (file === REGISTRY_FILE || resolved === path.resolve(REGISTRY_FILE)) {
