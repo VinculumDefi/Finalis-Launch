@@ -16,8 +16,8 @@ import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered
-// (Revision B + on-chain verification). Solana is not part of this deployment
-// and is not offered for new locks.
+// (Revision D Base rows + on-chain verification). Base only (t430u item 2):
+// the other chains stay in this list as history and the filter removes them.
 const ENV_GROUPS = [
   { label: 'EVM', envs: ['Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Base', 'Optimism'] },
   { label: 'UTXO', envs: ['Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash'] },
@@ -38,7 +38,7 @@ export default function BaseVerifier() {
   const lifecycleRef = useRef(new PendingAttemptLifecycle());
   const lifecycle = lifecycleRef.current;
 
-  const [env, setEnv] = useState('Ethereum');
+  const [env, setEnv] = useState('Base');
   const [verifiedUsd, setVerifiedUsd] = useState('10.00');
   const [daysSinceLaunch, setDaysSinceLaunch] = useState('0');
   const [duration, setDuration] = useState(604800);
