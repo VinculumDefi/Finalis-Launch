@@ -18,7 +18,8 @@ No symbol search (removed by D-64) and no community-token override
 (VF-ORC-006: no override applies, and a displayed registry contract is never
 replaced with a different lookup contract). The former v9 overrides for
 TigerOG, LionOG, FrogOG (BSC legacy contracts) and WKC are removed under
-t427u; TigerOG, LionOG and FrogOG left the registry on 2026-10-19.
+t427u. TigerOG is on the Base registry by founder override (t430u, t431u),
+which supplies no price; it is priced by this cascade like any other row.
 No hardcoded prices anywhere.
 
 Usage:
@@ -118,6 +119,53 @@ def cg_batch(id_list):
     return result
 
 # ── TIER 2: DEXSCREENER BY CONTRACT ──────────────────────────────────────────
+# The price is always the price of the token being priced. A DexScreener pair
+# reports priceUsd for its base (first) token only. When the token is the base
+# token, priceUsd is its price. When it is the quote (second) token, its price
+# is priceUsd / priceNative (priceNative is the base token's price in quote
+# tokens). A pair that does not hold the token on either side, or lacks the
+# fields needed, is skipped. Any pool may give the reference price; the pair
+# with the most liquidity among the usable ones is taken. (Operator t431u: the
+# pool choice does not matter; the other token's price is never assigned.)
+def _f(x):
+    try:
+        return float(x or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+def _same(a, b):
+    return isinstance(a, str) and isinstance(b, str) and a.lower() == b.lower()
+
+def token_usd_from_pair(pair, contract):
+    """USD price of `contract` from one DexScreener pair, or None."""
+    if not pair or not contract:
+        return None
+    price_usd = _f(pair.get("priceUsd"))
+    if price_usd <= 0:
+        return None
+    if _same((pair.get("baseToken") or {}).get("address"), contract):
+        return price_usd
+    if _same((pair.get("quoteToken") or {}).get("address"), contract):
+        price_native = _f(pair.get("priceNative"))
+        if price_native <= 0:
+            return None
+        usd = price_usd / price_native
+        return usd if usd > 0 and usd != float("inf") else None
+    return None
+
+def best_ds_price(pairs, ds_chain, contract):
+    best = None
+    for p in pairs or []:
+        if not p or p.get("chainId") != ds_chain:
+            continue
+        usd = token_usd_from_pair(p, contract)
+        if usd is None:
+            continue
+        liq = _f((p.get("liquidity") or {}).get("usd"))
+        if best is None or liq > best[0]:
+            best = (liq, usd)
+    return None if best is None else best[1]
+
 def ds_by_contract(chain, contract):
     ds_chain = DS_CHAIN.get(chain)
     if not ds_chain or not contract:
@@ -126,16 +174,17 @@ def ds_by_contract(chain, contract):
     if any(contract.upper().startswith(x) for x in
            ("MISSING","PENDING","REVIEW","NATIVE","DEADBEEF")):
         return None
+    # Chain-scoped endpoint first: it lists the token's pools on its own chain.
+    # The older all-chain endpoint returns a capped list that can leave out the
+    # token's own-chain pools, so it is only a fallback.
+    scoped = fetch(f"https://api.dexscreener.com/token-pairs/v1/{ds_chain}/{contract}")
+    usd = best_ds_price(scoped, ds_chain, contract) if isinstance(scoped, list) else None
+    if usd is not None:
+        return usd
     data = fetch(f"https://api.dexscreener.com/latest/dex/tokens/{contract}")
     if not data or not data.get("pairs"):
         return None
-    pairs = [p for p in data["pairs"]
-             if p.get("chainId") == ds_chain
-             and float(p.get("priceUsd") or 0) > 0]
-    if not pairs:
-        return None
-    best = max(pairs, key=lambda p: float((p.get("liquidity") or {}).get("usd") or 0))
-    return float(best["priceUsd"])
+    return best_ds_price(data["pairs"], ds_chain, contract)
 
 # ── FORMAT ───────────────────────────────────────────────────────────────────
 def fmt(usd):
