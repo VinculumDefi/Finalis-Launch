@@ -3,9 +3,9 @@
 // impersonation (no key). HTTP is mocked here; nothing is fetched or posted live.
 // The fixture test/fixtures/price_fetch_sample.json is a slice of one real
 // read-only fetch (t209u item 2).
-// Base-only launch: the ceremony registers only the 129 Base rows of registry
+// Base-only launch: the ceremony registers only the 130 Base rows of registry
 // Revision D, so the fetcher and price run default to those rows. The
-// fetcher's chain logic is still exercised offline on all 589 Revision D rows
+// fetcher's chain logic is still exercised offline on all 590 Revision D rows
 // (baseOnly: false).
 // Operator t430u item 1 (2026-10-26): the $10,000 pool minimum and its
 // screening are removed. The rule tested here is the scheduled cascade of
@@ -58,9 +58,9 @@ describe("Price fetcher -> price run (test chain)", function () {
   const tel = baseRows.find((r) => r.row === 1082);
   const noId = baseRows.find((r) => r.kind === "token" && !r.pricingIdentifier && !ogAddrs.has(lc(r.identifier)));
 
-  it("reads the 589 Revision D rows; the default is the 129 Base rows the ceremony registers", () => {
-    expect(rows.length).to.equal(589);
-    expect(baseRows.length).to.equal(129);
+  it("reads the 590 Revision D rows; the default is the 130 Base rows the ceremony registers", () => {
+    expect(rows.length).to.equal(590);
+    expect(baseRows.length).to.equal(130);
     expect(baseRows.every((r) => r.environmentId === "Base")).to.equal(true);
     expect(baseRows.filter((r) => r.row === 2).length).to.equal(1);
     expect(baseRows.map((r) => r.environmentId + "|" + lc(r.canonicalAssetId)).sort())
@@ -94,6 +94,17 @@ describe("Price fetcher -> price run (test chain)", function () {
           // baseEth, tel and the rest: id not found -> step 2 for tokens, no price for natives
         })],
         [/dexscreener\.com\/token-pairs\/v1\/optimism\//, () => { throw new Error("ECONNRESET"); }],
+        // t436u: TigerOG (founder override) has no Base pair on DexScreener; the
+        // all-chain endpoint gives a bsc PancakeSwap pair for its exact address
+        // (shape of the live answer on 2026-10-26) with zero 24h volume and
+        // trades. A non-override Base token's other-chain pair is offered too
+        // and must be ignored.
+        [/dexscreener\.com\/latest\/dex\/tokens\//, (u) => {
+          const a = lc(u.split("/").pop());
+          if (ogAddrs.has(a)) return { pairs: [{ chainId: "bsc", dexId: "pancakeswap", pairAddress: "0x" + "7".repeat(40), baseToken: { address: ogRows[0].identifier }, quoteToken: { address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" },
+            priceUsd: "0.0000000000000000007353", priceNative: "0.0000000000000000000009863", liquidity: { usd: 4879.08 }, volume: { h24: 0 }, txns: { h24: { buys: 0, sells: 0 } } }] };
+          return { pairs: [{ chainId: "bsc", pairAddress: "0x" + "8".repeat(40), baseToken: { address: a }, quoteToken: { address: "0x" + "e".repeat(40) }, priceUsd: "5", priceNative: "1", liquidity: { usd: 1e7 } }] };
+        }],
         [/dexscreener\.com\/token-pairs/, (u) => {
           const a = lc(u.split("/").pop());
           if (a === lc(T.cgOnly.identifier)) return [pair(T.cgOnly, { liq: 50000, price: "999" })]; // never requested (VF-ORC-002)
@@ -147,8 +158,15 @@ describe("Price fetcher -> price run (test chain)", function () {
       expect(R(T.noQuote)).to.include({ usd: null, reason: "no_price" });
       expect(R(T.noPool)).to.include({ usd: null, reason: "no_price" });
     });
-    it("founder override rows get no invented price: no source -> no price", () => {
-      for (const r of ogRows) expect(R(r), r.symbol).to.include({ usd: null, source: null, reason: "no_price" });
+    it("founder override (TigerOG, t436u): priced from a pair for its exact address on another chain, with zero 24h volume", () => {
+      expect(ogRows.length).to.equal(1);
+      expect(R(ogRows[0])).to.include({ usd: "0.0000000000000000007353", source: "DexScreener", reason: null, pairChain: "bsc", pairSide: "base", liquidityUsd: 4879 });
+      expect(m.urls).to.include("https://api.dexscreener.com/latest/dex/tokens/" + ogRows[0].identifier);
+    });
+    it("a non-override token never uses another chain's pair and never asks the all-chain endpoint", () => {
+      expect(R(noId)).to.include({ usd: "42", source: "DexScreener", pairChain: "base" });
+      expect(R(T.noPool)).to.include({ usd: null, reason: "no_price" });
+      expect(m.urls.filter((u) => u.includes("/latest/dex/tokens/")).map(lc)).to.deep.equal(ogRows.map((r) => "https://api.dexscreener.com/latest/dex/tokens/" + lc(r.identifier)));
     });
     it("an API that stays down after the retries fails closed", () => {
       expect(R(T.dsDown)).to.include({ usd: null, source: null, reason: "fetch_error" });
@@ -160,14 +178,14 @@ describe("Price fetcher -> price run (test chain)", function () {
       expect(rowAddress(btc)).to.equal(null);
       expect(rowAddress(baseEth)).to.equal(null);
     });
-    it("only CoinGecko by id and DexScreener by the row's own chain and address are requested; never a symbol search", () => {
-      for (const u of m.urls) expect(u).to.match(/^https:\/\/(api\.coingecko\.com\/api\/v3\/simple\/price\?ids=|api\.dexscreener\.com\/token-pairs\/v1\/[a-z]+\/[0-9A-Za-z]+$)/);
+    it("only CoinGecko by id and DexScreener by the row's own address are requested; never a symbol search", () => {
+      for (const u of m.urls) expect(u).to.match(/^https:\/\/(api\.coingecko\.com\/api\/v3\/simple\/price\?ids=|api\.dexscreener\.com\/token-pairs\/v1\/[a-z]+\/[0-9A-Za-z]+$|api\.dexscreener\.com\/latest\/dex\/tokens\/0x[0-9A-Fa-f]{40}$)/);
       expect(m.urls.some((u) => /search|geckoterminal/.test(u))).to.equal(false);
       expect(m.urls.some((u) => u === "https://api.dexscreener.com/token-pairs/v1/polygon/" + T.idle.identifier)).to.equal(true);
     });
   });
 
-  describe("on the test chain (Base-only ceremony: 129 Base rows, poster = live poster)", function () {
+  describe("on the test chain (Base-only ceremony: 130 Base rows, poster = live poster)", function () {
     let v;
     before(async () => {
       const [signer] = await ethers.getSigners();
@@ -195,32 +213,31 @@ describe("Price fetcher -> price run (test chain)", function () {
       }
     });
 
-    it("a full Base-row fetch (mocked HTTP, 129 rows) builds runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
+    it("a full Base-row fetch (mocked HTTP, 130 rows) builds runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
       const failIds = new Set(baseRows.filter((r, i) => i % 7 === 0 && r.pricingIdentifier).map((r) => r.pricingIdentifier));
       const m = mock([
         [/coingecko/, (u) => Object.fromEntries(cgIds(u).filter((id) => !failIds.has(id)).map((id, j) => [id, { usd: (j + 1) / 8, last_updated_at: NOW }]))],
         // Every token has one small pool on its own chain, except the founder
-        // override row, which is given none here to show it then fails
-        // closed. (On 2026-10-26 TigerOG's one Base pool was listed on
-        // GeckoTerminal, not DexScreener, so a live run does not price it.)
-        [/dexscreener/, (u) => { const p = u.split("/"); if (ogAddrs.has(lc(p[p.length - 1]))) return [];
+        // override row, which is given no pool on any chain here to show it
+        // then fails closed (no price is invented for it).
+        [/dexscreener/, (u) => { const p = u.split("/"); if (ogAddrs.has(lc(p[p.length - 1]))) return u.includes("/latest/dex/tokens/") ? { pairs: [] } : [];
           return [{ chainId: p[p.length - 2], pairAddress: "0x" + "c".repeat(40), baseToken: { address: p[p.length - 1] }, quoteToken: { address: "0x" + "e".repeat(40) },
           priceUsd: "0.5", priceNative: "1", liquidity: { usd: 900 } }]; }],
       ]);
       const res = await fetchPrices({ rows: baseRows, get: m.get, pause: NOPAUSE });
-      expect(res.length).to.equal(129);
+      expect(res.length).to.equal(130);
       const c = summarize(res);
       const failNatives = baseRows.filter((r) => r.kind === "native" && failIds.has(r.pricingIdentifier)).length;
       const dsTokens = baseRows.filter((r) => r.kind === "token" && !ogAddrs.has(lc(r.identifier)) && (!r.pricingIdentifier || failIds.has(r.pricingIdentifier))).length;
-      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(129);
+      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(130);
       expect(c.fail).to.equal(failNatives + 1);      // natives with no CoinGecko price, and the founder override row
       expect(c.DexScreener).to.equal(dsTokens);      // a token with no CoinGecko price uses its own-chain pool, whatever its size
       expect(c.DexScreener).to.be.gt(0);
       for (const f of res.filter((x) => x.usd == null)) expect(f.reason).to.equal("no_price");
       const first = await nextRunId(v);
       const runs = buildPriceRuns(res, first);
-      expect(runs.length).to.equal(Math.ceil(129 / MAX_LINES_PER_RUN));
-      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(129);
+      expect(runs.length).to.equal(Math.ceil(130 / MAX_LINES_PER_RUN));
+      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(130);
       expect(runs.map((r) => r.runId)).to.deep.equal(runs.map((_, i) => first + BigInt(i)));
       for (const r of runs) {
         const rc = await postOnTestChain(hre, v, r);
