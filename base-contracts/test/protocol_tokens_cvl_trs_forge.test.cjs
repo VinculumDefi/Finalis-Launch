@@ -2,7 +2,7 @@
 // Rev 6 VF-TOK-007 and VF-REG-008: VCLM, CHONX and SYNTH are prohibited Commitment
 // Vault Lock (CVL) inputs. TRS (stake) and the SYNTH Forge are separate mechanisms.
 // The real Base ceremony flow (baseCeremonyFlow.js) runs as committed.
-//   Path A: the 131 Base rows (the Base-only ceremony as built, t430u). The Base lock refuses the three
+//   Path A: the 129 Base rows (the Base-only ceremony as built, t430u). The Base lock refuses the three
 //           protocol tokens before any token moves (t262u).
 //   Path B: rows 488-490 with their token addresses: the Verifier refuses the
 //           index write (VF-REG-008), so that ceremony never finalizes.
@@ -176,14 +176,14 @@ async function cvlRefused(h, sym, token, id, price, amount, label) {
   console.log(`      [${label}] ${sym} lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted`);
 }
 
-describe("t259u/t262u Path A (131 Base rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
+describe("t259u/t262u Path A (129 Base rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
   before(async () => { await h.setup(); });
 
-  it("A0: 131 Base rows / 130 Base token addresses; no protocol-token row or index entry; finalized", async () => {
-    expect(h.logs).to.include("registry 131/131");
-    expect(h.logs).to.include("token addresses 130/130");
+  it("A0: 129 Base rows / 128 Base token addresses; no protocol-token row or index entry; finalized", async () => {
+    expect(h.logs).to.include("registry 129/129");
+    expect(h.logs).to.include("token addresses 128/128");
     for (const id of [VCLM_ID, CHONX_ID, SYNTH_ID]) expect((await h.r.verifier.assetPrecisionTable(key("Base", id))).canonicalAssetId).to.equal(ethers.ZeroHash);
     expect(await h.r.verifier.configurationFinalized()).to.equal(true);
   });
