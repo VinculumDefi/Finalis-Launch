@@ -8,7 +8,7 @@
 // Inputs (all in deployment/, no network access here):
 //   assetRegistry.revC.json                 previous revision (row fields)
 //   assetRegistry.resolved.json             prior revision (fields of rows 28 and 138)
-//   baseRegistryCandidate_2026-10-26.csv    approved Base list (128 entries; 6 EXCLUDED rows skipped, including LionOG and FrogOG under t431u)
+//   baseRegistryCandidate_2026-10-26.csv    approved Base list (129 entries; 6 EXCLUDED rows skipped, including LionOG and FrogOG under t431u)
 //   revD_onchain_2026-10-26.json            name/symbol/decimals/code read on Base (scripts/readBaseTokenFacts.cjs)
 //
 // Rules:
@@ -161,8 +161,8 @@ function buildRevisionD() {
     revision: "D",
     date: "2026-10-26",
     rules: {
-      membership: "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG by founder override (t430u item 5). LionOG and FrogOG removed (t431u). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
-      pricing: "Unchanged scheduled pricing rules: CoinGecko by the row's pricingIdentifier, then DexScreener by the row's own Base contract. A row with no usable price has no valuation for that run (VF-ORC-005). No substitute price.",
+      membership: "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG by founder override (t430u item 5). LionOG and FrogOG removed (t431u). doginme added as a new S3 row (operator t438u). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
+      pricing: "Unchanged scheduled pricing rules: CoinGecko by the row's pricingIdentifier, then DexScreener by the row's own Base contract. TigerOG (founder override, t436u) may take the most liquid DexScreener pool for its exact registry contract on any chain, with no market-activity or trading-recency test. A row with no usable price has no valuation for that run (VF-ORC-005). No substitute price.",
       tel: "TEL uses the upgraded Base contract " + TEL_MIGRATION.newAddress + " (t430u item 3); the old Base contract " + TEL_MIGRATION.oldAddress + " is not registered.",
     },
     onchainFacts: { file: "deployment/" + path.basename(ONCHAIN), block: facts.block, readAt: facts.readAt },
