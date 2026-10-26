@@ -8,7 +8,7 @@
 // (Base-only launch, t357u: one reader, the Base subset of Revision B).
 //   1. Feeding VCLM in as row 488 with its token address: the Verifier refuses
 //      the index write (VF-REG-008) and the ceremony stops before finalize.
-//   2. The Base-only ceremony (131 Base rows of the 591-row Revision D): the Base lock refuses a VCLM lock before any
+//   2. The Base-only ceremony (129 Base rows of the 589-row Revision D): the Base lock refuses a VCLM lock before any
 //      token moves (VF-TOK-007); CHONX still opens after 10,000,000 VCLM from
 //      ordinary locks and an ordinary lock then mints CHONX.
 const { expect } = require("chai");
@@ -45,11 +45,11 @@ describe("VCLM is not a lock input: row 488 refused, Base lock refuses VCLM (t26
     };
     await expect(runBaseCeremony({ ethers, signer, art, data, log }))
       .to.be.revertedWith("VF-REG-008: protocol token is not a lock input");
-    expect(logs).to.include("registry 132/132"); // the 131 Base rows plus VCLM
+    expect(logs).to.include("registry 130/130"); // the 129 Base rows plus VCLM
     expect(logs).to.not.include("Finalized.");
   });
 
-  describe("2: the Base-only ceremony (131 Base rows)", function () {
+  describe("2: the Base-only ceremony (129 Base rows)", function () {
     let r, signer, user, recipient, dest;
     before(async () => {
       [signer, user, recipient, dest] = await ethers.getSigners();
