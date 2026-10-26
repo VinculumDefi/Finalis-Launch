@@ -20,18 +20,18 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // pinned and unchanged in the manifest as the prior ceremony source.
 // Operator t431u (2026-10-26): LionOG and FrogOG are removed from Revision D
 // (TigerOG stays by founder override); Revision D was rebuilt and re-pinned.
-const EXPECTED_REGISTRY_SHA256 = "2b3799390d9c75b339a795ab39bcc6e39ced3ed7b2be491a4b36179468d5d2fa";
+const EXPECTED_REGISTRY_SHA256 = "d8bb58d80d593f4e0e967ee82c239327055adb07cef8809fe48f7b95372903d4";
 const EXPECTED_REGISTRY_FILENAME = "assetRegistry.revD.json";
-const EXPECTED_REGISTRY_ROWS = 589;
+const EXPECTED_REGISTRY_ROWS = 590;
 // Pinned row counts of every registry file the manifest lists.
-const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 589 };
-const EXPECTED_MANIFEST_SHA256 = "c71979e7429b4503b82d9acfd305a31841888ed9b8d7c8a0d9853c56a73144c4";
+const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 590 };
+const EXPECTED_MANIFEST_SHA256 = "96434c14c111315a8a88af3b24c3c42d6ccc1ce36fd1b2f7bce5fccf056a75df";
 // Base-only launch: the ceremony registers only the Base rows of Revision D.
-// Revision D itself is not changed (589 rows, pinned above); the Base subset
+// Revision D itself is not changed (590 rows, pinned above); the Base subset
 // is derived here at build time and must have exactly these counts.
 const BASE_ONLY_RULE = "Revision D entries with environmentId === \"Base\" (row 2 Base ETH included); token addresses with environmentId === \"Base\"; no aliases";
-const EXPECTED_BASE_ROWS = 129;
-const EXPECTED_BASE_TOKEN_ADDRESSES = 128;
+const EXPECTED_BASE_ROWS = 130;
+const EXPECTED_BASE_TOKEN_ADDRESSES = 129;
 const EXPECTED_BASE_ALIASES = 0;
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
@@ -174,7 +174,7 @@ function verifyCeremonyManifest(opts = {}) {
   if (resolved.rowCount !== EXPECTED_REGISTRY_ROWS || resolved.rowCount !== manifest.expectedRegistryRows) {
     failures.push({
       field: "registry.rowCount",
-      expected: String(EXPECTED_REGISTRY_ROWS) + " (590 Revision D rows plus Base ETH as row 2)",
+      expected: String(EXPECTED_REGISTRY_ROWS) + " (Revision D rows; the Base subset includes Base ETH as row 2)",
       actual: String(resolved.rowCount) + " (source=" + resolved.filename + ")",
     });
   }
