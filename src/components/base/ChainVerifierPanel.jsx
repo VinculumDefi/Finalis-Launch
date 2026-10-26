@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ENVIRONMENTS } from '@/lib/vfBaseRegistry';
 import { isVerifierRegistered, getChainVerifier } from '@/lib/vfChainVerifierRegistry';
+import { isInThisDeployment, NOT_IN_THIS_DEPLOYMENT_LABEL } from '@/lib/vfDeploymentScope';
 
 export default function ChainVerifierPanel() {
   return (
@@ -20,7 +21,8 @@ export default function ChainVerifierPanel() {
         <p className="text-xs text-[#6b6b65] mb-3">
           Each of the 16 environments has a dedicated IChainVerifier that performs
           objective chain-native finality verification and independent fact extraction.
-          All 16 are registered. Solana is not part of this deployment.
+          This deployment is Base only. The verifier code for the other 15 is kept
+          and is not part of this deployment.
         </p>
         <div className="grid gap-1.5">
           {ENVIRONMENTS.map((env) => {
@@ -41,6 +43,9 @@ export default function ChainVerifierPanel() {
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                     {env.family}
                   </Badge>
+                  {!isInThisDeployment(env.id) && (
+                    <span className="text-[10px] text-[#6b6b65]">{NOT_IN_THIS_DEPLOYMENT_LABEL}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[#6b6b65] font-mono">
