@@ -1,5 +1,5 @@
 // Rig 2 (Base): the full stack deployed the way the ceremony page does it
-// (runBaseCeremony, ceremony.json, the 131 Base rows of Revision D) on a LOCAL fork of Base mainnet,
+// (runBaseCeremony, ceremony.json, the 129 Base rows of Revision D) on a LOCAL fork of Base mainnet,
 // then real Base tokens through lock -> recordFeeAndRac -> verifyAndMint ->
 // release. The Base reader reads the lock record from storage, so the whole
 // mint path runs on real token code. Prices come from real Chainlink feeds on
@@ -41,8 +41,8 @@ describe("Rig 2: Base mainnet fork, full ceremony stack, real Base tokens", func
     expect((await ethers.provider.getCode(T.USDC_BASE)).length).to.be.gt(100);
     S = await C.deployStack();
     [, user, recipient, dest] = S.signers;
-    expect(S.logs).to.include("registry 131/131");
-    expect(S.logs).to.include("token addresses 130/130");
+    expect(S.logs).to.include("registry 129/129");
+    expect(S.logs).to.include("token addresses 128/128");
     expect(S.logs).to.include("Finalized.");
     console.log("      fork block", (await ethers.provider.getBlock("latest")).number, "Verifier", short(await S.verifier.getAddress()), "Base lock", short(await S.lock.getAddress()));
     const rows = [];
