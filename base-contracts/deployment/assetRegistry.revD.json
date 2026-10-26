@@ -3,7 +3,7 @@
  "revision": "D",
  "date": "2026-10-26",
  "rules": {
-  "membership": "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG, LionOG and FrogOG by founder override (t430u item 5). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
+  "membership": "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG by founder override (t430u item 5). LionOG and FrogOG removed (t431u). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
   "pricing": "Unchanged scheduled pricing rules: CoinGecko by the row's pricingIdentifier, then DexScreener by the row's own Base contract. A row with no usable price has no valuation for that run (VF-ORC-005). No substitute price.",
   "tel": "TEL uses the upgraded Base contract 0x7E13B43065380aCdeC1c2d138c579cbBbafA0731 (t430u item 3); the old Base contract 0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1 is not registered."
  },
@@ -27,16 +27,16 @@
   ]
  },
  "counts": {
-  "total": 591,
-  "base": 131,
-  "baseTokens": 130,
+  "total": 589,
+  "base": 129,
+  "baseTokens": 128,
   "baseNative": 1,
   "baseNewRows": 101,
-  "founderOverride": 3,
+  "founderOverride": 1,
   "historicalOtherEnvironments": 460,
   "byChain": {
    "Ethereum": 265,
-   "Base": 131,
+   "Base": 129,
    "Bitcoin": 1,
    "Dogecoin": 1,
    "Arbitrum": 22,
@@ -3195,7 +3195,7 @@
    "founderOverride": true,
    "revD": {
     "source": "prior revision row 138",
-    "founderOverride": "founder override (t430u item 5)"
+    "founderOverride": "founder override (t430u item 5, TigerOG only under t431u)"
    }
   },
   {
@@ -13289,62 +13289,6 @@
     "poolAddress": "0xde1cc05230db3ecfdcd8d4cc486e910ca694af2a",
     "priceSource": "DexScreener (pool traded in last 24h)",
     "priceAgeHours": 0
-   }
-  },
-  {
-   "row": 999,
-   "environmentId": "Base",
-   "assetId": "LionOG",
-   "canonicalAssetId": "0x5fb4a8487d11077491f174c4581c5af1f982a56a98bab5bfef0466d4e4e12549",
-   "symbol": "LionOG",
-   "decimals": 9,
-   "decimalsFrom": "decimals() eth_call",
-   "unresolvedReason": null,
-   "custodyClass": 3,
-   "custodyPath": 1,
-   "identifier": "0x6731F2d7ADF86cfba30d15c4D10113Ce98f3492A",
-   "pricingIdentifier": null,
-   "sameKeyAsRow": null,
-   "kind": "token",
-   "onchain": {
-    "status": "verified",
-    "block": 53120088,
-    "name": "LionOG",
-    "symbol": "LIONOG",
-    "codeBytes": 45
-   },
-   "founderOverride": true,
-   "revD": {
-    "source": "prior revision row 999",
-    "founderOverride": "founder override (t430u item 5)"
-   }
-  },
-  {
-   "row": 1000,
-   "environmentId": "Base",
-   "assetId": "FrogOG",
-   "canonicalAssetId": "0xa7d9f396a8d3b35cb6d982001f77f04c64bb642b254af70500053cdfe9cf9a0f",
-   "symbol": "FrogOG",
-   "decimals": 9,
-   "decimalsFrom": "decimals() eth_call",
-   "unresolvedReason": null,
-   "custodyClass": 3,
-   "custodyPath": 1,
-   "identifier": "0x0E3b564bdD09348840811C7e1106BbD0e98b5b4f",
-   "pricingIdentifier": null,
-   "sameKeyAsRow": null,
-   "kind": "token",
-   "onchain": {
-    "status": "verified",
-    "block": 53120088,
-    "name": "FrogOG",
-    "symbol": "FROGOG",
-    "codeBytes": 45
-   },
-   "founderOverride": true,
-   "revD": {
-    "source": "prior revision row 1000",
-    "founderOverride": "founder override (t430u item 5)"
    }
   },
   {
