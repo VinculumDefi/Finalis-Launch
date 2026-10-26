@@ -31,7 +31,8 @@ const rec = (row, env) => {
   const h = HIST.find((e) => e.row === row && (!env || e.environmentId === env));
   return { registry_row: h.row, symbol: h.symbol, environment: h.environmentId, contract_or_native_identifier: h.identifier };
 };
-const OG = [[138, 'TigerOG', '0xcf7fc0de71238c9ec45ec2fd24fdc8521345dbb5'], [999, 'LionOG', '0x6731f2d7adf86cfba30d15c4d10113ce98f3492a'], [1000, 'FrogOG', '0x0e3b564bdd09348840811c7e1106bbd0e98b5b4f']];
+const OG = [[138, 'TigerOG', '0xcf7fc0de71238c9ec45ec2fd24fdc8521345dbb5']];
+const REMOVED_T431U = [[999, 'LionOG', '0x6731f2d7adf86cfba30d15c4d10113ce98f3492a'], [1000, 'FrogOG', '0x0e3b564bdd09348840811c7e1106bbd0e98b5b4f']];
 const TEL_NEW = '0x7e13b43065380acdec1c2d138c579cbbbafa0731';
 const TEL_OLD = '0x09be1692ca16e06f536f0038ff11d1da8524adb1';
 
@@ -44,12 +45,12 @@ test('this deployment is Base only', () => {
   assert.equal(SOLANA_LOCKS_ENABLED, false);
 });
 
-test('allowlist equals the Base rows of Revision D exactly (131 entries: 130 tokens + Base ETH, no native links, nothing excluded)', () => {
+test('allowlist equals the Base rows of Revision D exactly (129 entries: 128 tokens + Base ETH, no native links, nothing excluded)', () => {
   const key = (e) => `${e.environmentId}|${e.row}|${e.canonicalAssetId}`;
   assert.equal(REVD.revision, 'D');
-  assert.equal(REVD.entries.length, 591);
-  assert.equal(BASE.length, 131);
-  assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 131, tokens: 130, natives: 1, nativeLinks: 0, excluded: 0, founderOverride: 3, notOffered: 460 });
+  assert.equal(REVD.entries.length, 589);
+  assert.equal(BASE.length, 129);
+  assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 129, tokens: 128, natives: 1, nativeLinks: 0, excluded: 0, founderOverride: 1, notOffered: 460 });
   assert.deepEqual(new Set(ACTIVE_ALLOWLIST.entries.map(key)), new Set(BASE.map(key)));
   for (const e of BASE) {
     const a = ACTIVE_ALLOWLIST.entries.find((x) => key(x) === key(e));
@@ -77,7 +78,7 @@ test('a Base token is shown (Base USDC row 454), matched by chain + address in a
   assert.equal(isOfferable({ ...r, environment: 'Ethereum' }), false);
 });
 
-test('founder override: TigerOG row 138, LionOG 999, FrogOG 1000 are always offered, by exact Base contract', () => {
+test('founder override: TigerOG row 138 is always offered, by exact Base contract (t431u: TigerOG only)', () => {
   assert.deepEqual(FOUNDER_OVERRIDE_ENTRIES.map((e) => [e.row, e.symbol, e.address]), OG);
   for (const [row, sym, addr] of OG) {
     const r = recD(row);
@@ -90,7 +91,15 @@ test('founder override: TigerOG row 138, LionOG 999, FrogOG 1000 are always offe
     assert.equal(isOfferable({ environment: 'Base', symbol: sym, contract_or_native_identifier: '' }), false);
     assert.equal(isOfferable({ environment: 'Base', symbol: sym, contract_or_native_identifier: '0x' + '7'.repeat(40) }), false);
   }
-  assert.equal(ACTIVE_ALLOWLIST.entries.filter((e) => e.founderOverride).length, 3);
+  assert.equal(ACTIVE_ALLOWLIST.entries.filter((e) => e.founderOverride).length, 1);
+});
+
+test('t431u: LionOG and FrogOG are removed and not offered', () => {
+  for (const [row, sym, addr] of REMOVED_T431U) {
+    assert.equal(ACTIVE_ALLOWLIST.entries.some((e) => e.row === row || String(e.address).toLowerCase() === addr), false, sym);
+    assert.equal(findAllowedToken('Base', addr), null, sym);
+    assert.equal(isOfferable({ environment: 'Base', symbol: sym, contract_or_native_identifier: addr }), false, sym);
+  }
 });
 
 test('TEL is offered on the upgraded Base contract only (t430u item 3)', () => {
