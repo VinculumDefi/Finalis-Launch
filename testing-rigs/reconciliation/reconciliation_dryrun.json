@@ -7,45 +7,45 @@
  "checks": [
   {
    "area": "bytecode",
-   "name": "vclm (TokenVCLM) at 0x489F...3650",
+   "name": "vclm (TokenVCLM) at 0x0134...E5E9",
    "status": "PASS",
    "detail": "runtime 3326 bytes, keccak 0x35f62d4a6b, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "chonx (TokenCHONX) at 0xa86F...744e",
+   "name": "chonx (TokenCHONX) at 0x2285...3513",
    "status": "PASS",
    "detail": "runtime 3326 bytes, keccak 0x786480ea01, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "verifier (VinculumFinalisVerifier) at 0x0134...E5E9",
+   "name": "verifier (VinculumFinalisVerifier) at 0x5678...07D2",
    "status": "PASS",
-   "detail": "runtime 20558 bytes, keccak 0x73c3d81535, immutables and constructor args derived"
+   "detail": "runtime 21320 bytes, keccak 0x3ece4b0f6c, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "forge (VinculumFinalisSynth) at 0x2285...3513",
+   "name": "forge (VinculumFinalisSynth) at 0x64FC...2D24",
    "status": "PASS",
-   "detail": "runtime 3373 bytes, keccak 0xd7984a987c, immutables and constructor args derived"
+   "detail": "runtime 3373 bytes, keccak 0x4323e601d8, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "stake (VinculumFinalisStake) at 0x5678...07D2",
+   "name": "stake (VinculumFinalisStake) at 0xD9da...6517",
    "status": "PASS",
-   "detail": "runtime 12330 bytes, keccak 0x31cd855049, immutables and constructor args derived"
+   "detail": "runtime 12330 bytes, keccak 0x08f7ab1fc7, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "lock (BaseCommitmentVaultLock) at 0x64FC...2D24",
+   "name": "lock (BaseCommitmentVaultLock) at 0x51a3...E4c3",
    "status": "PASS",
-   "detail": "runtime 8285 bytes, keccak 0xac1094f4af, immutables and constructor args derived"
+   "detail": "runtime 8285 bytes, keccak 0x56dc1485f4, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
-   "name": "reader:Base (BaseLockRecordVerifier) at 0xa1c0...8CD6",
+   "name": "reader:Base (BaseLockRecordVerifier) at 0xCDfE...56C9",
    "status": "PASS",
-   "detail": "runtime 2891 bytes, keccak 0xeebf5cc276, immutables and constructor args derived"
+   "detail": "runtime 2891 bytes, keccak 0xcae2036ab9, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
@@ -55,15 +55,15 @@
   },
   {
    "area": "bytecode",
-   "name": "ceremony-data is Base-only: 27 rows, 26 token addresses, 0 aliases, one reader, one Dev Fund",
+   "name": "ceremony-data is Base-only: 131 rows, 130 token addresses, 0 aliases, one reader, one Dev Fund",
    "status": "PASS",
-   "detail": "27 rows, 26 tokens, 0 aliases, source 487"
+   "detail": "131 rows, 130 tokens, 0 aliases, source 591"
   },
   {
    "area": "creation",
    "name": "vclm creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441910"
+   "detail": "tx nonce 3441912"
   },
   {
    "area": "creation",
@@ -75,7 +75,7 @@
    "area": "creation",
    "name": "chonx creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441911"
+   "detail": "tx nonce 3441913"
   },
   {
    "area": "creation",
@@ -87,7 +87,7 @@
    "area": "creation",
    "name": "verifier creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441912"
+   "detail": "tx nonce 3441914"
   },
   {
    "area": "creation",
@@ -99,7 +99,7 @@
    "area": "creation",
    "name": "forge creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441913"
+   "detail": "tx nonce 3441915"
   },
   {
    "area": "creation",
@@ -111,7 +111,7 @@
    "area": "creation",
    "name": "stake creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441914"
+   "detail": "tx nonce 3441916"
   },
   {
    "area": "creation",
@@ -123,7 +123,7 @@
    "area": "creation",
    "name": "lock creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441915"
+   "detail": "tx nonce 3441917"
   },
   {
    "area": "creation",
@@ -135,7 +135,7 @@
    "area": "creation",
    "name": "reader:Base creation input = ceremony.json bytecode + intended constructor args",
    "status": "PASS",
-   "detail": "tx nonce 3441918"
+   "detail": "tx nonce 3441920"
   },
   {
    "area": "creation",
@@ -255,7 +255,7 @@
    "area": "references",
    "name": "Verifier.protocolLaunchTimestamp set",
    "status": "PASS",
-   "detail": "launch 2026-10-26T11:53:45.000Z"
+   "detail": "launch 2026-10-26T16:07:08.000Z"
   },
   {
    "area": "references",
@@ -943,13 +943,13 @@
   },
   {
    "area": "registry",
-   "name": "27 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
+   "name": "131 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "registry",
-   "name": "26 token addresses index to their intended row",
+   "name": "130 token addresses index to their intended row",
    "status": "PASS",
    "detail": ""
   },
@@ -961,7 +961,7 @@
   },
   {
    "area": "registry",
-   "name": "27 Base rows resolve to the BaseLockRecordVerifier at 0xa1c0...8CD6",
+   "name": "131 Base rows resolve to the BaseLockRecordVerifier at 0xCDfE...56C9",
    "status": "PASS",
    "detail": ""
   },
@@ -973,21 +973,21 @@
   },
   {
    "area": "registry",
-   "name": "26 Base token addresses have contract code on Base",
+   "name": "130 Base token addresses have contract code on Base",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "ceremony txs",
-   "name": "registry rows written = the 27 ceremony-data rows, no extras",
+   "name": "registry rows written = the 131 ceremony-data rows, no extras",
    "status": "PASS",
-   "detail": "27 written, 0 single writes"
+   "detail": "131 written, 0 single writes"
   },
   {
    "area": "ceremony txs",
-   "name": "token index writes = the 26 ceremony-data rows",
+   "name": "token index writes = the 130 ceremony-data rows",
    "status": "PASS",
-   "detail": "26 written"
+   "detail": "130 written"
   },
   {
    "area": "ceremony txs",
@@ -1041,7 +1041,7 @@
    "area": "ceremony txs",
    "name": "operator transaction list is complete (contiguous nonces from first create to finalize)",
    "status": "PASS",
-   "detail": "17 txs, local fork blocks 53113128..53113147"
+   "detail": "21 txs, local fork blocks 53120716..53120739"
   },
   {
    "area": "closed",
