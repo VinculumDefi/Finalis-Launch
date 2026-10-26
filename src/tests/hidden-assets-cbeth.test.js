@@ -32,11 +32,11 @@ test('the hidden list has exactly one entry, cbETH on Base, with a reason and fi
   assert.ok(Object.isFrozen(HIDDEN_ASSETS) && Object.isFrozen(h));
 });
 
-test('cbETH is still on Revision D and the allowlist mirror (129 Base rows unchanged)', () => {
-  assert.equal(ACTIVE_ALLOWLIST.entries.length, 129);
+test('cbETH is still on Revision D and the allowlist mirror (130 Base rows unchanged)', () => {
+  assert.equal(ACTIVE_ALLOWLIST.entries.length, 130);
   assert.ok(CBETH, 'cbETH row present in the allowlist mirror');
   assert.ok(isOperatorHidden(CBETH));
-  assert.equal(REVD.entries.length, 589);
+  assert.equal(REVD.entries.length, 590);
   assert.ok(REVD.entries.some((e) => e.environmentId === 'Base' && e.row === 25 && e.identifier.toLowerCase() === CBETH.address));
 });
 
@@ -53,8 +53,8 @@ test('cbETH is never shown or offered, on any entry path', () => {
   assert.equal(isOfferable({ environment: 'Base', contract_or_native_identifier: CBETH.address }), false);
 });
 
-test('every other allowlisted asset is unaffected (128 offered)', () => {
-  assert.equal(OFFERED_COUNT, 128);
+test('every other allowlisted asset is unaffected (129 offered)', () => {
+  assert.equal(OFFERED_COUNT, 129);
   assert.equal(OFFERED_ENTRIES.length, ACTIVE_ALLOWLIST.entries.length - 1);
   for (const e of OFFERED_ENTRIES) {
     if (e.kind === 'token') {
