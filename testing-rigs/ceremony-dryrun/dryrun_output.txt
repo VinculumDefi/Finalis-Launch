@@ -1,5 +1,5 @@
 mode: SIMULATE (Base-only, local Base fork, local test signer; nothing broadcast)
 ceremony would succeed
 Base USDC (row 454): registered custodyClass 1 (S1); 1000 USDC 7-day lock minted 15000.0 VCLM vs 10000.0 at S3 = 15000 bps (1.5x)
-Revision D: TEL row 1082 indexed at 0x7E13...0731 (old 0x09bE...aDB1 not indexed); founder override TigerOG row 138 0xCF7F...dbB5, LionOG row 999 not registered (t431u), FrogOG row 1000 not registered (t431u); $0.95 flag on USDC_BASE row 454, USDT row 1086 only
+Revision D: TEL row 1082 indexed at 0x7E13...0731 (old 0x09bE...aDB1 not indexed); founder override TigerOG row 138 0xCF7F...dbB5, LionOG row 999 not registered (t431u), FrogOG row 1000 not registered (t431u), added doginme row 1103 0x6921...b75b (t438u); $0.95 flag on USDC_BASE row 454, USDT row 1086 only
 reconciliation PASS
