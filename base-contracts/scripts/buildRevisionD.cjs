@@ -7,14 +7,16 @@
 //
 // Inputs (all in deployment/, no network access here):
 //   assetRegistry.revC.json                 previous revision (row fields)
-//   assetRegistry.resolved.json             prior revision (fields of rows 28, 138, 999, 1000)
-//   baseRegistryCandidate_2026-10-26.csv    approved Base list (128 entries, 4 EXCLUDED rows skipped)
+//   assetRegistry.resolved.json             prior revision (fields of rows 28 and 138)
+//   baseRegistryCandidate_2026-10-26.csv    approved Base list (128 entries; 6 EXCLUDED rows skipped, including LionOG and FrogOG under t431u)
 //   revD_onchain_2026-10-26.json            name/symbol/decimals/code read on Base (scripts/readBaseTokenFacts.cjs)
 //
 // Rules:
 //   * Approved candidate entries (status other than EXCLUDED), in candidate order.
-//   * Founder override (t430u item 5): TigerOG, LionOG, FrogOG (scripts/founderOverride.cjs)
-//     are added regardless of any screening.
+//   * Founder override (t430u item 5): TigerOG (scripts/founderOverride.cjs)
+//     is added regardless of any screening.
+//   * LionOG (row 999) and FrogOG (row 1000) are removed (operator t431u). The
+//     build stops if either exact contract ends up in the Base subset.
 //   * TEL uses the upgraded Base contract 0x7E13…0731 (t430u item 3), not the
 //     old 0x09bE…aDB1 in the candidate file. Decimals come from the chain (18).
 //   * Existing Base rows keep their Revision C row number, assetId and
@@ -31,7 +33,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
-const { FOUNDER_OVERRIDE, FOUNDER_OVERRIDE_NAME } = require("./founderOverride.cjs");
+const { FOUNDER_OVERRIDE, FOUNDER_OVERRIDE_NAME, REMOVED_T431U } = require("./founderOverride.cjs");
 
 const DEP = path.join(__dirname, "..", "deployment");
 const CANDIDATE = path.join(DEP, "baseRegistryCandidate_2026-10-26.csv");
@@ -144,6 +146,9 @@ function buildRevisionD() {
   }
   const addrs = base.filter((e) => e.kind === "token").map((e) => e.identifier.toLowerCase());
   if (new Set(addrs).size !== addrs.length) throw new Error("duplicate Base token address");
+  for (const r of REMOVED_T431U) {
+    if (addrs.includes(r.address.toLowerCase()) || base.some((e) => e.row === r.row)) throw new Error(r.symbol + " is removed under t431u but is in the Base subset");
+  }
   for (const e of base) if (e.canonicalAssetId !== canonical(e.assetId) && e.assetId !== "native-ETH") throw new Error("canonical id mismatch row " + e.row);
 
   const others = revC.entries.filter((e) => e.environmentId !== "Base");
@@ -156,7 +161,7 @@ function buildRevisionD() {
     revision: "D",
     date: "2026-10-26",
     rules: {
-      membership: "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG, LionOG and FrogOG by founder override (t430u item 5). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
+      membership: "Base entries approved in deployment/baseRegistryCandidate_2026-10-26.csv (EXCLUDED rows skipped) plus TigerOG by founder override (t430u item 5). LionOG and FrogOG removed (t431u). No liquidity-pool minimum, no freshness rule and no market-cap screen (t430u item 1).",
       pricing: "Unchanged scheduled pricing rules: CoinGecko by the row's pricingIdentifier, then DexScreener by the row's own Base contract. A row with no usable price has no valuation for that run (VF-ORC-005). No substitute price.",
       tel: "TEL uses the upgraded Base contract " + TEL_MIGRATION.newAddress + " (t430u item 3); the old Base contract " + TEL_MIGRATION.oldAddress + " is not registered.",
     },
