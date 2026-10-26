@@ -100,11 +100,12 @@ function buildPkg({
   recipient,
   racIdentity,
   priceRecord = "0x",
+  proofAssetId,
 }) {
   const bps = STANDARD_BPS;
   const fee = feeOf(gross, bps);
   const principal = gross - fee;
-  const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration, recipient, outputToken: 0, assetId });
+  const lockEventProof = encodeLockProof({ lockId, gross, fee, principal, duration, recipient, outputToken: 0, assetId: proofAssetId || assetId });
   return {
     sourceEnvironmentId: env,
     commitmentVaultLockId: lockId,
@@ -310,13 +311,25 @@ async function deployStableFixture() {
   const usdt = ethers.id("USDT");
   await verifier.registerAssetPrecision("Ethereum", usdc, "USDC", 6, 1, 1);
   await verifier.registerAssetPrecision("Ethereum", usdt, "USDT", 6, 1, 1);
-  // t298u: USDC/USDT stablecoin rows on other chains, plus non-USDC/USDT controls.
+  // t430u item 4: the $0.95 cutoff follows the exact (environment, contract)
+  // identity indexed to a row, so every row here is indexed to its contract.
+  const index = [
+    { environmentId: "Ethereum", token: ETH_USDC, canonicalAssetId: usdc },
+    { environmentId: "Ethereum", token: ETH_USDT, canonicalAssetId: usdt },
+  ];
+  STABLE_TOKEN.set(usdc, { env: "Ethereum", token: ETH_USDC });
+  STABLE_TOKEN.set(usdt, { env: "Ethereum", token: ETH_USDT });
+  // Verified identities on other chains, plus controls that are not on the list.
   const others = {};
-  for (const [env, symbol] of [...OTHER_CHAIN_STABLES, ...NON_FLOOR_CONTROLS]) {
-    others[symbol] = ethers.id(`${env}:${symbol}`);
-    await verifier.registerAssetPrecision(env, others[symbol], symbol, 6, 3, 1);
+  for (const [env, symbol, token] of [...OTHER_CHAIN_STABLES, ...NON_FLOOR_CONTROLS]) {
+    const key = `${env}:${symbol}`;
+    others[key] = ethers.id(`${env}:${symbol}:${token}`);
+    await verifier.registerAssetPrecision(env, others[key], symbol, 6, 3, 1);
+    index.push({ environmentId: env, token, canonicalAssetId: others[key] });
+    STABLE_TOKEN.set(others[key], { env, token });
   }
-  for (const env of ["Ethereum", ...new Set(OTHER_CHAIN_STABLES.map(([e]) => e))]) {
+  await verifier.registerTokenAddressBatch(index);
+  for (const env of ["Ethereum", ...new Set([...OTHER_CHAIN_STABLES, ...NON_FLOOR_CONTROLS].map(([e]) => e))]) {
     await verifier.registerChainVerifier(env, await mock.getAddress());
     await verifier.configureDevFund(env, deployer.address);
   }
@@ -326,30 +339,46 @@ async function deployStableFixture() {
   return { deployer, recipient, vclm, verifier, usdc, usdt, others };
 }
 
-// Registry stablecoin rows outside Ethereum (Revision B symbols).
+const ETH_USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const ETH_USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+// canonicalAssetId -> the (environment, contract) its test locks report.
+const STABLE_TOKEN = new Map();
+// Verified USDC/USDT identities outside Ethereum (design D.4,
+// STABLECOIN_IDENTITIES_2026-10-25.json): exact environment and contract.
 const OTHER_CHAIN_STABLES = [
-  ["Optimism", "USDC_OP"],
-  ["Optimism", "USDT_OP"],
-  ["Arbitrum", "USDC_ARB"],
-  ["Arbitrum", "USDT_ARB"],
-  ["Polygon", "USDC_POL"],
-  ["Polygon", "USDT_POL"],
-  ["BNB Smart Chain", "USDC_BSC"],
-  ["BNB Smart Chain", "USDT_BSC"],
-  ["Avalanche", "USDC_AVAX"],
-  ["Avalanche", "USDT_AVAX"],
-  ["Avalanche", "USDTE"],
-  ["Base", "USDC_BASE"],
+  ["Optimism", "USDC_OP", "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"],
+  ["Optimism", "USDC_E_OP", "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"],
+  ["Optimism", "USDT_OP", "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"],
+  ["Optimism", "USDT0_OP", "0x01bFF41798a0BcF287b996046Ca68b395DbC1071"],
+  ["Arbitrum", "USDC_ARB", "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"],
+  ["Arbitrum", "USDC_E_ARB", "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"],
+  ["Arbitrum", "USDT_ARB", "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"],
+  ["Polygon", "USDC_POL", "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"],
+  ["Polygon", "USDC_E_POL", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"],
+  ["Polygon", "USDT_POL", "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"],
+  ["BNB Smart Chain", "USDC_BSC", "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"],
+  ["BNB Smart Chain", "USDT_BSC", "0x55d398326f99059fF775485246999027B3197955"],
+  ["Avalanche", "USDC_AVAX", "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"],
+  ["Avalanche", "USDT_AVAX", "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"],
+  ["Base", "USDC_BASE", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"],
+  ["Base", "USDT", "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2"],
 ];
-// Not USDC/USDT rows: no $0.95 floor (only the $0.01 minimum).
+// Not verified USDC/USDT identities: no $0.95 cutoff (only the $0.01 minimum).
+// Includes tokens whose ticker text is exactly USDC or USDT at another
+// contract, and Avalanche USDT.e (held off the list under D-74).
 const NON_FLOOR_CONTROLS = [
-  ["Ethereum", "DAI"],
-  ["Ethereum", "CUSDC"],
-  ["Ethereum", "USDS"],
+  ["Ethereum", "DAI", "0x6B175474E89094C44Da98b954EedeAC495271d0F"],
+  ["Ethereum", "CUSDC", "0x39AA39c021dfbaE8faC545936693aC917d5E7563"],
+  ["Ethereum", "USDS", "0xdC035D45d973E3EC169d2276DDab16f1e407384F"],
+  ["Base", "USDC", "0x000000000000000000000000000000000000dEaD"],
+  ["Ethereum", "USDT_FAKE", "0x1111111111111111111111111111111111111111"],
+  ["Avalanche", "USDTE", "0xc7198437980c041c805A1EDcbA50c1Ce5db95118"],
 ];
 
 function stablePkg({ assetId, lockName, gross, duration = DAY30, recipient, priceRecord = "0x", env = "Ethereum", custodyClass = 1 }) {
+  const t = STABLE_TOKEN.get(assetId);
   return buildPkg({
+    proofAssetId: t ? ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(["string", "address"], [t.env, t.token])) : undefined,
     env,
     lockId: ethers.id(lockName),
     identity: `eth-${lockName}`,
@@ -512,24 +541,61 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     expect(await vclm.balanceOf(recipient.address)).to.equal(expected);
   });
 
-  it("USDC/USDT rows on every chain take the $0.95 floor; DAI, CUSDC and USDS do not", async function () {
+  it("verified USDC/USDT identities on every chain take the $0.95 cutoff; other contracts do not, whatever their ticker", async function () {
     const { recipient, verifier, others } = await deployStableFixture();
     let run = 1n;
-    for (const [env, symbol] of OTHER_CHAIN_STABLES) {
-      await writeScheduledPrice(verifier, { env, assetId: others[symbol], priceUsd18: 900_000_000_000_000_000n, runId: run++ });
+    for (const [env, symbol, token] of OTHER_CHAIN_STABLES) {
+      const a = others[`${env}:${symbol}`];
+      expect(await verifier.isUsdStableIdentity(env, token), `${env} ${symbol} identity`).to.equal(true);
+      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd18: 900_000_000_000_000_000n, runId: run++ });
       for (const d of [HOUR, DAY30]) {
-        const pkg = stablePkg({ env, custodyClass: 3, assetId: others[symbol], lockName: `${symbol}-${d}`, gross: d === HOUR ? 15_000n : 20_000_000n, duration: d, recipient: recipient.address });
+        const pkg = stablePkg({ env, custodyClass: 3, assetId: a, lockName: `${env}-${symbol}-${d}`, gross: d === HOUR ? 15_000n : 20_000_000n, duration: d, recipient: recipient.address });
         await expect(verifier.recordFeeAndRac(pkg), `${env} ${symbol} ${d}s`).to.be.revertedWith(STABLE_BELOW);
       }
-      await writeScheduledPrice(verifier, { env, assetId: others[symbol], priceUsd18: 950_000_000_000_000_000n, runId: run++ });
-      const ok = stablePkg({ env, custodyClass: 3, assetId: others[symbol], lockName: `${symbol}-ok`, gross: 20_000_000n, recipient: recipient.address });
+      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd18: 950_000_000_000_000_000n, runId: run++ });
+      const ok = stablePkg({ env, custodyClass: 3, assetId: a, lockName: `${env}-${symbol}-ok`, gross: 20_000_000n, recipient: recipient.address });
       await expect(verifier.recordFeeAndRac(ok), `${env} ${symbol} at $0.95`).to.not.be.reverted;
     }
-    for (const [env, symbol] of NON_FLOOR_CONTROLS) {
-      await writeScheduledPrice(verifier, { env, assetId: others[symbol], priceUsd18: 900_000_000_000_000_000n, runId: run++ });
-      const pkg = stablePkg({ env, custodyClass: 3, assetId: others[symbol], lockName: `${symbol}-control`, gross: 20_000_000n, recipient: recipient.address });
-      await expect(verifier.recordFeeAndRac(pkg), `${symbol} has no $0.95 floor`).to.not.be.reverted;
+    for (const [env, symbol, token] of NON_FLOOR_CONTROLS) {
+      const a = others[`${env}:${symbol}`];
+      expect(await verifier.isUsdStableIdentity(env, token), `${env} ${symbol} not an identity`).to.equal(false);
+      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd18: 900_000_000_000_000_000n, runId: run++ });
+      const pkg = stablePkg({ env, custodyClass: 3, assetId: a, lockName: `${env}-${symbol}-control`, gross: 20_000_000n, recipient: recipient.address });
+      await expect(verifier.recordFeeAndRac(pkg), `${env} ${symbol} has no $0.95 cutoff`).to.not.be.reverted;
     }
+  });
+
+  it("t430u item 4: a token with ticker USDC at another Base address is not cut off; the real Base USDC identity is", async function () {
+    const { recipient, verifier, others } = await deployStableFixture();
+    const fake = others["Base:USDC"]; // row symbol exactly "USDC", contract 0x…dEaD
+    const real = others["Base:USDC_BASE"]; // Circle USDC 0x8335…2913
+    const p90 = 900_000_000_000_000_000n;
+    await writeScheduledPrice(verifier, { env: "Base", assetId: fake, priceUsd18: p90, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Base", assetId: real, priceUsd18: p90, runId: 2n });
+    expect(await verifier.isUsdStableIdentity("Base", "0x000000000000000000000000000000000000dEaD")).to.equal(false);
+    expect(await verifier.isUsdStableIdentity("Base", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")).to.equal(true);
+    // The same contract on another environment is a different identity.
+    expect(await verifier.isUsdStableIdentity("Ethereum", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")).to.equal(false);
+    const f = stablePkg({ env: "Base", custodyClass: 3, assetId: fake, lockName: "base-ticker-usdc", gross: 20_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(f)).to.not.be.reverted;
+    const r = stablePkg({ env: "Base", custodyClass: 3, assetId: real, lockName: "base-real-usdc", gross: 20_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(r)).to.be.revertedWith(STABLE_BELOW);
+    // Threshold unchanged: exactly $0.95 is allowed for the real identity.
+    expect(await verifier.USD_STABLE_MIN_PRICE()).to.equal(950_000_000_000_000_000n);
+    await writeScheduledPrice(verifier, { env: "Base", assetId: real, priceUsd18: 950_000_000_000_000_000n, runId: 3n });
+    const r95 = stablePkg({ env: "Base", custodyClass: 3, assetId: real, lockName: "base-real-usdc-95", gross: 20_000_000n, recipient: recipient.address });
+    await expect(verifier.recordFeeAndRac(r95)).to.not.be.reverted;
+  });
+
+  it("t430u item 4: the cutoff flag is set on the row of the exact identity only, never by row symbol", async function () {
+    const { verifier, others, usdc } = await deployStableFixture();
+    const rowKey = (env, a) => ethers.keccak256(ethers.solidityPacked(["string", "bytes32"], [env, a]));
+    expect(await verifier.usdStableRow(rowKey("Base", others["Base:USDC_BASE"]))).to.equal(true);
+    expect(await verifier.usdStableRow(rowKey("Base", others["Base:USDT"]))).to.equal(true);
+    expect(await verifier.usdStableRow(rowKey("Ethereum", usdc))).to.equal(true);
+    expect(await verifier.usdStableRow(rowKey("Base", others["Base:USDC"]))).to.equal(false);
+    expect(await verifier.usdStableRow(rowKey("Ethereum", others["Ethereum:USDT_FAKE"]))).to.equal(false);
+    expect(await verifier.usdStableRow(rowKey("Avalanche", others["Avalanche:USDTE"]))).to.equal(false);
   });
 
   it("a lock already created (bound) keeps its creation price after a drop below $0.95", async function () {
