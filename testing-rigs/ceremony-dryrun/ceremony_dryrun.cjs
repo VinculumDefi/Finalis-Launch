@@ -1,7 +1,7 @@
 // Ceremony dry-run, Base-only launch (founder directive t357u). Runs the
 // Base ceremony exactly as base.html does (baseCeremonyFlow.runBaseCeremony,
 // built ceremony.json artifacts, the Base subset of registry Revision D in
-// ceremony-data.json: 131 rows, 130 token addresses, 0 aliases, one reader)
+// ceremony-data.json: 129 rows, 128 token addresses, 0 aliases, one reader)
 // against a LOCAL fork of Base mainnet, then reconciles the deployed set
 // (Rig 10), then checks Base USDC (row 454): registered as S1 and a real
 // USDC lock on the fork mints at 1.5x the S3 amount (operator decision
@@ -34,19 +34,19 @@ const err = (...a) => process.stderr.write(scrub(a.join(" ")) + "\n");
 const coder = ethers.AbiCoder.defaultAbiCoder();
 
 const STEPS = [
-  "inputs and artifacts (Base subset: 131 rows, 130 token addresses, 0 aliases)",
+  "inputs and artifacts (Base subset: 129 rows, 128 token addresses, 0 aliases)",
   "fork is Base mainnet",
   "deploy VCLM, CHONX, Verifier, Forge, Stake",
   "deploy Base lock",
   "initialize VCLM and CHONX, deploy and register the Base reader",
-  "registry rows (131 Base rows)",
-  "token address index (130 Base token addresses)",
+  "registry rows (129 Base rows)",
+  "token address index (128 Base token addresses)",
   "Dev Fund, price run 1, poster hand-over, finalize",
   "post-finalize state (one reader, no other environment wired)",
   "Base reader with a real lock on the fork",
   "Rig 10 reconciliation: deployed set vs artifacts and ceremony-data",
   "Base USDC (row 454) is S1: registered class and a real USDC lock minted at 1.5x",
-  "Revision D (t430u): TEL upgraded contract only, founder-override rows, stablecoin flag by exact identity",
+  "Revision D (t430u): TEL upgraded contract only, founder override TigerOG only (t431u), stablecoin flag by exact identity",
 ];
 let step = 0;
 const gasRows = [];
@@ -63,9 +63,9 @@ async function main() {
   const extra = Object.keys(art).filter((n) => !["TokenVCLM", "TokenCHONX", "VinculumFinalisVerifier", "VinculumFinalisSynth", "VinculumFinalisStake", "BaseCommitmentVaultLock", "BaseLockRecordVerifier"].includes(n));
   if (extra.length) throw new Error(`ceremony.json carries non-Base contracts: ${extra.join(", ")}`);
   if (DATA.baseOnly !== true) throw new Error("ceremony-data is not marked baseOnly");
-  if (DATA.registryRows !== 591) throw new Error(`registry source has ${DATA.registryRows} rows, expected 591 (Revision D)`);
-  if (DATA.entries.length !== 131) throw new Error(`registry has ${DATA.entries.length} rows, expected 131 Base rows`);
-  if (DATA.tokenAddresses.length !== 130) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 130`);
+  if (DATA.registryRows !== 589) throw new Error(`registry source has ${DATA.registryRows} rows, expected 589 (Revision D)`);
+  if (DATA.entries.length !== 129) throw new Error(`registry has ${DATA.entries.length} rows, expected 129 Base rows`);
+  if (DATA.tokenAddresses.length !== 128) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 128`);
   if (DATA.assetRowAliases.length !== 0) throw new Error(`${DATA.assetRowAliases.length} aliases, expected 0`);
   if (!DATA.entries.every((e) => e.environmentId === "Base") || !DATA.tokenAddresses.every((t) => t.environmentId === "Base")) throw new Error("a non-Base row is in ceremony-data");
   if (JSON.stringify(Object.keys(DATA.readers)) !== JSON.stringify(["base"])) throw new Error("ceremony-data readers are not Base only");
@@ -98,8 +98,8 @@ async function main() {
         else if (/^reader Base/.test(line)) at(4);
         else if (/^registry /.test(line) && step < 5) at(5);
         else if (/^token addresses /.test(line) && step < 6) at(6);
-        if (/^token addresses 130\/130/.test(line)) at(7);
-        if (/^(registry|token addresses) /.test(line) && !/\/(131|130)$/.test(line)) continue;
+        if (/^token addresses 128\/128/.test(line)) at(7);
+        if (/^(registry|token addresses) /.test(line) && !/\/(129|128)$/.test(line)) continue;
         err("  " + line);
       }
     },
@@ -253,7 +253,7 @@ async function main() {
   if ((await tIdx(TEL_NEW)) !== telRow.canonicalAssetId) throw new Error("upgraded TEL contract is not indexed to row 1082");
   if ((await tIdx(TEL_OLD)) !== ethers.ZeroHash) throw new Error("old TEL contract is indexed");
   const ogLines = [];
-  for (const [row, sym] of [[138, "TigerOG"], [999, "LionOG"], [1000, "FrogOG"]]) {
+  for (const [row, sym] of [[138, "TigerOG"]]) {
     const e = DATA.entries.find((x) => x.row === row);
     if (!e || e.symbol !== sym) throw new Error(`ceremony-data has no founder-override row ${row} ${sym}`);
     const k = ethers.keccak256(ethers.solidityPacked(["string", "bytes32"], ["Base", e.canonicalAssetId]));
@@ -261,6 +261,12 @@ async function main() {
     const t = DATA.tokenAddresses.find((x) => x.canonicalAssetId === e.canonicalAssetId);
     if (!t || (await tIdx(t.token)) !== e.canonicalAssetId) throw new Error(`${sym} row ${row} token not indexed`);
     ogLines.push(`${sym} row ${row} ${short(t.token)}`);
+  }
+  // LionOG (row 999) and FrogOG (row 1000) are removed (operator t431u): neither row nor contract is on the Verifier.
+  for (const [row, sym, tok] of [[999, "LionOG", "0x6731F2d7ADF86cfba30d15c4D10113Ce98f3492A"], [1000, "FrogOG", "0x0E3b564bdD09348840811C7e1106BbD0e98b5b4f"]]) {
+    if (DATA.entries.some((x) => x.row === row) || DATA.tokenAddresses.some((x) => x.token.toLowerCase() === tok.toLowerCase())) throw new Error(`${sym} is removed under t431u but is in ceremony-data`);
+    if ((await tIdx(tok)) !== ethers.ZeroHash) throw new Error(`${sym} contract is indexed`);
+    ogLines.push(`${sym} row ${row} not registered (t431u)`);
   }
   const stableFlagged = [];
   for (const e of DATA.entries) {
