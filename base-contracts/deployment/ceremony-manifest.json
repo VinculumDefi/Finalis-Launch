@@ -1,15 +1,22 @@
 {
   "_note": "Machine-facing pre-deployment manifest. Verified by scripts/build_ceremony_artifacts.cjs. Not an operator checklist. The build hardcodes this file's SHA-256 so editing the manifest to match a wrong registry is refused.",
-  "revision": "Revision C",
-  "revisionLabel": "registry-revC-2026-10-24",
+  "revision": "Revision D",
+  "revisionLabel": "registry-revD-2026-10-26",
   "artifacts": [
+    {
+      "filename": "assetRegistry.revD.json",
+      "path": "deployment/assetRegistry.revD.json",
+      "revisionLabel": "Revision D",
+      "sha256": "1f00f1f4bd4a2d0d31f3cf7c978c18bd2f5040d5a497d75797dace417859482e",
+      "rowCount": 591,
+      "rowCountNote": "590 Revision D rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 131 Base rows (130 tokens plus Base ETH). Revision D is Revision C with its Base rows replaced by the expanded Base registry (operator t430u); non-Base rows are carried unchanged as history."
+    },
     {
       "filename": "assetRegistry.revC.json",
       "path": "deployment/assetRegistry.revC.json",
-      "revisionLabel": "Revision C",
+      "revisionLabel": "Revision C (prior ceremony source; pinned unchanged; not the ceremony source)",
       "sha256": "5c3311eb4f7b59c34e7ccc8a6bd9e817b4f0bb02bdeff65c5cfed98f79cca581",
-      "rowCount": 487,
-      "rowCountNote": "486 Revision C rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 27 Base rows. Revision C is a full copy of Revision B with row 454 USDC_BASE as S1 (operator decision t367u)."
+      "rowCount": 487
     },
     {
       "filename": "assetRegistry.revB.json",
@@ -21,15 +28,15 @@
     {
       "filename": "baseCeremonyFlow.js",
       "path": "scripts/deploy-pages/baseCeremonyFlow.js",
-      "revisionLabel": "Revision C ceremony flow (Base-only)",
-      "sha256": "d2e1de2dd50fa870642be09f00a8a3d5fe130fa68038cbd8a7dbd46d215992c5",
+      "revisionLabel": "Revision D ceremony flow (Base-only)",
+      "sha256": "3d38f7faad328060cbfe369516f338c88574f2534cf04c1918db2adfcc3dc414",
       "rowCount": null
     },
     {
       "filename": "base.html",
       "path": "scripts/deploy-pages/base.html",
-      "revisionLabel": "Revision C ceremony page (Base-only)",
-      "sha256": "50d08f3064c75db97eaeb2e710a43fbe1fa0a0b3ee2546d7513014803a35998a",
+      "revisionLabel": "Revision D ceremony page (Base-only)",
+      "sha256": "fb836fe9cda642baba433a8f4232b11bfdd7567257f6b1f3d85737b10fa627b6",
       "rowCount": null
     },
     {
@@ -47,16 +54,16 @@
       "rowCount": null
     }
   ],
-  "expectedRegistryRows": 487,
-  "registryWrittenRows": 486,
+  "expectedRegistryRows": 591,
+  "registryWrittenRows": 590,
   "registryBaseEthRow": 2,
   "registryBaseEthEnvironment": "Base",
   "registryBaseEthSymbol": "ETH",
   "registryBaseEthAssetId": "native-ETH",
   "baseOnly": true,
-  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision C, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Operator decision t367u: the ceremony source is Revision C (row 454 USDC_BASE is S1 at 1.5x, Master Specification Revision 18 Section 6.1). Revision B itself is unchanged and stays pinned above.",
-  "expectedBaseRows": 27,
-  "expectedBaseTokenAddresses": 26,
+  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision C, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Operator decision t367u: the ceremony source is Revision C (row 454 USDC_BASE is S1 at 1.5x, Master Specification Revision 18 Section 6.1). Revision B itself is unchanged and stays pinned above. Operator t430u (2026-10-26): the ceremony source is Revision D, the expanded Base registry (131 Base rows). Revision C is unchanged and stays pinned above.",
+  "expectedBaseRows": 131,
+  "expectedBaseTokenAddresses": 130,
   "expectedBaseAliases": 0,
   "deployOrder": [
     "VinculumFinalisToken (VCLM)",
