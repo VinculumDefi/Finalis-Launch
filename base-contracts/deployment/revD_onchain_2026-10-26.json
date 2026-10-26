@@ -1,0 +1,1049 @@
+{
+ "chain": "Base",
+ "chainId": 8453,
+ "rpc": "https://mainnet.base.org",
+ "block": 53120088,
+ "readAt": "2026-10-26T15:45:23.534Z",
+ "tokens": {
+  "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": {
+   "address": "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+   "codeBytes": 2096,
+   "name": "Coinbase Wrapped Staked ETH",
+   "symbol": "cbETH",
+   "decimals": "18",
+   "totalSupply": "91536912696046881948916"
+  },
+  "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": {
+   "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+   "codeBytes": 1550,
+   "name": "Coinbase Wrapped BTC",
+   "symbol": "cbBTC",
+   "decimals": "8",
+   "totalSupply": "4854901405283"
+  },
+  "0x940181a94a35a4569e4529a3cdfb74e38fd98631": {
+   "address": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+   "codeBytes": 4736,
+   "name": "Aerodrome",
+   "symbol": "AERO",
+   "decimals": "18",
+   "totalSupply": "2006874384808615942587875087"
+  },
+  "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": {
+   "address": "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+   "codeBytes": 14849,
+   "name": "Virtual Protocol",
+   "symbol": "VIRTUAL",
+   "decimals": "18",
+   "totalSupply": "497705804709404527004293578"
+  },
+  "0x532f27101965dd16442e59d40670faf5ebb142e4": {
+   "address": "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+   "codeBytes": 23271,
+   "name": "Brett",
+   "symbol": "BRETT",
+   "decimals": "18",
+   "totalSupply": "9999997544340006294456944163"
+  },
+  "0x4ed4e862860bed51a9570b96d89af5e1b0efefed": {
+   "address": "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",
+   "codeBytes": 11608,
+   "name": "Degen",
+   "symbol": "DEGEN",
+   "decimals": "18",
+   "totalSupply": "35946899339092476083277931102"
+  },
+  "0xac1bd2486aaf3b5c0fc3fd868558b082a531b2b4": {
+   "address": "0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4",
+   "codeBytes": 11948,
+   "name": "Toshi",
+   "symbol": "TOSHI",
+   "decimals": "18",
+   "totalSupply": "420689980957167224795424422478"
+  },
+  "0x0578d8a44db98b23bf096a382e016e29a5ce0ffe": {
+   "address": "0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe",
+   "codeBytes": 2680,
+   "name": "higher",
+   "symbol": "HIGHER",
+   "decimals": "18",
+   "totalSupply": "1000000000000000000000000000"
+  },
+  "0xa99f6e6785da0f5d6fb42495fe424bce029eeb3e": {
+   "address": "0xA99F6e6785Da0F5d6fB42495Fe424BCE029Eeb3E",
+   "codeBytes": 4932,
+   "name": "Pendle",
+   "symbol": "PENDLE",
+   "decimals": "18",
+   "totalSupply": "612770339196732989249614"
+  },
+  "0xf6e932ca12afa26665dc4dde7e27be02a7c02e50": {
+   "address": "0xF6e932Ca12afa26665dC4dDE7e27be02A7c02e50",
+   "codeBytes": 11915,
+   "name": "Mochi",
+   "symbol": "MOCHI",
+   "decimals": "18",
+   "totalSupply": "1000000000000000000000000000000"
+  },
+  "0x4f9fd6be4a90f2620860d680c0d4d5fb53d1a825": {
+   "address": "0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825",
+   "codeBytes": 45,
+   "name": "aixbt by Virtuals",
+   "symbol": "AIXBT",
+   "decimals": "18",
+   "totalSupply": "998914867384139147138361299"
+  },
+  "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb": {
+   "address": "0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb",
+   "codeBytes": 1620,
+   "name": "tokenbot",
+   "symbol": "CLANKER",
+   "decimals": "18",
+   "totalSupply": "1000000000000000000000000"
+  },
+  "0xe3086852a4b125803c815a158249ae468a3254ca": {
+   "address": "0xE3086852A4B125803C815a158249ae468A3254Ca",
+   "codeBytes": 2835,
+   "name": "mfercoin",
+   "symbol": "$mfer",
+   "decimals": "18",
+   "totalSupply": "999997819542365138940470525"
+  },
+  "0x0d97f261b1e88845184f678e2d1e7a98d9fd38de": {
+   "address": "0x0d97F261b1e88845184f678e2d1e7a98D9FD38dE",
+   "codeBytes": 11952,
+   "name": "Base God",
+   "symbol": "TYBG",
+   "decimals": "18",
+   "totalSupply": "125000000000000000000000000000"
+  },
+  "0x3c281a39944a2319aa653d81cfd93ca10983d234": {
+   "address": "0x3C281A39944a2319aA653D81Cfd93Ca10983D234",
+   "codeBytes": 7722,
+   "name": "BUILD",
+   "symbol": "BUILD",
+   "decimals": "18",
+   "totalSupply": "1000000000000000000000000000000"
+  },
+  "0x4a0c64af541439898448659aedcec8e8e819fc53": {
+   "address": "0x4A0c64af541439898448659AEdcEC8E8e819FC53",
+   "codeBytes": 8380,
+   "name": "Ponke",
+   "symbol": "PONKE",
+   "decimals": "18",
+   "totalSupply": "3122802580806280000000000"
+  },
+  "0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c": {
+   "address": "0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C",
+   "codeBytes": 14545,
+   "name": "HeyAnon",
+   "symbol": "Anon",
+   "decimals": "18",
+   "totalSupply": "1466844265060000000000000"
+  },
+  "0x32e0f9d26d1e33625742a52620cc76c1130efde6": {
+   "address": "0x32E0f9d26D1e33625742A52620cC76C1130efde6",
+   "codeBytes": 5986,
+   "name": "BASED",
+   "symbol": "BASED",
+   "decimals": "18",
+   "totalSupply": "75287725000000000000000000000"
+  },
+  "0x55cd6469f597452b5a7536e2cd98fde4c1247ee4": {
+   "address": "0x55cD6469F597452B5A7536e2CD98fDE4c1247ee4",
+   "codeBytes": 45,
+   "name": "Luna by Virtuals",
+   "symbol": "LUNA",
+   "decimals": "18",
+   "totalSupply": "998493080203940838204986252"
+  },
+  "0x768be13e1680b5ebe0024c42c896e3db59ec0149": {
+   "address": "0x768BE13e1680b5ebE0024C42c896E3dB59ec0149",
+   "codeBytes": 14554,
+   "name": "SKI MASK DOG",
+   "symbol": "SKI",
+   "decimals": "9",
+   "totalSupply": "1000000000000000000"
+  },
+  "0xb1a03eda10342529bbf8eb700a06c60441fef25d": {
+   "address": "0xB1a03EdA10342529bBF8EB700a06C60441fEf25d",
+   "codeBytes": 2603,
+   "name": "Mister Miggles",
+   "symbol": "MIGGLES",
+   "decimals": "18",
+   "totalSupply": "1000000000000000000000000000"
+  },
+  "0x9a26f5433671751c3276a065f57e5a02d2817973": {
+   "address": "0x9a26F5433671751C3276a065f57e5a02D2817973",
+   "codeBytes": 7022,
+   "name": "Keyboard Cat",
+   "symbol": "KEYCAT",
+   "decimals": "18",
+   "totalSupply": "10000000000000000000000000000"
+  },
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": {
+   "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+   "codeBytes": 1852,
+   "name": "USD Coin",
+   "symbol": "USDC",
+   "decimals": "6",
+   "totalSupply": "4277691493332520"
+  },
+  "0xc0634090f2fe6c6d75e61be2b949464abb498973": {
+   "address": "0xc0634090F2Fe6c6d75e61Be2b949464aBB498973",
+   "codeBytes": 9001,
+   "name": "Keeta",
+   "symbol": "KTA",
+   "decimals": "18",
+   "totalSupply": "1000000000000000000000000000"
+  },
+  "0x624e2e7fdc8903165f64891672267ab0fcb98831": {
+   "address": "0x624e2e7fDc8903165F64891672267AB0FCB98831",
+   "codeBytes": 4932,
+   "name": "SoSoValue",
+   "symbol": "SOSO",
+   "decimals": "18",
+   "totalSupply": "73535536516150503288863280"
+  },
+  "0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00": {
+   "address": "0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00",
+   "codeBytes": 45,
+   "name": "Ribbita by Virtuals",
+   "symbol": "TIBBIR",
+   "decimals": "18",
+   "totalSupply": "445926590922998795018043898"
+  },
+  "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": {
+   "address": "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf",
+   "codeBytes": 2968,
+   "name": "Venice Token",
+   "symbol": "VVV",
+   "decimals": "18",
+   "totalSupply": "115104328435118639522598269"
+  },
+  "0xc5fecc3a29fb57b5024eec8a2239d4621e111cbe": {
+   "address": "0xc5fecC3a29Fb57B5024eEc8a2239d4621e111CBE",
+   "codeBytes": 5835,
+   "name": "1INCH Token",
+   "symbol": "1INCH",
+   "decimals": "18",
+   "totalSupply": "242884337704086307892965"
+  },
+  "0x63706e401c06ac8513145b7687a14804d17f814b": {
+   "address": "0x63706e401c06ac8513145b7687A14804d17f814b",
+   "codeBytes": 4932,
+   "name": "Aave Token",
+   "symbol": "AAVE",
+   "decimals": "18",
+   "totalSupply": "30883939414553267864735"
+  },
+  "0xb20a4bd059f5914a2f8b9c18881c637f79efb7df": {
+   "address": "0xb20A4Bd059F5914a2F8B9c18881c637f79efb7df",
+   "codeBytes": 45,
+   "name": "Adshares",
+   "symbol": "ADS",
+   "decimals": "11",
+   "totalSupply": "2201493979203496389"
+  },
+  "0x3c87e7af3cdbae5bb56b4936325ea95ca3e0efd9": {
+   "address": "0x3c87e7AF3cDBAe5bB56b4936325Ea95CA3E0EfD9",
+   "codeBytes": 4932,
+   "name": "AdEx Network",
+   "symbol": "ADX",
+   "decimals": "18",
+   "totalSupply": "0"
+  },
+  "0xc0fbc4967259786c743361a5885ef49380473dcf": {
+   "address": "0xc0Fbc4967259786C743361a5885ef49380473dCF",
+   "codeBytes": 2229,
+   "name": "Aleph.im V2 SuperToken",
+   "symbol": "ALEPH",
+   "decimals": "18",
+   "totalSupply": "500000000000000000000000000"
+  },
+  "0x75f2231a289ea35895246b21e9c6e5bbf5ce69ed": {
+   "address": "0x75f2231A289Ea35895246b21e9c6E5BbF5ce69ED",
+   "codeBytes": 4932,
+   "name": "AltLayer",
+   "symbol": "ALT",
+   "decimals": "18",
+   "totalSupply": "121207845670205183898803"
+  },
+  "0x91ad1b44913cd1b8241a4ff1e2eaa198da6bf4c9": {
+   "address": "0x91Ad1b44913cD1B8241A4Ff1e2EAa198DA6Bf4c9",
+   "codeBytes": 12764,
+   "name": "Altura",
+   "symbol": "ALU",
+   "decimals": "18",
+   "totalSupply": "124721842859544731534442142"
+  },
+  "0xb358489d5d92641edb4d8ee8063f8005964346ba": {
+   "address": "0xb358489D5d92641EdB4D8eE8063f8005964346Ba",
+   "codeBytes": 4932,
+   "name": "Amp",
+   "symbol": "AMP",
+   "decimals": "18",
+   "totalSupply": "1150295469562143693470387"
+  },
+  "0xd4a0e0b9149bcee3c920d2e00b5de09138fd8bb7": {
+   "address": "0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7",
+   "codeBytes": 1933,
+   "name": "Aave Base WETH",
+   "symbol": "aBasWETH",
+   "decimals": "18",
+   "totalSupply": "95211285960593491045218"
+  },
+  "0x23ee2343b892b1bb63503a4fabc840e0e2c6810f": {
+   "address": "0x23ee2343B892b1BB63503a4FAbc840E0e2C6810f",
+   "codeBytes": 5200,
+   "name": "Axelar",
+   "symbol": "AXL",
+   "decimals": "6",
+   "totalSupply": "2599670098180"
+  },
+  "0x58ecef26335af7b04a998105a6603b0dc475af33": {
+   "address": "0x58ecEF26335Af7b04A998105a6603B0Dc475aF33",
+   "codeBytes": 2164,
+   "name": "Baby Doge Coin",
+   "symbol": "BabyDoge",
+   "decimals": "9",
+   "totalSupply": "420000000000000000000000000"
+  },
+  "0x4158734d47fc9692176b5085e0f52ee0da5d47f1": {
+   "address": "0x4158734D47Fc9692176B5085E0F52ee0Da5d47F1",
+   "codeBytes": 5835,
+   "name": "Balancer",
+   "symbol": "BAL",
+   "decimals": "18",
+   "totalSupply": "246108427492651243722180"
+  },
+  "0x2a66d51407b84b82b5aff3dec4d49f72cbcd322a": {
+   "address": "0x2A66d51407b84b82b5AFF3DeC4D49f72CBCD322a",
+   "codeBytes": 1554,
+   "name": "Beam",
+   "symbol": "BEAM",
+   "decimals": "18",
+   "totalSupply": "19713587375526000000000000"
+  },
+  "0xf5dbaa3dfc5e81405c7306039fb037a3dcd57ce2": {
+   "address": "0xf5Dbaa3DFC5e81405c7306039fB037a3DCD57Ce2",
+   "codeBytes": 4932,
+   "name": "Biconomy",
+   "symbol": "BICO",
+   "decimals": "18",
+   "totalSupply": "553202536339640489579"
+  },
+  "0xa7d68d155d17cb30e311367c2ef1e82ab6022b67": {
+   "address": "0xA7d68d155d17cB30e311367c2Ef1E82aB6022b67",
+   "codeBytes": 5835,
+   "name": "BTRST",
+   "symbol": "BTRST",
+   "decimals": "18",
+   "totalSupply": "12682511183159248730216938"
+  },
+  "0x3055913c90fcc1a6ce9a358911721eeb942013a1": {
+   "address": "0x3055913c90Fcc1A6CE9a358911721eEb942013A1",
+   "codeBytes": 20237,
+   "name": "PancakeSwap Token",
+   "symbol": "Cake",
+   "decimals": "18",
+   "totalSupply": "472616955948660000000000"
+  },
+  "0xc08cd26474722ce93f4d0c34d16201461c10aa8c": {
+   "address": "0xc08Cd26474722cE93F4D0c34D16201461c10AA8C",
+   "codeBytes": 12532,
+   "name": "CARV",
+   "symbol": "CARV",
+   "decimals": "18",
+   "totalSupply": "628297533809337000000000000"
+  },
+  "0x70c8392de9b39a1e48d12a70af6ff4be25d6d0a2": {
+   "address": "0x70c8392DE9b39a1E48d12A70Af6FF4Be25D6D0A2",
+   "codeBytes": 170,
+   "name": "Chiliz",
+   "symbol": "CHZ",
+   "decimals": "18",
+   "totalSupply": "16940467648882730000000000"
+  },
+  "0x9e1028f5f1d5ede59748ffcee5532509976840e0": {
+   "address": "0x9e1028F5F1D5eDE59748FFceE5532509976840E0",
+   "codeBytes": 5835,
+   "name": "Compound",
+   "symbol": "COMP",
+   "decimals": "18",
+   "totalSupply": "9855265955545189340797"
+  },
+  "0xc694a91e6b071bf030a18bd3053a7fe09b6dae69": {
+   "address": "0xc694a91e6b071bF030A18BD3053A7fE09B6DaE69",
+   "codeBytes": 5835,
+   "name": "CoW Protocol Token",
+   "symbol": "COW",
+   "decimals": "18",
+   "totalSupply": "897352453396047042268076"
+  },
+  "0x8ee73c484a26e0a5df2ee2a4960b789967dd0415": {
+   "address": "0x8Ee73c484A26e0A5df2Ee2a4960B789967dd0415",
+   "codeBytes": 5835,
+   "name": "Curve DAO Token",
+   "symbol": "CRV",
+   "decimals": "18",
+   "totalSupply": "1789785377802763710820719"
+  },
+  "0x259fac10c5cbfefe3e710e1d9467f70a76138d45": {
+   "address": "0x259Fac10c5CbFEFE3E710e1D9467f70a76138d45",
+   "codeBytes": 5835,
+   "name": "Cartesi Token",
+   "symbol": "CTSI",
+   "decimals": "18",
+   "totalSupply": "2111411226003577788702"
+  },
+  "0xbb22ff867f8ca3d5f2251b4084f6ec86d4666e14": {
+   "address": "0xBB22Ff867F8Ca3D5F2251B4084F6Ec86D4666E14",
+   "codeBytes": 4932,
+   "name": "Cryptex",
+   "symbol": "CTX",
+   "decimals": "18",
+   "totalSupply": "312021676763601443616316"
+  },
+  "0xafb89a09d82fbde58f18ac6437b3fc81724e4df6": {
+   "address": "0xAfb89a09D82FBDE58f18Ac6437B3fC81724e4dF6",
+   "codeBytes": 5835,
+   "name": "The Doge NFT",
+   "symbol": "DOG",
+   "decimals": "18",
+   "totalSupply": "1198108226262068482715555417"
+  },
+  "0x2081ab0d9ec9e4303234ab26d86b20b3367946ee": {
+   "address": "0x2081Ab0D9EC9e4303234Ab26D86b20B3367946ee",
+   "codeBytes": 5835,
+   "name": "Eigen",
+   "symbol": "EIGEN",
+   "decimals": "18",
+   "totalSupply": "355484922706404416815020"
+  },
+  "0x4a9f3ed92892c0168dc194ec3867f8316288b32a": {
+   "address": "0x4a9f3ed92892c0168DC194eC3867f8316288B32a",
+   "codeBytes": 4932,
+   "name": "Dogelon",
+   "symbol": "ELON",
+   "decimals": "18",
+   "totalSupply": "3672627353832793772880000391199"
+  },
+  "0x58538e6a46e07434d7e7375bc268d3cb839c0133": {
+   "address": "0x58538e6A46E07434d7E7375Bc268D3cb839C0133",
+   "codeBytes": 13886,
+   "name": "ENA",
+   "symbol": "ENA",
+   "decimals": "18",
+   "totalSupply": "12830904859616000000000000"
+  },
+  "0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2": {
+   "address": "0x6C240DDA6b5c336DF09A4D011139beAAa1eA2Aa2",
+   "codeBytes": 177,
+   "name": "ether.fi governance token",
+   "symbol": "ETHFI",
+   "decimals": "18",
+   "totalSupply": "841920023105840000000000"
+  },
+  "0xa153ad732f831a79b5575fa02e793ec4e99181b0": {
+   "address": "0xa153Ad732F831a79b5575Fa02e793EC4E99181b0",
+   "codeBytes": 7768,
+   "name": "Euler",
+   "symbol": "EUL",
+   "decimals": "18",
+   "totalSupply": "41641732346000000000000"
+  },
+  "0xd08a2917653d4e460893203471f0000826fb4034": {
+   "address": "0xD08a2917653d4E460893203471f0000826fb4034",
+   "codeBytes": 5835,
+   "name": "FARM Reward Token",
+   "symbol": "FARM",
+   "decimals": "18",
+   "totalSupply": "5823428453396369215514"
+  },
+  "0x74f804b4140ee70830b3eef4e690325841575f89": {
+   "address": "0x74F804B4140ee70830B3Eef4e690325841575F89",
+   "codeBytes": 4932,
+   "name": "Fetch",
+   "symbol": "FET",
+   "decimals": "18",
+   "totalSupply": "801020374429570723611"
+  },
+  "0x61e030a56d33e8260fdd81f03b162a79fe3449cd": {
+   "address": "0x61E030A56D33e8260FdD81f03B162A79Fe3449Cd",
+   "codeBytes": 122,
+   "name": "Fluid",
+   "symbol": "FLUID",
+   "decimals": "18",
+   "totalSupply": "2137978709459087804951415"
+  },
+  "0x01facc69ec7360640aa5898e852326752801674a": {
+   "address": "0x01facC69EC7360640AA5898E852326752801674A",
+   "codeBytes": 3064,
+   "name": "Fuse Token",
+   "symbol": "FUSE",
+   "decimals": "18",
+   "totalSupply": "2178564152062264308664058"
+  },
+  "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb": {
+   "address": "0xcD2F22236DD9Dfe2356D7C543161D4d260FD9BcB",
+   "codeBytes": 5835,
+   "name": "Aavegotchi GHST Token",
+   "symbol": "GHST",
+   "decimals": "18",
+   "totalSupply": "20974415086112114300337897"
+  },
+  "0xfb1aaba03c31ea98a3eec7591808acb1947ee7ac": {
+   "address": "0xFB1Aaba03c31EA98A3eEC7591808AcB1947ee7Ac",
+   "codeBytes": 6236,
+   "name": "Gains Network",
+   "symbol": "GNS",
+   "decimals": "18",
+   "totalSupply": "1995080103384058598887481"
+  },
+  "0x0f4d237b09cb37d207ba60353dc254d4530d4df1": {
+   "address": "0x0F4d237B09Cb37d207BA60353Dc254d4530D4dF1",
+   "codeBytes": 4932,
+   "name": "Graph Token",
+   "symbol": "GRT",
+   "decimals": "18",
+   "totalSupply": "32299795692990632950366"
+  },
+  "0x60b407479ef0ddf6cc146ced609aa07d4296f204": {
+   "address": "0x60B407479ef0ddF6Cc146ceD609aa07d4296F204",
+   "codeBytes": 4932,
+   "name": "HEX",
+   "symbol": "HEX",
+   "decimals": "8",
+   "totalSupply": "253722642854811"
+  },
+  "0xc5102fe9359fd9a28f877a67e36b0f050d81a3cc": {
+   "address": "0xc5102fE9359FD9a28f877a67E36B0F050d81a3CC",
+   "codeBytes": 16498,
+   "name": "Hop",
+   "symbol": "HOP",
+   "decimals": "18",
+   "totalSupply": "17312445234015242603943387"
+  },
+  "0xf3dd141109dfe8e4c006f88a2a8747a086e7c1f8": {
+   "address": "0xf3dD141109Dfe8e4c006F88a2A8747a086e7C1f8",
+   "codeBytes": 12493,
+   "name": "HoloToken",
+   "symbol": "HOT",
+   "decimals": "18",
+   "totalSupply": "8433348292747000000000000"
+  },
+  "0xbcbaf311cec8a4eac0430193a528d9ff27ae38c1": {
+   "address": "0xBCBAf311ceC8a4EAC0430193A528d9FF27ae38C1",
+   "codeBytes": 5835,
+   "name": "IoTeX Network",
+   "symbol": "IOTX",
+   "decimals": "18",
+   "totalSupply": "5463300644194783141424732"
+  },
+  "0xdcefd8c8fcc492630b943abcab3429f12ea9fea2": {
+   "address": "0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2",
+   "codeBytes": 45,
+   "name": "Klima DAO",
+   "symbol": "KLIMA",
+   "decimals": "9",
+   "totalSupply": "8819828597335908"
+  },
+  "0x46777c76dbbe40fabb2aab99e33ce20058e76c59": {
+   "address": "0x46777C76dBbE40fABB2AAB99E33CE20058e76C59",
+   "codeBytes": 183,
+   "name": "Layer3",
+   "symbol": "L3",
+   "decimals": "18",
+   "totalSupply": "21707952850540890000000000"
+  },
+  "0x88fb150bdc53a65fe94dea0c9ba0a6daf8c6e196": {
+   "address": "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196",
+   "codeBytes": 7756,
+   "name": "ChainLink Token",
+   "symbol": "LINK",
+   "decimals": "18",
+   "totalSupply": "215195461108188035038614"
+  },
+  "0x5259384690acf240e9b0a8811bd0ffbfbddc125c": {
+   "address": "0x5259384690aCF240e9b0A8811bD0FFbFBDdc125C",
+   "codeBytes": 5835,
+   "name": "LQTY",
+   "symbol": "LQTY",
+   "decimals": "18",
+   "totalSupply": "288793576353220270147"
+  },
+  "0x0d760ee479401bb4c40bdb7604b329fff411b3f2": {
+   "address": "0x0D760ee479401Bb4C40BDB7604b329FfF411b3f2",
+   "codeBytes": 5835,
+   "name": "LoopringCoin V2",
+   "symbol": "LRC",
+   "decimals": "18",
+   "totalSupply": "3114284762938678886670"
+  },
+  "0xb29749498954a3a821ec37bde86e386df3ce30b6": {
+   "address": "0xB29749498954A3A821ec37BdE86e386dF3cE30B6",
+   "codeBytes": 2421,
+   "name": "Liquid Staked ETH",
+   "symbol": "LsETH",
+   "decimals": "18",
+   "totalSupply": "27875552596109775094"
+  },
+  "0xac485391eb2d7d88253a7f1ef18c37f4242d1a24": {
+   "address": "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24",
+   "codeBytes": 5100,
+   "name": "Lisk",
+   "symbol": "LSK",
+   "decimals": "18",
+   "totalSupply": "232413198236854195575325"
+  },
+  "0x57f5fbd3de65dfc0bd3630f732969e5fb97e6d37": {
+   "address": "0x57F5fbD3DE65DFC0bd3630F732969e5fb97E6d37",
+   "codeBytes": 831,
+   "name": "MAGA",
+   "symbol": "TRUMP",
+   "decimals": "9",
+   "totalSupply": "3624576932272020"
+  },
+  "0xf1572d1da5c3cce14ee5a1c9327d17e9ff0e3f43": {
+   "address": "0xF1572d1Da5c3CcE14eE5a1c9327d17e9ff0E3f43",
+   "codeBytes": 855,
+   "name": "MAGIC",
+   "symbol": "MAGIC",
+   "decimals": "18",
+   "totalSupply": "4127516981910875979010134"
+  },
+  "0xd0a4d1889bbe483273f29b4acdfaa567a67f99e1": {
+   "address": "0xD0a4D1889BbE483273f29b4aCdfAA567A67F99E1",
+   "codeBytes": 4932,
+   "name": "Mask Network",
+   "symbol": "MASK",
+   "decimals": "18",
+   "totalSupply": "0"
+  },
+  "0x45d9c101a3870ca5024582fd788f4e1e8f7971c3": {
+   "address": "0x45D9C101a3870Ca5024582fd788F4E1e8F7971c3",
+   "codeBytes": 4932,
+   "name": "MASQ",
+   "symbol": "MASQ",
+   "decimals": "18",
+   "totalSupply": "12543344553045108854578167"
+  },
+  "0x9e81f6495ba29a6b4d48bddd042c0598fa8abc9f": {
+   "address": "0x9e81F6495BA29a6B4D48bDdD042C0598fA8abc9F",
+   "codeBytes": 6963,
+   "name": "MATH Token",
+   "symbol": "MATH",
+   "decimals": "18",
+   "totalSupply": "200000000000000000000000000"
+  },
+  "0x7c298664bd6582f6f264c2cb5a4b9cc09b6e3889": {
+   "address": "0x7C298664BD6582f6f264c2Cb5a4B9cC09b6E3889",
+   "codeBytes": 4932,
+   "name": "Melon Token",
+   "symbol": "MLN",
+   "decimals": "18",
+   "totalSupply": "0"
+  },
+  "0x084382d1cc4f4dfd1769b1cc1ac2a9b1f8365e90": {
+   "address": "0x084382D1cc4f4DFD1769b1cC1Ac2A9b1f8365e90",
+   "codeBytes": 12492,
+   "name": "MODE",
+   "symbol": "MODE",
+   "decimals": "18",
+   "totalSupply": "223104716882826000000000000"
+  },
+  "0x2da56acb9ea78330f947bd57c54119debda7af71": {
+   "address": "0x2Da56AcB9Ea78330f947bD57C54119Debda7AF71",
+   "codeBytes": 5835,
+   "name": "Mog Coin",
+   "symbol": "Mog",
+   "decimals": "18",
+   "totalSupply": "110477163793518960659392048466317"
+  },
+  "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": {
+   "address": "0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842",
+   "codeBytes": 141,
+   "name": "Morpho Token",
+   "symbol": "MORPHO",
+   "decimals": "18",
+   "totalSupply": "25433238487650687496565048"
+  },
+  "0xe6baa3fedb5dc88b2c59ba4812388bb0906d19db": {
+   "address": "0xE6bAA3Fedb5Dc88b2c59ba4812388Bb0906D19dB",
+   "codeBytes": 4932,
+   "name": "PolySwarm",
+   "symbol": "NCT",
+   "decimals": "18",
+   "totalSupply": "27152594576036650393956"
+  },
+  "0x7002458b1df59eccb57387bc79ffc7c29e22e6f7": {
+   "address": "0x7002458B1DF59EccB57387bC79fFc7C29E22e6f7",
+   "codeBytes": 4932,
+   "name": "OriginToken",
+   "symbol": "OGN",
+   "decimals": "18",
+   "totalSupply": "8589468053122391803042320"
+  },
+  "0x060cb087a9730e13aa191f31a6d86bff8dfcdcc0": {
+   "address": "0x060cb087a9730E13aa191f31A6d86bFF8DfcdCC0",
+   "codeBytes": 5597,
+   "name": "Olympus",
+   "symbol": "OHM",
+   "decimals": "9",
+   "totalSupply": "45180488364365"
+  },
+  "0x54330d28ca3357f294334bdc454a032e7f353416": {
+   "address": "0x54330d28ca3357F294334BDC454a032e7f353416",
+   "codeBytes": 5835,
+   "name": "Autonolas",
+   "symbol": "OLAS",
+   "decimals": "18",
+   "totalSupply": "11972864356321018159613225"
+  },
+  "0xd52333441c0553facb259600fa833a69186893a5": {
+   "address": "0xd52333441c0553fACb259600FA833a69186893A5",
+   "codeBytes": 7275,
+   "name": "PAAL AI",
+   "symbol": "$PAAL",
+   "decimals": "18",
+   "totalSupply": "22459206146014972792346039"
+  },
+  "0xb4fde59a779991bfb6a52253b51947828b982be3": {
+   "address": "0xB4fDe59a779991bfB6a52253B51947828b982be3",
+   "codeBytes": 5835,
+   "name": "Pepe",
+   "symbol": "PEPE",
+   "decimals": "18",
+   "totalSupply": "105429513251996993399268228007"
+  },
+  "0x02f8464da016de80ab36a7aee21ecfb304cb166d": {
+   "address": "0x02f8464da016dE80ab36a7Aee21ECFb304cB166d",
+   "codeBytes": 6627,
+   "name": "Polkastarter",
+   "symbol": "POLS",
+   "decimals": "18",
+   "totalSupply": "100000000000000000000000000"
+  },
+  "0xd652c5425aea2afd5fb142e120fecf79e18fafc3": {
+   "address": "0xd652C5425aea2Afd5fb142e120FeCf79e18fafc3",
+   "codeBytes": 5835,
+   "name": "PoolTogether",
+   "symbol": "POOL",
+   "decimals": "18",
+   "totalSupply": "1401521185490078560650126"
+  },
+  "0xfa980ced6895ac314e7de34ef1bfae90a5add21b": {
+   "address": "0xfA980cEd6895AC314E7dE34Ef1bFAE90a5AdD21b",
+   "codeBytes": 15968,
+   "name": "Prime",
+   "symbol": "PRIME",
+   "decimals": "18",
+   "totalSupply": "1703186864054576364729746"
+  },
+  "0xc61f9663e05fccd84d4d6c56a373093437ecb899": {
+   "address": "0xC61f9663E05fccd84d4D6c56A373093437ECB899",
+   "codeBytes": 13796,
+   "name": "Rarible",
+   "symbol": "RARI",
+   "decimals": "18",
+   "totalSupply": "46328020149000000000000"
+  },
+  "0x1f73eaf55d696bffa9b0ea16fa987b93b0f4d302": {
+   "address": "0x1f73EAf55d696BFFA9b0EA16fa987B93b0f4d302",
+   "codeBytes": 5835,
+   "name": "Rocket Pool Protocol",
+   "symbol": "RPL",
+   "decimals": "18",
+   "totalSupply": "12767471481867415055294"
+  },
+  "0xab36452dbac151be02b16ca17d8919826072f64a": {
+   "address": "0xaB36452DbAC151bE02b16Ca17d8919826072f64a",
+   "codeBytes": 5835,
+   "name": "Reserve Rights",
+   "symbol": "RSR",
+   "decimals": "18",
+   "totalSupply": "5692462579749841567897889990"
+  },
+  "0xac531eb26ca1d21b85126de8fb87e80e09002dcf": {
+   "address": "0xac531Eb26Ca1d21b85126De8FB87E80E09002DcF",
+   "codeBytes": 17295,
+   "name": "SAND",
+   "symbol": "SAND",
+   "decimals": "18",
+   "totalSupply": "327574531179829674712000000000001"
+  },
+  "0xb9caa63e09c646c1ec79acb2158d173e64a5fed3": {
+   "address": "0xb9cAA63e09c646C1ec79aCB2158d173e64a5FEd3",
+   "codeBytes": 4932,
+   "name": "SKALE",
+   "symbol": "SKL",
+   "decimals": "18",
+   "totalSupply": "2449748898084812827356989"
+  },
+  "0x662015ec830df08c0fc45896fab726542e8ac09e": {
+   "address": "0x662015EC830DF08C0FC45896FaB726542e8AC09E",
+   "codeBytes": 4932,
+   "name": "Status Network Token",
+   "symbol": "SNT",
+   "decimals": "18",
+   "totalSupply": "5479889201915108133873108"
+  },
+  "0x22e6966b799c4d5b13be962e1d117b56327fda66": {
+   "address": "0x22e6966B799c4D5B13BE962E1D117b56327FDa66",
+   "codeBytes": 5835,
+   "name": "Synthetix Network Token",
+   "symbol": "SNX",
+   "decimals": "18",
+   "totalSupply": "922454574735234699225710"
+  },
+  "0x64fcc3a02eeeba05ef701b7eed066c6ebd5d4e51": {
+   "address": "0x64FCC3A02eeEba05Ef701b7eed066c6ebD5d4E51",
+   "codeBytes": 1115,
+   "name": "Spectra Token",
+   "symbol": "SPECTRA",
+   "decimals": "18",
+   "totalSupply": "710836459435177107275986941"
+  },
+  "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c": {
+   "address": "0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C",
+   "codeBytes": 831,
+   "name": "SPX6900",
+   "symbol": "SPX",
+   "decimals": "8",
+   "totalSupply": "2606852859311720"
+  },
+  "0xe3b53af74a4bf62ae5511055290838050bf764df": {
+   "address": "0xE3B53AF74a4BF62Ae5511055290838050bf764Df",
+   "codeBytes": 9379,
+   "name": "StargateToken",
+   "symbol": "STG",
+   "decimals": "18",
+   "totalSupply": "429842824616400374558275"
+  },
+  "0x391359ab0ccef572dcac78f74e47d7c06db0b982": {
+   "address": "0x391359ab0CCef572DcaC78F74E47D7C06Db0b982",
+   "codeBytes": 5835,
+   "name": "SuperVerse",
+   "symbol": "SUPER",
+   "decimals": "18",
+   "totalSupply": "183393819949924599111577"
+  },
+  "0x7d49a065d17d6d4a55dc13649901fdbb98b2afba": {
+   "address": "0x7D49a065D17d6d4a55dc13649901fdBB98B2AFBA",
+   "codeBytes": 5835,
+   "name": "SushiToken",
+   "symbol": "SUSHI",
+   "decimals": "18",
+   "totalSupply": "279832861271980314665012"
+  },
+  "0x432036208d2717394d2614d6697c46df3ed69540": {
+   "address": "0x432036208d2717394d2614d6697c46DF3Ed69540",
+   "codeBytes": 8723,
+   "name": "Synapse",
+   "symbol": "SYN",
+   "decimals": "18",
+   "totalSupply": "125598453519364009759338"
+  },
+  "0x26f3901ac8a79c50fb0d8289c74f0d09adc42e29": {
+   "address": "0x26f3901aC8a79c50fb0d8289C74f0d09AdC42E29",
+   "codeBytes": 5835,
+   "name": "Threshold Network Token",
+   "symbol": "T",
+   "decimals": "18",
+   "totalSupply": "5889135152182263466484546"
+  },
+  "0x7e13b43065380acdec1c2d138c579cbbbafa0731": {
+   "address": "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731",
+   "codeBytes": 16172,
+   "name": "Telcoin",
+   "symbol": "TEL",
+   "decimals": "18",
+   "totalSupply": "191665485348898000000000000"
+  },
+  "0xa81a52b4dda010896cdd386c7fbdc5cdc835ba23": {
+   "address": "0xA81a52B4dda010896cDd386C7fBdc5CDc835ba23",
+   "codeBytes": 5835,
+   "name": "Trace Token",
+   "symbol": "TRAC",
+   "decimals": "18",
+   "totalSupply": "32827579152471859750599529"
+  },
+  "0xf8e9e61ffb2b491f7df29823a76009743671cd96": {
+   "address": "0xF8e9E61FFB2b491f7DF29823a76009743671CD96",
+   "codeBytes": 4932,
+   "name": "Tellor Tributes",
+   "symbol": "TRB",
+   "decimals": "18",
+   "totalSupply": "77000000000000000000"
+  },
+  "0xc3de830ea07524a0761646a6a4e4be0e114a3c83": {
+   "address": "0xc3De830EA07524a0761646a6a4e4be0e114a3C83",
+   "codeBytes": 5835,
+   "name": "Uniswap",
+   "symbol": "UNI",
+   "decimals": "18",
+   "totalSupply": "209881808991254376071407"
+  },
+  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": {
+   "address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+   "codeBytes": 6774,
+   "name": "Tether USD",
+   "symbol": "USDT",
+   "decimals": "6",
+   "totalSupply": "29007981349782"
+  },
+  "0x4acd4d03af6f9cc0fb7c5f0868b7b6287d7969c5": {
+   "address": "0x4ACD4D03af6F9cc0fB7C5f0868B7b6287D7969c5",
+   "codeBytes": 1129,
+   "name": "USUAL",
+   "symbol": "USUAL",
+   "decimals": "18",
+   "totalSupply": "336061715706753807849"
+  },
+  "0xb0ffa8000886e57f86dd5264b9582b2ad87b2b91": {
+   "address": "0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91",
+   "codeBytes": 209,
+   "name": "Wormhole Token",
+   "symbol": "W",
+   "decimals": "18",
+   "totalSupply": "71773662036648460000000000"
+  },
+  "0x0555e30da8f98308edb960aa94c0db47230d2b9c": {
+   "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+   "codeBytes": 13649,
+   "name": "Wrapped BTC",
+   "symbol": "WBTC",
+   "decimals": "8",
+   "totalSupply": "7159881476"
+  },
+  "0x04c0599ae5a44757c0af6f9ec3b93da8976c150a": {
+   "address": "0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A",
+   "codeBytes": 1159,
+   "name": "Wrapped eETH",
+   "symbol": "weETH",
+   "decimals": "18",
+   "totalSupply": "18712643638229770924479"
+  },
+  "0xafde2490236bc64950def5472296aa0d9758db0d": {
+   "address": "0xaFdE2490236bc64950def5472296aa0D9758Db0d",
+   "codeBytes": 12493,
+   "name": "Wilder World Token",
+   "symbol": "WILD",
+   "decimals": "18",
+   "totalSupply": "16988659608000000000000"
+  },
+  "0xf3df0a31ec5ea438150987805e841f960b9471b6": {
+   "address": "0xF3df0A31ec5EA438150987805e841F960b9471b6",
+   "codeBytes": 12244,
+   "name": "WOO",
+   "symbol": "WOO",
+   "decimals": "18",
+   "totalSupply": "15116111053013000000000000"
+  },
+  "0xebb7873213c8d1d9913d8ea39aa12d74cb107995": {
+   "address": "0xebB7873213c8d1d9913D8eA39Aa12d74cB107995",
+   "codeBytes": 5949,
+   "name": "Venus XVS",
+   "symbol": "XVS",
+   "decimals": "18",
+   "totalSupply": "57353087870000000000"
+  },
+  "0xd7b99ffb8b2afc6fe013a17207cbe50f223adc94": {
+   "address": "0xD7B99ffB8B2afc6fe013a17207cbe50f223aDc94",
+   "codeBytes": 4932,
+   "name": "XY Oracle",
+   "symbol": "XYO",
+   "decimals": "18",
+   "totalSupply": "6870796260102141158048757"
+  },
+  "0x9eaf8c1e34f05a589eda6bafdf391cf6ad3cb239": {
+   "address": "0x9EaF8C1E34F05a589EDa6BAfdF391Cf6Ad3CB239",
+   "codeBytes": 5835,
+   "name": "yearn.finance",
+   "symbol": "YFI",
+   "decimals": "18",
+   "totalSupply": "393287216673955139075"
+  },
+  "0xaac78d1219c08aecc8e37e03858fe885f5ef1799": {
+   "address": "0xaAC78d1219c08AecC8e37e03858FE885f5EF1799",
+   "codeBytes": 4932,
+   "name": "Yield Guild Games Token",
+   "symbol": "YGG",
+   "decimals": "18",
+   "totalSupply": "3023053031885112411777329"
+  },
+  "0x3bb4445d30ac020a84c1b5a8a2c6248ebc9779d0": {
+   "address": "0x3bB4445D30AC020a84c1b5A8A2C6248ebC9779D0",
+   "codeBytes": 5835,
+   "name": "0x Protocol Token",
+   "symbol": "ZRX",
+   "decimals": "18",
+   "totalSupply": "322626264831935085383333"
+  },
+  "0x2416092f143378750bb29b79ed961ab195cceea5": {
+   "address": "0x2416092f143378750bb29b79eD961ab195CcEea5",
+   "codeBytes": 2188,
+   "name": "Renzo Restaked ETH",
+   "symbol": "ezETH",
+   "decimals": "18",
+   "totalSupply": "263107924851016072521"
+  },
+  "0xb6fe221fe9eef5aba221c348ba20a1bf5e73624c": {
+   "address": "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c",
+   "codeBytes": 5835,
+   "name": "Rocket Pool ETH",
+   "symbol": "rETH",
+   "decimals": "18",
+   "totalSupply": "1856928753551988981455"
+  },
+  "0x1bc71130a0e39942a7658878169764bbd8a45993": {
+   "address": "0x1Bc71130A0e39942a7658878169764Bbd8A45993",
+   "codeBytes": 12363,
+   "name": "KelpDao Restaked ETH",
+   "symbol": "rsETH",
+   "decimals": "18",
+   "totalSupply": "3440751000000000000"
+  },
+  "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b": {
+   "address": "0x236aa50979D5f3De3Bd1Eeb40E81137F22ab794b",
+   "codeBytes": 2227,
+   "name": "Base tBTC v2",
+   "symbol": "tBTC",
+   "decimals": "18",
+   "totalSupply": "47351821540000000000"
+  },
+  "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": {
+   "address": "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+   "codeBytes": 3296,
+   "name": "Wrapped liquid staked Ether 2.0",
+   "symbol": "wstETH",
+   "decimals": "18",
+   "totalSupply": "24388802190578874419888"
+  },
+  "0xcf7fc0de71238c9ec45ec2fd24fdc8521345dbb5": {
+   "address": "0xCF7Fc0De71238c9EC45EC2Fd24FDc8521345dbB5",
+   "codeBytes": 45,
+   "name": "TigerOG",
+   "symbol": "TIGEROG",
+   "decimals": "9",
+   "totalSupply": "8094368131811117828802767310885"
+  },
+  "0x6731f2d7adf86cfba30d15c4d10113ce98f3492a": {
+   "address": "0x6731F2d7ADF86cfba30d15c4D10113Ce98f3492A",
+   "codeBytes": 45,
+   "name": "LionOG",
+   "symbol": "LIONOG",
+   "decimals": "9",
+   "totalSupply": "116570477515288810956000000000"
+  },
+  "0x0e3b564bdd09348840811c7e1106bbd0e98b5b4f": {
+   "address": "0x0E3b564bdD09348840811C7e1106BbD0e98b5b4f",
+   "codeBytes": 45,
+   "name": "FrogOG",
+   "symbol": "FROGOG",
+   "decimals": "9",
+   "totalSupply": "159197057904921290324000000000"
+  }
+ }
+}
