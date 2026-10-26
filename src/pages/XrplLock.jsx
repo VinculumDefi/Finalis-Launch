@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FileText, Lock, ScrollText } from 'lucide-react';
+import { FileText, Lock, ScrollText, Ban } from 'lucide-react';
 import ProvenanceBanner from '@/components/xrpl/ProvenanceBanner';
 import TransactionStructure from '@/components/xrpl/TransactionStructure';
 import LockConfigForm from '@/components/xrpl/LockConfigForm';
@@ -10,6 +10,7 @@ import { AUTHORITY, LOCK_STATES, ATTEMPT_STATES } from '@/lib/vfXrplAuthority';
 import { validateLockRequest, computeOutput } from '@/lib/vfXrplLockEngine';
 import { XrplMockAdapter } from '@/lib/vfXrplMockAdapter';
 import { buildAtomicBatch } from '@/lib/vfXrplTransactionBuilder';
+import { NOT_IN_THIS_DEPLOYMENT_LABEL, XRPL_NOT_DEPLOYED_MESSAGE, XRPL_LOCKS_ENABLED } from '@/lib/vfDeploymentScope';
 
 function parseUsdToFixedPoint(usdStr) {
   if (!usdStr || typeof usdStr !== 'string') return 0n;
@@ -63,6 +64,8 @@ export default function XrplLock() {
   }
 
   function onSubmit() {
+    // Base-only deployment (t430u item 2): nothing is built or submitted here.
+    if (!XRPL_LOCKS_ENABLED) return;
     const id = `vf-xrpl-lock-${Date.now()}`;
     setLockId(id);
     const isHandshake = String(values.durationSecs) === '3600';
@@ -152,6 +155,17 @@ export default function XrplLock() {
   return (
     <div className="min-h-screen bg-[#fafaf8] text-[#0a0a0a]">
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        <div role="alert" data-testid="xrpl-not-deployed" className="rounded-lg border-2 border-rose-300 bg-rose-50 p-4 space-y-1">
+          <div className="flex items-center gap-2">
+            <Ban className="w-5 h-5 text-rose-700" />
+            <h2 className="text-base font-bold text-rose-800">{NOT_IN_THIS_DEPLOYMENT_LABEL}</h2>
+          </div>
+          <p className="text-sm text-rose-800">{XRPL_NOT_DEPLOYED_MESSAGE}</p>
+          <p className="text-xs text-rose-700">
+            This page is kept for reference only. A preflight here fails and nothing can be submitted.
+          </p>
+        </div>
+
         <ProvenanceBanner />
 
         <header className="space-y-1">
