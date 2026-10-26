@@ -1,0 +1,107 @@
+{
+ "_note": "TEL Base asset-contract migration evidence (operator t430u item 3). Read-only reads; nothing was signed or sent.",
+ "decision": "t430u item 3: use the official upgraded TEL contract on Base. Asset-contract migration, not a new protocol rule.",
+ "newContract": "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731",
+ "oldContract": "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1",
+ "officialSource": {
+  "url": "https://tel3.telcoin.network/faqs",
+  "readAt": "2026-10-26",
+  "statements": [
+   "Token contract (new TEL you hold): 0x7E13B43065380aCdeC1c2d138c579cbBbafA0731, same on all networks",
+   "Old TEL, Base: 0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1",
+   "Upgrade contract: 0x2703E00cAE30A7707e4d18C38f8CB6A4a40c2703",
+   "Holders upgrade 1:1; decimals change from 2 to 18; the ticker stays TEL"
+  ],
+  "governance": "https://forum.telcoin.org/t/telip-the-tel-token-upgrade/847"
+ },
+ "onchain": {
+  "rpc": "https://mainnet.base.org",
+  "block": 53119944,
+  "new": {
+   "address": "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731",
+   "codeBytes": 16172,
+   "name": "Telcoin",
+   "symbol": "TEL",
+   "decimals": "18",
+   "totalSupply": "191665485348898000000000000",
+   "eip1967Impl": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "old": {
+   "address": "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1",
+   "codeBytes": 4932,
+   "name": "Telcoin",
+   "symbol": "TEL",
+   "decimals": "2",
+   "totalSupply": "86506678452",
+   "eip1967Impl": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  }
+ },
+ "pricing": {
+  "coingecko": {
+   "id": "telcoin",
+   "usd": 0.00142295,
+   "lastUpdated": "2026-10-26T15:40:51.000Z",
+   "basePlatformListed": "0x09be1692ca16e06f536f0038ff11d1da8524adb1",
+   "note": "CoinGecko still lists the old Base address under the telcoin id. The upgrade is 1:1 per TEL, so the per-TEL USD price is unit-compatible with the new contract at 18 decimals."
+  },
+  "dexscreenerNew": [
+   {
+    "pair": "0x272e0968e2fb347236c6060cc9395f13591968f3f83056c600c755066dd214a6",
+    "dex": "uniswap",
+    "base": "TEL",
+    "quote": "ETH",
+    "baseAddress": "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731",
+    "priceUsd": "0.001398",
+    "liquidityUsd": 66164.97
+   },
+   {
+    "pair": "0x1266df876a41a4f4250dbfa9887e70f20a40a3ccd802c8d75b51b7fd4eb36982",
+    "dex": "uniswap",
+    "base": "TEL",
+    "quote": "eUSD",
+    "baseAddress": "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731",
+    "priceUsd": "0.001390",
+    "liquidityUsd": 43800.63
+   }
+  ],
+  "dexscreenerOld": [
+   {
+    "pair": "0x727b2741ac2b2df8bc9185e1de972661519fc07b156057eeed9b07c50e08829b",
+    "dex": "uniswap",
+    "base": "TEL",
+    "quote": "ETH",
+    "baseAddress": "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1",
+    "priceUsd": "0.001426",
+    "liquidityUsd": 47946.1
+   },
+   {
+    "pair": "0xD2963db0eB25E70c39E3E5D7785e4B6508068E55",
+    "dex": "uniswap",
+    "base": "TEL",
+    "quote": "GMRT",
+    "baseAddress": "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1",
+    "priceUsd": "0.001446",
+    "liquidityUsd": 8792.62
+   },
+   {
+    "pair": "0xf89fa7dd6166d5e3fed5cdbf8f456b254da55d23cff3c7dadb69cb2b00928507",
+    "dex": "uniswap",
+    "base": "TEL",
+    "quote": "USDC",
+    "baseAddress": "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1",
+    "priceUsd": "0.001417",
+    "liquidityUsd": 44.5
+   }
+  ],
+  "compatible": true,
+  "basis": "1:1 upgrade per the official portal; new-contract Base pool price is within about 2% of the old contract's top pool and of CoinGecko at read time; the registry row uses decimals 18 from decimals() on the new contract."
+ },
+ "registryChange": {
+  "row": 1082,
+  "symbol": "TEL",
+  "identifier": "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731",
+  "decimals": 18,
+  "pricingIdentifier": "telcoin",
+  "migratedFrom": "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1"
+ }
+}
