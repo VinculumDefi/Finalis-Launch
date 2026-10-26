@@ -232,7 +232,7 @@ const { CEREMONY_REGISTRY_FILE, CEREMONY_REGISTRY_NAME, loadRegistry } = require
 const REGISTRY_FILE = CEREMONY_REGISTRY_FILE;
 const REGISTRY_NAME = CEREMONY_REGISTRY_NAME;
 
-const EXPECTED_CEREMONY_ROWS = 591;
+const EXPECTED_CEREMONY_ROWS = 589;
 
 function resolveCeremonyRegistry(file = REGISTRY_FILE) {
   if (!fs.existsSync(file)) {
