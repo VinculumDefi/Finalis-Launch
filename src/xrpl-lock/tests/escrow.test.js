@@ -122,7 +122,10 @@ test('T-07: Full preflight validation (VF-ARC-004)', () => {
     chonxActivationReceipt: '',
     cumulativeVclmIssued: 0n,
   });
-  assert.strictEqual(result.ok, true, `Expected pass, got errors: ${result.errors.join('; ')}`);
+  // Base-only launch (t430u item 2): XRP is not offered, so the kept engine
+  // refuses it at VF-REG-001 only. Every other preflight check passes.
+  assert.strictEqual(result.ok, false);
+  assert.deepStrictEqual(result.checks.filter((c) => !c.pass).map((c) => c.id), ['VF-REG-001']);
 });
 
 // T-08: EscrowCreate transaction construction
