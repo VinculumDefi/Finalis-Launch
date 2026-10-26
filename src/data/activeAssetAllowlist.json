@@ -7,8 +7,8 @@
  "sources": {
   "registry": {
    "file": "base-contracts/deployment/assetRegistry.revD.json",
-   "sha256": "1f00f1f4bd4a2d0d31f3cf7c978c18bd2f5040d5a497d75797dace417859482e",
-   "entries": 591
+   "sha256": "2b3799390d9c75b339a795ab39bcc6e39ced3ed7b2be491a4b36179468d5d2fa",
+   "entries": 589
   },
   "onchainVerification": {
    "file": "base-contracts/deployment/revD_onchain_2026-10-26.json",
@@ -18,12 +18,12 @@
   }
  },
  "counts": {
-  "entries": 131,
-  "tokens": 130,
+  "entries": 129,
+  "tokens": 128,
   "natives": 1,
   "nativeLinks": 0,
   "excluded": 0,
-  "founderOverride": 3,
+  "founderOverride": 1,
   "notOffered": 460
  },
  "entries": [
@@ -121,7 +121,7 @@
    "pricingIdentifier": null,
    "address": "0xcf7fc0de71238c9ec45ec2fd24fdc8521345dbb5",
    "onchainStatus": "founder_override",
-   "founderOverride": "founder override (t430u item 5)"
+   "founderOverride": "founder override (t430u item 5, TigerOG only under t431u)"
   },
   {
    "kind": "token",
@@ -362,32 +362,6 @@
    "pricingIdentifier": "venice-token",
    "address": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
    "onchainStatus": "verify"
-  },
-  {
-   "kind": "token",
-   "row": 999,
-   "environmentId": "Base",
-   "symbol": "LionOG",
-   "decimals": 9,
-   "canonicalAssetId": "0x5fb4a8487d11077491f174c4581c5af1f982a56a98bab5bfef0466d4e4e12549",
-   "custodyClass": 3,
-   "pricingIdentifier": null,
-   "address": "0x6731f2d7adf86cfba30d15c4d10113ce98f3492a",
-   "onchainStatus": "founder_override",
-   "founderOverride": "founder override (t430u item 5)"
-  },
-  {
-   "kind": "token",
-   "row": 1000,
-   "environmentId": "Base",
-   "symbol": "FrogOG",
-   "decimals": 9,
-   "canonicalAssetId": "0xa7d9f396a8d3b35cb6d982001f77f04c64bb642b254af70500053cdfe9cf9a0f",
-   "custodyClass": 3,
-   "pricingIdentifier": null,
-   "address": "0x0e3b564bdd09348840811c7e1106bbd0e98b5b4f",
-   "onchainStatus": "founder_override",
-   "founderOverride": "founder override (t430u item 5)"
   },
   {
    "kind": "token",
