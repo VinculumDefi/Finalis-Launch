@@ -21,9 +21,10 @@ import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 import { hasUtxoMinimum, checkUtxoMinimumLock, priceAsOfSecs, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered.
-// Solana is not part of this deployment and is not offered for new locks.
+// Base only (t430u item 2): the other chains stay in this list as history, and the
+// filter removes them because they are not part of this deployment.
 const ENV_OPTIONS = [
-  'XRPL', 'Stellar',
+  'Base', 'XRPL', 'Stellar',
   'Bitcoin', 'Litecoin', 'Dogecoin', 'DigiByte', 'Zcash', 'BitcoinCash',
   'Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Optimism',
 ].filter((e) => isInThisDeployment(e) && isOfferableEnvironmentNative(e));
@@ -31,7 +32,7 @@ const ENV_OPTIONS = [
 export default function TokenLayer() {
   const [tokenState, setTokenState] = useState(() => new TokenLayerState());
   const [verifierState, setVerifierState] = useState(() => new VerifierState());
-  const [env, setEnv] = useState('Ethereum');
+  const [env, setEnv] = useState(ENV_OPTIONS[0] || 'Base');
   const [durationIdx, setDurationIdx] = useState(1); // 7 days
   const [outputToken, setOutputToken] = useState('VCLM');
   const [pipeline, setPipeline] = useState({});
