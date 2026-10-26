@@ -1,4 +1,4 @@
-// App-side hiding: only Revision B assets that passed on-chain verification are offered.
+// App-side hiding: only Revision C assets that passed on-chain verification are offered.
 // Run: node --test src/tests/active-asset-allowlist.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,7 +17,7 @@ import { XRPL_REGISTRY } from '../lib/vfXrplRegistry.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEP = path.join(ROOT, 'base-contracts', 'deployment');
-const REVB = JSON.parse(readFileSync(path.join(DEP, 'assetRegistry.revB.json'), 'utf8'));
+const REVC = JSON.parse(readFileSync(path.join(DEP, 'assetRegistry.revC.json'), 'utf8'));
 const HIST = JSON.parse(readFileSync(path.join(DEP, 'assetRegistry.resolved.json'), 'utf8')).entries;
 // A hosted-registry style record built from the historical row (same row, chain and address).
 const rec = (row, env) => {
@@ -25,27 +25,30 @@ const rec = (row, env) => {
   return { registry_row: h.row, symbol: h.symbol, environment: h.environmentId, contract_or_native_identifier: h.identifier };
 };
 
-test('allowlist equals Revision B exactly (487 entries: 475 tokens + 12 natives, 3 native links, nothing excluded)', () => {
+test('allowlist equals Revision C exactly (487 entries: 475 tokens + 12 natives, 3 native links, nothing excluded)', () => {
   const key = (e) => `${e.environmentId}|${e.row}|${e.canonicalAssetId}`;
   assert.equal(ACTIVE_ALLOWLIST.entries.length, 487);
   assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 487, tokens: 475, natives: 12, nativeLinks: 3, excluded: 0 });
-  assert.deepEqual(new Set(ACTIVE_ALLOWLIST.entries.map(key)), new Set(REVB.entries.map(key)));
-  for (const e of REVB.entries) {
+  assert.deepEqual(new Set(ACTIVE_ALLOWLIST.entries.map(key)), new Set(REVC.entries.map(key)));
+  for (const e of REVC.entries) {
     const a = ACTIVE_ALLOWLIST.entries.find((x) => key(x) === key(e));
     if (e.kind === 'token') assert.equal(a.address, e.identifier.toLowerCase());
     else assert.equal(a.nativeId, e.assetId);
   }
   assert.deepEqual(ACTIVE_ALLOWLIST.nativeLinks.map((l) => [l.environmentId, l.symbol, l.usesRow]),
-    REVB.nativeLinks.map((l) => [l.environmentId, l.symbol, l.usesRow]));
+    REVC.nativeLinks.map((l) => [l.environmentId, l.symbol, l.usesRow]));
   assert.equal(ACTIVE_ALLOWLIST.entries.some((e) => e.environmentId === 'Solana'), false);
+  for (const e of REVC.entries) assert.equal(ACTIVE_ALLOWLIST.entries.find((x) => key(x) === key(e)).custodyClass, e.custodyClass);
+  // Rev 18 VF-REG-002: Base USDC (Circle) row 454 is S1.
+  assert.equal(ACTIVE_ALLOWLIST.entries.find((x) => x.environmentId === 'Base' && x.row === 454).custodyClass, 1);
 });
 
-test('the committed allowlist is exactly what the builder produces from revB.json + today\'s verification', () => {
+test('the committed allowlist is exactly what the builder produces from revC.json + today\'s verification', () => {
   const out = execFileSync('node', [path.join(ROOT, 'base-contracts', 'scripts', 'buildAppAllowlist.cjs'), '--check'], { encoding: 'utf8' });
   assert.match(out, /is current/);
 });
 
-test('a Revision B token is shown (Ethereum USDC row 1), matched by chain + address in any case', () => {
+test('a Revision C token is shown (Ethereum USDC row 1), matched by chain + address in any case', () => {
   const r = rec(1, 'Ethereum');
   assert.equal(isOfferable(r), true);
   assert.equal(isOfferable({ ...r, contract_or_native_identifier: r.contract_or_native_identifier.toUpperCase().replace('0X', '0x') }), true);
@@ -80,7 +83,7 @@ test('Solana rows are hidden (token and native), and the Solana picker offers no
   assert.ok(SOLANA_REGISTRY.length > 0);
 });
 
-test('a ticker-only match is hidden: no identifier, or a Revision B ticker on an address that is not its own', () => {
+test('a ticker-only match is hidden: no identifier, or a Revision C ticker on an address that is not its own', () => {
   assert.equal(resolveOfferable({ environment: 'Ethereum', symbol: 'USDC', contract_or_native_identifier: '' }).reason, 'no_contract_or_native_identifier');
   assert.equal(isOfferable({ environment: 'Ethereum', symbol: 'USDC' }), false);
   assert.equal(isOfferable({ environment: 'Ethereum', symbol: 'USDC', contract_or_native_identifier: 'USDC' }), false);
@@ -89,7 +92,7 @@ test('a ticker-only match is hidden: no identifier, or a Revision B ticker on an
   assert.equal(isOfferable({ environment: 'Ethereum', symbol: 'USDC', contract_or_native_identifier: 'NATIVE' }), false);
 });
 
-test('natives on Revision B are shown; Cosmos ATOM (not on Revision B) is hidden', () => {
+test('natives on Revision C are shown; Cosmos ATOM (not on Revision C) is hidden', () => {
   const natives = [['Ethereum', 'ETH'], ['Base', 'ETH'], ['Bitcoin', 'BTC'], ['Dogecoin', 'DOGE'], ['Litecoin', 'LTC'], ['Bitcoin Cash', 'BCH'],
     ['DigiByte', 'DGB'], ['Zcash', 'ZEC'], ['XRP Ledger', 'XRP'], ['Stellar', 'XLM']];
   for (const [env, sym] of natives) assert.equal(isOfferable({ environment: env, symbol: sym, contract_or_native_identifier: 'NATIVE — no EVM contract' }), true, env);
@@ -121,7 +124,7 @@ test('other entry paths refuse non-allowlisted assets: lock preflight, proof pac
   assert.equal(isOfferablePackageAsset('XRPL', 'native-XRP'), true);
   assert.equal(isOfferablePackageAsset('Solana', 'native-SOL'), false);
   assert.equal(isOfferablePackageAsset('CosmosHub', 'native-uatom'), false);
-  assert.equal(isOfferablePackageAsset('Ethereum', REVB.entries.find((e) => e.row === 1).canonicalAssetId), true);
+  assert.equal(isOfferablePackageAsset('Ethereum', REVC.entries.find((e) => e.row === 1).canonicalAssetId), true);
   assert.equal(isOfferablePackageAsset('Ethereum', HIST.find((e) => e.row === 77).canonicalAssetId), false);
   // Manual address entry
   assert.ok(findAllowedToken('Ethereum', rec(1, 'Ethereum').contract_or_native_identifier));
