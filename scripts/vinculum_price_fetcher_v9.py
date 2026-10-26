@@ -10,33 +10,16 @@ No hardcoded substitute prices (VF-ORC-004). Miss => asset unavailable until a l
 
 Built against: approved_assets_final.json (1001 assets, clean)
 
-Cascade per asset:
-  Tier 1 — CoinGecko  (batch 200 IDs per call, ~5 calls total)
-  Tier 2 — DexScreener (contract address lookup for batch misses)
-  Tier 3 — DexScreener (symbol search for remaining)
-  Tier 4 — Community-token override (TigerOG, LionOG, FrogOG, WKC):
-           DexScreener -> GeckoTerminal, against a dedicated price-source
-           contract that may differ from the asset's display contract.
+Cascade per asset (Revision 18 Section 7, D-64, VF-ORC-006):
+  Tier 1: CoinGecko  (batch 200 IDs per call)
+  Tier 2: DexScreener (the registry's own contract address on its own chain)
 
-v9 vs v8 — TigerOG / LionOG / FrogOG price-source fix:
-  - TigerOG, LionOG, and FrogOG each exist as a legacy token on BSC and a
-    unified Axelar ITS token on Base. The registry displays them as the
-    Base ITS token (registry "contract" field = ITS address, unchanged).
-    But the ITS contracts on Base have thin/inconsistent liquidity, while
-    the original legacy BSC contracts retain real market activity — nobody
-    is required to bridge their legacy tokens, so BSC liquidity persists.
-  - COMMUNITY_TOKENS now points ds_addr/gt_addr at the legacy BSC contract
-    for these three (ds_chain/gt_network = "bsc") instead of the Base ITS
-    address. Display chain in the registry is untouched — still Base.
-  - Steps 2 and 3 now skip any asset whose key is in COMMUNITY_TOKENS.
-    Previously, Step 2 (DexScreener by contract) would run against these
-    three using their Base ITS contract *before* reaching Step 4, and if
-    the thin ITS pool returned any price at all it would lock that in and
-    Step 4's correct BSC-sourced override would never run. That's the
-    likely cause of the intermittent (not clean-miss) coverage gap.
-  - Fixed leftover "v6" strings in the log header, xlsx summary title, and
-    HTTP User-Agent that were never updated in earlier version bumps.
-  - No hardcoded prices anywhere.
+No symbol search (removed by D-64) and no community-token override
+(VF-ORC-006: no override applies, and a displayed registry contract is never
+replaced with a different lookup contract). The former v9 overrides for
+TigerOG, LionOG, FrogOG (BSC legacy contracts) and WKC are removed under
+t427u; TigerOG, LionOG and FrogOG left the registry on 2026-10-19.
+No hardcoded prices anywhere.
 
 Usage:
   python vinculum_price_fetcher_v9.py
@@ -75,7 +58,6 @@ TIMEOUT_S   = 14
 CG_BATCH    = 200
 CG_PAUSE    = 4.0   # seconds between CoinGecko batch calls
 DS_PAUSE    = 0.6   # DexScreener
-GT_PAUSE    = 1.5   # GeckoTerminal
 MAX_RETRY   = 3
 
 NATIVE_CHAINS = {
@@ -86,57 +68,6 @@ DS_CHAIN = {
     "Ethereum":"ethereum","Base":"base","Arbitrum":"arbitrum",
     "Optimism":"optimism","Polygon":"polygon","BSC":"bsc",
     "Avalanche":"avalanche","Solana":"solana",
-}
-
-GT_NET = {
-    "Ethereum":"eth","Base":"base","Arbitrum":"arbitrum",
-    "Optimism":"optimism","Polygon":"polygon","BSC":"bsc",
-    "Avalanche":"avax","Solana":"solana",
-}
-
-# Community tokens: no CoinGecko ID — priced via DexScreener first,
-# then GeckoTerminal as fallback. Both sources tried for every token.
-#
-# TigerOG / LionOG / FrogOG display in the registry as their unified Axelar
-# ITS token on Base (registry "contract" field), but that display contract
-# often has thin/inconsistent liquidity. Each also has an original legacy
-# token on BSC that nobody is ever required to bridge away from, so it
-# keeps real market activity. ds_addr/gt_addr below deliberately point at
-# the BSC legacy contract, not the Base display contract — this is a
-# price-source override, keyed by contract address, independent of what
-# the registry shows the user. See v9 changelog above.
-COMMUNITY_TOKENS = {
-    "TigerOG@Base": {
-        # Price source: BNBTiger legacy contract on BSC (~$921K liquidity
-        # on its main WBNB pool as of last check). Display stays Base ITS.
-        "ds_chain":  "bsc",
-        "ds_addr":   "0xAC68931B666E086E9de380CFDb0Fb5704a35dc2D",
-        "gt_network":"bsc",
-        "gt_addr":   "0xAC68931B666E086E9de380CFDb0Fb5704a35dc2D",
-    },
-    "LionOG@Base": {
-        # Price source: BNBLion legacy contract on BSC (~$110K liquidity
-        # as of last check). Display stays Base ITS.
-        "ds_chain":  "bsc",
-        "ds_addr":   "0xdA1689C5557564d06E2A546F8FD47350b9D44a73",
-        "gt_network":"bsc",
-        "gt_addr":   "0xdA1689C5557564d06E2A546F8FD47350b9D44a73",
-    },
-    "FrogOG@Base": {
-        # Price source: BNBFrog legacy contract on BSC (~$108K liquidity
-        # as of last check). Display stays Base ITS.
-        "ds_chain":  "bsc",
-        "ds_addr":   "0x64da67A12a46f1DDF337393e2dA12eD0A507Ad3D",
-        "gt_network":"bsc",
-        "gt_addr":   "0x64da67A12a46f1DDF337393e2dA12eD0A507Ad3D",
-    },
-    "WKC@Ethereum": {
-        # Unchanged — not part of the Base ITS pattern.
-        "ds_chain":  "ethereum",
-        "ds_addr":   "0x6ec90334d89dbdc89e08a133271be3d104128edb",
-        "gt_network":"eth",
-        "gt_addr":   "0x6ec90334d89dbdc89e08a133271be3d104128edb",
-    },
 }
 
 fh = None
@@ -206,37 +137,6 @@ def ds_by_contract(chain, contract):
     best = max(pairs, key=lambda p: float((p.get("liquidity") or {}).get("usd") or 0))
     return float(best["priceUsd"])
 
-# ── TIER 3: DEXSCREENER SYMBOL SEARCH ────────────────────────────────────────
-def ds_by_search(symbol, chain):
-    ds_chain = DS_CHAIN.get(chain)
-    if not ds_chain:
-        return None
-    data = fetch("https://api.dexscreener.com/latest/dex/search",
-                 params={"q": symbol})
-    if not data or not data.get("pairs"):
-        return None
-    pairs = [p for p in data["pairs"]
-             if p.get("chainId") == ds_chain
-             and (p.get("baseToken") or {}).get("symbol","").upper() == symbol.upper()
-             and float(p.get("priceUsd") or 0) > 0
-             and float((p.get("liquidity") or {}).get("usd") or 0) > 200]
-    if not pairs:
-        return None
-    best = max(pairs, key=lambda p: float((p.get("liquidity") or {}).get("usd") or 0))
-    return float(best["priceUsd"])
-
-# ── TIER 4: GECKO TERMINAL ────────────────────────────────────────────────────
-def gt_by_contract(network, address):
-    data = fetch(f"https://api.geckoterminal.com/api/v2/networks/{network}/tokens/{address}")
-    if not data:
-        return None
-    p = (data.get("data") or {}).get("attributes", {}).get("price_usd")
-    try:
-        v = float(p) if p else None
-        return v if v and v > 0 else None
-    except (ValueError, TypeError):
-        return None
-
 # ── FORMAT ───────────────────────────────────────────────────────────────────
 def fmt(usd):
     if usd is None: return "--"
@@ -290,7 +190,6 @@ def main():
     log("Step 2: DexScreener (contract address)...")
     ds_needed = [a for a in assets
                  if f"{a['symbol']}@{a['chain']}" not in prices
-                 and f"{a['symbol']}@{a['chain']}" not in COMMUNITY_TOKENS
                  and a["chain"] in DS_CHAIN
                  and a.get("contract","")]
     log(f"  {len(ds_needed)} assets to try...")
@@ -304,65 +203,7 @@ def main():
         time.sleep(DS_PAUSE)
     log(f"  DexScreener contract: {ds_applied} prices found")
 
-    # ── STEP 3: DEXSCREENER SYMBOL SEARCH (still missing) ────────────────────
-    log("Step 3: DexScreener symbol search...")
-    ds_search_needed = [a for a in assets
-                        if f"{a['symbol']}@{a['chain']}" not in prices
-                        and f"{a['symbol']}@{a['chain']}" not in COMMUNITY_TOKENS
-                        and a["chain"] in DS_CHAIN]
-    log(f"  {len(ds_search_needed)} assets to try...")
-    ds_search_applied = 0
-    for a in ds_search_needed:
-        key = f"{a['symbol']}@{a['chain']}"
-        usd = ds_by_search(a["symbol"], a["chain"])
-        if usd:
-            prices[key] = {"usd": usd, "source": "DexScreener_search", "ts": ts}
-            ds_search_applied += 1
-        time.sleep(DS_PAUSE)
-    log(f"  DexScreener search: {ds_search_applied} prices found")
-
-    # ── STEP 4: COMMUNITY TOKENS (DexScreener first, GeckoTerminal fallback) ──
-    log("Step 4: Community tokens (DexScreener -> GeckoTerminal)...")
-    comm_applied = 0
-    for key, cfg in COMMUNITY_TOKENS.items():
-        if key in prices:
-            log(f"  {key}: already priced")
-            continue
-
-        usd = None
-        source = None
-
-        # Try DexScreener first
-        ds_data = fetch(f"https://api.dexscreener.com/latest/dex/tokens/{cfg['ds_addr']}")
-        if ds_data and ds_data.get("pairs"):
-            pairs = [p for p in ds_data["pairs"]
-                     if p.get("chainId") == cfg["ds_chain"]
-                     and float(p.get("priceUsd") or 0) > 0]
-            if pairs:
-                best = max(pairs, key=lambda p: float((p.get("liquidity") or {}).get("usd") or 0))
-                usd = float(best["priceUsd"])
-                source = "DexScreener"
-        time.sleep(DS_PAUSE)
-
-        # GeckoTerminal fallback if DexScreener found nothing
-        if not usd:
-            usd = gt_by_contract(cfg["gt_network"], cfg["gt_addr"])
-            if usd:
-                source = "GeckoTerminal"
-            time.sleep(GT_PAUSE)
-
-        if usd:
-            prices[key] = {"usd": usd, "source": source, "ts": ts}
-            comm_applied += 1
-            log(f"  {key}: ${usd} [{source}]")
-        else:
-            prices[key] = {"usd": None, "source": "none", "ts": ts,
-                           "error": "no price on DexScreener or GeckoTerminal — low/no liquidity"}
-            log(f"  {key}: no price found on either source")
-
-    log(f"  Community tokens: {comm_applied} priced")
-
-    # ── STEP 5: MARK REMAINING ────────────────────────────────────────────────
+    # ── STEP 3: MARK REMAINING ────────────────────────────────────────────────
     no_price = []
     for a in assets:
         key = f"{a['symbol']}@{a['chain']}"
@@ -420,7 +261,6 @@ def main():
         src_fills = {
             "CoinGecko":          PatternFill("solid", start_color="E3F2FD"),
             "DexScreener":        PatternFill("solid", start_color="EDE7F6"),
-            "DexScreener_search": PatternFill("solid", start_color="F3E5F5"),
             "GeckoTerminal":      PatternFill("solid", start_color="FFF3E0"),
             "none":               PatternFill("solid", start_color="FFEBEE"),
         }
