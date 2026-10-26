@@ -27,12 +27,12 @@ const REQ = {
   chonxActivationReceipt: '', cumulativeVclmIssued: 0n,
 };
 
-test('scope: Solana is the one environment not in this deployment', () => {
-  assert.deepEqual([...NOT_IN_THIS_DEPLOYMENT], ['Solana']);
+test('scope: Solana is not in this deployment (Base only, t430u item 2)', () => {
+  assert.ok(NOT_IN_THIS_DEPLOYMENT.includes('Solana'));
   assert.equal(SOLANA_LOCKS_ENABLED, false);
   assert.equal(isInThisDeployment('Solana'), false);
   assert.equal(NOT_IN_THIS_DEPLOYMENT_LABEL, 'Not part of this deployment');
-  for (const e of ENVIRONMENTS.filter((x) => x.id !== 'Solana')) assert.equal(isInThisDeployment(e.id), true, e.id);
+  for (const e of ENVIRONMENTS) assert.equal(isInThisDeployment(e.id), e.id === 'Base', e.id);
 });
 
 test('Solana lock engine refuses every request (fail closed)', () => {
@@ -86,8 +86,14 @@ test('no chain list for new locks offers Solana', () => {
   assert.ok(!groups.includes("'Solana'"));
   assert.ok(groups.includes('isInThisDeployment(e) && isOfferableEnvironmentNative(e)'));
   const pending = read('components/base/PendingAttemptPanel.jsx');
-  assert.ok(pending.includes("useState('Ethereum')"));
+  assert.ok(pending.includes("useState('Base')"));
   assert.ok(pending.includes('isInThisDeployment(e.id)'));
   // the Base lock page and the app nav do not link to the Solana page
   assert.ok(!read('pages/VinculumFlow.jsx').includes('/solana-lock'));
+  // Base only (t430u item 2): no link to the XRPL page either, and the defaults are Base
+  assert.ok(!read('pages/VinculumFlow.jsx').includes('/xrpl-lock'));
+  assert.ok(baseVerifier.includes("useState('Base')"));
+  assert.ok(envOptions.includes("'Base'"));
+  const xrpl = read('pages/XrplLock.jsx');
+  assert.ok(xrpl.includes('XRPL_NOT_DEPLOYED_MESSAGE') && xrpl.includes('if (!XRPL_LOCKS_ENABLED) return;'));
 });
