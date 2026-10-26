@@ -7,7 +7,7 @@
 // Run: testing-rigs/reconciliation/live.sh
 //
 // Base-only launch (t357u): reconcile.cjs now expects exactly one reader
-// (Base) and the 131-row Base subset (Revision D, t430u). The 2026-10-22 set in live_set.cjs has
+// (Base) and the 129-row Base subset (Revision D, t430u). The 2026-10-22 set in live_set.cjs has
 // fifteen readers and the full registry, so it is expected to MISMATCH;
 // it is kept as a record. Point live_set.cjs at the new Base-only set after
 // the founder's ceremony. Not run by the Base-only gate.
