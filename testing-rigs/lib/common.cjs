@@ -19,10 +19,9 @@ const ETH_PRICE = BigInt(DATA.priceUsd18);
 const short = (a) => (a ? String(a).slice(0, 6) + "..." + String(a).slice(-4) : String(a));
 const fmt = (x, d = 18) => ethers.formatUnits(x, d);
 
-// Base-only launch: ceremony-data holds only the 27 Base rows. Rigs that
+// Base-only launch: ceremony-data holds only the 131 Base rows. Rigs that
 // probe non-Base rows (to show they are refused) look them up in the full
-// ceremony source, registry Revision C (t367u). Its non-Base rows are
-// identical to Revision B.
+// ceremony source, registry Revision D (t430u).
 let FULL_REVB = null;
 const entry = (env, sym) => {
   let e = DATA.entries.find((x) => x.environmentId === env && x.symbol === sym);
