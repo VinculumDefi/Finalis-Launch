@@ -255,7 +255,7 @@
    "area": "references",
    "name": "Verifier.protocolLaunchTimestamp set",
    "status": "PASS",
-   "detail": "launch 2026-10-24T22:03:52.000Z"
+   "detail": "launch 2026-10-26T11:53:45.000Z"
   },
   {
    "area": "references",
@@ -967,7 +967,7 @@
   },
   {
    "area": "registry",
-   "name": "460 non-Base Revision B rows are not registered",
+   "name": "460 non-Base registry rows are not registered",
    "status": "PASS",
    "detail": ""
   },
@@ -1041,7 +1041,7 @@
    "area": "ceremony txs",
    "name": "operator transaction list is complete (contiguous nonces from first create to finalize)",
    "status": "PASS",
-   "detail": "17 txs, local fork blocks 53045032..53045051"
+   "detail": "17 txs, local fork blocks 53113128..53113147"
   },
   {
    "area": "closed",
