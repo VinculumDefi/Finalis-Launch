@@ -86,7 +86,7 @@
  {
   "step": 5,
   "gasLimit": "16777216",
-  "gasUsed": "2064449",
+  "gasUsed": "2134703",
   "to": "0x5678...07D2",
   "created": null
  },
@@ -107,7 +107,7 @@
  {
   "step": 6,
   "gasLimit": "16777216",
-  "gasUsed": "931709",
+  "gasUsed": "962920",
   "to": "0x5678...07D2",
   "created": null
  },
