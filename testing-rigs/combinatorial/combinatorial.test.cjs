@@ -9,6 +9,12 @@
 // the lock itself cannot refuse it. The Verifier refuses it fail-closed (VF-ORC-005,
 // no mint). The oracle accepts "refused at the lock" or "refused after the lock"
 // for that class and fails on any mint.
+// t430u item 4 (2026-10-26): the $0.95 rule applies to the exact USDC/USDT
+// identities (Verifier isUsdStableIdentity: environment + contract), never to a
+// ticker. The USDC and USDT classes run on fixture code placed at the real
+// USDC/USDT contract of each chain (hardhat_setCode on the local chain). The
+// USDC_X class carries a stablecoin-like ticker on another address: it is not
+// a stablecoin identity, so the $0.95 rule does not apply to it.
 // Grid (exhaustive): chain context {Base, Ethereum} x asset class {native, standard
 // ERC-20, stablecoin at $0.95, stablecoin above (1.00 at lock, 0.94 later),
 // stablecoin below (0.94 at lock, 1.00 later), low-decimals ERC-20, protocol token}
@@ -47,13 +53,18 @@ const BAD_DURS = [0, 3599, 3601, 604801];
 const ASSETS = [
   { cls: "native", sym: "ETH", dec: 18, p1: usd("2000"), p2: usd("4000") },
   { cls: "erc20", sym: "TKN", dec: 18, p1: usd("2"), p2: usd("1") },
-  { cls: "stable_at_0.95", sym: "USDC", dec: 18, p1: usd("0.95"), p2: usd("0.95") },
-  { cls: "stable_above_then_below", sym: "USDT", dec: 18, p1: usd("1"), p2: usd("0.94") },
-  { cls: "stable_below_then_above", sym: "USDC_X", dec: 18, p1: usd("0.94"), p2: usd("1") },
+  { cls: "stable_at_0.95", sym: "USDC", dec: 18, p1: usd("0.95"), p2: usd("0.95"), identity: "USDC" },
+  { cls: "stable_above_then_below", sym: "USDT", dec: 18, p1: usd("1"), p2: usd("0.94"), identity: "USDT" },
+  { cls: "stable_below_then_above", sym: "USDC_X", dec: 18, p1: usd("0.94"), p2: usd("1") }, // ticker only: not an identity
   { cls: "erc20_lowdec", sym: "LDX", dec: 2, p1: usd("1"), p2: usd("1") },
   { cls: "protocol", sym: "VCLM", dec: 18, p1: 0n, p2: 0n },
 ];
-const isStableSym = (s) => /^(USDC|USDT)(_.+)?$|^USDTE$/.test(s);
+// The exact USDC/USDT contracts (Verifier isUsdStableIdentity) used for the identity classes.
+const STABLE_IDENTITY = {
+  Base: { USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", USDT: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2" },
+  Ethereum: { USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
+};
+const isStableIdentity = (a) => !!a.identity;
 
 function append(o) { fs.appendFileSync(CELLS, JSON.stringify(o) + "\n"); }
 function why(e) {
@@ -111,6 +122,14 @@ describe("COMBINATORIAL rig (active, fails on any deviation)", function () {
         else if (a.cls === "protocol") {
           token = env === "Base" ? vclm : await P.deploy("Vinculum Finalis VCLM", "VCLM");
           id = ethers.id(env + ":protocol");
+        } else if (a.identity) {
+          // fixture code at the exact stablecoin contract (constructor storage: withholdBps 0)
+          const tmp = await F.deploy(0);
+          const at = STABLE_IDENTITY[env][a.identity];
+          await network.provider.send("hardhat_setCode", [at, await ethers.provider.getCode(await tmp.getAddress())]);
+          token = F.attach(at);
+          if (!(await verifier.isUsdStableIdentity(env, at))) throw new Error("not a stablecoin identity: " + env + " " + a.identity);
+          id = ethers.id(env + ":" + a.sym);
         } else { token = await F.deploy(0); id = ethers.id(env + ":" + a.sym); }
         if (a.cls !== "protocol") {
           await verifier.registerAssetPrecision(env, id, a.sym, a.dec, 2, 0);
@@ -174,7 +193,7 @@ describe("COMBINATORIAL rig (active, fails on any deviation)", function () {
     else if (A.cls === "protocol") expect = "refuse_lock:VF-TOK-007";
     else if (!inBand) expect = "refuse_lock:band";
     else if (feeSpec === 0n) expect = "refuse_lock:zero_fee";
-    else if (isStableSym(A.sym) && A.p1 < usd("0.95")) expect = "refuse:stable_below_0.95_at_lock";
+    else if (isStableIdentity(A) && A.p1 < usd("0.95")) expect = "refuse:stable_below_0.95_at_lock";
     else expect = "mint";
     o.expect = expect;
     await priceRun(1);
