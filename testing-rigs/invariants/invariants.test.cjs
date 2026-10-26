@@ -1,6 +1,6 @@
 // Rig 4: invariants as property tests. Random call sequences (seeded PRNG,
 // RIG_SEED, default 20261023) run on the full stack deployed by the real
-// runBaseCeremony flow (ceremony.json + 591-row Revision D ceremony-data.json) in the
+// runBaseCeremony flow (ceremony.json + 589-row Revision D ceremony-data.json) in the
 // in-process Hardhat chain. Nothing is broadcast. No key is used.
 //
 // Invariants:
