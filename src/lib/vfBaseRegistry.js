@@ -83,12 +83,16 @@ export const ASSET_PRECISION_TABLE = {
   'Avalanche/native-AVAX':{ symbol: 'AVAX', decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'avalanche-2', contract: null },
   'Polygon/native-POL':   { symbol: 'POL',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'matic-network', contract: null },
   'Arbitrum/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
-  'Base/native-ETH':      { symbol: 'ETH',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
+  // Base ETH (registry row 2 under Base) is S2: Rev 18 VF-REG-003, t427u.
+  'Base/native-ETH':      { symbol: 'ETH',  decimals: 18, custodyClass: 'S2', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
   'Optimism/native-ETH':  { symbol: 'ETH',  decimals: 18, custodyClass: 'S3', custodyPath: 'native', pricing_identifier: 'ethereum',  contract: null },
 
   // --- EVM canonical tokens (S1 class — USDC/USDT) ---
   'Ethereum/USDC':        { symbol: 'USDC', decimals: 6,  custodyClass: 'S1', custodyPath: 'token', pricing_identifier: 'usd-coin',  contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' },
   'Ethereum/USDT':        { symbol: 'USDT', decimals: 6,  custodyClass: 'S1', custodyPath: 'token', pricing_identifier: 'tether',    contract: '0xdAC17F958D2ee523a2206206994597C13D831ec7' },
+  // Base USDC issued by Circle (Revision C row 454, USDC_BASE) is S1: Rev 18 VF-REG-002, t427u.
+  // No Tether-issued Base USDT exists in the registry; bridged Base USDT stays S3 (VF-REG-005).
+  'Base/USDC_BASE':       { symbol: 'USDC_BASE', decimals: 6,  custodyClass: 'S1', custodyPath: 'token', pricing_identifier: 'usd-coin',  contract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' },
 
   // --- EVM canonical tokens (S2 class — AAVE/LINK/UNI) ---
   'Ethereum/AAVE':        { symbol: 'AAVE', decimals: 18, custodyClass: 'S2', custodyPath: 'token', pricing_identifier: 'aave',     contract: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' },
