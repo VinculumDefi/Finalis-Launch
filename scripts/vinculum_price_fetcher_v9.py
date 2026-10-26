@@ -18,8 +18,12 @@ No symbol search (removed by D-64) and no community-token override
 (VF-ORC-006: no override applies, and a displayed registry contract is never
 replaced with a different lookup contract). The former v9 overrides for
 TigerOG, LionOG, FrogOG (BSC legacy contracts) and WKC are removed under
-t427u. TigerOG is on the Base registry by founder override (t430u, t431u),
-which supplies no price; it is priced by this cascade like any other row.
+t427u. TigerOG is on the Base registry by founder override (t430u, t431u).
+The override never supplies a price. Under operator decision t436u its Tier 2
+lookup takes a DexScreener pool for its exact registry contract on any chain
+(TigerOG is an Axelar ITS token, so the same address exists on other chains),
+the pool with the most liquidity, and no market-activity, trading-recency or
+pool-age test applies to it. Every other row uses its own chain's pools only.
 No hardcoded prices anywhere.
 
 Usage:
@@ -153,10 +157,20 @@ def token_usd_from_pair(pair, contract):
         return usd if usd > 0 and usd != float("inf") else None
     return None
 
-def best_ds_price(pairs, ds_chain, contract):
+# Founder override rows (operator t430u item 5, narrowed to TigerOG by t431u).
+# Exact identity: registry environment and exact contract, never a ticker.
+FOUNDER_OVERRIDE = (("Base", "0xCF7Fc0De71238c9EC45EC2Fd24FDc8521345dbB5"),)
+
+def is_founder_override(chain, contract):
+    return any(chain == c and _same(contract, a) for c, a in FOUNDER_OVERRIDE)
+
+def best_ds_price(pairs, ds_chain, contract, any_chain=False):
+    """Price from the usable pair with the most liquidity. Only pairs on
+    ds_chain count, unless any_chain is set (founder override rows only).
+    No volume, trade-count, recency or pool-age test is applied."""
     best = None
     for p in pairs or []:
-        if not p or p.get("chainId") != ds_chain:
+        if not p or (not any_chain and p.get("chainId") != ds_chain):
             continue
         usd = token_usd_from_pair(p, contract)
         if usd is None:
@@ -178,7 +192,14 @@ def ds_by_contract(chain, contract):
     # The older all-chain endpoint returns a capped list that can leave out the
     # token's own-chain pools, so it is only a fallback.
     scoped = fetch(f"https://api.dexscreener.com/token-pairs/v1/{ds_chain}/{contract}")
-    usd = best_ds_price(scoped, ds_chain, contract) if isinstance(scoped, list) else None
+    scoped = scoped if isinstance(scoped, list) else []
+    if is_founder_override(chain, contract):
+        # Operator t436u: any pool for this exact contract on any chain, the
+        # most liquid one, with no market-activity requirement.
+        data = fetch(f"https://api.dexscreener.com/latest/dex/tokens/{contract}")
+        every = scoped + ((data or {}).get("pairs") or [])
+        return best_ds_price(every, ds_chain, contract, any_chain=True)
+    usd = best_ds_price(scoped, ds_chain, contract)
     if usd is not None:
         return usd
     data = fetch(f"https://api.dexscreener.com/latest/dex/tokens/{contract}")
