@@ -55,9 +55,9 @@
   },
   {
    "area": "bytecode",
-   "name": "ceremony-data is Base-only: 129 rows, 128 token addresses, 0 aliases, one reader, one Dev Fund",
+   "name": "ceremony-data is Base-only: 130 rows, 129 token addresses, 0 aliases, one reader, one Dev Fund",
    "status": "PASS",
-   "detail": "129 rows, 128 tokens, 0 aliases, source 589"
+   "detail": "130 rows, 129 tokens, 0 aliases, source 590"
   },
   {
    "area": "creation",
@@ -255,7 +255,7 @@
    "area": "references",
    "name": "Verifier.protocolLaunchTimestamp set",
    "status": "PASS",
-   "detail": "launch 2026-10-26T17:12:21.000Z"
+   "detail": "launch 2026-10-26T18:53:33.000Z"
   },
   {
    "area": "references",
@@ -943,13 +943,13 @@
   },
   {
    "area": "registry",
-   "name": "129 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
+   "name": "130 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "registry",
-   "name": "128 token addresses index to their intended row",
+   "name": "129 token addresses index to their intended row",
    "status": "PASS",
    "detail": ""
   },
@@ -961,7 +961,7 @@
   },
   {
    "area": "registry",
-   "name": "129 Base rows resolve to the BaseLockRecordVerifier at 0xCDfE...56C9",
+   "name": "130 Base rows resolve to the BaseLockRecordVerifier at 0xCDfE...56C9",
    "status": "PASS",
    "detail": ""
   },
@@ -973,21 +973,21 @@
   },
   {
    "area": "registry",
-   "name": "128 Base token addresses have contract code on Base",
+   "name": "129 Base token addresses have contract code on Base",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "ceremony txs",
-   "name": "registry rows written = the 129 ceremony-data rows, no extras",
+   "name": "registry rows written = the 130 ceremony-data rows, no extras",
    "status": "PASS",
-   "detail": "129 written, 0 single writes"
+   "detail": "130 written, 0 single writes"
   },
   {
    "area": "ceremony txs",
-   "name": "token index writes = the 128 ceremony-data rows",
+   "name": "token index writes = the 129 ceremony-data rows",
    "status": "PASS",
-   "detail": "128 written"
+   "detail": "129 written"
   },
   {
    "area": "ceremony txs",
@@ -1041,7 +1041,7 @@
    "area": "ceremony txs",
    "name": "operator transaction list is complete (contiguous nonces from first create to finalize)",
    "status": "PASS",
-   "detail": "21 txs, local fork blocks 53122671..53122694"
+   "detail": "21 txs, local fork blocks 53125663..53125686"
   },
   {
    "area": "closed",
