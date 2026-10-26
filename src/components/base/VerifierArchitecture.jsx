@@ -47,7 +47,8 @@ export default function VerifierArchitecture() {
         </div>
       </div>
       <div className="flex flex-wrap gap-2 text-[10px] font-mono pt-2 border-t border-[#18324b]/10">
-        <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{ENVIRONMENT_COUNT} environments</span>
+        <span className="px-2 py-0.5 bg-emerald-50 rounded text-emerald-700">Active: Base only</span>
+        <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{ENVIRONMENT_COUNT} environments in the code</span>
         <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{evmCount} EVM</span>
         <span className="px-2 py-0.5 bg-[#18324b]/5 rounded text-[#18324b]">{utxoCount} UTXO</span>
         <span className="px-2 py-0.5 bg-emerald-50 rounded text-emerald-700">Handshake: no allowance limit (Revision 12)</span>
