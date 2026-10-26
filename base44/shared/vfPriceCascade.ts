@@ -15,9 +15,10 @@
 //
 // No symbol search (removed by D-64) and no community-token override
 // (VF-ORC-006: no override applies, and a displayed registry contract is never
-// replaced with a different lookup contract). The four former overrides
-// (TigerOG, LionOG, FrogOG, WKC) are removed; TigerOG, LionOG and FrogOG left
-// the registry on 2026-10-19.
+// replaced with a different lookup contract). The four former price-source
+// overrides (TigerOG, LionOG, FrogOG, WKC) are removed. TigerOG is on the Base
+// registry by founder override (t430u, t431u), which supplies no price; it is
+// priced by this cascade like any other row.
 //
 // If no price is found, returns { usd: null } and never fabricates a value.
 // =============================================================================
@@ -81,20 +82,57 @@ async function coingeckoPrice(coingeckoId) {
 }
 
 // Tier 2: DexScreener by contract address
-async function dsByContract(environment, contract) {
+//
+// The price is always the price of the token being priced. A DexScreener pair
+// reports priceUsd for its base (first) token only. When the token is the base
+// token, priceUsd is its price. When it is the quote (second) token, its price
+// is priceUsd / priceNative (priceNative is the base token's price in quote
+// tokens). A pair that does not hold the token on either side, or that lacks
+// the fields needed, is skipped. Any pool may give the reference price; the
+// pair with the most liquidity among the usable ones is taken. (Operator
+// t431u: the pool choice does not matter; the other token's price must never
+// be assigned.)
+const sameAddr = (a, b) => typeof a === "string" && typeof b === "string" && a.toLowerCase() === b.toLowerCase();
+
+export function tokenUsdFromPair(pair, contract) {
+  if (!pair || !contract) return null;
+  const priceUsd = parseFloat(pair.priceUsd || "0");
+  if (!(priceUsd > 0)) return null;
+  if (sameAddr((pair.baseToken || {}).address, contract)) return { usd: priceUsd, side: "base" };
+  if (sameAddr((pair.quoteToken || {}).address, contract)) {
+    const priceNative = parseFloat(pair.priceNative || "0");
+    if (!(priceNative > 0)) return null;
+    const usd = priceUsd / priceNative;
+    return Number.isFinite(usd) && usd > 0 ? { usd, side: "quote" } : null;
+  }
+  return null;
+}
+
+export function bestDsPrice(pairs, dsChain, contract) {
+  let best = null;
+  for (const p of pairs || []) {
+    if (!p || p.chainId !== dsChain) continue;
+    const t = tokenUsdFromPair(p, contract);
+    if (!t) continue;
+    const liq = parseFloat((p.liquidity || {}).usd || "0") || 0;
+    if (!best || liq > best.liq) best = { ...t, liq, pair: p.pairAddress || null };
+  }
+  return best ? { usd: best.usd, source: "DexScreener", pairSide: best.side, pair: best.pair } : null;
+}
+
+export async function dsByContract(environment, contract) {
   const dsChain = DS_CHAIN[environment];
   if (!dsChain || !contract) return null;
   if (PLACEHOLDER_PREFIXES.some((p) => contract.toUpperCase().startsWith(p))) return null;
+  // Chain-scoped endpoint first: it lists the token's pools on its own chain.
+  // The older all-chain endpoint returns a capped list that can leave out the
+  // token's own-chain pools, so it is only a fallback.
+  const scoped = await fetchJson(`https://api.dexscreener.com/token-pairs/v1/${dsChain}/${contract}`);
+  const r = Array.isArray(scoped) ? bestDsPrice(scoped, dsChain, contract) : null;
+  if (r) return r;
   const data = await fetchJson(`https://api.dexscreener.com/latest/dex/tokens/${contract}`);
   if (!data || !data.pairs) return null;
-  const pairs = data.pairs.filter(
-    (p) => p.chainId === dsChain && parseFloat(p.priceUsd || "0") > 0
-  );
-  if (!pairs.length) return null;
-  const best = pairs.reduce((a, b) =>
-    parseFloat((b.liquidity || {}).usd || "0") > parseFloat((a.liquidity || {}).usd || "0") ? b : a
-  );
-  return { usd: parseFloat(best.priceUsd), source: "DexScreener" };
+  return bestDsPrice(data.pairs, dsChain, contract);
 }
 
 // Main cascade: runs the tiers in the order of Revision 18 Section 7 (D-64).
