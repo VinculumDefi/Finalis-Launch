@@ -3,8 +3,8 @@
 // the source (27 rows, 26 token addresses, 0 aliases), and base.html is the
 // only page, so its own Connect gate is tested here.
 // t367u: the ceremony source was registry Revision C (487 rows).
-// t430u (2026-10-26): the ceremony source is registry Revision D (589 rows,
-// 129 Base rows, 128 Base token addresses): the expanded Base registry with the
+// t430u (2026-10-26): the ceremony source is registry Revision D (590 rows,
+// 130 Base rows, 129 Base token addresses): the expanded Base registry with the
 // upgraded TEL contract and the founder override rows. Revisions B and C stay
 // unchanged and pinned as history.
 const { expect } = require("chai");
@@ -12,6 +12,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
+const { ethers } = require("ethers");
 
 const {
   EXPECTED_REGISTRY_SHA256,
@@ -25,7 +26,7 @@ const { resolveCeremonyRegistry, REGISTRY_FILE } = require("../scripts/deploy-pa
 const { HISTORICAL_FILE, loadRegistry, REGISTRY_FILE: REVB_FILE } = require("../scripts/registryFile.cjs");
 const REVB_SHA256 = "1bdcb8346ab95abe5225adcffb9c5c3c7bb40c6cd5f1a851d3ed05bb2d77e2a9";
 const REVC_SHA256 = "5c3311eb4f7b59c34e7ccc8a6bd9e817b4f0bb02bdeff65c5cfed98f79cca581";
-const REVD_SHA256 = "2b3799390d9c75b339a795ab39bcc6e39ced3ed7b2be491a4b36179468d5d2fa";
+const REVD_SHA256 = "d8bb58d80d593f4e0e967ee82c239327055adb07cef8809fe48f7b95372903d4";
 const REVC_FILE = path.join(__dirname, "..", "deployment", "assetRegistry.revC.json");
 const TEL_NEW = "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731";
 const TEL_OLD = "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1";
@@ -35,12 +36,12 @@ const PAGES = path.join(__dirname, "..", "scripts", "deploy-pages");
 const CEREMONY_DATA = path.join(PAGES, "ceremony-data.json");
 
 describe("ceremony registry guard (t284u / t285u)", function () {
-  it("resolved registry has 589 rows and row 2 is Base native ETH", function () {
+  it("resolved registry has 590 rows and row 2 is Base native ETH", function () {
     const r = resolveCeremonyRegistry();
     expect(r.path).to.equal(REGISTRY_FILE);
     expect(r.filename).to.equal("assetRegistry.revD.json");
     expect(r.sha256).to.equal(REVD_SHA256);
-    expect(r.rowCount).to.equal(589);
+    expect(r.rowCount).to.equal(590);
     expect(r.sha256).to.equal(EXPECTED_REGISTRY_SHA256);
     expect(r.baseEth.environmentId).to.equal("Base");
     expect(r.baseEth.symbol).to.equal("ETH");
@@ -48,16 +49,16 @@ describe("ceremony registry guard (t284u / t285u)", function () {
     expect(r.baseEth.row).to.equal(2);
   });
 
-  it("ceremony artifact: source 589 rows, Base subset 129/128/0, source equals resolver, hash equals constant", function () {
+  it("ceremony artifact: source 590 rows, Base subset 130/129/0, source equals resolver, hash equals constant", function () {
     const resolved = assertCanonicalRegistry();
     expect(fs.existsSync(CEREMONY_DATA)).to.equal(true);
     const data = JSON.parse(fs.readFileSync(CEREMONY_DATA, "utf8"));
     expect(data.registryRows).to.equal(EXPECTED_REGISTRY_ROWS);
-    expect(data.entries.length).to.equal(129);
+    expect(data.entries.length).to.equal(130);
     expect(data.entries.every((e) => e.environmentId === "Base")).to.equal(true);
     const key = (e) => e.row + ":" + e.canonicalAssetId;
     expect(data.entries.map(key)).to.deep.equal(resolved.entries.filter((e) => e.environmentId === "Base").map(key));
-    expect(data.tokenAddresses.length).to.equal(128);
+    expect(data.tokenAddresses.length).to.equal(129);
     expect(data.tokenAddresses.every((t) => t.environmentId === "Base")).to.equal(true);
     expect(data.assetRowAliases.length).to.equal(0);
     expect(data.registrySha256).to.equal(EXPECTED_REGISTRY_SHA256);
@@ -85,12 +86,12 @@ describe("ceremony registry guard (t284u / t285u)", function () {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "revd-mut-"));
     const copy = path.join(tmp, "assetRegistry.revD.json");
     const raw = fs.readFileSync(REGISTRY_FILE, "utf8");
-    // Flip one character inside a stable string field; keep valid JSON and 589 rows.
+    // Flip one character inside a stable string field; keep valid JSON and 590 rows.
     const mutated = raw.replace('"revision": "D"', '"revision": "X"');
     expect(mutated).to.not.equal(raw);
     fs.writeFileSync(copy, mutated);
     const mutJson = JSON.parse(mutated);
-    expect(mutJson.entries.length).to.equal(589);
+    expect(mutJson.entries.length).to.equal(590);
     expect(() => assertRegistryGuard(copy)).to.throw(/REFUSED/);
     try {
       assertRegistryGuard(copy);
@@ -128,7 +129,7 @@ describe("ceremony registry guard (t284u / t285u)", function () {
     expect(man.artifacts.find((a) => a.filename === "assetRegistry.revD.json").sha256).to.equal(EXPECTED_REGISTRY_SHA256);
     const D = JSON.parse(fs.readFileSync(REGISTRY_FILE, "utf8"));
     const base = D.entries.filter((e) => e.environmentId === "Base");
-    expect(base.length).to.equal(129);
+    expect(base.length).to.equal(130);
     // Base USDC (Circle) row 454 stays S1 (the Revision C change is kept).
     expect(base.find((e) => e.row === 454).custodyClass).to.equal(1);
     // TEL: the upgraded contract only (t430u item 3).
@@ -143,6 +144,12 @@ describe("ceremony registry guard (t284u / t285u)", function () {
       expect(base.some((e) => e.row === row)).to.equal(false);
       expect(base.some((e) => String(e.identifier).toLowerCase() === addr.toLowerCase())).to.equal(false);
     }
+    // doginme is added as a new S3 row (operator t438u): row 1103, exact Base contract, CoinGecko id doginme.
+    const dog = base.filter((e) => String(e.identifier).toLowerCase() === "0x6921b130d297cc43754afba22e5eac0fbf8db75b");
+    expect(dog.map((e) => [e.row, e.symbol, e.decimals, e.custodyClass, e.pricingIdentifier, e.kind])).to.deep.equal([[1103, "doginme", 18, 3, "doginme", "token"]]);
+    expect(dog[0].onchain.status).to.equal("verified");
+    expect(dog[0].canonicalAssetId).to.equal(ethers.solidityPackedKeccak256(["string", "string"], ["Base", "doginme"]));
+    expect(Math.max(...base.map((e) => e.row))).to.equal(1103);
   });
 
   it("ceremony data registers Base USDC (row 454) as S1", function () {
@@ -161,7 +168,7 @@ describe("ceremony registry guard (t284u / t285u)", function () {
 
   it("manifest verification passes on the committed Revision D package", function () {
     const { manifest, resolved } = verifyCeremonyManifest();
-    expect(manifest.expectedRegistryRows).to.equal(589);
+    expect(manifest.expectedRegistryRows).to.equal(590);
     expect(resolved.sha256).to.equal(EXPECTED_REGISTRY_SHA256);
     expect(EXPECTED_MANIFEST_SHA256).to.match(/^[0-9a-f]{64}$/);
   });
@@ -278,8 +285,8 @@ describe("ceremony registry guard (t284u / t285u)", function () {
   it("page gate: base.html refuses a wrong source count, a wrong Base count or a non-Base row", function () {
     const gate = baseGate();
     const data = JSON.parse(fs.readFileSync(CEREMONY_DATA, "utf8"));
-    expect(gate({ ...data, registryRows: 962 })).to.equal("expected 589 source rows, found 962");
-    expect(gate({ ...data, entries: data.entries.slice(1) })).to.equal("expected 129 Base rows, found 128");
+    expect(gate({ ...data, registryRows: 962 })).to.equal("expected 590 source rows, found 962");
+    expect(gate({ ...data, entries: data.entries.slice(1) })).to.equal("expected 130 Base rows, found 129");
     const bad = data.entries.map((e, i) => (i === 3 ? { ...e, environmentId: "Ethereum" } : e));
     expect(gate({ ...data, entries: bad })).to.match(/non-Base row/);
     const html = fs.readFileSync(path.join(PAGES, "base.html"), "utf8");
