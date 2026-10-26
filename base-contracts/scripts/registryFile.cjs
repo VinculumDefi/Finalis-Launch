@@ -14,9 +14,9 @@
 // Revision C is kept unchanged as the prior ceremony source.
 //
 // Base-only launch candidate (operator t430u, 2026-10-26): the ceremony reads
-// Revision D (deployment/assetRegistry.revD.json, 591 entries). Revision D is
+// Revision D (deployment/assetRegistry.revD.json, 589 entries). Revision D is
 // Revision C with its Base rows replaced by the expanded Base registry
-// (131 Base rows: 130 tokens plus Base ETH), built by scripts/buildRevisionD.cjs.
+// (129 Base rows: 128 tokens plus Base ETH), built by scripts/buildRevisionD.cjs.
 // Non-Base rows are carried unchanged as history; the ceremony registers only
 // the Base rows. CEREMONY_REGISTRY_FILE below is the ceremony source;
 // resolveCeremonyRegistry() and build_ceremony_artifacts.cjs use it. Revision B
@@ -50,7 +50,7 @@ function loadRegistry(file = REGISTRY_FILE) {
   if (base === HISTORICAL_BASENAME || resolved === path.resolve(HISTORICAL_FILE)) {
     throw new Error(
       "REGISTRY GUARD REFUSAL: refusing historical " + HISTORICAL_BASENAME +
-      " as the ceremony registry. Expected " + CEREMONY_REGISTRY_BASENAME + " (Revision D, 591 rows)."
+      " as the ceremony registry. Expected " + CEREMONY_REGISTRY_BASENAME + " (Revision D, 589 rows)."
     );
   }
   if (file === REGISTRY_FILE || resolved === path.resolve(REGISTRY_FILE)) {
