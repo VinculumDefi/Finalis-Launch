@@ -18,18 +18,20 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // (deployment/assetRegistry.revD.json), Revision C with its Base rows replaced
 // by the expanded Base registry (scripts/buildRevisionD.cjs). Revision C stays
 // pinned and unchanged in the manifest as the prior ceremony source.
-const EXPECTED_REGISTRY_SHA256 = "1f00f1f4bd4a2d0d31f3cf7c978c18bd2f5040d5a497d75797dace417859482e";
+// Operator t431u (2026-10-26): LionOG and FrogOG are removed from Revision D
+// (TigerOG stays by founder override); Revision D was rebuilt and re-pinned.
+const EXPECTED_REGISTRY_SHA256 = "2b3799390d9c75b339a795ab39bcc6e39ced3ed7b2be491a4b36179468d5d2fa";
 const EXPECTED_REGISTRY_FILENAME = "assetRegistry.revD.json";
-const EXPECTED_REGISTRY_ROWS = 591;
+const EXPECTED_REGISTRY_ROWS = 589;
 // Pinned row counts of every registry file the manifest lists.
-const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 591 };
-const EXPECTED_MANIFEST_SHA256 = "deb51078a7281f98008a0e2d9a795a18dde79ce02ce31c45aa81d17ca7abd604";
+const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 589 };
+const EXPECTED_MANIFEST_SHA256 = "c71979e7429b4503b82d9acfd305a31841888ed9b8d7c8a0d9853c56a73144c4";
 // Base-only launch: the ceremony registers only the Base rows of Revision D.
-// Revision D itself is not changed (591 rows, pinned above); the Base subset
+// Revision D itself is not changed (589 rows, pinned above); the Base subset
 // is derived here at build time and must have exactly these counts.
 const BASE_ONLY_RULE = "Revision D entries with environmentId === \"Base\" (row 2 Base ETH included); token addresses with environmentId === \"Base\"; no aliases";
-const EXPECTED_BASE_ROWS = 131;
-const EXPECTED_BASE_TOKEN_ADDRESSES = 130;
+const EXPECTED_BASE_ROWS = 129;
+const EXPECTED_BASE_TOKEN_ADDRESSES = 128;
 const EXPECTED_BASE_ALIASES = 0;
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
