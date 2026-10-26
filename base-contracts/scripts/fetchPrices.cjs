@@ -3,8 +3,8 @@
 //
 // Input : the ceremony registry, Revision D (deployment/assetRegistry.revD.json,
 //         via scripts/registryFile.cjs CEREMONY_REGISTRY_FILE). By default only
-//         its Base rows, the rows the Base-only ceremony registers: 128 Base
-//         tokens plus Base ETH (row 2) = 129.
+//         its Base rows, the rows the Base-only ceremony registers: 129 Base
+//         tokens plus Base ETH (row 2) = 130.
 // Output: [{ environmentId, canonicalAssetId, usd | null, source, reason, row, symbol }]
 //         usd is the fetched decimal string; null = confirmed fail with reason.
 //         Feeds scripts/priceRun.cjs unchanged (it reads environmentId,
@@ -23,7 +23,14 @@
 //     the token and give it a USD price, the pair with the most liquidity
 //     gives the price (token as base: priceUsd; token as quote:
 //     priceUsd / priceNative).
-//  3. Nothing else. No symbol search, no other-chain pair, no substitute or
+//     Founder override row (TigerOG only, operator t436u): DexScreener pairs
+//     for its exact registry contract on ANY chain count (token-pairs on its
+//     own chain plus the all-chain token endpoint), the most liquid usable
+//     pair gives the price, always the token's own side. TigerOG is an Axelar
+//     ITS token, so the same address exists on other chains. No volume,
+//     trade-recency or pool-age test applies (none applies to any row).
+//  3. Nothing else. No symbol search, no other-chain pair (except the founder
+//     override row in step 2), no substitute or
 //     hardcoded price (VF-ORC-004). No price -> confirmed fail "no_price";
 //     the row has no usable valuation for that run (VF-ORC-005).
 // The first valid price is used; later sources are not consulted for that row
@@ -31,12 +38,14 @@
 // an API stayed down fails "fetch_error".
 //
 // Founder override row (TigerOG only after t431u; scripts/founderOverride.cjs,
-// t430u item 5) goes through the same cascade. No price is invented for it.
+// t430u item 5) goes through the same cascade, with the any-chain pool rule
+// of step 2 (t436u). No price is invented for it.
 //
 // CLI: node scripts/fetchPrices.cjs --out <file.json>
 const fs = require("fs");
 const https = require("https");
 const { loadRegistry, CEREMONY_REGISTRY_FILE } = require("./registryFile.cjs");
+const { isFounderOverride } = require("./founderOverride.cjs");
 
 const CG_BATCH = 200;
 const PAUSE = { cg: 6000, ds: 250, retry: 2000 }; // retry: base back-off between tries
@@ -56,7 +65,7 @@ const EVM_ADDR = /^0x[0-9a-fA-F]{40}$/;
 const B58_ADDR = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 // Rows to price. Base-only launch: by default only the Base rows of the
-// ceremony registry (Revision D, 129 rows). { baseOnly: false } gives every
+// ceremony registry (Revision D, 130 rows). { baseOnly: false } gives every
 // Revision D row (Base rows plus the historical rows of other chains).
 function registryRows(regFile = CEREMONY_REGISTRY_FILE, { baseOnly = true } = {}) {
   return loadRegistry(regFile).all.filter((r) => !baseOnly || r.environmentId === "Base");
@@ -107,18 +116,23 @@ const same = (chain, a, b) => (chain === "Solana" ? a === b : String(a).toLowerC
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
 // DexScreener token-pairs -> the token's own-chain pairs that give it a USD
-// price, most liquidity first. No liquidity minimum.
-function dsPairs(chain, address, pairs) {
+// price, most liquidity first. No liquidity, volume, trade or pool-age test.
+// anyChain (founder override row only, t436u): pairs on every chain count.
+function dsPairs(chain, address, pairs, { anyChain = false } = {}) {
   const out = [];
+  const seen = new Set();
   for (const p of Array.isArray(pairs) ? pairs : []) {
-    if (p.chainId && p.chainId !== CHAINS[chain].ds) continue; // own chain only
+    if (!anyChain && p.chainId && p.chainId !== CHAINS[chain].ds) continue; // own chain only
+    const key = String(p.chainId || "") + "|" + String(p.pairAddress || "").toLowerCase();
+    if (p.pairAddress && seen.has(key)) continue;
+    seen.add(key);
     const base = same(chain, p.baseToken && p.baseToken.address, address), quote = same(chain, p.quoteToken && p.quoteToken.address, address);
     if (!base && !quote) continue;
     let price = null;
     if (base && num(p.priceUsd) > 0) price = decimalString(p.priceUsd);
     else if (quote && num(p.priceUsd) > 0 && num(p.priceNative) > 0) price = decimalString(String(num(p.priceUsd) / num(p.priceNative)));
     if (!price) continue;
-    out.push({ source: "DexScreener", address: String(p.pairAddress || "").toLowerCase(), liquidityUsd: num((p.liquidity || {}).usd), side: base ? "base" : "quote", price });
+    out.push({ source: "DexScreener", address: String(p.pairAddress || "").toLowerCase(), chain: p.chainId || null, liquidityUsd: num((p.liquidity || {}).usd), side: base ? "base" : "quote", price });
   }
   return out.sort((x, y) => y.liquidityUsd - x.liquidityUsd);
 }
@@ -152,16 +166,24 @@ async function fetchPrices({ rows = registryRows(), get = httpGet, pause = PAUSE
     const a = rowAddress(r);
     if (!a) { out.push({ ...base, usd: null, source: null, reason: c.err ? "fetch_error" : "no_price", detail: c.why + "; no own-chain contract", kind: "token" }); continue; }
     let pairs = null, dsErr = null;
+    const fo = isFounderOverride(r.environmentId, a.address);
     try {
-      pairs = dsPairs(a.chain, a.address, await getJson(get, `https://api.dexscreener.com/token-pairs/v1/${CHAINS[a.chain].ds}/${a.address}`, { wait: pause.ds, retry: pause.retry ?? 2000 }));
+      const own = await getJson(get, `https://api.dexscreener.com/token-pairs/v1/${CHAINS[a.chain].ds}/${a.address}`, { wait: pause.ds, retry: pause.retry ?? 2000 });
+      let raw = Array.isArray(own) ? own : [];
+      if (fo) {
+        await sleep(pause.ds);
+        const all = await getJson(get, `https://api.dexscreener.com/latest/dex/tokens/${a.address}`, { wait: pause.ds, retry: pause.retry ?? 2000 });
+        raw = raw.concat((all && Array.isArray(all.pairs)) ? all.pairs : []);
+      }
+      pairs = dsPairs(a.chain, a.address, raw, { anyChain: fo });
     } catch (e) { dsErr = "dexscreener: fetch error " + e.message; }
     await sleep(pause.ds);
     if (pairs && pairs.length) {
       const p = pairs[0];
-      out.push({ ...base, usd: p.price, source: "DexScreener", reason: null, pair: p.address, pairSide: p.side, liquidityUsd: Math.round(p.liquidityUsd), pairsSeen: pairs.length, detail: c.why, kind: "token" });
+      out.push({ ...base, usd: p.price, source: "DexScreener", reason: null, pair: p.address, pairChain: p.chain, pairSide: p.side, liquidityUsd: Math.round(p.liquidityUsd), pairsSeen: pairs.length, detail: c.why, kind: "token" });
       continue;
     }
-    const why = [c.why, dsErr || "dexscreener: no own-chain pair with a USD price"].join("; ");
+    const why = [c.why, dsErr || (fo ? "dexscreener: no pair on any chain with a USD price" : "dexscreener: no own-chain pair with a USD price")].join("; ");
     out.push({ ...base, usd: null, source: null, reason: c.err || dsErr ? "fetch_error" : "no_price", detail: why, kind: "token" });
   }
   log(`priced ${out.filter((x) => x.usd != null).length} of ${out.length} rows`);
