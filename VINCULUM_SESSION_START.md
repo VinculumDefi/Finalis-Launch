@@ -1,8 +1,8 @@
 # Vinculum session start
 
-Revision 7, current as of Sunday 2026-10-25 (ET). Read this first in every
+Revision 8, current as of Sunday 2026-10-25 (ET). Read this first in every
 new session. It says what is live, what governs, and the rules. It replaces
-Revision 6 of 2026-10-24 (see History at the end).
+Revision 7 of 2026-10-25 (see History at the end).
 
 The operator is not a programmer. One step at a time. Plain English. Do not
 build, commit, change, deploy or send anything until the operator asks.
@@ -12,7 +12,7 @@ https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
 Revision 18 of the Master Specification was added to main at e96d102.
 Registry Revision C was added to main at 90ac322. This session start
-is Revision 7. Check `git log -1 origin/main` for the newest commit.
+is Revision 8. Check `git log -1 origin/main` for the newest commit.
 
 Start with these files:
 1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision,
@@ -54,7 +54,18 @@ If a file is missing, list the folder. Do not invent the file.
   table.
 
 ## Launch scope
+- This launch is seven chains at once, in one ceremony: Ethereum, Base,
+  Arbitrum, BNB Smart Chain, Polygon, Avalanche C-Chain and Optimism.
+- One ITS token set: one VCLM, one CHONX and one SYNTH. Each has a copy on all
+  seven chains, linked through Axelar ITS. Moving a token between chains burns
+  it on one side and mints it on the other, so the worldwide supply never
+  changes.
+- One worldwide supply for each token.
+- The global ledger on Base authorizes every mint.
+- No per-chain allocations.
+- The launch is final. After finalize there are no controls.
 - Readers are required. They must not be disabled.
+- Nothing is signed or deployed.
 
 ## Governing rules
 - The Handshake is one hour. Its fee is 5%, the same uniform 5% on every
@@ -133,7 +144,8 @@ will not be reused in the new seven-chain token system.
 ## History
 | Revision | Date | Change | Archived copy |
 |---|---|---|---|
-| 7 | 2026-10-25 | Base-only launch scope line and future-work line removed. Live deployment section removed. Echo rule, Gap-escalation rule and Settled architecture decisions (2026-10-25) added. Revision 3 history wording updated. | This file (current) |
+| 8 | 2026-10-25 | Launch scope rewritten for the seven-chain simultaneous launch (operator t418u). | This file (current) |
+| 7 | 2026-10-25 | Base-only launch scope line and future-work line removed. Live deployment section removed. Echo rule, Gap-escalation rule and Settled architecture decisions (2026-10-25) added. Revision 3 history wording updated. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_7_2026-10-25.md` |
 | 6 | 2026-10-24 | Revision 18 governs, named by number and SHA-256. Registry Revision C identifier and pin added. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_6_2026-10-24.md` |
 | 5 | 2026-10-24 | Revision 17 governs, named by number and SHA-256. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_5_2026-10-24.md` |
 | 4 | 2026-10-24 | Revision 16 governs, named by number and SHA-256. Revision control rule. Launch scope: Base only. Finality status lines and old precedence lines removed. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_4_2026-10-24.md` |

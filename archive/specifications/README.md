@@ -29,8 +29,8 @@ Nothing here governs. Nothing here is deleted.
   Neither was adopted.
 - `document-register/`: earlier editions of `DOCUMENT_REGISTER.md`.
 - `session-start/`: earlier editions of `VINCULUM_SESSION_START.md`
-  (Revision 1 of 2026-10-12, Revision 2 of 2026-10-20, and Revisions 3, 4,
-  5 and 6 of 2026-10-24).
+  (Revision 1 of 2026-10-12, Revision 2 of 2026-10-20, Revisions 3, 4, 5
+  and 6 of 2026-10-24, and Revision 7 of 2026-10-25).
 
 ## Rules
 - One live copy per document, listed in `DOCUMENT_REGISTER.md`.
