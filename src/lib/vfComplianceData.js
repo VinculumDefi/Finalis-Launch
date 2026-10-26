@@ -140,7 +140,7 @@ export const REQUIREMENTS = [
   { id: 'VF-COM-026', category: 'Commitment Vault', title: 'Out-of-range 1h cannot become recognized lock', status: STATUS.PARTIAL, trace: 'checkUsdBounds() (Rev 12 band $0.01 to $0.02); deployable verifier pending' },
 
   // VF-REG (11)
-  { id: 'VF-REG-001', category: 'Registry', title: 'Exactly the Base registry entries (Base-only candidate: the 131 Base rows of Revision D)', status: STATUS.IMPLEMENTED, trace: 'base-contracts/scripts/build_ceremony_artifacts.cjs EXPECTED_BASE_ROWS=131 from deployment/assetRegistry.revD.json; the app allowlist is built from the Revision D Base rows only (src/data/activeAssetAllowlist.json)' },
+  { id: 'VF-REG-001', category: 'Registry', title: 'Exactly the Base registry entries (Base-only candidate: the 129 Base rows of Revision D)', status: STATUS.IMPLEMENTED, trace: 'base-contracts/scripts/build_ceremony_artifacts.cjs EXPECTED_BASE_ROWS=129 from deployment/assetRegistry.revD.json; the app allowlist is built from the Revision D Base rows only (src/data/activeAssetAllowlist.json)' },
   { id: 'VF-REG-002', category: 'Registry', title: 'S1 = Ethereum USDC, Ethereum USDT, Base USDC, Base USDT, PYUSD (by registry identity)', status: STATUS.IMPLEMENTED, trace: 'Revision D row 454 Base USDC (Circle) is class 1; ASSET_PRECISION_TABLE Base/USDC_BASE custodyClass=S1. No Tether-issued Base USDT is in the registry; bridged Base USDT stays S3' },
   { id: 'VF-REG-003', category: 'Registry', title: 'S2 = native ETH (incl. Base ETH row 2), native BTC, Ethereum AAVE/LINK/UNI', status: STATUS.IMPLEMENTED, trace: 'ASSET_PRECISION_TABLE Base/native-ETH custodyClass=S2; Revision D row 2 under Base is class 2' },
   { id: 'VF-REG-004', category: 'Registry', title: 'Remaining Base registry entries = S3', status: STATUS.IMPLEMENTED, trace: 'All other Revision D Base rows custodyClass=3' },
@@ -150,7 +150,7 @@ export const REQUIREMENTS = [
   { id: 'VF-REG-008', category: 'Registry', title: 'Protocol tokens excluded from registry', status: STATUS.IMPLEMENTED, trace: 'No VCLM/CHONX/SYNTH in ASSET_PRECISION_TABLE' },
   { id: 'VF-REG-009', category: 'Registry', title: 'WETH is pricing metadata, native ETH = S2', status: STATUS.IMPLEMENTED, trace: 'Ethereum/native-ETH = S2; no WETH entry' },
   { id: 'VF-REG-010', category: 'Registry', title: 'No post-finalization change', status: STATUS.IMPLEMENTED, trace: 'Asset table (precision + pricing_identifier + contract) immutable const; onlyAuthority pre-finalization' },
-  { id: 'VF-REG-011', category: 'Registry', title: 'Machine-readable registry conforms to the Base registry records', status: STATUS.IMPLEMENTED, trace: 'build_ceremony_artifacts.cjs checks the 131 Revision D Base rows (source sha256 1f00f1f4...)' },
+  { id: 'VF-REG-011', category: 'Registry', title: 'Machine-readable registry conforms to the Base registry records', status: STATUS.IMPLEMENTED, trace: 'build_ceremony_artifacts.cjs checks the 129 Revision D Base rows (source sha256 1f00f1f4...)' },
 
   // VF-ORC (14)
   { id: 'VF-ORC-001', category: 'Oracle/Price', title: 'Twice-daily price run', status: STATUS.IMPLEMENTED, trace: 'fetchAssetPrice backend function (on-demand); cascade integrated into TokenLayer pipeline; pricing_identifier sourced from registry (vfBaseRegistry.js ASSET_PRECISION_TABLE)' },
