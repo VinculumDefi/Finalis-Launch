@@ -14,6 +14,8 @@ const coder = ethers.AbiCoder.defaultAbiCoder();
 const ETH = ethers.id("batchfix/ETH");
 const USDC = ethers.id("batchfix/USDC");
 const USDCX = ethers.id("batchfix/USDC_");
+const ETH_USDC_TOKEN = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const USDC_PROOF_ASSET = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(["string", "address"], ["Ethereum", ETH_USDC_TOKEN]));
 const ERROR_SELECTOR = "0x08c379a0";
 const PANIC_SELECTOR = "0x4e487b71";
 
@@ -36,6 +38,11 @@ async function fx({ harness = false } = {}) {
   const mockOverride = await (await ethers.getContractFactory("MockAlwaysFinalizedVerifier")).deploy();
   const noDevFund = await (await ethers.getContractFactory("MockReaderNoDevFund")).deploy();
   const counter = await (await ethers.getContractFactory("TestStakeRewardCounter")).deploy();
+  await verifier.registerAssetPrecision("Ethereum", USDC, "USDC", 6, 3, 0);
+  await verifier.registerAssetPrecision("Ethereum", USDCX, "USDC_", 6, 3, 0);
+  // t430u item 4: the $0.95 cutoff follows the exact identity indexed to a row.
+  // Indexed before vclm.initialize: the test counter has no synthToken() view.
+  await verifier.registerTokenAddressBatch([{ environmentId: "Ethereum", token: ETH_USDC_TOKEN, canonicalAssetId: USDC }]);
   await vclm.initialize(await verifier.getAddress(), await counter.getAddress());
   await chonx.initialize(await verifier.getAddress(), ethers.ZeroAddress);
   for (const [env, r] of [["Ethereum", mock], ["Optimism", mockOverride], ["Polygon", noDevFund]]) {
@@ -43,8 +50,6 @@ async function fx({ harness = false } = {}) {
     await verifier.configureDevFund(env, deployer.address);
     await verifier.registerAssetPrecision(env, ETH, "ETH", 18, 2, 0);
   }
-  await verifier.registerAssetPrecision("Ethereum", USDC, "USDC", 6, 3, 0);
-  await verifier.registerAssetPrecision("Ethereum", USDCX, "USDC_", 6, 3, 0);
   await verifier.setScheduledPricePoster(deployer.address);
   await finalizeCeremony(verifier);
   return { deployer, recipient, other, dest, vclm, chonx, verifier, mock, mockOverride, noDevFund, counter };
@@ -74,7 +79,7 @@ function pkg({ env = "Ethereum", lockId = ethers.hexlify(ethers.randomBytes(32))
     racIdentity: racIdentity || ethers.hexlify(ethers.randomBytes(32)), priceRecord: "0x", sourceFinalityProof: "0x",
     lockEventProof: coder.encode(
       ["bytes32", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint8", "bytes32"],
-      [lockId, gross, fee, principal, duration, created, 2n, recipient, out, asset]
+      [lockId, gross, fee, principal, duration, created, 2n, recipient, out, asset === USDC ? USDC_PROOF_ASSET : asset]
     ),
   };
 }
