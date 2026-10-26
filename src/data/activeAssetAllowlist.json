@@ -7,19 +7,19 @@
  "sources": {
   "registry": {
    "file": "base-contracts/deployment/assetRegistry.revD.json",
-   "sha256": "2b3799390d9c75b339a795ab39bcc6e39ced3ed7b2be491a4b36179468d5d2fa",
-   "entries": 589
+   "sha256": "d8bb58d80d593f4e0e967ee82c239327055adb07cef8809fe48f7b95372903d4",
+   "entries": 590
   },
   "onchainVerification": {
    "file": "base-contracts/deployment/revD_onchain_2026-10-26.json",
-   "sha256": "c0ac8e9df9abb984c275d7e9cc8cd413725e65969adf2e30f0abb6bb1faad9be",
-   "block": 53120088,
+   "sha256": "eaad783e34bf59731585f277c35b834c82133c1931390970940ccaa767e338ea",
+   "block": 53124689,
    "rule": "code present and decimals equal to the registry"
   }
  },
  "counts": {
-  "entries": 129,
-  "tokens": 128,
+  "entries": 130,
+  "tokens": 129,
   "natives": 1,
   "nativeLinks": 0,
   "excluded": 0,
@@ -1573,6 +1573,18 @@
    "custodyClass": 3,
    "pricingIdentifier": "superbridge-bridged-wsteth-base",
    "address": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
+   "onchainStatus": "verify"
+  },
+  {
+   "kind": "token",
+   "row": 1103,
+   "environmentId": "Base",
+   "symbol": "doginme",
+   "decimals": 18,
+   "canonicalAssetId": "0x32f3c717f15eb2fb26288c2160d3616f825e0729d518e2982dab16b38c0e3f3a",
+   "custodyClass": 3,
+   "pricingIdentifier": "doginme",
+   "address": "0x6921b130d297cc43754afba22e5eac0fbf8db75b",
    "onchainStatus": "verify"
   }
  ],
