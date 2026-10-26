@@ -1,8 +1,8 @@
 // Builds src/data/activeAssetAllowlist.json: the only assets the app may offer.
 //
 // Base-only launch (operator decision t430u item 2, 2026-10-26). The source is
-// the ceremony registry, Revision D (deployment/assetRegistry.revD.json, 591
-// rows), and only its Base rows are offered: Base ETH plus the 130 Base
+// the ceremony registry, Revision D (deployment/assetRegistry.revD.json, 589
+// rows), and only its Base rows are offered: Base ETH plus the 128 Base
 // tokens. Rows of every other chain stay in Revision D as history and are not
 // offered; they are counted under "notOffered", not listed.
 //
@@ -11,8 +11,8 @@
 // present and decimals() equal to the registry decimals. A token that fails is
 // left out and listed under "excluded".
 // Founder override (t430u item 5, scripts/founderOverride.cjs): TigerOG,
-// LionOG and FrogOG, by exact Base contract, are always offered. No check in
-// this builder may leave them out.
+// by exact Base contract, is always offered. No check in this builder may
+// leave it out. LionOG and FrogOG were removed by operator t431u.
 //
 // The previous builder (Revision C, all chains, 2026-10-20 verification) is
 // kept in git history at commit de31c42.
