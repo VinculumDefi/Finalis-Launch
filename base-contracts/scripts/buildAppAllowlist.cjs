@@ -1,72 +1,70 @@
 // Builds src/data/activeAssetAllowlist.json: the only assets the app may offer.
 //
-// An asset is offerable only if it is on the active list (Revision C,
-// deployment/assetRegistry.revC.json, 487 entries; same rows as Revision B with
-// Base USDC row 454 as S1 per Rev 18 VF-REG-002) AND, for a token, it passes
-// today's on-chain verification (deployment/onchain_verify_20261020.csv,
-// status verify or renamed_ticker). A Revision C token that is missing from the
-// verification file or failed it is left out and listed under "excluded".
-// Solana is never offerable (no Solana row is in Revision C; the reader is blocked).
+// Base-only launch (operator decision t430u item 2, 2026-10-26). The source is
+// the ceremony registry, Revision D (deployment/assetRegistry.revD.json, 591
+// rows), and only its Base rows are offered: Base ETH plus the 130 Base
+// tokens. Rows of every other chain stay in Revision D as history and are not
+// offered; they are counted under "notOffered", not listed.
+//
+// A Base token is offered only if it passes the on-chain read of 2026-10-26
+// (deployment/revD_onchain_2026-10-26.json, Base block 53120088): contract code
+// present and decimals() equal to the registry decimals. A token that fails is
+// left out and listed under "excluded".
+// Founder override (t430u item 5, scripts/founderOverride.cjs): TigerOG,
+// LionOG and FrogOG, by exact Base contract, are always offered. No check in
+// this builder may leave them out.
+//
+// The previous builder (Revision C, all chains, 2026-10-20 verification) is
+// kept in git history at commit de31c42.
 //
 // Match keys (never a ticker on its own):
 //   token:  environment + contract address (lowercase)
-//   native: environment + native id (Revision C assetId, e.g. native-BTC)
-// nativeLinks: Revision C's native coins that use another row's price
-// (Polygon POL -> row 114, Arbitrum and Optimism ETH -> row 2).
+//   native: environment + native id (Revision D assetId, e.g. native-ETH)
+// nativeLinks: none on Base (the links of other chains are not offered).
 //
 // Usage: node scripts/buildAppAllowlist.cjs [--check]
 //   --check: rebuild in memory and fail if the committed file differs.
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { isFounderOverride, FOUNDER_OVERRIDE_NAME } = require("./founderOverride.cjs");
 
 const DEP = path.join(__dirname, "..", "deployment");
-const REG = path.join(DEP, "assetRegistry.revC.json");
-const VERIFY = path.join(DEP, "onchain_verify_20261020.csv");
+const REG = path.join(DEP, "assetRegistry.revD.json");
+const ONCHAIN = path.join(DEP, "revD_onchain_2026-10-26.json");
 const OUT = path.join(__dirname, "..", "..", "src", "data", "activeAssetAllowlist.json");
-const PASS = new Set(["verify", "renamed_ticker"]);
+const ACTIVE_ENVIRONMENTS = ["Base"];
 const isAddr = (s) => /^0x[0-9a-fA-F]{40}$/.test(s || "") && !/^0x0{40}$/.test(s);
 const sha = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
 
-function parseCsv(text) {
-  const [h, ...ls] = text.trim().split("\n");
-  const H = h.split(",");
-  return ls.map((l) => {
-    const v = []; let cur = "", q = false;
-    for (let i = 0; i < l.length; i++) {
-      const c = l[i];
-      if (q) { if (c === '"' && l[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
-      else if (c === '"') q = true; else if (c === ",") { v.push(cur); cur = ""; } else cur += c;
-    }
-    v.push(cur);
-    return Object.fromEntries(H.map((k, i) => [k, v[i]]));
-  });
-}
-
 function buildAllowlist() {
   const reg = JSON.parse(fs.readFileSync(REG, "utf8"));
-  const verify = new Map(parseCsv(fs.readFileSync(VERIFY, "utf8")).map((r) => [r.environment + "|" + r.address.toLowerCase(), r]));
+  const chain = JSON.parse(fs.readFileSync(ONCHAIN, "utf8"));
   const entries = [], excluded = [];
+  let notOffered = 0;
   for (const e of reg.entries) {
-    if (e.environmentId === "Solana") { excluded.push({ row: e.row, environmentId: e.environmentId, symbol: e.symbol, reason: "solana_hidden" }); continue; }
+    if (!ACTIVE_ENVIRONMENTS.includes(e.environmentId)) { notOffered++; continue; }
     const base = { row: e.row, environmentId: e.environmentId, symbol: e.symbol, decimals: e.decimals, canonicalAssetId: e.canonicalAssetId, custodyClass: e.custodyClass, pricingIdentifier: e.pricingIdentifier };
     if (e.kind === "native") { entries.push({ kind: "native", ...base, nativeId: e.assetId }); continue; }
     if (e.kind !== "token" || !isAddr(e.identifier)) { excluded.push({ ...base, reason: "no_contract_address" }); continue; }
-    const v = verify.get(e.environmentId + "|" + e.identifier.toLowerCase());
-    if (!v) { excluded.push({ ...base, address: e.identifier.toLowerCase(), reason: "not_checked_onchain" }); continue; }
-    if (!PASS.has(v.status)) { excluded.push({ ...base, address: e.identifier.toLowerCase(), reason: "onchain_" + (v.reason || v.status) }); continue; }
-    entries.push({ kind: "token", ...base, address: e.identifier.toLowerCase(), onchainStatus: v.status });
+    const address = e.identifier.toLowerCase();
+    if (isFounderOverride(e.environmentId, e.identifier)) { entries.push({ kind: "token", ...base, address, onchainStatus: "founder_override", founderOverride: FOUNDER_OVERRIDE_NAME }); continue; }
+    const t = chain.tokens[address];
+    if (!t) { excluded.push({ ...base, address, reason: "not_checked_onchain" }); continue; }
+    if (!(t.codeBytes > 0)) { excluded.push({ ...base, address, reason: "onchain_no_code" }); continue; }
+    if (Number(t.decimals) !== Number(e.decimals)) { excluded.push({ ...base, address, reason: "onchain_decimals_mismatch" }); continue; }
+    entries.push({ kind: "token", ...base, address, onchainStatus: "verify" });
   }
-  const nativeLinks = (reg.nativeLinks || []).map((l) => ({ kind: "native", environmentId: l.environmentId, nativeId: "native-" + l.symbol, symbol: l.symbol, usesRow: l.usesRow, rowEnvironmentId: l.rowEnvironmentId, canonicalAssetId: l.canonicalAssetId }));
   return {
-    _note: "Generated by base-contracts/scripts/buildAppAllowlist.cjs. Do not edit by hand. The app offers only these assets. Match tokens by environment + contract address (case-insensitive) and natives by environment + native id; never by ticker alone. Solana is hidden.",
+    _note: "Generated by base-contracts/scripts/buildAppAllowlist.cjs. Do not edit by hand. The app offers only these assets. Base only. Match tokens by environment + contract address (case-insensitive) and natives by environment + native id; never by ticker alone.",
     revision: reg.revision,
+    activeEnvironments: ACTIVE_ENVIRONMENTS,
     sources: {
-      registry: { file: "base-contracts/deployment/assetRegistry.revC.json", sha256: sha(REG), entries: reg.entries.length },
-      onchainVerification: { file: "base-contracts/deployment/onchain_verify_20261020.csv", sha256: sha(VERIFY), passStatuses: [...PASS] },
+      registry: { file: "base-contracts/deployment/assetRegistry.revD.json", sha256: sha(REG), entries: reg.entries.length },
+      onchainVerification: { file: "base-contracts/deployment/revD_onchain_2026-10-26.json", sha256: sha(ONCHAIN), block: chain.block, rule: "code present and decimals equal to the registry" },
     },
-    counts: { entries: entries.length, tokens: entries.filter((x) => x.kind === "token").length, natives: entries.filter((x) => x.kind === "native").length, nativeLinks: nativeLinks.length, excluded: excluded.length },
-    entries, nativeLinks, excluded,
+    counts: { entries: entries.length, tokens: entries.filter((x) => x.kind === "token").length, natives: entries.filter((x) => x.kind === "native").length, nativeLinks: 0, excluded: excluded.length, founderOverride: entries.filter((x) => x.founderOverride).length, notOffered },
+    entries, nativeLinks: [], excluded,
   };
 }
 
