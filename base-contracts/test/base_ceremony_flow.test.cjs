@@ -2,7 +2,8 @@
 // same code base.html runs), driven on the in-process Hardhat chain with the
 // real ceremony.json and ceremony-data.json. Nothing is broadcast.
 // Base-only launch (t357u): one reader (Base), the Base subset of registry
-// Revision C (t367u: row 454 USDC_BASE is S1).
+// Revision D (t430u: 131 Base rows, 130 Base token addresses; row 454
+// USDC_BASE is S1).
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
@@ -43,10 +44,10 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     for (const env of NON_BASE_ENVS) expect(await r.verifier.devFundDestinations(env), env).to.equal(ethers.ZeroAddress);
   });
 
-  it("registers the Base subset of Revision C only: 27 rows, 26 token addresses, no non-Base row", async () => {
-    expect(data.registryRows).to.equal(487);
-    expect(data.entries.length).to.equal(27);
-    expect(data.tokenAddresses.length).to.equal(26);
+  it("registers the Base subset of Revision D only: 131 rows, 130 token addresses, no non-Base row", async () => {
+    expect(data.registryRows).to.equal(591);
+    expect(data.entries.length).to.equal(131);
+    expect(data.tokenAddresses.length).to.equal(130);
     expect(data.assetRowAliases.length).to.equal(0);
     for (const e of data.entries) {
       const k = ethers.solidityPackedKeccak256(["string", "bytes32"], [e.environmentId, e.canonicalAssetId]);
@@ -54,7 +55,7 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     }
     const { resolveCeremonyRegistry } = require("../scripts/deploy-pages/resolveAssetRegistry.cjs");
     const nonBase = resolveCeremonyRegistry().entries.filter((e) => e.environmentId !== "Base");
-    expect(nonBase.length).to.equal(487 - 27);
+    expect(nonBase.length).to.equal(591 - 131);
     for (const e of nonBase.slice(0, 40)) {
       const k = ethers.solidityPackedKeccak256(["string", "bytes32"], [e.environmentId, e.canonicalAssetId]);
       expect((await r.verifier.assetPrecisionTable(k)).canonicalAssetId, e.environmentId + " " + e.symbol).to.equal(ethers.ZeroHash);
