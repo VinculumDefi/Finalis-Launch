@@ -131,3 +131,5 @@ candidate_no,source_entry,symbol,address,price_id,custody_class,multiplier,statu
 130,addition rsETH@Base (from rows 404),rsETH,0x1bc71130a0e39942a7658878169764bbd8a45993,kelp-dao-restaked-eth,S3,1.0x,ACTIVE,priced in 2026-10-25 check,
 131,"addition tBTC@Base (from rows 205,391)",tBTC,0x236aa50979d5f3de3bd1eeb40e81137f22ab794b,tbtc,S3,1.0x,ACTIVE,priced in 2026-10-25 check,
 132,addition wstETH@Base (from rows 24),wstETH,0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452,superbridge-bridged-wsteth-base,S3,1.0x,ACTIVE,priced in 2026-10-25 check,
+133,row 999,LionOG,0x6731f2d7adf86cfba30d15c4d10113ce98f3492a,,,,EXCLUDED,"operator t431u (2026-10-26): removed from the Base registry; no longer a founder override row","t431u: eliminate LionOG, keep TigerOG"
+134,row 1000,FrogOG,0x0e3b564bdd09348840811c7e1106bbd0e98b5b4f,,,,EXCLUDED,"operator t431u (2026-10-26): removed from the Base registry; no longer a founder override row","t431u: eliminate FrogOG, keep TigerOG"
