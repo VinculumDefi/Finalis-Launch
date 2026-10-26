@@ -111,14 +111,17 @@ for (const [name, eng, asset, src, dest] of [
   });
 }
 
-test('XRPL practice engine accepts a $0.015 XRP Handshake end to end', () => {
+// Base-only launch (t430u item 2): XRP is not offered, so the kept XRPL engine
+// refuses it at VF-REG-001. Every other check still passes.
+test('XRPL practice engine refuses XRP only at VF-REG-001 (Base-only deployment)', () => {
   const r = xrpl.validateLockRequest({
     assetSymbol: 'XRP', durationSecs: 3600, outputToken: 'VCLM', baseRecipient: '0x' + '1'.repeat(40),
     releaseDestination: 'rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH', sourceAccount: 'rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH',
     grossAssetUnits: '7500', verifiedGrossUsdMicro: ((15n * SCALE) / 1000n).toString(), daysSinceLaunch: 0,
     chonxActivationReceipt: '', cumulativeVclmIssued: 0n,
   });
-  assert.equal(r.ok, true, r.errors.join('; '));
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.checks.filter((c) => !c.pass).map((c) => c.id), ['VF-REG-001']);
 });
 
 test('simulator Dev Funds equal the live Dev Funds the contracts are deployed with', () => {
