@@ -2,14 +2,16 @@
 // same code base.html runs), driven on the in-process Hardhat chain with the
 // real ceremony.json and ceremony-data.json. Nothing is broadcast.
 // Base-only launch (t357u): one reader (Base), the Base subset of registry
-// Revision D (t430u: 130 Base rows, 129 Base token addresses; row 454
-// USDC_BASE is S1).
+// Revision E (t448u, proposed: 2893 Base rows, 2892 Base token addresses;
+// row 454 USDC_BASE is S1). Revision D (t430u, 130 Base rows) is the prior source.
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const art = require("../scripts/deploy-pages/ceremony.json");
 const data = require("../scripts/deploy-pages/ceremony-data.json");
 const { runBaseCeremony, checkInputs } = require("../scripts/deploy-pages/baseCeremonyFlow.js");
 const { NON_BASE_ENVS } = require("../scripts/applyCeremonyAddresses.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before finalize", function () {
   this.timeout(600000);
@@ -44,10 +46,10 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     for (const env of NON_BASE_ENVS) expect(await r.verifier.devFundDestinations(env), env).to.equal(ethers.ZeroAddress);
   });
 
-  it("registers the Base subset of Revision D only: 130 rows, 129 token addresses, no non-Base row", async () => {
-    expect(data.registryRows).to.equal(590);
-    expect(data.entries.length).to.equal(130);
-    expect(data.tokenAddresses.length).to.equal(129);
+  it("registers the Base subset of Revision E only: 2893 rows, 2892 token addresses, no non-Base row", async () => {
+    expect(data.registryRows).to.equal(3353);
+    expect(data.entries.length).to.equal(2893);
+    expect(data.tokenAddresses.length).to.equal(2892);
     expect(data.assetRowAliases.length).to.equal(0);
     for (const e of data.entries) {
       const k = ethers.solidityPackedKeccak256(["string", "bytes32"], [e.environmentId, e.canonicalAssetId]);
@@ -55,7 +57,7 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     }
     const { resolveCeremonyRegistry } = require("../scripts/deploy-pages/resolveAssetRegistry.cjs");
     const nonBase = resolveCeremonyRegistry().entries.filter((e) => e.environmentId !== "Base");
-    expect(nonBase.length).to.equal(590 - 130);
+    expect(nonBase.length).to.equal(3353 - 2893);
     for (const e of nonBase.slice(0, 40)) {
       const k = ethers.solidityPackedKeccak256(["string", "bytes32"], [e.environmentId, e.canonicalAssetId]);
       expect((await r.verifier.assetPrecisionTable(k)).canonicalAssetId, e.environmentId + " " + e.symbol).to.equal(ethers.ZeroHash);
@@ -99,7 +101,7 @@ describe("Base deploy page flow (Base-only): one reader, Forge and Stake, before
     await network.provider.send("hardhat_impersonateAccount", [posterAddr]);
     await network.provider.send("hardhat_setBalance", [posterAddr, "0x56BC75E2D63100000"]);
     const poster = await ethers.getSigner(posterAddr);
-    await (await r.verifier.connect(poster).applyScheduledPriceRun(2n, [{ success: true, environmentId: "Base", canonicalAssetId: row.canonicalAssetId, priceUsd18: 10n ** 18n }])).wait();
+    await (await r.verifier.connect(poster).applyScheduledPriceRun(2n, [{ success: true, environmentId: "Base", canonicalAssetId: row.canonicalAssetId, priceUsd30: P30(10n ** 18n) }])).wait();
     await network.provider.send("hardhat_stopImpersonatingAccount", [posterAddr]);
     await (await usdc.connect(user).approve(await r.lock.getAddress(), amt)).wait();
     const lockId = ethers.id("flow:usdc-s1");
