@@ -7,6 +7,8 @@
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const DAY = 86400n;
@@ -228,7 +230,7 @@ async function vfx({ harness = false, rewards = 0n } = {}) {
 async function post(verifier, rows) {
   const runId = (await verifier.lastScheduledRunId()) + 1n;
   await verifier.applyScheduledPriceRun(runId, rows.map(([env, asset, price]) => ({
-    environmentId: env, canonicalAssetId: asset, priceUsd18: price, success: true,
+    environmentId: env, canonicalAssetId: asset, priceUsd30: P30(price), success: true,
   })));
   return (await latest()) + 1n;
 }
@@ -312,7 +314,7 @@ describe("Mutant kills: VinculumFinalisVerifier", function () {
     const { verifier } = await vfx();
     const fwd = await (await ethers.getContractFactory("TestForwarder")).deploy();
     const data = verifier.interface.encodeFunctionData("applyScheduledPriceRun", [1n, [{
-      environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd18: PRICE, success: true }]]);
+      environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd30: P30(PRICE), success: true }]]);
     await expect(fwd.forward(await verifier.getAddress(), data)).to.be.revertedWith("VF-ORC-007: not price poster");
   });
 
@@ -424,14 +426,14 @@ describe("Mutant kills: VinculumFinalisVerifier", function () {
   it("R-Verifier-639-37: a scheduled price of exactly 2^128-1 is accepted; 2^128 is refused", async function () {
     const { verifier } = await vfx();
     const MAX = (1n << 128n) - 1n;
-    const row = (price) => [{ environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd18: price, success: true }];
+    const row = (price) => [{ environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd30: price, success: true }]; // raw 30-decimal value: the uint128 bound itself
     const last = await verifier.lastScheduledRunId();
     await expect(verifier.applyScheduledPriceRun(last + 1n, row(MAX + 1n))).to.be.revertedWith("VF-ORC-004: price out of range");
     await expect(verifier.applyScheduledPriceRun(last + 1n, row(MAX))).to.not.be.reverted;
     expect(await verifier.lastScheduledRunId()).to.equal(last + 1n);
     const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Ethereum", ETH]);
     const e = await verifier.scheduledPrices(key);
-    expect(e.priceUsd18).to.equal(MAX);
+    expect(e.priceUsd30).to.equal(MAX);
     expect(e.usable).to.equal(true);
   });
 
