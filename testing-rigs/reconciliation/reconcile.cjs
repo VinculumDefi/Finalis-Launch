@@ -30,7 +30,7 @@ const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // The fifteen environments other than Base in the sixteen-environment base.
 const NON_BASE_ENVS = require(path.join(BC, "deployment/representativeBase.cjs")).rows.map((r) => r.environment).filter((e) => e !== "Base");
-const EXPECTED_BASE = { rows: 130, tokenAddresses: 129, aliases: 0 }; // Revision D Base rows (t430u)
+const EXPECTED_BASE = { rows: 2893, tokenAddresses: 2892, aliases: 0 }; // Revision E Base rows (t448u, proposed)
 
 // Every non-view function of every contract in the set, by contract.
 //   config: must revert for the operator (deployer) and for a stranger.
@@ -148,11 +148,11 @@ async function reconcile(o) {
   }
   // Base-only: the deployed set has exactly one reader.
   R.add("bytecode", "the set has exactly one reader (Base)", JSON.stringify(Object.keys(set.readers)) === JSON.stringify(["Base"]) ? "PASS" : "MISMATCH", Object.keys(set.readers).join(","));
-  // ceremony-data is the Base subset of the ceremony registry (Revision D, t430u).
+  // ceremony-data is the Base subset of the ceremony registry (Revision E, t448u).
   R.add("bytecode", `ceremony-data is Base-only: ${EXPECTED_BASE.rows} rows, ${EXPECTED_BASE.tokenAddresses} token addresses, 0 aliases, one reader, one Dev Fund`,
     DATA.baseOnly === true && DATA.entries.length === EXPECTED_BASE.rows && DATA.tokenAddresses.length === EXPECTED_BASE.tokenAddresses && DATA.assetRowAliases.length === EXPECTED_BASE.aliases
       && DATA.entries.every((e) => e.environmentId === "Base") && DATA.tokenAddresses.every((t) => t.environmentId === "Base")
-      && JSON.stringify(Object.keys(DATA.readers)) === JSON.stringify(["base"]) && JSON.stringify(Object.keys(DATA.evmDevFunds)) === JSON.stringify(["Base"]) && DATA.registryRows === 590 ? "PASS" : "MISMATCH",
+      && JSON.stringify(Object.keys(DATA.readers)) === JSON.stringify(["base"]) && JSON.stringify(Object.keys(DATA.evmDevFunds)) === JSON.stringify(["Base"]) && DATA.registryRows === 3353 ? "PASS" : "MISMATCH",
     `${DATA.entries.length} rows, ${DATA.tokenAddresses.length} tokens, ${DATA.assetRowAliases.length} aliases, source ${DATA.registryRows}`);
 
   log(`  section 1b. ...`);
@@ -295,7 +295,7 @@ async function reconcile(o) {
   }
   await K(V, "Verifier", "STANDARD_FEE_BPS", 500n); await K(V, "Verifier", "HANDSHAKE_USD_MIN", 10n ** 16n);
   await K(V, "Verifier", "HANDSHAKE_USD_MAX", 2n * 10n ** 16n); await K(V, "Verifier", "HANDSHAKE_DURATION_SECS", 3600n);
-  await K(V, "Verifier", "USD_STABLE_MIN_PRICE", 95n * 10n ** 16n); await K(V, "Verifier", "CHONX_ACTIVATION_THRESHOLD", 10000000n * 10n ** 18n);
+  await K(V, "Verifier", "USD_STABLE_MIN_PRICE", 95n * 10n ** 28n); await K(V, "Verifier", "CHONX_ACTIVATION_THRESHOLD", 10000000n * 10n ** 18n);
   await K(forge, "Forge", "SYNTH_ACTIVATION_THRESHOLD", 100000000n * 10n ** 18n); await K(forge, "Forge", "VCLM_BURN_PER_SYNTH", 1000n * 10n ** 18n);
   await K(forge, "Forge", "CHONX_BURN_PER_SYNTH", 10000n * 10n ** 18n);
   {
@@ -328,7 +328,7 @@ async function reconcile(o) {
   }
 
   log(`  section 5. ...`);
-  // ---- 5. registry: the Base subset of the ceremony registry, Revision D (130 rows, 129 token addresses, 0 aliases); no non-Base row; readers by chain name
+  // ---- 5. registry: the Base subset of the ceremony registry, Revision E (2893 rows, 2892 token addresses, 0 aliases); no non-Base row; readers by chain name
   {
     const mc = new ethers.Contract(MULTICALL3, ["function aggregate3((address target,bool allowFailure,bytes callData)[] calls) view returns ((bool success,bytes returnData)[])"], P);
     const many = async (calls) => {
@@ -372,7 +372,7 @@ async function reconcile(o) {
         R.add("registry", `${n} ${env} rows resolve to the ${cfg.contract} at ${short(set.readers[env])}`, a === A(set.readers[env]) ? "PASS" : "MISMATCH", a === A(set.readers[env]) ? "" : `chainVerifiers -> ${short(a)}`);
       }
       // Base-only: no non-Base row of the ceremony registry is registered
-      // (Revision D, t430u).
+      // (Revision E, t448u).
       const { resolveCeremonyRegistry } = require(path.join(BC, "scripts/deploy-pages/resolveAssetRegistry.cjs"));
       const nonBase = resolveCeremonyRegistry().entries.filter((e) => e.environmentId !== "Base");
       const nb = await many(nonBase.map((e) => vi.encodeFunctionData("assetPrecisionTable", [key(e.environmentId, e.canonicalAssetId)])));
@@ -419,8 +419,8 @@ async function reconcile(o) {
     R.add("ceremony txs", "poster: operator first (price run 1), then the live poster", posters.length === 2 && operator && posters[0] === A(operator) && posters[1] === A(DATA.scheduledPricePoster) ? "PASS" : "MISMATCH", posters.map(short).join(" then "));
     const runs = by("applyScheduledPriceRun");
     const run1 = runs[0] && runs[0].d.args[1];
-    R.add("ceremony txs", "one pre-finalize price run 1: Base ETH at ceremony-data priceUsd18", runs.length === 1 && runs[0].d.args[0] === 1n && run1.length === 1 && run1[0].environmentId === "Base" && run1[0].priceUsd18 === BigInt(DATA.priceUsd18) && run1[0].success ? "PASS" : "MISMATCH",
-      runs.map((r) => `run ${r.d.args[0]}: ${r.d.args[1].map((u) => `${u.environmentId} ${ethers.formatEther(u.priceUsd18)} USD`).join(",")}`).join("; "));
+    R.add("ceremony txs", "one pre-finalize price run 1: Base ETH at ceremony-data priceUsd30", runs.length === 1 && runs[0].d.args[0] === 1n && run1.length === 1 && run1[0].environmentId === "Base" && run1[0].priceUsd30 === BigInt(DATA.priceUsd30) && run1[0].success ? "PASS" : "MISMATCH",
+      runs.map((r) => `run ${r.d.args[0]}: ${r.d.args[1].map((u) => `${u.environmentId} ${ethers.formatUnits(u.priceUsd30, 30)} USD`).join(",")}`).join("; "));
     const fin = by("finalize");
     R.add("ceremony txs", "finalize is the operator's last Verifier call", fin.length === 1 && calls[calls.length - 1].d && calls[calls.length - 1].d.name === "finalize" ? "PASS" : "MISMATCH", `${fin.length} finalize calls`);
     R.add("ceremony txs", "no unexpected Verifier calls", unknown === 0 && calls.every((c) => !c.d || ["registerAssetPrecisionBatch", "registerTokenAddressBatch", "registerAssetRowAlias", "configureDevFund", "registerChainVerifier", "setScheduledPricePoster", "applyScheduledPriceRun", "finalize"].includes(c.d.name)) ? "PASS" : "MISMATCH",
@@ -462,7 +462,7 @@ async function reconcile(o) {
           // The scheduled poster path stays open for the poster only. Simulate a well-formed next run for Base ETH.
           try {
             const last = await g(V, "lastScheduledRunId");
-            const d2 = V.interface.encodeFunctionData("applyScheduledPriceRun", [last + 1n, [{ environmentId: "Base", canonicalAssetId: DATA.row2.canonicalAssetId, priceUsd18: BigInt(DATA.priceUsd18), success: true }]]);
+            const d2 = V.interface.encodeFunctionData("applyScheduledPriceRun", [last + 1n, [{ environmentId: "Base", canonicalAssetId: DATA.row2.canonicalAssetId, priceUsd30: BigInt(DATA.priceUsd30), success: true }]]);
             await retry(() => P.call({ from: DATA.scheduledPricePoster, to: set.verifier, data: d2 }));
             R.add("closed", "applyScheduledPriceRun from the live poster (the only open configuration-like path)", "PASS", `run ${last + 1n} would apply`);
           } catch (e) { R.add("closed", "applyScheduledPriceRun from the live poster", "PASS", "poster path present; simulated run reverted: " + revertReason(ethers, e)); }
