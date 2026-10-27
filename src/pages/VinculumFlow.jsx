@@ -12,6 +12,7 @@ import {
   buildCreateNativeLock, buildRelease, computeFee, ethToWei, resolvePageAsset, submitLock, submitRelease,
 } from '@/lib/vfBaseEthLock';
 import { useApprovedAssetRegistry } from '@/hooks/useApprovedAssetRegistry';
+import { priceDecimalsForConfiguredVerifier } from '@/lib/vfPriceFormat';
 
 // The asset this page locks: Base native ETH (Revision E row 2), from the active list.
 
@@ -38,6 +39,7 @@ export default function VinculumFlow() {
   const [releaseResult, setReleaseResult] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  const priceFormat = priceDecimalsForConfiguredVerifier();
   const registry = useApprovedAssetRegistry();
   const pageAsset = resolvePageAsset();
 
@@ -52,6 +54,7 @@ export default function VinculumFlow() {
     const built = buildCreateNativeLock({
       lockId, baseRecipient, outputToken, releaseDestination,
       durationSecs: Number(durationSecs), grossEth, priceUsd, chonxActivationReceipt: chonxReceipt,
+      priceDecimals: priceFormat.ok ? priceFormat.decimals : undefined,
     });
     setConstructed(built);
     if (built.ok) setSubmitResult(await submitLock(built));
@@ -176,6 +179,7 @@ export default function VinculumFlow() {
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Scheduled Base ETH price read from the Verifier (USD)</Label>
               <Input value={priceUsd} onChange={(e) => setPriceUsd(e.target.value)} placeholder="required; empty refuses" inputMode="decimal" />
+              <p className="text-xs text-muted-foreground">{priceFormat.ok ? `Price format: ${priceFormat.decimals} decimals (${priceFormat.basis})` : `Price format unknown: ${priceFormat.reason}`}</p>
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Base recipient (0x + 40 hex)</Label>
