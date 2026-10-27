@@ -1,8 +1,8 @@
 # Vinculum session start
 
-Revision 8, current as of Sunday 2026-10-25 (ET). Read this first in every
+Revision 9, current as of Tuesday 2026-10-27 (ET). Read this first in every
 new session. It says what is live, what governs, and the rules. It replaces
-Revision 7 of 2026-10-25 (see History at the end).
+Revision 8 of 2026-10-25 (see History at the end).
 
 The operator is not a programmer. One step at a time. Plain English. Do not
 build, commit, change, deploy or send anything until the operator asks.
@@ -10,16 +10,16 @@ build, commit, change, deploy or send anything until the operator asks.
 ## Repository
 https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
-Revision 18 of the Master Specification was added to main at e96d102.
+Revision 19 of the Master Specification is the governing edition (adopted 2026-10-27).
 Registry Revision C was added to main at 90ac322. This session start
-is Revision 8. Check `git log -1 origin/main` for the newest commit.
+is Revision 9. Check `git log -1 origin/main` for the newest commit.
 
 Start with these files:
 1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision,
    its path and its SHA-256; the single source of truth for which copy
    governs)
-2. `docs/Vinculum_Finalis_Master_Specification_Revision_18_2026-10-24.md`
-   (Revision 18, the current governing specification)
+2. `docs/Vinculum_Finalis_Master_Specification_Revision_19_2026-10-27.md`
+   (Revision 19, the current governing specification)
 3. `deployment/BASE44_LIVE_CONFIG_2026-10-22.md` (the live Base set)
 4. `testing-rigs/MASTER_FINDINGS.md` and `testing-rigs/FIX_LOG_2026-10-23.md`
    (open findings and recorded operator decisions)
@@ -28,17 +28,17 @@ Start with these files:
 If a file is missing, list the folder. Do not invent the file.
 
 ## Governing specification
-- Revision 18 governs:
-  `docs/Vinculum_Finalis_Master_Specification_Revision_18_2026-10-24.md`.
+- Revision 19 governs:
+  `docs/Vinculum_Finalis_Master_Specification_Revision_19_2026-10-27.md`.
 - Its SHA-256 is
-  `487735227ea32aa6914d180d5aa8fd0ef5028e56a5ab4c328a63168072ca44bc`.
+  `0d2d56cb37dbf11d7986a731b305a14c418273c5786a4c0db8c5ee9b38aabcad`.
   The same hash is in `DOCUMENT_REGISTER.md`. If the file's hash does not
   match, stop and tell the operator.
 - Every rule is stated in that file. No rule comes from an earlier revision
   by reference. Earlier revisions are in `archive/specifications/` and do
   not govern.
 - Changes whose adoption is unclear are not in the governing text. They are
-  in Revision 18, Appendix E ("Not adopted / pending").
+  in Revision 19, Appendix E ("Not adopted / pending").
 
 ## Revision control
 - To make a new revision: copy the current revision, edit the copy, and save
@@ -144,7 +144,8 @@ will not be reused in the new seven-chain token system.
 ## History
 | Revision | Date | Change | Archived copy |
 |---|---|---|---|
-| 8 | 2026-10-25 | Launch scope rewritten for the seven-chain simultaneous launch (operator t418u). | This file (current) |
+| 9 | 2026-10-27 | Revision 19 governs, named by number and SHA-256. Only the governing-specification reference changed. | This file (current) |
+| 8 | 2026-10-25 | Launch scope rewritten for the seven-chain simultaneous launch (operator t418u). | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_8_2026-10-25.md` |
 | 7 | 2026-10-25 | Base-only launch scope line and future-work line removed. Live deployment section removed. Echo rule, Gap-escalation rule and Settled architecture decisions (2026-10-25) added. Revision 3 history wording updated. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_7_2026-10-25.md` |
 | 6 | 2026-10-24 | Revision 18 governs, named by number and SHA-256. Registry Revision C identifier and pin added. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_6_2026-10-24.md` |
 | 5 | 2026-10-24 | Revision 17 governs, named by number and SHA-256. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_5_2026-10-24.md` |
