@@ -11,6 +11,9 @@ const C = require("../lib/common.cjs");
 const { expect } = require(path.join(C.BC, "node_modules/chai"));
 const { ethers, network, art, DATA, SCALE, DAY7, ETH_ID, short, fmt, reason } = C;
 const LIVE = require("/workspace/t301u/addrs.cjs");
+// This rig talks to the LIVE Oct 22 Verifier, which stores 18-decimal prices.
+// The current ABI names that field priceUsd30 (VF-ORC-016, new contracts only);
+// ABI encoding is by position, so values here stay 18-decimal for the live set.
 
 describe("Rig 2: live finalized Base set (read-only probe on a local fork)", function () {
   this.timeout(1800000);
@@ -48,7 +51,7 @@ describe("Rig 2: live finalized Base set (read-only probe on a local fork)", fun
     out.lastRun = String(await V.lastScheduledRunId());
     const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", ETH_ID]);
     const sp = await V.scheduledPrices(key);
-    out.baseEthPrice = { usable: sp.usable, usd: fmt(sp.priceUsd18) };
+    out.baseEthPrice = { usable: sp.usable, usd: fmt(sp.priceUsd30) };
     out.vclmSupply = fmt(await vclm.totalSupply());
     out.chonxSupply = fmt(await chonx.totalSupply());
     out.lifetimeVclm = fmt(await V.lifetimeVclmIssued());
@@ -79,13 +82,13 @@ describe("Rig 2: live finalized Base set (read-only probe on a local fork)", fun
       await network.provider.send("hardhat_impersonateAccount", [poster]);
       await network.provider.send("hardhat_setBalance", [poster, "0x56BC75E2D63100000"]);
       const ps = await ethers.getSigner(poster);
-      await (await V.connect(ps).applyScheduledPriceRun((await V.lastScheduledRunId()) + 1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: BigInt(ans) * 10n ** 10n, success: true }])).wait();
+      await (await V.connect(ps).applyScheduledPriceRun((await V.lastScheduledRunId()) + 1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: BigInt(ans) * 10n ** 10n /* 18-decimal: live set */, success: true }])).wait();
       sp = await V.scheduledPrices(key);
-      out.pricePostedOnFork = fmt(sp.priceUsd18);
+      out.pricePostedOnFork = fmt(sp.priceUsd30);
     }
     const mk = async () => {
       const id = ethers.id("live:" + Math.random());
-      await (await lock.connect(user).createNativeLock(id, recipient.address, 0, ETH_ID, ethers.ZeroHash, dest.address, DAY7, sp.priceUsd18, { value: SCALE })).wait();
+      await (await lock.connect(user).createNativeLock(id, recipient.address, 0, ETH_ID, ethers.ZeroHash, dest.address, DAY7, sp.priceUsd30, { value: SCALE })).wait();
       const rec = await lock.lockRecord(id);
       return C.basePkg(id, rec, ETH_ID, 2, 18);
     };
