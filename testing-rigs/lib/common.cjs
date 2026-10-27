@@ -13,15 +13,15 @@ const DAY7 = 604800n;
 const YEAR10 = 315360000n;
 const coder = ethers.AbiCoder.defaultAbiCoder();
 const ETH_ID = DATA.row2.canonicalAssetId;
-const ETH_PRICE = BigInt(DATA.priceUsd18);
+const ETH_PRICE = BigInt(DATA.priceUsd30) / 10n ** 12n; // ceremony-data price is 30-decimal (VF-ORC-016)
 
 // Never print a full address in a report.
 const short = (a) => (a ? String(a).slice(0, 6) + "..." + String(a).slice(-4) : String(a));
 const fmt = (x, d = 18) => ethers.formatUnits(x, d);
 
-// Base-only launch: ceremony-data holds only the 130 Base rows. Rigs that
+// Base-only launch: ceremony-data holds only the 2893 Base rows. Rigs that
 // probe non-Base rows (to show they are refused) look them up in the full
-// ceremony source, registry Revision D (t430u).
+// ceremony source, registry Revision E (t448u).
 let FULL_REVB = null;
 const entry = (env, sym) => {
   let e = DATA.entries.find((x) => x.environmentId === env && x.symbol === sym);
