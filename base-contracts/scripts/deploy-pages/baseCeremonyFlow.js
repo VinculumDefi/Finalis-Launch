@@ -9,9 +9,10 @@
 //   -> CHONX.initialize(Verifier, 0)
 //   -> ONE reader deployed and registered: BaseLockRecordVerifier bound to the
 //      new Base lock. No other environment gets a reader (Base-only launch).
-//   -> registry: the Base rows of Revision D only (129 Base tokens + Base ETH
-//      as row 2 = 130; Base USDC is S1), the Base token address index
-//      (129 addresses), no aliases
+//   -> registry: the Base rows of Revision E only (2892 Base tokens + Base ETH
+//      as row 2 = 2893; Base USDC is S1), the Base token address index
+//      (2892 addresses), no aliases. At 50 per batch that is 58 asset
+//      batches and 58 address batches.
 //   -> Dev Fund for Base only -> poster = this wallet, price run 1, read usable
 //   -> poster handed to the live poster -> finalize.
 (function (root) {
@@ -19,8 +20,8 @@
   const BASE_ONLY_ENVS = ["Base"];
 
   function checkInputs(ethers, data, me) {
-    if (!data.devFund || !data.row2 || !Array.isArray(data.entries) || !data.priceUsd18) throw new Error("ceremony data incomplete. Nothing was sent.");
-    if (BigInt(data.priceUsd18) <= 0n) throw new Error("scheduled ETH price is not positive. Nothing was sent.");
+    if (!data.devFund || !data.row2 || !Array.isArray(data.entries) || !data.priceUsd30) throw new Error("ceremony data incomplete. Nothing was sent.");
+    if (BigInt(data.priceUsd30) <= 0n || BigInt(data.priceUsd30) >= 2n ** 128n) throw new Error("scheduled ETH price is not positive or above the uint128 bound. Nothing was sent.");
     if (data.entries.length === 0 || data.entries.some((e) => e.environmentId !== "Base"))
       throw new Error("ceremony data holds a non-Base registry row (Base-only launch). Nothing was sent.");
     if (!Array.isArray(data.tokenAddresses) || data.tokenAddresses.some((t) => t.environmentId !== "Base"))
@@ -46,7 +47,7 @@
   async function runBaseCeremony({ ethers, signer, art, data, log = () => {} }) {
     const me = await signer.getAddress();
     const { livePoster } = checkInputs(ethers, data, me);
-    const priceUsd18 = BigInt(data.priceUsd18);
+    const priceUsd30 = BigInt(data.priceUsd30); // USD per whole ETH, 30 decimals (VF-ORC-016)
     const dep = async (name, args) => {
       const c = await new ethers.ContractFactory(art[name].abi, art[name].bytecode, signer).deploy(...args);
       await c.waitForDeployment();
@@ -79,7 +80,7 @@
     log("reader Base " + await at(readers.Base));
 
     const items = data.entries.map((e) => ({ environmentId: e.environmentId, canonicalAssetId: e.canonicalAssetId, symbol: e.symbol, decimals: e.decimals, custodyClass: e.custodyClass, custodyPath: e.custodyPath }));
-    // ceremony-data.entries is the Base subset of Revision D (129 + Base ETH = 130).
+    // ceremony-data.entries is the Base subset of Revision E (2892 + Base ETH = 2893).
     // Append row 2 only when an older data file omitted it.
     const hasBaseEth = items.some((e) => e.environmentId === "Base" && String(e.canonicalAssetId).toLowerCase() === String(data.row2.canonicalAssetId).toLowerCase());
     if (!hasBaseEth) {
@@ -101,9 +102,9 @@
 
     await (await verifier.configureDevFund("Base", data.devFund)).wait();
     await (await verifier.setScheduledPricePoster(me)).wait();
-    await (await verifier.applyScheduledPriceRun(1, [{ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, priceUsd18, success: true }])).wait();
+    await (await verifier.applyScheduledPriceRun(1, [{ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, priceUsd30, success: true }])).wait();
     const sp = await verifier.scheduledPrices(key);
-    if (!sp.usable || sp.priceUsd18 !== priceUsd18) throw new Error("price read is not usable. Not finalizing.");
+    if (!sp.usable || sp.priceUsd30 !== priceUsd30) throw new Error("price read is not usable. Not finalizing.");
 
     // Hand the poster to the live poster. Its runs must use run number 2 or higher.
     if ((await at(lock)) === livePoster) throw new Error("live price poster equals a new lock. Not finalizing.");
