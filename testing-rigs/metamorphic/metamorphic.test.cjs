@@ -21,6 +21,8 @@
 const path = require("path");
 const fs = require("fs");
 const { createRequire } = require("module");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const BC = path.resolve(__dirname, "../../base-contracts");
 const req = createRequire(path.join(BC, "package.json"));
 const { ethers, network } = req("hardhat");
@@ -84,8 +86,8 @@ describe("METAMORPHIC rig (active, fails on any violation)", function () {
   }
   async function prices(ethPrice) {
     await S.verifier.applyScheduledPriceRun(runId++, [
-      { environmentId: "Base", canonicalAssetId: S.ethId, priceUsd18: ethPrice, success: true },
-      { environmentId: "Base", canonicalAssetId: S.tknId, priceUsd18: usd("1"), success: true }]);
+      { environmentId: "Base", canonicalAssetId: S.ethId, priceUsd30: P30(ethPrice), success: true },
+      { environmentId: "Base", canonicalAssetId: S.tknId, priceUsd30: P30(usd("1")), success: true }]);
   }
   async function toDay(day) {
     const t = Number(S.launch) + day * 86400;
