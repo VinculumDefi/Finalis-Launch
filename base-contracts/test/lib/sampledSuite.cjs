@@ -24,15 +24,21 @@ const { sampleTokens, SEED } = require("./sampling.cjs");
 const { ASSET_ROW_ALIASES } = require("../../scripts/testChainCeremony.cjs");
 // Revision B rows under their own environment (deployment/assetRegistry.revB.json).
 const REG = require("../../scripts/registryFile.cjs").loadRegistry().written;
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const coder = ethers.AbiCoder.defaultAbiCoder();
 const SCALE = 10n ** 18n;
 const DURATIONS = [3600n, 604800n, 2592000n, 5184000n, 7776000n, 15552000n, 31536000n, 63072000n, 94608000n, 126144000n,
   157680000n, 189216000n, 220752000n, 252288000n, 283824000n, 315360000n];
 const TRS = [[30n * 86400n, 10000n], [60n * 86400n, 14000n], [90n * 86400n, 17500n], [120n * 86400n, 21000n]];
-const HS_UNITS = 10000n, STD_UNITS = 100000000n; // $0.015 and $150 at the price below
+// HS units are worth $0.015 and STD units $150 at the price below. Units scale
+// with decimals above 14 so the whole-token price stays inside the uint128
+// 30-decimal price range (VF-ORC-016, at most about $340 million per token).
+const unitShift = (dec) => 10n ** BigInt(Math.max(0, Number(dec) - 14));
+const HS_UNITS_FOR = (dec) => 10000n * unitShift(dec), STD_UNITS_FOR = (dec) => 100000000n * unitShift(dec);
 const HS_USD = 15n * SCALE / 1000n, STD_USD = 150n * SCALE;
-const priceFor = (dec) => (HS_USD * 10n ** BigInt(dec)) / HS_UNITS; // so HS_UNITS is worth $0.015
+const priceFor = (dec) => (HS_USD * 10n ** BigInt(dec)) / HS_UNITS_FOR(dec); // so HS units are worth $0.015
 
 const READERS = {
   Base: { contract: "BaseLockRecordVerifier", chainId: 8453 },
@@ -88,7 +94,7 @@ async function deployAll() {
   for (let i = 0; i < idx.length; i += 50) await verifier.registerTokenAddressBatch(idx.slice(i, i + 50));
   for (const a of ASSET_ROW_ALIASES) await verifier.registerAssetRowAlias(a.environmentId, a.canonicalAssetId, a.rowEnvironmentId);
   await verifier.setScheduledPricePoster(deployer.address);
-  const prices = list.map(([env, id, , dec]) => ({ environmentId: env, canonicalAssetId: id, priceUsd18: priceFor(dec), success: true }));
+  const prices = list.map(([env, id, , dec]) => ({ environmentId: env, canonicalAssetId: id, priceUsd30: P30(priceFor(dec)), success: true }));
   for (let i = 0; i < prices.length; i += 100) await verifier.applyScheduledPriceRun(BigInt(1 + i / 100), prices.slice(i, i + 100));
   await verifier.finalize();
   const code = await ethers.provider.getCode(await (await (await ethers.getContractFactory("TestFixtureERC20")).deploy(0)).getAddress());
@@ -118,10 +124,11 @@ function rev6Class(r) {
   if (r.environmentId === "Ethereum" && ["AAVE", "LINK", "UNI"].includes(r.symbol)) return 2;
   return 3;
 }
-function expectedIssuance({ gross, decimals, priceUsd18, custodyClass, duration, createdAt, launch, output }) {
+function expectedIssuance({ gross, decimals, priceUsd30, custodyClass, duration, createdAt, launch, output }) {
   const S = R6.SCALE;
   // Verified Gross USD Value before fee (VF-COM-017), every division floors (VF-COM-019).
-  const usd = (((gross * S) / 10n ** BigInt(decimals)) * priceUsd18) / S;
+  // VF-ORC-016: one floor rounding, floor(gross * priceUsd30 / 10^(decimals + 12)).
+  const usd = (gross * priceUsd30) / 10n ** BigInt(decimals + 12);
   const em = output === 0 ? R6.EMISSION.VCLM : R6.EMISSION.CHONX;
   const days = createdAt > launch ? (createdAt - launch) / DAY : 0n;
   let rate = em.initial_rate_per_dollar;
@@ -143,7 +150,7 @@ async function lockProveMint(env, user, recipient, dest, asset, duration, opt = 
   const output = opt.output || 0;
   const lock = V.locks[env].connect(user);
   const hs = duration === 3600n;
-  const units = opt.units || (hs ? HS_UNITS : STD_UNITS);
+  const units = opt.units || (hs ? HS_UNITS_FOR(asset.decimals) : STD_UNITS_FOR(asset.decimals));
   const usd = opt.usd || (hs ? HS_USD : STD_USD);
   const lockId = ethers.hexlify(ethers.randomBytes(32));
   const tx = asset.token
@@ -185,7 +192,7 @@ async function lockProveMint(env, user, recipient, dest, asset, duration, opt = 
   await V.verifier.verifyAndMint(p, 0);
   const minted = (await out.balanceOf(recipient)) - before;
   const exp = expectedIssuance({
-    gross: rec.gross, decimals: asset.decimals, priceUsd18: priceFor(asset.decimals), custodyClass: asset.custodyClass,
+    gross: rec.gross, decimals: asset.decimals, priceUsd30: P30(priceFor(asset.decimals)), custodyClass: asset.custodyClass,
     duration, createdAt: rec.createdAt, launch: V.launch, output,
   });
   expect(exp.issuance, `${env} ${asset.label} ${duration}s expected > 0`).to.be.gt(0n);
@@ -300,8 +307,8 @@ describe(`Sampled CVL x 16 durations + TRS x 4 durations (seed "${SEED}")`, func
           if (a.token) {
             await network.provider.send("hardhat_setCode", [a.token, V.code]);
             const tok = await ethers.getContractAt("TestFixtureERC20", a.token);
-            await tok.mint(user.address, STD_UNITS * 32n);
-            await tok.connect(user).approve(await V.locks[env].getAddress(), STD_UNITS * 32n);
+            await tok.mint(user.address, STD_UNITS_FOR(a.decimals) * 32n);
+            await tok.connect(user).approve(await V.locks[env].getAddress(), STD_UNITS_FOR(a.decimals) * 32n);
           }
           const locks = [];
           let total = 0n;
