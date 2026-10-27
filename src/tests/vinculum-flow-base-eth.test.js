@@ -28,7 +28,7 @@ const REVE = JSON.parse(readFileSync(path.join(ROOT, 'base-contracts', 'deployme
 const A = '0x' + '11'.repeat(20);
 const B = '0x' + '22'.repeat(20);
 const ID = '0x' + 'ab'.repeat(32);
-const ok = { lockId: ID, baseRecipient: A, releaseDestination: B, outputToken: 'VCLM', durationSecs: 604800, grossEth: '0.01', priceUsd: '2500' };
+const ok = { lockId: ID, baseRecipient: A, releaseDestination: B, outputToken: 'VCLM', durationSecs: 604800, grossEth: '0.01', priceUsd: '2500', priceDecimals: 18 };
 
 test('page asset is Base ETH from the active list, with the Revision E Base ETH asset id', () => {
   const r = resolvePageAsset();
