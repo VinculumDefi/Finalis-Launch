@@ -1,6 +1,6 @@
 // Operator decision 2026-10-24 (finding HH-013): cbETH on Base (row 25) is hidden
 // at the app level. It is never shown or offered as a lock option. The registry
-// (now Revision D), its hash lock and the registry pin are unchanged.
+// (now Revision E, t448u proposed), its hash lock and the registry pin are unchanged.
 // Run: node --test src/tests/hidden-assets-cbeth.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,7 +14,7 @@ import {
 } from '../lib/vfActiveAssetAllowlist.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const REVD = JSON.parse(readFileSync(path.join(ROOT, 'base-contracts', 'deployment', 'assetRegistry.revD.json'), 'utf8'));
+const REVE = JSON.parse(readFileSync(path.join(ROOT, 'base-contracts', 'deployment', 'assetRegistry.revE.json'), 'utf8'));
 const CBETH = ACTIVE_ALLOWLIST.entries.find((e) => e.environmentId === 'Base' && e.symbol === 'CBETH');
 const cbethRecord = {
   registry_row: CBETH.row, symbol: CBETH.symbol, environment: 'Base', contract_or_native_identifier: CBETH.address,
@@ -32,12 +32,12 @@ test('the hidden list has exactly one entry, cbETH on Base, with a reason and fi
   assert.ok(Object.isFrozen(HIDDEN_ASSETS) && Object.isFrozen(h));
 });
 
-test('cbETH is still on Revision D and the allowlist mirror (130 Base rows unchanged)', () => {
-  assert.equal(ACTIVE_ALLOWLIST.entries.length, 130);
+test('cbETH is still on Revision E and the allowlist mirror (2893 Base rows)', () => {
+  assert.equal(ACTIVE_ALLOWLIST.entries.length, 2893);
   assert.ok(CBETH, 'cbETH row present in the allowlist mirror');
   assert.ok(isOperatorHidden(CBETH));
-  assert.equal(REVD.entries.length, 590);
-  assert.ok(REVD.entries.some((e) => e.environmentId === 'Base' && e.row === 25 && e.identifier.toLowerCase() === CBETH.address));
+  assert.equal(REVE.entries.length, 3353);
+  assert.ok(REVE.entries.some((e) => e.environmentId === 'Base' && e.row === 25 && e.identifier.toLowerCase() === CBETH.address));
 });
 
 test('cbETH is never shown or offered, on any entry path', () => {
@@ -53,8 +53,8 @@ test('cbETH is never shown or offered, on any entry path', () => {
   assert.equal(isOfferable({ environment: 'Base', contract_or_native_identifier: CBETH.address }), false);
 });
 
-test('every other allowlisted asset is unaffected (129 offered)', () => {
-  assert.equal(OFFERED_COUNT, 129);
+test('every other allowlisted asset is unaffected (2892 offered)', () => {
+  assert.equal(OFFERED_COUNT, 2892);
   assert.equal(OFFERED_ENTRIES.length, ACTIVE_ALLOWLIST.entries.length - 1);
   for (const e of OFFERED_ENTRIES) {
     if (e.kind === 'token') {
