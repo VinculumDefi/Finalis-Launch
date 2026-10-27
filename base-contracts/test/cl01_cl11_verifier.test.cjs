@@ -1,6 +1,8 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const HOUR = 3600n;
@@ -29,7 +31,7 @@ function encodeLockProof({ lockId, gross, fee, principal, duration, created = CR
 }
 
 function encodePrice(priceUsd18) {
-  return ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [priceUsd18]);
+  return ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [P30(priceUsd18)]);
 }
 
 async function deployVerifierFixture({ finalize = true } = {}) {
@@ -68,13 +70,13 @@ async function deployVerifierFixture({ finalize = true } = {}) {
   return { deployer, recipient, vclm, chonx, verifier, mock, stake };
 }
 
-async function writeScheduledPrice(verifier, { env, assetId, priceUsd18, runId = 1n, success = true }) {
+async function writeScheduledPrice(verifier, { env, assetId, priceUsd30, runId = 1n, success = true }) {
   // run 1 is the Base ETH price written before finalize
   await verifier.applyScheduledPriceRun(runId + 1n, [
     {
       environmentId: env,
       canonicalAssetId: assetId,
-      priceUsd18: success ? priceUsd18 : 0n,
+      priceUsd30: success ? priceUsd30 : 0n, // callers pass 30-decimal values (VF-ORC-016)
       success,
     },
   ]);
@@ -161,7 +163,7 @@ describe("CL-11 · Rev 12: no Handshake allowance lookup on Base", function () {
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
     await finalizeCeremony(verifier);
-    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd30: P30(30000n * SCALE), runId: 1n });
 
     // Rev 12 removed the Rev 6 allowance (3 or 1). Before the fix a Bitcoin
     // package had to state exactly 1. Now any value verifies and mints, for a
@@ -222,7 +224,7 @@ describe("CL-11 · Rev 12: no Handshake allowance lookup on Base", function () {
     await verifier.configureDevFund("Bitcoin", deployer.address);
     await verifier.setScheduledPricePoster(deployer.address);
     await finalizeCeremony(verifier);
-    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: 30000n * SCALE, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd30: P30(30000n * SCALE), runId: 1n });
 
     const identity = "btc-handshake-id";
     const hsGross = 40n;
@@ -415,8 +417,8 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     const usdcPrice = 999_000_000_000_000_000n; // $0.999
     const usdtPrice = 1_002_000_000_000_000_000n; // $1.002
     await verifier.applyScheduledPriceRun(2n, [
-      { environmentId: "Ethereum", canonicalAssetId: usdc, priceUsd18: usdcPrice, success: true },
-      { environmentId: "Ethereum", canonicalAssetId: usdt, priceUsd18: usdtPrice, success: true },
+      { environmentId: "Ethereum", canonicalAssetId: usdc, priceUsd30: P30(usdcPrice), success: true },
+      { environmentId: "Ethereum", canonicalAssetId: usdt, priceUsd30: P30(usdtPrice), success: true },
     ]);
     await markCreated();
     expect(await verifier.S1_MULTIPLIER_BPS()).to.equal(15000n);
@@ -437,7 +439,7 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
       expect((await vclm.balanceOf(recipient.address)) - before).to.equal(expected);
       const binding = await verifier.lockReferencePrices(lockKey("Ethereum", name));
       expect(binding.bound).to.equal(true);
-      expect(binding.priceUsd18).to.equal(price);
+      expect(binding.priceUsd30).to.equal(P30(price));
     }
   });
 
@@ -445,24 +447,24 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     const { recipient, vclm, verifier, usdt } = await deployStableFixture();
     // 0.015 USDT Handshake
     const gross = 15_000n;
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 949_999_999_999_999_999n, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(949_999_999_999_999_999n), runId: 1n });
     const pkg = stablePkg({ assetId: usdt, lockName: "usdt-hs-depeg", gross, duration: HOUR, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(pkg)).to.be.revertedWith(STABLE_BELOW);
 
     // Failed run: a lock created after it has no usable price (fail closed).
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 0n, runId: 2n, success: false });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(0n), runId: 2n, success: false });
     const afterFail = stablePkg({ assetId: usdt, lockName: "usdt-hs-after-fail", gross, duration: HOUR, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(afterFail)).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
 
     // Still below on the next successful run.
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 900_000_000_000_000_000n, runId: 3n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(900_000_000_000_000_000n), runId: 3n });
     const stillBelow = stablePkg({ assetId: usdt, lockName: "usdt-hs-still-below", gross, duration: HOUR, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(stillBelow)).to.be.revertedWith(STABLE_BELOW);
 
     // Exactly $0.95 restores Handshake availability for locks created after
     // that run; valued at $0.95, not $1.
     const p95 = 950_000_000_000_000_000n;
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: p95, runId: 4n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(p95), runId: 4n });
     const recovered = stablePkg({ assetId: usdt, lockName: "usdt-hs-recovered", gross, duration: HOUR, recipient: recipient.address });
     await verifier.recordFeeAndRac(recovered);
     await verifier.verifyAndMint(recovered, 0);
@@ -477,8 +479,8 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
 
   it("sub-$0.95 refuses standard and Handshake locks, at every duration", async function () {
     const { recipient, verifier, usdc, usdt } = await deployStableFixture();
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 800_000_000_000_000_000n, runId: 1n });
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 949_999_999_999_999_999n, runId: 2n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(800_000_000_000_000_000n), runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(949_999_999_999_999_999n), runId: 2n });
     for (const [assetId, sym] of [[usdc, "usdc"], [usdt, "usdt"]]) {
       // 0.015 token Handshake ($0.012 to $0.0142, inside the $0.01-$0.02 band).
       const hs = stablePkg({ assetId, lockName: `${sym}-sub-hs`, gross: 15_000n, duration: HOUR, recipient: recipient.address });
@@ -494,18 +496,18 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
 
   it("recovery to at or above $0.95 on a later run re-enables standard and Handshake locks", async function () {
     const { recipient, vclm, verifier, usdc } = await deployStableFixture();
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 900_000_000_000_000_000n, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(900_000_000_000_000_000n), runId: 1n });
     const std = stablePkg({ assetId: usdc, lockName: "usdc-recover-std", gross: 20_000_000n, recipient: recipient.address });
     const hs = stablePkg({ assetId: usdc, lockName: "usdc-recover-hs", gross: 15_000n, duration: HOUR, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(std)).to.be.revertedWith(STABLE_BELOW);
     await expect(verifier.recordFeeAndRac(hs)).to.be.revertedWith(STABLE_BELOW);
     // A failed run keeps new locks unavailable; no $1 substitute.
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 0n, runId: 2n, success: false });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(0n), runId: 2n, success: false });
     const failStd = stablePkg({ assetId: usdc, lockName: "usdc-recover-fail", gross: 20_000_000n, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(failStd)).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
     // Later successful run at $0.97: locks created after it are available, valued at $0.97.
     const p97 = 970_000_000_000_000_000n;
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: p97, runId: 3n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(p97), runId: 3n });
     const std2 = stablePkg({ assetId: usdc, lockName: "usdc-recover-std2", gross: 20_000_000n, recipient: recipient.address });
     const hs2 = stablePkg({ assetId: usdc, lockName: "usdc-recover-hs2", gross: 15_000n, duration: HOUR, recipient: recipient.address });
     await verifier.recordFeeAndRac(std2);
@@ -516,7 +518,7 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
       (await verifier.previewIssuance(20n * p97, 0, 1, DAY30, 0)) +
       (await verifier.previewIssuance((((15n * SCALE) / 1000n) * p97) / SCALE, 0, 1, HOUR, 0));
     expect(await vclm.balanceOf(recipient.address)).to.equal(expected);
-    expect((await verifier.lockReferencePrices(lockKey("Ethereum", "usdc-recover-std2"))).priceUsd18).to.equal(p97);
+    expect((await verifier.lockReferencePrices(lockKey("Ethereum", "usdc-recover-std2"))).priceUsd30).to.equal(P30(p97));
     // AG-06 / COMB-03(b): locks created during the depeg stay refused.
     await expect(verifier.recordFeeAndRac(std)).to.be.revertedWith(STABLE_BELOW);
     await expect(verifier.recordFeeAndRac(hs)).to.be.revertedWith(STABLE_BELOW);
@@ -525,10 +527,10 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
   it("exactly $0.95 is allowed for standard and Handshake locks; one wei below is refused", async function () {
     const { recipient, vclm, verifier, usdt } = await deployStableFixture();
     const p95 = 950_000_000_000_000_000n;
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: p95 - 1n, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(p95 - 1n), runId: 1n });
     const std = stablePkg({ assetId: usdt, lockName: "usdt-95-std", gross: 20_000_000n, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(std)).to.be.revertedWith(STABLE_BELOW);
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: p95, runId: 2n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(p95), runId: 2n });
     const std95 = stablePkg({ assetId: usdt, lockName: "usdt-95-std-at", gross: 20_000_000n, recipient: recipient.address });
     await verifier.recordFeeAndRac(std95);
     await verifier.verifyAndMint(std95, 0);
@@ -547,19 +549,19 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     for (const [env, symbol, token] of OTHER_CHAIN_STABLES) {
       const a = others[`${env}:${symbol}`];
       expect(await verifier.isUsdStableIdentity(env, token), `${env} ${symbol} identity`).to.equal(true);
-      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd18: 900_000_000_000_000_000n, runId: run++ });
+      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd30: P30(900_000_000_000_000_000n), runId: run++ });
       for (const d of [HOUR, DAY30]) {
         const pkg = stablePkg({ env, custodyClass: 3, assetId: a, lockName: `${env}-${symbol}-${d}`, gross: d === HOUR ? 15_000n : 20_000_000n, duration: d, recipient: recipient.address });
         await expect(verifier.recordFeeAndRac(pkg), `${env} ${symbol} ${d}s`).to.be.revertedWith(STABLE_BELOW);
       }
-      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd18: 950_000_000_000_000_000n, runId: run++ });
+      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd30: P30(950_000_000_000_000_000n), runId: run++ });
       const ok = stablePkg({ env, custodyClass: 3, assetId: a, lockName: `${env}-${symbol}-ok`, gross: 20_000_000n, recipient: recipient.address });
       await expect(verifier.recordFeeAndRac(ok), `${env} ${symbol} at $0.95`).to.not.be.reverted;
     }
     for (const [env, symbol, token] of NON_FLOOR_CONTROLS) {
       const a = others[`${env}:${symbol}`];
       expect(await verifier.isUsdStableIdentity(env, token), `${env} ${symbol} not an identity`).to.equal(false);
-      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd18: 900_000_000_000_000_000n, runId: run++ });
+      await writeScheduledPrice(verifier, { env, assetId: a, priceUsd30: P30(900_000_000_000_000_000n), runId: run++ });
       const pkg = stablePkg({ env, custodyClass: 3, assetId: a, lockName: `${env}-${symbol}-control`, gross: 20_000_000n, recipient: recipient.address });
       await expect(verifier.recordFeeAndRac(pkg), `${env} ${symbol} has no $0.95 cutoff`).to.not.be.reverted;
     }
@@ -570,8 +572,8 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     const fake = others["Base:USDC"]; // row symbol exactly "USDC", contract 0x…dEaD
     const real = others["Base:USDC_BASE"]; // Circle USDC 0x8335…2913
     const p90 = 900_000_000_000_000_000n;
-    await writeScheduledPrice(verifier, { env: "Base", assetId: fake, priceUsd18: p90, runId: 1n });
-    await writeScheduledPrice(verifier, { env: "Base", assetId: real, priceUsd18: p90, runId: 2n });
+    await writeScheduledPrice(verifier, { env: "Base", assetId: fake, priceUsd30: P30(p90), runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Base", assetId: real, priceUsd30: P30(p90), runId: 2n });
     expect(await verifier.isUsdStableIdentity("Base", "0x000000000000000000000000000000000000dEaD")).to.equal(false);
     expect(await verifier.isUsdStableIdentity("Base", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")).to.equal(true);
     // The same contract on another environment is a different identity.
@@ -581,8 +583,8 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     const r = stablePkg({ env: "Base", custodyClass: 3, assetId: real, lockName: "base-real-usdc", gross: 20_000_000n, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(r)).to.be.revertedWith(STABLE_BELOW);
     // Threshold unchanged: exactly $0.95 is allowed for the real identity.
-    expect(await verifier.USD_STABLE_MIN_PRICE()).to.equal(950_000_000_000_000_000n);
-    await writeScheduledPrice(verifier, { env: "Base", assetId: real, priceUsd18: 950_000_000_000_000_000n, runId: 3n });
+    expect(await verifier.USD_STABLE_MIN_PRICE()).to.equal(95n * 10n ** 28n); // $0.95 at 30 decimals (VF-ORC-016)
+    await writeScheduledPrice(verifier, { env: "Base", assetId: real, priceUsd30: P30(950_000_000_000_000_000n), runId: 3n });
     const r95 = stablePkg({ env: "Base", custodyClass: 3, assetId: real, lockName: "base-real-usdc-95", gross: 20_000_000n, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(r95)).to.not.be.reverted;
   });
@@ -601,11 +603,11 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
   it("a lock already created (bound) keeps its creation price after a drop below $0.95", async function () {
     const { recipient, vclm, verifier, usdc } = await deployStableFixture();
     const p1 = 1_000_000_000_000_000_000n;
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: p1, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(p1), runId: 1n });
     const bound = stablePkg({ assetId: usdc, lockName: "usdc-bound", gross: 20_000_000n, recipient: recipient.address });
     await verifier.recordFeeAndRac(bound);
 
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 800_000_000_000_000_000n, runId: 2n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(800_000_000_000_000_000n), runId: 2n });
 
     // New Handshake: unavailable.
     const freshHs = stablePkg({
@@ -624,7 +626,7 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
     // Bound lock: still mints at its $1.00 lock-creation reference.
     await verifier.verifyAndMint(bound, 0);
     const binding = await verifier.lockReferencePrices(lockKey("Ethereum", "usdc-bound"));
-    expect(binding.priceUsd18).to.equal(p1);
+    expect(binding.priceUsd30).to.equal(P30(p1));
     expect(await vclm.balanceOf(recipient.address)).to.equal(
       await verifier.previewIssuance(20n * SCALE, 0, 1, DAY30, 0)
     );
@@ -632,7 +634,7 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
 
   it("$0.01 standard floor applies to the priced dollar value", async function () {
     const { recipient, verifier, usdc } = await deployStableFixture();
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd18: 990_000_000_000_000_000n, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdc, priceUsd30: P30(990_000_000_000_000_000n), runId: 1n });
     // 0.01 USDC x $0.99 = $0.0099 < $0.01 (would pass if priced at $1).
     const low = stablePkg({ assetId: usdc, lockName: "usdc-floor-low", gross: 10_000n, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(low)).to.be.revertedWith("VF-COM-009: standard USD below $0.01");
@@ -643,7 +645,7 @@ describe("CL-01 / VF-ORC · USDC/USDT priced from scheduled runs; $0.95 floor on
 
   it("Handshake $0.01-$0.02 band applies to the priced dollar value", async function () {
     const { recipient, verifier, usdt } = await deployStableFixture();
-    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd18: 1_040_000_000_000_000_000n, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Ethereum", assetId: usdt, priceUsd30: P30(1_040_000_000_000_000_000n), runId: 1n });
     // 0.0196 USDT x $1.04 = $0.020384 > $0.02 (would pass if priced at $1).
     const high = stablePkg({ assetId: usdt, lockName: "usdt-hs-high", gross: 19_600n, duration: HOUR, recipient: recipient.address });
     await expect(verifier.recordFeeAndRac(high)).to.be.revertedWith("VF-COM-003: handshake USD outside $0.01-$0.02");
@@ -731,14 +733,14 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
       assetId,
-      priceUsd18: 30000n * SCALE,
+      priceUsd30: P30(30000n * SCALE),
       runId: 1n,
     });
     // Failed next run: fail closed, do not keep older price usable
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
       assetId,
-      priceUsd18: 0n,
+      priceUsd30: P30(0n),
       runId: 2n,
       success: false,
     });
@@ -790,7 +792,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await finalizeCeremony(verifier);
 
     const price1 = 30000n * SCALE;
-    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd18: price1, runId: 1n });
+    await writeScheduledPrice(verifier, { env: "Bitcoin", assetId, priceUsd30: P30(price1), runId: 1n });
 
     const pkg = buildPkg({
       env: "Bitcoin",
@@ -813,13 +815,13 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
       assetId,
-      priceUsd18: 31000n * SCALE,
+      priceUsd30: P30(31000n * SCALE),
       runId: 2n,
     });
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
       assetId,
-      priceUsd18: 0n,
+      priceUsd30: P30(0n),
       runId: 3n,
       success: false,
     });
@@ -831,7 +833,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
       )
     );
     expect(binding.bound).to.equal(true);
-    expect(binding.priceUsd18).to.equal(price1);
+    expect(binding.priceUsd30).to.equal(P30(price1));
     expect(await vclm.balanceOf(recipient.address)).to.be.gt(0n);
   });
 
@@ -864,7 +866,7 @@ describe("CL-01 / VF-ORC · USD from scheduled registry price", function () {
     await writeScheduledPrice(verifier, {
       env: "Bitcoin",
       assetId,
-      priceUsd18: 30000n * SCALE,
+      priceUsd30: P30(30000n * SCALE),
       runId: 1n,
     });
 
