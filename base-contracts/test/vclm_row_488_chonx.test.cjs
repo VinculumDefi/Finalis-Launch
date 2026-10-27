@@ -8,7 +8,7 @@
 // (Base-only launch, t357u: one reader, the Base subset of Revision B).
 //   1. Feeding VCLM in as row 488 with its token address: the Verifier refuses
 //      the index write (VF-REG-008) and the ceremony stops before finalize.
-//   2. The Base-only ceremony (130 Base rows of the 590-row Revision D): the Base lock refuses a VCLM lock before any
+//   2. The Base-only ceremony (2893 Base rows of the 3353-row Revision E): the Base lock refuses a VCLM lock before any
 //      token moves (VF-TOK-007); CHONX still opens after 10,000,000 VCLM from
 //      ordinary locks and an ordinary lock then mints CHONX.
 const { expect } = require("chai");
@@ -23,7 +23,7 @@ const YEAR10 = 315360000n;
 const ETH_ID = DATA.row2.canonicalAssetId;
 const VCLM_ID = ethers.solidityPackedKeccak256(["string", "string"], ["Base", "VCLM"]);
 const VCLM_ROW_488 = { environmentId: "Base", canonicalAssetId: VCLM_ID, symbol: "VCLM", decimals: 18, custodyClass: 3, custodyPath: 1 };
-const ETH_PRICE = BigInt(DATA.priceUsd18);
+const ETH_PRICE = BigInt(DATA.priceUsd30) / 10n ** 12n; // ceremony-data price is 30-decimal (VF-ORC-016)
 const coder = ethers.AbiCoder.defaultAbiCoder();
 
 describe("VCLM is not a lock input: row 488 refused, Base lock refuses VCLM (t262u, test chain)", function () {
@@ -45,11 +45,11 @@ describe("VCLM is not a lock input: row 488 refused, Base lock refuses VCLM (t26
     };
     await expect(runBaseCeremony({ ethers, signer, art, data, log }))
       .to.be.revertedWith("VF-REG-008: protocol token is not a lock input");
-    expect(logs).to.include("registry 131/131"); // the 130 Base rows plus VCLM
+    expect(logs).to.include("registry 2894/2894"); // the 2893 Base rows plus VCLM
     expect(logs).to.not.include("Finalized.");
   });
 
-  describe("2: the Base-only ceremony (130 Base rows)", function () {
+  describe("2: the Base-only ceremony (2893 Base rows)", function () {
     let r, signer, user, recipient, dest;
     before(async () => {
       [signer, user, recipient, dest] = await ethers.getSigners();
