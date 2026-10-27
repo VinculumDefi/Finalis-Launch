@@ -1,13 +1,14 @@
 // Builds src/data/activeAssetAllowlist.json: the only assets the app may offer.
 //
-// Base-only launch (operator decision t430u item 2, 2026-10-26). The source is
-// the ceremony registry, Revision D (deployment/assetRegistry.revD.json, 590
-// rows), and only its Base rows are offered: Base ETH plus the 129 Base
-// tokens. Rows of every other chain stay in Revision D as history and are not
-// offered; they are counted under "notOffered", not listed.
+// Base-only launch. Operator order t448u (2026-10-26): the source is the
+// ceremony registry, Revision E (deployment/assetRegistry.revE.json), and only
+// its Base rows are offered: Base ETH plus every technically compatible Base
+// token. Rows of every other chain stay in the registry as history and are not
+// offered; they are counted under "notOffered", not listed. Revision D
+// (t430u, 130 Base rows) stays pinned; this builder no longer reads it.
 //
 // A Base token is offered only if it passes the on-chain read of 2026-10-26
-// (deployment/revD_onchain_2026-10-26.json, Base block 53120088): contract code
+// (deployment/revE_onchain_2026-10-26.json, one pinned Base block): contract code
 // present and decimals() equal to the registry decimals. A token that fails is
 // left out and listed under "excluded".
 // Founder override (t430u item 5, scripts/founderOverride.cjs): TigerOG,
@@ -19,7 +20,7 @@
 //
 // Match keys (never a ticker on its own):
 //   token:  environment + contract address (lowercase)
-//   native: environment + native id (Revision D assetId, e.g. native-ETH)
+//   native: environment + native id (registry assetId, e.g. native-ETH)
 // nativeLinks: none on Base (the links of other chains are not offered).
 //
 // Usage: node scripts/buildAppAllowlist.cjs [--check]
@@ -30,8 +31,8 @@ const crypto = require("crypto");
 const { isFounderOverride, FOUNDER_OVERRIDE_NAME } = require("./founderOverride.cjs");
 
 const DEP = path.join(__dirname, "..", "deployment");
-const REG = path.join(DEP, "assetRegistry.revD.json");
-const ONCHAIN = path.join(DEP, "revD_onchain_2026-10-26.json");
+const REG = path.join(DEP, "assetRegistry.revE.json");
+const ONCHAIN = path.join(DEP, "revE_onchain_2026-10-26.json");
 const OUT = path.join(__dirname, "..", "..", "src", "data", "activeAssetAllowlist.json");
 const ACTIVE_ENVIRONMENTS = ["Base"];
 const isAddr = (s) => /^0x[0-9a-fA-F]{40}$/.test(s || "") && !/^0x0{40}$/.test(s);
@@ -60,8 +61,8 @@ function buildAllowlist() {
     revision: reg.revision,
     activeEnvironments: ACTIVE_ENVIRONMENTS,
     sources: {
-      registry: { file: "base-contracts/deployment/assetRegistry.revD.json", sha256: sha(REG), entries: reg.entries.length },
-      onchainVerification: { file: "base-contracts/deployment/revD_onchain_2026-10-26.json", sha256: sha(ONCHAIN), block: chain.block, rule: "code present and decimals equal to the registry" },
+      registry: { file: "base-contracts/deployment/assetRegistry.revE.json", sha256: sha(REG), entries: reg.entries.length },
+      onchainVerification: { file: "base-contracts/deployment/revE_onchain_2026-10-26.json", sha256: sha(ONCHAIN), block: chain.block, rule: "code present and decimals equal to the registry" },
     },
     counts: { entries: entries.length, tokens: entries.filter((x) => x.kind === "token").length, natives: entries.filter((x) => x.kind === "native").length, nativeLinks: 0, excluded: excluded.length, founderOverride: entries.filter((x) => x.founderOverride).length, notOffered },
     entries, nativeLinks: [], excluded,
