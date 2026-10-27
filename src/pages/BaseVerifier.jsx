@@ -16,7 +16,7 @@ import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 import { hasUtxoMinimum, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
 
 // Only environments whose simulated native asset is on the active list are offered
-// (Revision D Base rows + on-chain verification). Base only (t430u item 2):
+// (Revision E Base rows + on-chain verification). Base only (t430u item 2):
 // the other chains stay in this list as history and the filter removes them.
 const ENV_GROUPS = [
   { label: 'EVM', envs: ['Ethereum', 'BNB', 'Avalanche', 'Polygon', 'Arbitrum', 'Base', 'Optimism'] },
