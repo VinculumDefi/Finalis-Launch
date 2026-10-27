@@ -1,8 +1,12 @@
 // Price run for the live price poster (deployment/liveConfig.json, 0x6001…0DB4).
 // Turns fetched prices into the poster's lines for
 // VinculumFinalisVerifier.applyScheduledPriceRun(runId, updates):
-//   - a fetched positive price  -> success line  { success: true,  priceUsd18 }
-//   - a miss / zero / bad price -> failure line  { success: false, priceUsd18: 0 }
+//   - a fetched positive price  -> success line  { success: true,  priceUsd30 }
+//   - a miss / zero / bad price -> failure line  { success: false, priceUsd30: 0 }
+//   - a price that rounds to 0 at 30 decimals, or is above the uint128 storage
+//     bound (about 340,282,366 USD per whole token) -> failure line (fail closed)
+// Prices are USD per whole token with 30 decimals (VF-ORC-016), truncated
+// (floor), never rounded up.
 //     (keeps that asset unusable until a later successful run)
 // Run numbers start at 2 (run 1 is the ceremony's first Base ETH price) and must
 // exceed the Verifier's lastScheduledRunId.
@@ -21,24 +25,32 @@ const { loadRegistry, CEREMONY_REGISTRY_FILE } = require("./registryFile.cjs");
 
 const LIVE = require("../deployment/liveConfig.json");
 const MIN_RUN_ID = 2n;
-const ABI = ["function applyScheduledPriceRun(uint64 runId, (string environmentId, bytes32 canonicalAssetId, uint256 priceUsd18, bool success)[] updates)"];
+const ABI = ["function applyScheduledPriceRun(uint64 runId, (string environmentId, bytes32 canonicalAssetId, uint256 priceUsd30, bool success)[] updates)"];
 
-// Exact decimal string -> 18-decimal integer. No floating point.
-function toUsd18(usd) {
+// Exact decimal string (plain or scientific notation) -> 30-decimal integer,
+// truncated toward zero. No floating point arithmetic on the value.
+const PRICE_DECIMALS = 30;
+const MAX_PRICE_USD30 = 2n ** 128n - 1n;
+function toUsd30(usd) {
   if (usd === null || usd === undefined) return 0n;
   const s = typeof usd === "number" ? (Number.isFinite(usd) ? usd.toString() : "") : String(usd).trim();
-  if (/e/i.test(s)) return toUsd18(Number(s).toFixed(18));
-  const m = s.match(/^(\d+)(?:\.(\d+))?$/);
-  if (!m) return 0n;
-  const frac = (m[2] || "").slice(0, 18).padEnd(18, "0");
-  return BigInt(m[1]) * 10n ** 18n + BigInt(frac);
+  const m = s.match(/^\+?(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/);
+  if (!m || (m[1] === "" && (m[2] === undefined || m[2] === ""))) return 0n;
+  const intPart = m[1] || "0";
+  const fracPart = m[2] || "";
+  const exp = m[3] ? parseInt(m[3], 10) : 0;
+  if (!Number.isSafeInteger(exp) || Math.abs(exp) > 1000) return 0n;
+  // value = digits * 10^(exp - fracPart.length); scaled = value * 10^30
+  const digits = BigInt(intPart + fracPart);
+  const shift = exp - fracPart.length + PRICE_DECIMALS;
+  return shift >= 0 ? digits * 10n ** BigInt(shift) : digits / 10n ** BigInt(-shift);
 }
 
 // Every line the Verifier has registered, as "environment|canonicalAssetId".
 // Base-only launch: the ceremony registers only the Base rows of the ceremony
-// registry, Revision D (129 tokens plus Base ETH = 130), and the Verifier
+// registry, Revision E (2892 tokens plus Base ETH = 2893), and the Verifier
 // refuses a price line for an unregistered row (VF-REG-001), so by default
-// only Base rows are kept. { baseOnly: false } gives all 590 Revision D rows.
+// only Base rows are kept. { baseOnly: false } gives all 3353 Revision E rows.
 function registryKeys(regFile = CEREMONY_REGISTRY_FILE, { baseOnly = true } = {}) {
   return new Set(loadRegistry(regFile).all.filter((e) => !baseOnly || e.environmentId === "Base")
     .map((e) => e.environmentId + "|" + e.canonicalAssetId.toLowerCase()));
@@ -56,10 +68,10 @@ function buildPriceRun(fetched, runId, { registry = registryKeys() } = {}) {
     if (!registry.has(k)) { skipped.push({ ...f, why: "not in registry" }); continue; }
     if (seen.has(k)) throw new Error("duplicate asset in run: " + f.environmentId);
     seen.add(k);
-    const p = toUsd18(f.usd);
-    updates.push(p > 0n
-      ? { environmentId: f.environmentId, canonicalAssetId: f.canonicalAssetId, priceUsd18: p, success: true }
-      : { environmentId: f.environmentId, canonicalAssetId: f.canonicalAssetId, priceUsd18: 0n, success: false });
+    const p = toUsd30(f.usd);
+    updates.push(p > 0n && p <= MAX_PRICE_USD30
+      ? { environmentId: f.environmentId, canonicalAssetId: f.canonicalAssetId, priceUsd30: p, success: true }
+      : { environmentId: f.environmentId, canonicalAssetId: f.canonicalAssetId, priceUsd30: 0n, success: false });
   }
   if (updates.length === 0) throw new Error("no registry assets in the fetched prices");
   return { runId: id, poster: LIVE.scheduledPricePoster, updates, skipped };
@@ -110,7 +122,7 @@ async function postOnTestChain(hre, verifier, run) {
   }
 }
 
-module.exports = { registryKeys, buildPriceRun, buildPriceRuns, toUsd18, calldata, nextRunId, postOnTestChain, MIN_RUN_ID, MAX_LINES_PER_RUN };
+module.exports = { registryKeys, buildPriceRun, buildPriceRuns, toUsd30, PRICE_DECIMALS, MAX_PRICE_USD30, calldata, nextRunId, postOnTestChain, MIN_RUN_ID, MAX_LINES_PER_RUN };
 
 if (require.main === module) {
   const a = process.argv.slice(2);
@@ -118,7 +130,7 @@ if (require.main === module) {
   if (!file || !a.includes("--run")) { console.error("usage: node scripts/priceRun.cjs <fetched.json> --run <N> [--out run.json]"); process.exit(1); }
   const runs = buildPriceRuns(JSON.parse(fs.readFileSync(file, "utf8")), run);
   const json = JSON.stringify(runs.map((r) => ({ runId: r.runId.toString(), poster: r.poster,
-    updates: r.updates.map((u) => ({ ...u, priceUsd18: u.priceUsd18.toString() })), skipped: r.skipped, calldata: calldata(r) })), null, 2);
+    updates: r.updates.map((u) => ({ ...u, priceUsd30: u.priceUsd30.toString() })), skipped: r.skipped, calldata: calldata(r) })), null, 2);
   if (out) fs.writeFileSync(out, json + "\n"); else console.log(json);
   for (const r of runs) console.error("Run " + r.runId + ": " + r.updates.filter((u) => u.success).length + " success, " + r.updates.filter((u) => !u.success).length + " failure lines.");
   console.error(runs.length + " run(s), NOT sent. Poster " + runs[0].poster.slice(0, 6) + "…" + runs[0].poster.slice(-4) + " signs each, in order.");
