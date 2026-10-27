@@ -1,12 +1,20 @@
 {
   "_note": "Machine-facing pre-deployment manifest. Verified by scripts/build_ceremony_artifacts.cjs. Not an operator checklist. The build hardcodes this file's SHA-256 so editing the manifest to match a wrong registry is refused.",
-  "revision": "Revision D",
-  "revisionLabel": "registry-revD-2026-10-26",
+  "revision": "Revision E",
+  "revisionLabel": "registry-revE-2026-10-26",
   "artifacts": [
+    {
+      "filename": "assetRegistry.revE.json",
+      "path": "deployment/assetRegistry.revE.json",
+      "revisionLabel": "Revision E",
+      "sha256": "af8a4fc62af5be7baf50e2fe164e23202de8e03f1f92103d27b490dcfb56e2e6",
+      "rowCount": 3353,
+      "rowCountNote": "3352 Revision E rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 2893 Base rows (2892 tokens plus Base ETH). Revision E is Revision D with its Base subset extended to every technically compatible Base token of the recommendation (operator order t448u); non-Base rows are carried unchanged as history. TigerOG stays by founder override."
+    },
     {
       "filename": "assetRegistry.revD.json",
       "path": "deployment/assetRegistry.revD.json",
-      "revisionLabel": "Revision D",
+      "revisionLabel": "Revision D (prior ceremony source, t430u; pinned unchanged; not the ceremony source)",
       "sha256": "d8bb58d80d593f4e0e967ee82c239327055adb07cef8809fe48f7b95372903d4",
       "rowCount": 590,
       "rowCountNote": "589 Revision D rows plus Base ETH as row 2. Source only: the Base-only ceremony registers its 130 Base rows (129 tokens plus Base ETH). Revision D is Revision C with its Base rows replaced by the expanded Base registry (operator t430u); non-Base rows are carried unchanged as history. Operator t431u removed LionOG and FrogOG; TigerOG stays by founder override. Operator t438u added doginme as a new S3 row."
@@ -29,14 +37,14 @@
       "filename": "baseCeremonyFlow.js",
       "path": "scripts/deploy-pages/baseCeremonyFlow.js",
       "revisionLabel": "Revision D ceremony flow (Base-only)",
-      "sha256": "befe9501dc9dd183c4a673e65dc41363bd5c2b3eb24f2cce0adcac378c817129",
+      "sha256": "6c867e76102b179049dadd402b6a8dd065a2201dc60045bf285cf67febf0dd5f",
       "rowCount": null
     },
     {
       "filename": "base.html",
       "path": "scripts/deploy-pages/base.html",
       "revisionLabel": "Revision D ceremony page (Base-only)",
-      "sha256": "0f40d2b73c1fa4f6dcb0b5edf91c0471ddc89e118ca5bf1498e640826c14924f",
+      "sha256": "751b867219125aa14f48596c337cdf97bf287bbac36b610c65df0e28ca401310",
       "rowCount": null
     },
     {
@@ -54,16 +62,16 @@
       "rowCount": null
     }
   ],
-  "expectedRegistryRows": 590,
-  "registryWrittenRows": 589,
+  "expectedRegistryRows": 3353,
+  "registryWrittenRows": 3352,
   "registryBaseEthRow": 2,
   "registryBaseEthEnvironment": "Base",
   "registryBaseEthSymbol": "ETH",
   "registryBaseEthAssetId": "native-ETH",
   "baseOnly": true,
-  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision C, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Operator decision t367u: the ceremony source is Revision C (row 454 USDC_BASE is S1 at 1.5x, Master Specification Revision 18 Section 6.1). Revision B itself is unchanged and stays pinned above. Operator t430u (2026-10-26): the ceremony source is Revision D, the expanded Base registry (130 Base rows after t431u and t438u). Revision C is unchanged and stays pinned above.",
-  "expectedBaseRows": 130,
-  "expectedBaseTokenAddresses": 129,
+  "baseOnlyNote": "Base-only launch (founder directive t357u). The ceremony deploys and wires Base only: one reader (Base), the Base subset of Revision C, the Base Dev Fund. No non-Base lock, reader or Dev Fund is registered. Operator decision t367u: the ceremony source is Revision C (row 454 USDC_BASE is S1 at 1.5x, Master Specification Revision 18 Section 6.1). Revision B itself is unchanged and stays pinned above. Operator t430u (2026-10-26): the ceremony source is Revision D, the expanded Base registry (130 Base rows after t431u and t438u). Revision C is unchanged and stays pinned above. Operator order t448u (2026-10-26), PROPOSED: the ceremony source is Revision E, the largest practical Base registry (2893 Base rows: every technically compatible Base token plus Base ETH). Revision D is unchanged and stays pinned above.",
+  "expectedBaseRows": 2893,
+  "expectedBaseTokenAddresses": 2892,
   "expectedBaseAliases": 0,
   "deployOrder": [
     "VinculumFinalisToken (VCLM)",
