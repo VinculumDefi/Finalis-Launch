@@ -333,7 +333,12 @@ async function reconcile(o) {
     const mc = new ethers.Contract(MULTICALL3, ["function aggregate3((address target,bool allowFailure,bytes callData)[] calls) view returns ((bool success,bytes returnData)[])"], P);
     const many = async (calls) => {
       const out = [];
-      for (let i = 0; i < calls.length; i += 120) out.push(...(await retry(() => mc.aggregate3.staticCall(calls.slice(i, i + 120).map((c) => ({ target: set.verifier, allowFailure: true, callData: c }))))));
+      const B = 40; // smaller batches, progress logged (t448u dry run); every call is still read and compared
+      const t0 = Date.now();
+      for (let i = 0; i < calls.length; i += B) {
+        out.push(...(await retry(() => mc.aggregate3.staticCall(calls.slice(i, i + B).map((c) => ({ target: set.verifier, allowFailure: true, callData: c }))))));
+        if ((i / B) % 10 === 0 || i + B >= calls.length) log(`    multicall ${Math.min(i + B, calls.length)}/${calls.length} (${Math.round((Date.now() - t0) / 1000)}s)`);
+      }
       return out;
     };
     try {
