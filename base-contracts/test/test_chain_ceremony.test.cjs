@@ -129,7 +129,7 @@ describe("Test-chain ceremony: new main verifier", function () {
     expect(c.poster.address).to.not.equal(c.deployer.address);
     const sp = await c.verifier.scheduledPrices(key("Base", c.baseEth.canonicalAssetId));
     expect(sp.usable).to.equal(true);
-    expect(sp.priceUsd18).to.equal(TEST_ETH_PRICE_USD18);
+    expect(sp.priceUsd30).to.equal(TEST_ETH_PRICE_USD18 * 10n ** 12n); // stored at 30 decimals (VF-ORC-016)
     const usdc = c.written.find((e) => e.symbol === "USDC");
     expect((await c.verifier.scheduledPrices(key(usdc.environmentId, usdc.canonicalAssetId))).usable).to.equal(false);
     await expect(c.verifier.applyScheduledPriceRun(2n, [])).to.be.revertedWith("VF-ORC-007: not price poster");
