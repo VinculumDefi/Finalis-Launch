@@ -6,6 +6,8 @@ const { ethers, network } = require("hardhat");
 const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
 const { encodeBlockHeader } = require("./lib/ethProof.cjs");
 const FX = require("./fixtures/utxo_local_locks.json");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const DAY = 86400n;
@@ -60,7 +62,7 @@ async function fx({ harness = false } = {}) {
 async function post(verifier, rows) {
   const runId = (await verifier.lastScheduledRunId()) + 1n;
   await verifier.applyScheduledPriceRun(runId, rows.map(([env, asset, price, success = true]) => ({
-    environmentId: env, canonicalAssetId: asset, priceUsd18: success ? price : 0n, success,
+    environmentId: env, canonicalAssetId: asset, priceUsd30: P30(success ? price : 0n), success,
   })));
   return (await latest()) + 1n;
 }
@@ -233,7 +235,7 @@ describe("Batch fix 2026-10-23", function () {
       const b = pkg({ recipient: f.recipient.address, created: c2 });
       expect(await submit(f, a)).to.equal(await f.verifier.previewIssuance(usdOf(SCALE, 18, 1000n * SCALE), 0, 2, D30, 0));
       expect(await submit(f, b)).to.equal(await f.verifier.previewIssuance(usdOf(SCALE, 18, 500n * SCALE), 0, 2, D30, 0));
-      expect(await f.verifier.priceInEffectAt("Ethereum", ETH, c1)).to.equal(1000n * SCALE);
+      expect(await f.verifier.priceInEffectAt("Ethereum", ETH, c1)).to.equal(P30(1000n * SCALE)); // stored with 30 decimals (VF-ORC-016)
     });
     it("COMB-03a: a USDC lock created at $1.00 still mints at $1.00 after a later depeg run", async function () {
       const f = await fx();
@@ -268,10 +270,10 @@ describe("Batch fix 2026-10-23", function () {
     it("a skipped or maximal run id is refused, and a reverted run does not consume an id", async function () {
       const f = await fx();
       const last = await f.verifier.lastScheduledRunId();
-      const row = [{ environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd18: SCALE, success: true }];
+      const row = [{ environmentId: "Ethereum", canonicalAssetId: ETH, priceUsd30: P30(SCALE), success: true }];
       await expect(f.verifier.applyScheduledPriceRun(last + 2n, row)).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
       await expect(f.verifier.applyScheduledPriceRun((1n << 64n) - 1n, row)).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
-      const bad = [{ environmentId: "Ethereum", canonicalAssetId: ethers.id("not registered"), priceUsd18: SCALE, success: true }];
+      const bad = [{ environmentId: "Ethereum", canonicalAssetId: ethers.id("not registered"), priceUsd30: P30(SCALE), success: true }];
       await expect(f.verifier.applyScheduledPriceRun(last + 1n, bad)).to.be.revertedWith("VF-REG-001: asset not in registry");
       expect(await f.verifier.lastScheduledRunId()).to.equal(last);
       await f.verifier.applyScheduledPriceRun(last + 1n, row);
