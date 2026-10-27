@@ -1,5 +1,5 @@
 // Rig 2 (Base): the full stack deployed the way the ceremony page does it
-// (runBaseCeremony, ceremony.json, the 130 Base rows of Revision D) on a LOCAL fork of Base mainnet,
+// (runBaseCeremony, ceremony.json, the 2893 Base rows of Revision E) on a LOCAL fork of Base mainnet,
 // then real Base tokens through lock -> recordFeeAndRac -> verifyAndMint ->
 // release. The Base reader reads the lock record from storage, so the whole
 // mint path runs on real token code. Prices come from real Chainlink feeds on
@@ -11,6 +11,8 @@ const fs = require("fs");
 const C = require("../lib/common.cjs");
 const { expect } = require(path.join(C.BC, "node_modules/chai"));
 const { ERC20, setBalance } = require("../lib/forkTokens.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const { ethers, network, DATA, SCALE, DAY7, YEAR10, ETH_ID, short, fmt, reason } = C;
 
 const T = {
@@ -41,8 +43,8 @@ describe("Rig 2: Base mainnet fork, full ceremony stack, real Base tokens", func
     expect((await ethers.provider.getCode(T.USDC_BASE)).length).to.be.gt(100);
     S = await C.deployStack();
     [, user, recipient, dest] = S.signers;
-    expect(S.logs).to.include("registry 130/130");
-    expect(S.logs).to.include("token addresses 129/129");
+    expect(S.logs).to.include("registry 2893/2893");
+    expect(S.logs).to.include("token addresses 2892/2892");
     expect(S.logs).to.include("Finalized.");
     console.log("      fork block", (await ethers.provider.getBlock("latest")).number, "Verifier", short(await S.verifier.getAddress()), "Base lock", short(await S.lock.getAddress()));
     const rows = [];
@@ -54,7 +56,7 @@ describe("Rig 2: Base mainnet fork, full ceremony stack, real Base tokens", func
         const [, ans, , upd] = await f.latestRoundData();
         if (ans <= 0n) continue;
         price[sym] = BigInt(ans) * 10n ** (18n - BigInt(await f.decimals()));
-        rows.push({ environmentId: "Base", canonicalAssetId: row(sym).canonicalAssetId, priceUsd18: price[sym] });
+        rows.push({ environmentId: "Base", canonicalAssetId: row(sym).canonicalAssetId, priceUsd30: P30(price[sym]) });
         console.log(`      price ${sym} ${fmt(price[sym])} USD (Chainlink ${desc}, ${new Date(Number(upd) * 1000).toISOString()})`);
       } catch (e) { console.log(`      ${sym}: feed read failed (${reason(e)}). Skipped (fail closed).`); }
     }
@@ -134,14 +136,14 @@ describe("Rig 2: Base mainnet fork, full ceremony stack, real Base tokens", func
     const early = await mk();
     await (await S.verifier.recordFeeAndRac(early)).wait(); // bound at the real price
     // Simulated depeg run (test scenario, not a market price).
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: rw.canonicalAssetId, priceUsd18: 94n * 10n ** 16n }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: rw.canonicalAssetId, priceUsd30: P30(94n * 10n ** 16n) }]);
     const late = await mk();
     await expect(S.verifier.recordFeeAndRac(late)).to.be.revertedWith("VF-ORC-005: USDC/USDT scheduled price below $0.95");
     await (await S.verifier.verifyAndMint(early, 0)).wait(); // already bound: mints
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: rw.canonicalAssetId, priceUsd18: 95n * 10n ** 16n }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: rw.canonicalAssetId, priceUsd30: P30(95n * 10n ** 16n) }]);
     await (await S.verifier.recordFeeAndRac(late)).wait();
     await (await S.verifier.verifyAndMint(late, 0)).wait();
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: rw.canonicalAssetId, priceUsd18: price.USDC_BASE }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: rw.canonicalAssetId, priceUsd30: P30(price.USDC_BASE) }]);
     results.usdc095 = "below 0.95 refused (VF-ORC-005); at 0.95 accepted; valuation bound before the dip still minted";
   });
 
