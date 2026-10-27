@@ -219,10 +219,11 @@ async function main() {
 }
 
 // ---------------------------------------------------------------------------
-// Ceremony registry resolver (Revision D, operator t430u). The Base-only
-// ceremony, the deploy page and build_ceremony_artifacts.cjs call this. Never
-// a folder glob. Revision D is Revision C with its Base rows replaced by the
-// expanded Base registry (scripts/buildRevisionD.cjs).
+// Ceremony registry resolver (Revision E, operator order t448u, proposed;
+// Revision D under t430u before it). The Base-only ceremony, the deploy page
+// and build_ceremony_artifacts.cjs call this. Never a folder glob. Revision E
+// is Revision D with its Base subset extended to every technically compatible
+// Base token (scripts/buildRevisionE.cjs).
 // deployment/assetRegistry.resolved.json remains the prior revision written
 // by main() above; it is not the ceremony source.
 // ---------------------------------------------------------------------------
@@ -232,7 +233,7 @@ const { CEREMONY_REGISTRY_FILE, CEREMONY_REGISTRY_NAME, loadRegistry } = require
 const REGISTRY_FILE = CEREMONY_REGISTRY_FILE;
 const REGISTRY_NAME = CEREMONY_REGISTRY_NAME;
 
-const EXPECTED_CEREMONY_ROWS = 590;
+const EXPECTED_CEREMONY_ROWS = 3353;
 
 function resolveCeremonyRegistry(file = REGISTRY_FILE) {
   if (!fs.existsSync(file)) {
