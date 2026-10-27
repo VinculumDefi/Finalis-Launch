@@ -16,7 +16,32 @@
 //   -> Dev Fund for Base only -> poster = this wallet, price run 1, read usable
 //   -> poster handed to the live poster -> finalize.
 (function (root) {
+  // Batch size (t452u). The Verifier itself refuses more than 50 items per batch call
+  // (VF-REG: batch exceeds 50), so 50 is the ceiling and no contract change is made.
+  // Gas sizing, measured on the test chain (scripts/revE/measureRowGas.cjs): about 70.9k gas
+  // per registry row and 30.6k per token address row. The largest real batch of 50 uses
+  // 3,564,505 gas (registry, 21.2% of the Base per-transaction cap of 16,777,216) and
+  // 1,552,176 gas (token addresses, 9.3%). Each batch is also checked
+  // with estimateGas against 85% of the cap and is split in half if it would exceed it.
+  // A single row that still exceeds it stops the ceremony (fail closed).
   const BATCH = 50;
+  const TX_GAS_CAP = 16777216n;
+  const GAS_TARGET = (TX_GAS_CAP * 85n) / 100n;
+  async function sendSized(method, items, label, log) {
+    let done = 0;
+    while (done < items.length) {
+      let n = Math.min(BATCH, items.length - done);
+      for (;;) {
+        const est = await method.estimateGas(items.slice(done, done + n));
+        if (est <= GAS_TARGET) break;
+        if (n === 1) throw new Error(label + ": one row needs " + est + " gas, above 85% of the " + TX_GAS_CAP + " transaction cap. Stopping.");
+        n = Math.ceil(n / 2);
+      }
+      await (await method(items.slice(done, done + n))).wait();
+      done += n;
+      log(label + " " + done + "/" + items.length);
+    }
+  }
   const BASE_ONLY_ENVS = ["Base"];
 
   function checkInputs(ethers, data, me) {
@@ -86,19 +111,13 @@
     if (!hasBaseEth) {
       items.push({ environmentId: "Base", canonicalAssetId: data.row2.canonicalAssetId, symbol: data.row2.symbol, decimals: data.row2.decimals, custodyClass: data.row2.custodyClass, custodyPath: data.row2.custodyPath });
     }
-    for (let i = 0; i < items.length; i += BATCH) {
-      await (await verifier.registerAssetPrecisionBatch(items.slice(i, i + BATCH))).wait();
-      log("registry " + Math.min(i + BATCH, items.length) + "/" + items.length);
-    }
+    await sendSized(verifier.registerAssetPrecisionBatch, items, "registry", log);
     const key = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", data.row2.canonicalAssetId]);
     if ((await verifier.assetPrecisionTable(key)).canonicalAssetId === ethers.ZeroHash) throw new Error("Base ETH row read failed");
 
     // Base token address index. No asset row aliases on Base.
     if (!Array.isArray(data.tokenAddresses)) throw new Error("token address index missing. Not finalizing.");
-    for (let i = 0; i < data.tokenAddresses.length; i += BATCH) {
-      await (await verifier.registerTokenAddressBatch(data.tokenAddresses.slice(i, i + BATCH))).wait();
-      log("token addresses " + Math.min(i + BATCH, data.tokenAddresses.length) + "/" + data.tokenAddresses.length);
-    }
+    await sendSized(verifier.registerTokenAddressBatch, data.tokenAddresses, "token addresses", log);
 
     await (await verifier.configureDevFund("Base", data.devFund)).wait();
     await (await verifier.setScheduledPricePoster(me)).wait();
