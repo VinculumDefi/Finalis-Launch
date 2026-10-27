@@ -13,7 +13,7 @@ import {
 } from '@/lib/vfBaseEthLock';
 import { useApprovedAssetRegistry } from '@/hooks/useApprovedAssetRegistry';
 
-// The asset this page locks: Base native ETH (Revision D row 2), from the active list.
+// The asset this page locks: Base native ETH (Revision E row 2), from the active list.
 
 function StatusPill({ ok, children }) {
   return ok
@@ -88,7 +88,7 @@ export default function VinculumFlow() {
           <p className="text-sm text-muted-foreground">
             Source environment: <span className="font-mono">{BASE_CHAIN.environment_id}</span> (chain id {BASE_CHAIN.chain_id}) · asset{' '}
             {pageAsset.ok
-              ? <span className="font-mono">ETH, Revision D row {pageAsset.entry.row}</span>
+              ? <span className="font-mono">ETH, Revision E row {pageAsset.entry.row}</span>
               : <span className="text-rose-600">{pageAsset.reason}</span>}
           </p>
           <div className="flex flex-wrap gap-2 pt-2">
