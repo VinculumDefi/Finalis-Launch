@@ -5,6 +5,8 @@ const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const HOUR = 3600n;
 const DAY7 = 604800n;
@@ -46,7 +48,7 @@ async function fullCeremony() {
   await (await verifier.setScheduledPricePoster(deployer.address)).wait();
   await (await verifier.configureDevFund("Base", devFund.address)).wait();
   await (await verifier.applyScheduledPriceRun(1n, [
-    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
   ])).wait();
   await (await verifier.finalize()).wait();
   return c;
@@ -106,7 +108,7 @@ async function partialCeremony(skip) {
   if (skip !== "devfund") await verifier.configureDevFund("Base", devFund.address);
   if (skip !== "poster") await verifier.setScheduledPricePoster(deployer.address);
   if (skip !== "price" && skip !== "poster" && skip !== "row") {
-    await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true }]);
+    await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true }]);
   }
   return c;
 }
@@ -138,9 +140,9 @@ describe("predeploy 1: ceremony order (finalize gated)", function () {
   });
   it("finalize reverts when the last Base ETH run failed (unusable)", async function () {
     const { verifier } = await partialCeremony();
-    await verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 0, success: false }]);
+    await verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(0), success: false }]);
     await expect(verifier.finalize()).to.be.revertedWith("VF-DEP-014: Base ETH price not usable");
-    await verifier.applyScheduledPriceRun(3n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true }]);
+    await verifier.applyScheduledPriceRun(3n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true }]);
     await expect(verifier.finalize()).to.not.be.reverted;
   });
   it("the poster can write a scheduled price before finalize; others cannot", async function () {
@@ -148,10 +150,10 @@ describe("predeploy 1: ceremony order (finalize gated)", function () {
     await verifier.registerAssetPrecision("Base", ETH_ID, "ETH", 18, 2, 0);
     await verifier.setScheduledPricePoster(deployer.address);
     await expect(verifier.connect(other).applyScheduledPriceRun(1n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
     ])).to.be.revertedWith("VF-ORC-007: not price poster");
     await expect(verifier.applyScheduledPriceRun(1n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
     ])).to.not.be.reverted;
   });
   it("full ordered ceremony finalizes", async function () {
@@ -168,7 +170,7 @@ describe("predeploy 2: Base ETH row", function () {
     expect((await verifier.assetPrecisionTable(key)).canonicalAssetId).to.equal(ETH_ID);
     const sp = await verifier.scheduledPrices(key);
     expect(sp.usable).to.equal(true);
-    expect(sp.priceUsd18).to.equal(PRICE);
+    expect(sp.priceUsd30).to.equal(P30(PRICE));
   });
   it("ETH only under Ethereum is not sufficient for a Base lock", async function () {
     const { verifier, reader, deployer, devFund } = await deployContracts();
@@ -177,11 +179,11 @@ describe("predeploy 2: Base ETH row", function () {
     await verifier.setScheduledPricePoster(deployer.address);
     await verifier.configureDevFund("Base", devFund.address);
     await expect(verifier.applyScheduledPriceRun(1n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
     ])).to.be.revertedWith("VF-REG-001: asset not in registry");
     // AG-07: a reverted run does not consume its id; the next run must be 1.
     await verifier.applyScheduledPriceRun(1n, [
-      { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+      { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
     ]);
     await expect(verifier.finalize()).to.be.revertedWith("VF-DEP-011: Base ETH registry row missing");
   });
@@ -237,7 +239,7 @@ describe("predeploy 4: negative cases", function () {
     await expect(c.verifier.verifyAndMint(pkg, 0)).to.be.revertedWith("VF-FEE-011: call recordFeeAndRac() first");
   });
   it("unusable price (failed run) reverts VF-ORC-005", async function () {
-    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 0, success: false }]);
+    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(0), success: false }]);
     const { lockId, rec } = await hs();
     await expect(c.verifier.recordFeeAndRac(pkgFrom(lockId, rec))).to.be.revertedWith("VF-ORC-005: no usable scheduled price");
   });
@@ -251,7 +253,7 @@ describe("predeploy 4: negative cases", function () {
     await d.verifier.registerAssetPrecision("Base", other, "OTH", 18, 2, 0);
     await d.verifier.setScheduledPricePoster(d.deployer.address);
     await d.verifier.configureDevFund("Base", d.devFund.address);
-    await d.verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true }]);
+    await d.verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true }]);
     await d.verifier.finalize();
     const { lockId, rec } = await openLock(d.lock, d.other, { recipient: d.recipient.address, dest: d.dest.address, duration: HOUR, gross: HS_GROSS });
     const pkg = pkgFrom(lockId, rec);
@@ -259,7 +261,7 @@ describe("predeploy 4: negative cases", function () {
     await expect(d.verifier.recordFeeAndRac(pkg)).to.be.revertedWith("VF-XCH-011: asset mismatch");
   });
   it("zero-price success run reverts VF-ORC-004", async function () {
-    await expect(c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 0, success: true }]))
+    await expect(c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(0), success: true }]))
       .to.be.revertedWith("VF-ORC-004: zero price");
   });
   // Relabelled to an unregistered asset: the asset check refuses it first.
