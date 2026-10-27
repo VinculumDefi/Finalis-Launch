@@ -49,7 +49,11 @@ const READY_LEDGER = ["Stellar", "XRP Ledger"];
 const BLOCKED = ["Solana"];
 const STELLAR_PUBLIC_NETWORK = "Public Global Stellar Network ; September 2015";
 const TEST_ETH_PRICE_USD18 = 2500n * 10n ** 18n; // TEST VALUE, test chain only
+// 50 is the Verifier's own per-call limit (VF-REG: batch exceeds 50). Measured gas is far below
+// the Base per-transaction cap (16,777,216), so every batch must also stay under 85% of it.
 const BATCH = 50;
+const TX_GAS_TARGET = (16777216n * 85n) / 100n;
+const underCap = (r) => { if (r.gasUsed > TX_GAS_TARGET) throw new Error("batch used " + r.gasUsed + " gas, above 85% of the transaction cap"); return r; };
 
 // ---- address -> scriptPubKey (Dev Fund outputs on UTXO chains)
 const B32 = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
@@ -207,15 +211,15 @@ async function runCeremony(hre) {
   let registryGas = 0n;
   for (let i = 0; i < all.length; i += BATCH) {
     const batch = all.slice(i, i + BATCH).map((e) => [e.environmentId, e.canonicalAssetId, e.symbol, e.decimals, e.custodyClass, e.custodyPath]);
-    registryGas += (await (await verifier.registerAssetPrecisionBatch(batch)).wait()).gasUsed;
+    registryGas += underCap(await (await verifier.registerAssetPrecisionBatch(batch)).wait()).gasUsed;
   }
 
   // Token address index (env + address -> row) and the Polygon native POL alias
   // to the existing POL row (environment Ethereum). No rows added.
   const { entries: tokenAddresses } = require("./buildTokenAddressIndex.cjs").buildTokenAddressIndex();
   for (let i = 0; i < tokenAddresses.length; i += BATCH) {
-    await (await verifier.registerTokenAddressBatch(tokenAddresses.slice(i, i + BATCH)
-      .map((t) => ({ environmentId: t.environmentId, token: t.token, canonicalAssetId: t.canonicalAssetId })))).wait();
+    underCap(await (await verifier.registerTokenAddressBatch(tokenAddresses.slice(i, i + BATCH)
+      .map((t) => ({ environmentId: t.environmentId, token: t.token, canonicalAssetId: t.canonicalAssetId })))).wait());
   }
   for (const a of ASSET_ROW_ALIASES) await (await verifier.registerAssetRowAlias(a.environmentId, a.canonicalAssetId, a.rowEnvironmentId)).wait();
 
