@@ -15,7 +15,8 @@ import IssuancePipeline from '@/components/tokens/IssuancePipeline';
 import EpochRewardPanel from '@/components/tokens/EpochRewardPanel';
 import { Coins, Zap, Activity, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { fetchAssetPrice, getAssetPricingInfo, computeVerifiedGrossUsdMicro } from '@/lib/vfPriceService';
+import { fetchAssetPrice, getAssetPricingInfo, computeVerifiedGrossUsdFormatAware } from '@/lib/vfPriceService';
+import { priceDecimalsForConfiguredVerifier } from '@/lib/vfPriceFormat';
 import { isOfferableEnvironmentNative, isOfferablePackageAsset, NOT_ACTIVE_MESSAGE } from '@/lib/vfActiveAssetAllowlist';
 import { isInThisDeployment } from '@/lib/vfDeploymentScope';
 import { hasUtxoMinimum, checkUtxoMinimumLock, priceAsOfSecs, NO_FRESH_PRICE_MESSAGE, isUtxoHandshake, checkUtxoHandshakeLock, utxoHandshakeNote } from '@/lib/vfUtxoMinimumLock';
@@ -150,7 +151,14 @@ export default function TokenLayer() {
           return;
         }
       }
-      usd = computeVerifiedGrossUsdMicro(grossAmount, decimals, priceResult.usd, SCALE).toString();
+      // The price format follows the Verifier this build points at (18 or 30 decimals). Unknown refuses.
+      const fmt = priceDecimalsForConfiguredVerifier();
+      const est = fmt.ok ? computeVerifiedGrossUsdFormatAware(grossAmount, decimals, priceResult.usd, SCALE, fmt.decimals) : null;
+      if (est === null) {
+        refuse(fmt.reason || 'price format unknown for this Verifier', 'Price format unknown');
+        return;
+      }
+      usd = est.toString();
       setPriceInfo({ price: priceResult.usd, source: priceResult.source, asset: assetInfo.symbol, env, asOf: priceAsOfSecs(priceResult) });
     } else {
       // VF-COM-003: a Handshake is $0.01 to $0.02 (Revision B verifier), so the simulation
