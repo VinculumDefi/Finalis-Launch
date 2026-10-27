@@ -10,6 +10,8 @@ const path = require("path");
 const C = require("../lib/common.cjs");
 const { expect } = require(path.join(C.BC, "node_modules/chai"));
 const { setBalance, findBalanceSlot, ERC20 } = require("../lib/forkTokens.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const { ethers, network, DATA, SCALE, DAY7, short, fmt, reason } = C;
 
 const T = {
@@ -62,7 +64,7 @@ describe("Rig 2: Ethereum mainnet fork, real tokens through the real ceremony st
       const dec = await f.decimals();
       if (ans <= 0n) throw new Error("non-positive price for " + sym);
       price[sym] = BigInt(ans) * 10n ** (18n - BigInt(dec));
-      rows.push({ environmentId: env, canonicalAssetId: row(sym).canonicalAssetId, priceUsd18: price[sym] });
+      rows.push({ environmentId: env, canonicalAssetId: row(sym).canonicalAssetId, priceUsd30: P30(price[sym]) });
       console.log(`      price ${sym} ${fmt(price[sym])} USD (Chainlink ${desc}, updated ${new Date(Number(upd) * 1000).toISOString()})`);
     }
     // AMPL has no live Chainlink USD feed on the fork. Use Ampleforth's own
@@ -74,7 +76,7 @@ describe("Rig 2: Ethereum mainnet fork, real tokens through the real ceremony st
       const [v, ok] = await mo.getData.staticCall();
       if (ok && v > 0n) {
         price.AMPL = v;
-        rows.push({ environmentId: env, canonicalAssetId: row("AMPL").canonicalAssetId, priceUsd18: v });
+        rows.push({ environmentId: env, canonicalAssetId: row("AMPL").canonicalAssetId, priceUsd30: P30(v) });
         console.log(`      price AMPL ${fmt(v)} USD (Ampleforth market oracle getData)`);
       } else console.log("      AMPL market oracle not valid. AMPL test will be skipped (fail closed).");
     } catch (e) { console.log("      AMPL market oracle read failed:", reason(e), "AMPL test will be skipped (fail closed)."); }
@@ -165,7 +167,7 @@ describe("Rig 2: Ethereum mainnet fork, real tokens through the real ceremony st
     // invariants rig test it on USDC_BASE.
     let mintedAt095 = null;
     // Restore the real feed price, then a normal lock.
-    await S.postPrices([{ environmentId: env, canonicalAssetId: row("USDC").canonicalAssetId, priceUsd18: price.USDC }]);
+    await S.postPrices([{ environmentId: env, canonicalAssetId: row("USDC").canonicalAssetId, priceUsd30: P30(price.USDC) }]);
     await (await t.approve(L, 5_000n * 10n ** 6n)).wait();
     const r = await lockAndMint("USDC", user, dest, 5_000n * 10n ** 6n);
     show("USDC", r.out, d);
