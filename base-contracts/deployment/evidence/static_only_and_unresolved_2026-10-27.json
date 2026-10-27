@@ -1,0 +1,2184 @@
+{
+ "_note": "Exact evidence for the 93 Revision E Base assets that have static checks only and for BREAD (unresolved RPC result). Derived from revE_compatibility_2026-10-26.json at block 53134232. These assets stay in the registry. They were NOT fork lock-tested and must never be called fully fork-tested. The registry file and its sha256 are unchanged.",
+ "labels": {
+  "compatible_static_only": "static checks only, not fork lock-tested",
+  "unresolved": "unresolved RPC result"
+ },
+ "registrySha256": "af8a4fc62af5be7baf50e2fe164e23202de8e03f1f92103d27b490dcfb56e2e6",
+ "fullyForkTested": 2798,
+ "counts": {
+  "staticOnly": 93,
+  "unresolved": 1
+ },
+ "assets": [
+  {
+   "address": "0x6797b6244fa75f2e78cdffc3a4eb169332b730cc",
+   "symbol": "EAI",
+   "registryRow": 1559,
+   "canonicalAssetId": "0x4321f9d579830d87f61c86bc0d7491691a3034d4d5a75117dbb463a80747419c",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B0456",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 12071,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 18,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 5,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000f111184a74720787e6",
+   "symbol": "CRWVC",
+   "registryRow": 2436,
+   "canonicalAssetId": "0x349b7facf6f1fd791eff44962c317a7653ef8700e1453b4963cd44a8fa1cb173",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1333",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "fund": "holder 0x8f10b468b06c6fd214b65f87778827f7d113f996",
+    "amount": "0",
+    "result": "NOT_SIMULATED",
+    "stage": "lock",
+    "reason": "execution reverted: CVL: zero gross",
+    "plainTransferOk": true,
+    "note": "funded amount was 0; not a compatibility signal"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000019641b253b3e2c8a24",
+   "symbol": "ANFC",
+   "registryRow": 2663,
+   "canonicalAssetId": "0x86dd0364256d86edaabc351dfdfe71fc622c7a83015640c2e2a8f78b355d797d",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1560",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000045beafafbe0dc7664",
+   "symbol": "ABNBC",
+   "registryRow": 2666,
+   "canonicalAssetId": "0x26de2834d3bfeac7f2c37023e0089026335eb85df9194ab9befc959f4ce2cc48",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1563",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000006064f8ec027f042294",
+   "symbol": "AEOC",
+   "registryRow": 2668,
+   "canonicalAssetId": "0xaebfb5822212a3dc8b2d70b7d616c86b8018bc27d669fa61a6b3a09cef785188",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1565",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000007cbdf8fa3861e51721",
+   "symbol": "APLDC",
+   "registryRow": 2671,
+   "canonicalAssetId": "0xc788dc9d1628cc4deac5ec720ae0a62c58ab273c8792fceeae862c8a72674e53",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1568",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000004cc3e96ceb78541d33",
+   "symbol": "AXONC",
+   "registryRow": 2674,
+   "canonicalAssetId": "0xbd144db4d587c34fe90586e19fa0e5e06662a4c2cf914b3cbdc94ccdff69aba4",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1571",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000a640ec8c1de0efb484",
+   "symbol": "AXTIC",
+   "registryRow": 2675,
+   "canonicalAssetId": "0x190ba7d16728dcb56ad20d0138baaa3bbcf83baa90d1f4098c5db31008fee9aa",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1572",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000747bffa52fe2c2510b",
+   "symbol": "BALLC",
+   "registryRow": 2676,
+   "canonicalAssetId": "0x52875c87d4c592ea07b1e2c7c7483d9b9dcfd4366ce7c60a514f73ac55602895",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1573",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000024170488e788cbbcb4",
+   "symbol": "BRK.BC",
+   "registryRow": 2678,
+   "canonicalAssetId": "0xdd31bdd7a1308e1005f7420429c3642b2a01ab5608c8a84832c5f7fa7e2fd559",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1575",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000801830b13b8e493423",
+   "symbol": "BYNDC",
+   "registryRow": 2679,
+   "canonicalAssetId": "0x8b4bd385fc1cb4ef5008db57d1a9a626276aa162afd4c36c4289e728e36e2634",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1576",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000082f7fea8f2ee8f438",
+   "symbol": "BJC",
+   "registryRow": 2681,
+   "canonicalAssetId": "0x2cb69a8c01532eac741583a9d914b987f67ac1d097b926565dbd52c500b765e6",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1578",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000067c8c151f24e1c9924",
+   "symbol": "XYZC",
+   "registryRow": 2682,
+   "canonicalAssetId": "0x5ed3881cd4f15513a9d01ee475c13a73f1a3bfa2c59a8b88cf32eed5d78cca63",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1579",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000003e5e2892158e25dd7b",
+   "symbol": "BOOTC",
+   "registryRow": 2684,
+   "canonicalAssetId": "0x5945348b8f3adb32878e93212d457d602661950c21a7b7aa14290333328fa6e6",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1581",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000808e9cca9ed8e4da61",
+   "symbol": "EATC",
+   "registryRow": 2685,
+   "canonicalAssetId": "0x1c21c693bd051612593a24fd6aa3fcbc70ce7b931148c138e07cb556b91261e7",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1582",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000072b5c2b2d18ee8a2a5",
+   "symbol": "AIC",
+   "registryRow": 2686,
+   "canonicalAssetId": "0x8c2d4c7411d16798cd1c9a98178386c6118f7ff0cf14141138100b1cdbc4bf51",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1583",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000ffb10718f880a48274",
+   "symbol": "CVNAC",
+   "registryRow": 2687,
+   "canonicalAssetId": "0x93dbed84cc6d08bc15c6ba815c77189a99ad5a51d1365e145bec1f6919ea9ba0",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1584",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001b6e407239eb31edcf",
+   "symbol": "CAVAC",
+   "registryRow": 2688,
+   "canonicalAssetId": "0x7ed96de6d693ffdf749259a375e3f0c8c809dd41480bf13b022118557adb926d",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1585",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000004161b4168d03841511",
+   "symbol": "CELHC",
+   "registryRow": 2689,
+   "canonicalAssetId": "0x6ec669997c47a3b41e8a379590ccc093d63847db8697a9dca14a7fe7937f0987",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1586",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001ca01a48688ec7d3cc",
+   "symbol": "CHPTC",
+   "registryRow": 2690,
+   "canonicalAssetId": "0x57302306340cc80ee843f46ff6a2b0e6678b372f0941233f83c12059a9b7dd59",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1587",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000a5e12a1842dfcdb118",
+   "symbol": "CHWYC",
+   "registryRow": 2691,
+   "canonicalAssetId": "0xc3b84d9717320a9936b35ba8f596d2c2512d4c391a4098611355b9372ec846ab",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1588",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000690275843b6e246286",
+   "symbol": "CIFRC",
+   "registryRow": 2692,
+   "canonicalAssetId": "0x56e86daf224263ff7072c8caf7018413ae3cdca3392909b9155c60a836c490cd",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1589",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000fa63cfff5c794dbb95",
+   "symbol": "CLSKC",
+   "registryRow": 2694,
+   "canonicalAssetId": "0xbd81d40744ba025faa944f9fbe2dfde27040e76e4842828338ba6d3421f239f7",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1591",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000055e63c4c1cdc6b7a36",
+   "symbol": "CLOVC",
+   "registryRow": 2696,
+   "canonicalAssetId": "0x68d7dc19b03b4c8e7c3862d43607cad90915b231fe6d7e281e403fda2dd02e56",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1593",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000003bd46dbde905508b16",
+   "symbol": "CMCSAC",
+   "registryRow": 2697,
+   "canonicalAssetId": "0x943bd6239282b32d348cf8d66e87ba6082147f1baaf9eba54e0df14e0b58f13f",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1594",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001ac12227a8ae0ef3ac",
+   "symbol": "STZC",
+   "registryRow": 2698,
+   "canonicalAssetId": "0x7d2a957ccfd078e53136d2c6a9d4edf814553cec31038deebc0caaf6165a2efe",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1595",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001aaa9010cd65f82c5e",
+   "symbol": "CORZC",
+   "registryRow": 2700,
+   "canonicalAssetId": "0x7a7ccc2dacac899703b706292ecfcbca7b04847a94e70e49242c6bc2e99f816a",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1597",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000431a5c1e48e3b1d130",
+   "symbol": "CROXC",
+   "registryRow": 2701,
+   "canonicalAssetId": "0x7d6bb1e9a07c3944ce41a7216a74c5f2401b805c5c942f1f02b75d7e709ceeb0",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1598",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000087d144f2c70cd1a5f6",
+   "symbol": "PLAYC",
+   "registryRow": 2702,
+   "canonicalAssetId": "0xadac4e282c85fe61e9461bedaa427dde021c0641410d1b911961e540219739a2",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1599",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001ecfaccd9047d3b544",
+   "symbol": "BROSC",
+   "registryRow": 2703,
+   "canonicalAssetId": "0xffb7ecf62b0a9f8a705979acd7850df38c0f7e63adf720d22783cc50fe1c45ef",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1600",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000a63e35e673e3776b88",
+   "symbol": "KODKC",
+   "registryRow": 2704,
+   "canonicalAssetId": "0xaa3ee2177768999823ad59887fe06fb65210d6d18787d36b1a536495cf8731b1",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1601",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000006b7f6966ee0453e251",
+   "symbol": "ELFC",
+   "registryRow": 2705,
+   "canonicalAssetId": "0x1322a55461e80765e1e1c1e8bb7edd058f797e727cf062660a4885dde904f022",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1602",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000007a90b2d9ed101035a8",
+   "symbol": "ENPHC",
+   "registryRow": 2706,
+   "canonicalAssetId": "0x6f9f4cbfa76567831bfa1f42e7aa64bbc94769a44b37a386eba83c75f27ac798",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1603",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000004fc7a0c25178a0d633",
+   "symbol": "FLYC",
+   "registryRow": 2708,
+   "canonicalAssetId": "0x589b5d65300a5d8f646ee2b809db2168a62a15c5cf01192ab5bde915b896260d",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1605",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000006de7888c3fffd803ac",
+   "symbol": "GLXYC",
+   "registryRow": 2710,
+   "canonicalAssetId": "0xf2a3d0a6fd44391d99ebc8dc1804591eb7615f669c7b32d032d57af4880ab7a8",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1607",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000009c52748e1d1cbd5fd6",
+   "symbol": "GEMIC",
+   "registryRow": 2711,
+   "canonicalAssetId": "0x726a238c6312548c69973bab377dbc0919d8d75abd1c77c989658d5b13de87ab",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1608",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000f0e13d9c1cdfd211c8",
+   "symbol": "GPROC",
+   "registryRow": 2712,
+   "canonicalAssetId": "0xc3c0a49841ef6cd5ce7711c8062eaa9b35cab70a5f1b3ef9f58301479c4b5b09",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1609",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000009a3602cf5d020afa98",
+   "symbol": "HPQC",
+   "registryRow": 2713,
+   "canonicalAssetId": "0x399a841fe2a288dcc3d4ea95b04d8a7b23c5fe5b29953af1b25a67769eab07d8",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1610",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000006ee1c139a723872e09",
+   "symbol": "HUTC",
+   "registryRow": 2714,
+   "canonicalAssetId": "0xe83fbbf5dcac9fd732d3f026fd573544ce65374ca433f335a491d0f737ad5e00",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1611",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000077d13d6c79b6c11c5a",
+   "symbol": "IBRXC",
+   "registryRow": 2715,
+   "canonicalAssetId": "0x0c6a02b3dd96c6a80777a28998db5ebbd9dbb8fedde2a64ec2bbe147b6de0e55",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1612",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000674e1325dbdf06b309",
+   "symbol": "LUNRC",
+   "registryRow": 2717,
+   "canonicalAssetId": "0x6e84197bdad6b72a6c1337ec9bb2aa03338a1fd2df05012c98f2d69182206c90",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1614",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000058f143099d5f79b0ec",
+   "symbol": "IONQC",
+   "registryRow": 2718,
+   "canonicalAssetId": "0x4d44460b36eef96fc9aa316e455c846f3949f524434aa4347d06fc43971b8b86",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1615",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000105a1f43ff3605c5de",
+   "symbol": "KSSC",
+   "registryRow": 2720,
+   "canonicalAssetId": "0x5455089f8a634efb56f542ef55a11751280db2fefe0c56ceac802539bd0bb65c",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1617",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000005c41b0018612629072",
+   "symbol": "DNUTC",
+   "registryRow": 2721,
+   "canonicalAssetId": "0x296b8ddd1654534b0bd7de157292fe0eeac06eeda49e82b0d6283707bdd2b27f",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1618",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001347ccd9e83d5bf3e0",
+   "symbol": "LYVC",
+   "registryRow": 2722,
+   "canonicalAssetId": "0x31942ce0547f3753ccdc64aaee24b5d616b7acd8555f110d777c98ca367ded59",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1619",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000081050ac3d4395df527",
+   "symbol": "LCIDC",
+   "registryRow": 2723,
+   "canonicalAssetId": "0x9b729676ca465cc0cba9957292c912c7b033385e9fb91ac738cdd9de57200604",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1620",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000a310e034e09186fb2d",
+   "symbol": "MARAC",
+   "registryRow": 2725,
+   "canonicalAssetId": "0xc6facb94787a524b77f556882c51195110d694611e77ba8292f59228e683e0ea",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1622",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000005bcde0a6926919fef9",
+   "symbol": "MNSTC",
+   "registryRow": 2726,
+   "canonicalAssetId": "0x37063c4dd2d1fcf1e93b53b4991f52795411cadb5102b64ca05741a8c1137fbe",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1623",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000069d694d397b9388dac",
+   "symbol": "NNEC",
+   "registryRow": 2730,
+   "canonicalAssetId": "0xb081e75c81ef619f37465ebcff6be83b786908f5e49165726c64e75a52779f13",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1627",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000002a0ec8f8861ce98983",
+   "symbol": "NVTSC",
+   "registryRow": 2731,
+   "canonicalAssetId": "0xc92e0de86d6964b4956311ae0551be3e8c0f513c52ef7e5c62b0566edd1cfb53",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1628",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000978546fe604b8dcbc6",
+   "symbol": "SMRC",
+   "registryRow": 2733,
+   "canonicalAssetId": "0x2fddb9c791474d805722a0b7568838b4ce4c213fb2248fdf22ea943818779e50",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1630",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000009188edfd2fcc8cc81e",
+   "symbol": "OKLOC",
+   "registryRow": 2734,
+   "canonicalAssetId": "0x7224c597e522298ee1998c573155ec1357dfdb7feb3cd10bc7a219b304c82aed",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1631",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000259694b27bf052e7d7",
+   "symbol": "OPENC",
+   "registryRow": 2736,
+   "canonicalAssetId": "0x53614b3f9db0332c369001f28df59ee85366261cd3b13ceb3656e83201a25367",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1633",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000068987dacde1db79cd4",
+   "symbol": "PZZAC",
+   "registryRow": 2737,
+   "canonicalAssetId": "0xfa898541fc0b11e22a33bb50d022271d8e4d63e37182fe2001a3f090e050e48d",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1634",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000006d1bc7faa266eb099d",
+   "symbol": "PEPC",
+   "registryRow": 2740,
+   "canonicalAssetId": "0x5406445abffe1f4a3696013e8a046f7b2453c9f0e44644c11859f6733a976a22",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1637",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000011b20aebe0bd567f1c",
+   "symbol": "PLNTC",
+   "registryRow": 2742,
+   "canonicalAssetId": "0x8e06169f843c3f8bb4dfa93c6d38d76b2fbcea0dd4be855b57abf5cd7d3d00d5",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1639",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000501ef81f911eb57656",
+   "symbol": "RXRXC",
+   "registryRow": 2744,
+   "canonicalAssetId": "0x4c27aa2b998c9bf2a3a3796acdf93996e8c657971d3fde641f1625ce38ddc1ec",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1641",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000cd7dfaef0423f1f103",
+   "symbol": "RDWC",
+   "registryRow": 2745,
+   "canonicalAssetId": "0x287ea3f5e59e21558ff01c27fb2f016489d2919e2ef4661cb871b7572cf21d69",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1642",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000c22fff2785bb27b39a",
+   "symbol": "RGTIC",
+   "registryRow": 2746,
+   "canonicalAssetId": "0x8087d8d4102dd1b1e373fc6f8ae5190128ef10df61c3731416e0218b45817ef2",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1643",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000bd0c7627b663c581a6",
+   "symbol": "RIOTC",
+   "registryRow": 2747,
+   "canonicalAssetId": "0x614b22ddc1d5a042c7469faf796128524bd51c57329d6b2516a5b3e61673cff0",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1644",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000000d3176ee4af1102d",
+   "symbol": "RKTC",
+   "registryRow": 2749,
+   "canonicalAssetId": "0xbe643a5eb9042bb0ae512efb90cfb5c0248a672404762e7fe9b3ae2512cc8a5e",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1646",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000004aa2b559ca0a0bbf5d",
+   "symbol": "ROOTC",
+   "registryRow": 2750,
+   "canonicalAssetId": "0x1473dfe9f86ba2c41b31a4e5b8aecc67b8e7a32e85c4453fc0e041793683c67f",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1647",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000000f28146eb28ea2835b",
+   "symbol": "RUMC",
+   "registryRow": 2751,
+   "canonicalAssetId": "0x548962661d595070b689ee7bbd0173fef5198318b9980a871ea1397babfef3ba",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1648",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000082cd2c7801305808df",
+   "symbol": "NOWC",
+   "registryRow": 2752,
+   "canonicalAssetId": "0xc149967d8afb2e6f88be14f7d756c29ed983ff33358c08b3e18fc077624f4bae",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1649",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000000c1f8acd3c4496a762",
+   "symbol": "SEZLC",
+   "registryRow": 2753,
+   "canonicalAssetId": "0x19670f1917ba4ecd03e099f82e564cd3f97cff04dfdae61fcf98b93baa65ae50",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1650",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000002b9ac07a0544688079",
+   "symbol": "SIDUC",
+   "registryRow": 2754,
+   "canonicalAssetId": "0x1021fa7d0965dcc00076ff1609b4ac9f94784aee6cc4f3acb6bce8cfb461ed61",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1651",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000000199ae48796c61909e",
+   "symbol": "FUNC",
+   "registryRow": 2755,
+   "canonicalAssetId": "0xc015bc167133d22a55c8df93d5e26cf5bc6ac60a2403d15a18b019212008ed5d",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1652",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000003fe90a64263b7f9e74",
+   "symbol": "SWBIC",
+   "registryRow": 2757,
+   "canonicalAssetId": "0x92bc889e961f99423889a5f9fd5905e025fa18b4dc09b9d24c92fbf82f183054",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1654",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000003ef37a7c863dc1482a",
+   "symbol": "SOFIC",
+   "registryRow": 2758,
+   "canonicalAssetId": "0xe018893e546cb43a24049fe296bfe5a7250959c7aeed96b9ac27711e99dae265",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1655",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000d5c0393796e92fcab0",
+   "symbol": "LUVC",
+   "registryRow": 2759,
+   "canonicalAssetId": "0x738242219651205fc0a7254e641eac2054ab7b3c238c9c2d12ad674cd212df37",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1656",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000009426b660396ebcf343",
+   "symbol": "USDEC",
+   "registryRow": 2760,
+   "canonicalAssetId": "0x3d78d20853f9462984dc97959a2d4b7d563f1e0b7a7366721fa86b01e1060609",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1657",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000b57f99acec3a7490d0",
+   "symbol": "SGC",
+   "registryRow": 2765,
+   "canonicalAssetId": "0x58c5feb5079069cab4ac48bba18d69a641767e2342d5c95cab26e6c5e4ba28ae",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1662",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000432a1d2bd864acec82",
+   "symbol": "WULFC",
+   "registryRow": 2767,
+   "canonicalAssetId": "0x3c39b36c6a8e4b4de46a2e9e992519ea390b981ff768db4fc069f767bfc207ad",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1664",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000001409f816682b7772b7",
+   "symbol": "SMPLC",
+   "registryRow": 2768,
+   "canonicalAssetId": "0x69cac0aa5adcf9b6b89600d707d1c7d21c716f3d80515d15f8db8286813b971a",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1665",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000008baf7bb82e4c37743f",
+   "symbol": "TTDC",
+   "registryRow": 2769,
+   "canonicalAssetId": "0xa02b89638809635a517741f14378aeb06b0785118b759c93f3bd0e5e736f4739",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1666",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000000bd75bf439a38bf7df",
+   "symbol": "DISC",
+   "registryRow": 2770,
+   "canonicalAssetId": "0xfbc775fcd1203edb9ecfd3c7376f4c8e61ca8ed5165351a504a98d2fa9fe2088",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1667",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000b8f841940325db6b2c",
+   "symbol": "TKOC",
+   "registryRow": 2771,
+   "canonicalAssetId": "0x4edec605968fddb27120a1aaf6813c3375afaced7c6bbb8833c801beb0784b7b",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1668",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000115bf2283265fb04db",
+   "symbol": "XXIC",
+   "registryRow": 2773,
+   "canonicalAssetId": "0x5f0e97ac99828505234a4ab6f888abcabb6533e0455f15dfb4084c6cf4627585",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1670",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000879a74c76c73a27d71",
+   "symbol": "UAAC",
+   "registryRow": 2774,
+   "canonicalAssetId": "0x5c34e07a934973133c785ee7a0209a8d4cc6dd08d9b6fec18377a271071d9094",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1671",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000902f48cba1f39149f7",
+   "symbol": "UC",
+   "registryRow": 2775,
+   "canonicalAssetId": "0xa6d6213cd128d37beb91aee9b8f77b67adf9415c81f82411e5c54dc73f148b43",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1672",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000fec679b39992f67627",
+   "symbol": "VVVC",
+   "registryRow": 2778,
+   "canonicalAssetId": "0x993025e3ce50156c08dd730c2e4aed46a2dd463eea21d21cfe2d18a0dfdc788d",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1675",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000979ef4dd6a001b58b1",
+   "symbol": "VKTXC",
+   "registryRow": 2779,
+   "canonicalAssetId": "0x448bbc35127747dfe430d82d8b464a8fb8db5a049a039af35c5ed7cd259714ec",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1676",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000008a7508619c717a7106",
+   "symbol": "WMTC",
+   "registryRow": 2780,
+   "canonicalAssetId": "0x4bb85d12aa1ac9fb4110f858e483fba3662a1316f3814c3f12cfff2c27fce440",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1677",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000089bc72c3e637a02adb",
+   "symbol": "WC",
+   "registryRow": 2781,
+   "canonicalAssetId": "0x00cdfaa132708b4adf78642c63e9633db4adc328ee569f4f659e38b8fd7f172b",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1678",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000281c973bf2555dd94b",
+   "symbol": "WINGC",
+   "registryRow": 2783,
+   "canonicalAssetId": "0x032b8b96438d9b8913a1705a558bcc648f337cdeb7c8d119961fbcf1c906440e",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1680",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000008df9bc22db1d7da2a5",
+   "symbol": "WOLFC",
+   "registryRow": 2784,
+   "canonicalAssetId": "0x3e84c65ccc879545d732e4463bfdfee65f888b53ea12db4818525f0d12e0ddcf",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1681",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb20000000000000000000089221e238277d52515",
+   "symbol": "WWC",
+   "registryRow": 2798,
+   "canonicalAssetId": "0x2def37dbcab2f9f3a3fe101207a79d84d383d1613e52dc7d63be15e201ff79eb",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1695",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb200000000000000000000613c15f118df2b189b",
+   "symbol": "YETIC",
+   "registryRow": 2799,
+   "canonicalAssetId": "0xb78af1a01204733d33464a74ddcabd123af8d94af77db083767d6c2e8afab381",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1696",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 3,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xb2000000000000000000005c8324136de0f4134a",
+   "symbol": "YUMC",
+   "registryRow": 2801,
+   "canonicalAssetId": "0xbbf385ab7114530f8f8a2f0bdbca8f44e7a44d78beb3e4388433dbccf6ce5fcb",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B1698",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 1,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 8,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xab274df53b9ca19a9bf9d389fe63c71335fd6a52",
+   "symbol": "ETHA",
+   "registryRow": 3702,
+   "canonicalAssetId": "0xfc15a6308c1077a6d25c2be2ac7225d03db793e8406ee1da1177da65ec98c5c3",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B2599",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 321,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 18,
+    "balanceOfOk": true,
+    "paused": false
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0x9d87f9b29a36e71b4994845526761d7ce4dabfe3",
+   "symbol": "SPXU",
+   "registryRow": 3704,
+   "canonicalAssetId": "0x5aaf3e46144d3a6f6482f905f552562032f5c1fa10f4699770d9c62a32d1a4bf",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B2601",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 321,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 18,
+    "balanceOfOk": true,
+    "paused": false
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xd01df9d21aa4580761725b304e3a85ff80cbbd01",
+   "symbol": "MQ",
+   "registryRow": 3756,
+   "canonicalAssetId": "0xe07fd17c642ab4ace50ebf49b94010d48cc33b9bd24dc0aace81391b620522c5",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B2653",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 237,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 18,
+    "balanceOfOk": true,
+    "paused": false
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0x49683bed3b5a4ae28ed0ca4b256ae994425b647c",
+   "symbol": "ULTY",
+   "registryRow": 3918,
+   "canonicalAssetId": "0x0f60cb00ad118fbde98f6bc4c1b0d6c7d80eb806cacac399341125a9cf7a26be",
+   "label": "static checks only, not fork lock-tested",
+   "verdict": "compatible_static_only",
+   "source": "B B2815",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 321,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 18,
+    "balanceOfOk": true,
+    "paused": false
+   },
+   "attempts": 2,
+   "simulation": {
+    "result": "NOT_SIMULATED",
+    "reason": "could not fund a local test account"
+   }
+  },
+  {
+   "address": "0xf327abd3c9709c9834d0ad1dc253ff6eed86c04d",
+   "symbol": "BREAD",
+   "registryRow": 2166,
+   "canonicalAssetId": "0xe94e5de56c1f6b4d64ebf6d597350a9bc20ea791e43b47ff00106d0b239f759c",
+   "label": "unresolved RPC result",
+   "verdict": "unresolved",
+   "source": "B B1063",
+   "coingeckoBaseContractMatch": true,
+   "static": {
+    "codeBytes": 18985,
+    "eip1967Impl": null,
+    "eip1167": false,
+    "decimals": 9,
+    "balanceOfOk": true,
+    "paused": null
+   },
+   "attempts": 2,
+   "simulation": {
+    "fund": "holder 0xf1d5e74427313c60afacf1706d26a261e0d76205",
+    "amount": "1000000000",
+    "result": "ERROR",
+    "reason": "could not coalesce error"
+   }
+  }
+ ]
+}
