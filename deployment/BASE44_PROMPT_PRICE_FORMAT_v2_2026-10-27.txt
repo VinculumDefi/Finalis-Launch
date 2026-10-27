@@ -1,0 +1,20 @@
+This replaces the earlier attachment. Do not use the earlier file.
+
+Goal: make this app's price handling work with two contract price formats, without changing anything visible today.
+
+Rules:
+1. Do not change any contract address, the VCLM token constant, the asset list, or any dependency (leave zod, moment and vite exactly as they are now). Do not send any transaction.
+2. Work only in this app's real files (lockMint.js, mintConfig.js and the Lock page), wherever prices are read and turned into a USD value.
+3. Decide the price format from the verifier the app is pointed at, by reading the chain, never by guessing from the size of a number:
+   - If PRICE_SCALE() returns exactly 1e30, prices have 30 decimals.
+   - If PRICE_SCALE() reverts and USD_STABLE_MIN_PRICE() returns exactly 0.95e18, prices have 18 decimals (this is the current verifier 0x771f...B3C, and the app must keep working exactly as now).
+   - Anything else: refuse to price and show "Price format unknown for this verifier".
+   Read this once when the page loads and cache it.
+4. Value calculation, using whole-number math only (BigInt), result is a USD value with 18 decimals, same as the lock takes today:
+   - 18 decimals: keep today's calculation exactly as it is.
+   - 30 decimals: value = floor(amount_in_smallest_units * price30 / (10^token_decimals * 10^12)).
+5. Price display: show the price from the chain divided by 10^18 or 10^30 to match its format. For very small prices (below 0.0001) show e-notation with 3 significant digits, for example 7.35e-19.
+6. The USDC/USDT floor is 0.95 in the verifier's own format (0.95e18 or 0.95e30).
+7. Do not change the $0.01 minimum, the 5% fee, the durations, or the 1.5x / 1.3x / 1.0x multipliers.
+
+Before publishing, show me the diff and confirm on chain that with the current verifier 0x771f...B3C the format resolves to 18 decimals and the displayed ETH price and a sample lock value are the same as before the change.
