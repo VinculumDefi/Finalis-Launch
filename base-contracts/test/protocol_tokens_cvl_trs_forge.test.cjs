@@ -2,7 +2,7 @@
 // Rev 6 VF-TOK-007 and VF-REG-008: VCLM, CHONX and SYNTH are prohibited Commitment
 // Vault Lock (CVL) inputs. TRS (stake) and the SYNTH Forge are separate mechanisms.
 // The real Base ceremony flow (baseCeremonyFlow.js) runs as committed.
-//   Path A: the 130 Base rows (the Base-only ceremony as built, t430u). The Base lock refuses the three
+//   Path A: the 2893 Base rows (the Base-only ceremony as built, t448u proposed). The Base lock refuses the three
 //           protocol tokens before any token moves (t262u).
 //   Path B: rows 488-490 with their token addresses: the Verifier refuses the
 //           index write (VF-REG-008), so that ceremony never finalizes.
@@ -18,7 +18,7 @@ const SCALE = 10n ** 18n;
 const DAY7 = 604800n;
 const YEAR10 = 315360000n;
 const ETH_ID = DATA.row2.canonicalAssetId;
-const ETH_PRICE = BigInt(DATA.priceUsd18);
+const ETH_PRICE = BigInt(DATA.priceUsd30) / 10n ** 12n; // ceremony-data price is 30-decimal (VF-ORC-016)
 const idOf = (sym) => ethers.solidityPackedKeccak256(["string", "string"], ["Base", sym]);
 const VCLM_ID = idOf("VCLM");
 const CHONX_ID = idOf("CHONX");
@@ -176,14 +176,14 @@ async function cvlRefused(h, sym, token, id, price, amount, label) {
   console.log(`      [${label}] ${sym} lock refused by the Base lock (VF-TOK-007): no token moved, no fee, nothing minted`);
 }
 
-describe("t259u/t262u Path A (130 Base rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
+describe("t259u/t262u Path A (2893 Base rows): protocol tokens refused by the Base lock; TRS stake of all three; Forge threshold (proof, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
   before(async () => { await h.setup(); });
 
-  it("A0: 130 Base rows / 129 Base token addresses; no protocol-token row or index entry; finalized", async () => {
-    expect(h.logs).to.include("registry 130/130");
-    expect(h.logs).to.include("token addresses 129/129");
+  it("A0: 2893 Base rows / 2892 Base token addresses; no protocol-token row or index entry; finalized", async () => {
+    expect(h.logs).to.include("registry 2893/2893");
+    expect(h.logs).to.include("token addresses 2892/2892");
     for (const id of [VCLM_ID, CHONX_ID, SYNTH_ID]) expect((await h.r.verifier.assetPrecisionTable(key("Base", id))).canonicalAssetId).to.equal(ethers.ZeroHash);
     expect(await h.r.verifier.configurationFinalized()).to.equal(true);
   });
