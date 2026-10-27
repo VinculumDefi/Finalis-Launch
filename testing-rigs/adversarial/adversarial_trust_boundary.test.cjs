@@ -7,6 +7,8 @@
 const path = require("path");
 const crypto = require("crypto");
 const { createRequire } = require("module");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const BC = path.resolve(__dirname, "../../base-contracts");
 const req = createRequire(path.join(BC, "package.json"));
 const { expect } = req("chai");
@@ -306,19 +308,19 @@ async function deploySystem(opts = {}) {
 
   await verifier.setScheduledPricePoster(poster.address);
   const priceUpdates = [
-    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
-    { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
+    { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
   ];
   for (const spec of readerSpecs) {
     if (!spec.aliasTo) {
-      priceUpdates.push({ environmentId: spec.env, canonicalAssetId: spec.assetId, priceUsd18: PRICE, success: true });
+      priceUpdates.push({ environmentId: spec.env, canonicalAssetId: spec.assetId, priceUsd30: P30(PRICE), success: true });
     }
   }
   for (const name of Object.keys(utxo)) {
-    priceUpdates.push({ environmentId: name, canonicalAssetId: utxo[name].assetId, priceUsd18: PRICE, success: true });
+    priceUpdates.push({ environmentId: name, canonicalAssetId: utxo[name].assetId, priceUsd30: P30(PRICE), success: true });
   }
-  if (opts.stellar) priceUpdates.push({ environmentId: "Stellar", canonicalAssetId: XLM_ID, priceUsd18: PRICE, success: true });
-  if (opts.xrpl) priceUpdates.push({ environmentId: "XRP Ledger", canonicalAssetId: XRP_ID, priceUsd18: PRICE, success: true });
+  if (opts.stellar) priceUpdates.push({ environmentId: "Stellar", canonicalAssetId: XLM_ID, priceUsd30: P30(PRICE), success: true });
+  if (opts.xrpl) priceUpdates.push({ environmentId: "XRP Ledger", canonicalAssetId: XRP_ID, priceUsd30: P30(PRICE), success: true });
   await verifier.connect(poster).applyScheduledPriceRun(1n, priceUpdates);
   await verifier.finalize();
   return {
@@ -807,7 +809,7 @@ describe("RIG 9 adversarial trust-boundary (safe behavior, fix 2026-10-23)", fun
     await network.provider.send("evm_increaseTime", [Number(400n * DAY)]);
     await network.provider.send("evm_mine", []);
     await c.verifier.connect(c.poster).applyScheduledPriceRun(2n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
     ]);
     const honest = await baseLockPkg(c);
     const cheat = await baseLockPkg(c);
@@ -825,7 +827,7 @@ describe("RIG 9 adversarial trust-boundary (safe behavior, fix 2026-10-23)", fun
     const c = await deploySystem();
     const p = await baseLockPkg(c);
     await c.verifier.connect(c.poster).applyScheduledPriceRun(2n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE * 10n, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE * 10n), success: true },
     ]);
     await c.verifier.recordFeeAndRac(p);
     await c.verifier.verifyAndMint(p, 0);
@@ -841,7 +843,7 @@ describe("RIG 9 adversarial trust-boundary (safe behavior, fix 2026-10-23)", fun
   run("SAFE ADV-14: the maximum runId is refused, so runs cannot be frozen [AG-07]", async () => {
     const c = await deploySystem();
     await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(2n ** 64n - 1n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE * 1000n, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE * 1000n), success: true },
     ])).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
     await c.verifier.connect(c.poster).applyScheduledPriceRun(2n, []);
     expect(await c.verifier.lastScheduledRunId()).to.equal(2n);
@@ -854,14 +856,14 @@ describe("RIG 9 adversarial controls that always run", function () {
   it("PASS ADV-P10: non-poster cannot applyScheduledPriceRun", async () => {
     const c = await deploySystem();
     await expect(c.verifier.connect(c.stranger).applyScheduledPriceRun(2n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE * 100n, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE * 100n), success: true },
     ])).to.be.revertedWith("VF-ORC-007: not price poster");
   });
 
   it("PASS ADV-P11: out-of-order / non-advancing runId is refused", async () => {
     const c = await deploySystem();
     await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(1n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
     ])).to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
     await expect(c.verifier.connect(c.poster).applyScheduledPriceRun(3n, []))
       .to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
