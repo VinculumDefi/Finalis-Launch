@@ -20,18 +20,22 @@ const MANIFEST_PATH = path.join(root, "deployment", "ceremony-manifest.json");
 // pinned and unchanged in the manifest as the prior ceremony source.
 // Operator t431u (2026-10-26): LionOG and FrogOG are removed from Revision D
 // (TigerOG stays by founder override); Revision D was rebuilt and re-pinned.
-const EXPECTED_REGISTRY_SHA256 = "d8bb58d80d593f4e0e967ee82c239327055adb07cef8809fe48f7b95372903d4";
-const EXPECTED_REGISTRY_FILENAME = "assetRegistry.revD.json";
-const EXPECTED_REGISTRY_ROWS = 590;
+// Operator order t448u (2026-10-26), PROPOSED: the ceremony source is registry
+// Revision E (deployment/assetRegistry.revE.json), Revision D with its Base
+// subset extended to every technically compatible Base token
+// (scripts/buildRevisionE.cjs). Revision D stays pinned and unchanged.
+const EXPECTED_REGISTRY_SHA256 = "af8a4fc62af5be7baf50e2fe164e23202de8e03f1f92103d27b490dcfb56e2e6";
+const EXPECTED_REGISTRY_FILENAME = "assetRegistry.revE.json";
+const EXPECTED_REGISTRY_ROWS = 3353;
 // Pinned row counts of every registry file the manifest lists.
-const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 590 };
-const EXPECTED_MANIFEST_SHA256 = "96434c14c111315a8a88af3b24c3c42d6ccc1ce36fd1b2f7bce5fccf056a75df";
-// Base-only launch: the ceremony registers only the Base rows of Revision D.
-// Revision D itself is not changed (590 rows, pinned above); the Base subset
+const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 590, "assetRegistry.revE.json": 3353 };
+const EXPECTED_MANIFEST_SHA256 = "dd2a500b29e2a0b915354b2476e923217d2c771fbf53c82304b0507b40710d10";
+// Base-only launch: the ceremony registers only the Base rows of Revision E.
+// Revision E itself is not changed (3353 rows, pinned above); the Base subset
 // is derived here at build time and must have exactly these counts.
-const BASE_ONLY_RULE = "Revision D entries with environmentId === \"Base\" (row 2 Base ETH included); token addresses with environmentId === \"Base\"; no aliases";
-const EXPECTED_BASE_ROWS = 130;
-const EXPECTED_BASE_TOKEN_ADDRESSES = 129;
+const BASE_ONLY_RULE = "Revision E entries with environmentId === \"Base\" (row 2 Base ETH included); token addresses with environmentId === \"Base\"; no aliases";
+const EXPECTED_BASE_ROWS = 2893;
+const EXPECTED_BASE_TOKEN_ADDRESSES = 2892;
 const EXPECTED_BASE_ALIASES = 0;
 
 const { resolveCeremonyRegistry } = require("./deploy-pages/resolveAssetRegistry.cjs");
@@ -68,7 +72,7 @@ function refused(failures) {
 }
 
 /**
- * Hash a registry file and refuse unless it matches the hardcoded Revision D
+ * Hash a registry file and refuse unless it matches the hardcoded Revision E
  * constants. Used by the suite against the historical file and mutated copies.
  * Does not call loadRegistry (historical basename is blocked there).
  */
@@ -137,10 +141,10 @@ function verifyCeremonyManifest(opts = {}) {
   const failures = [];
   const { manifest } = loadManifest();
 
-  if (manifest.revision !== "Revision D" || manifest.revisionLabel !== "registry-revD-2026-10-26") {
+  if (manifest.revision !== "Revision E" || manifest.revisionLabel !== "registry-revE-2026-10-26") {
     failures.push({
       field: "manifest.revisionLabel",
-      expected: "Revision D / registry-revD-2026-10-26",
+      expected: "Revision E / registry-revE-2026-10-26",
       actual: String(manifest.revision) + " / " + String(manifest.revisionLabel),
     });
   }
@@ -174,7 +178,7 @@ function verifyCeremonyManifest(opts = {}) {
   if (resolved.rowCount !== EXPECTED_REGISTRY_ROWS || resolved.rowCount !== manifest.expectedRegistryRows) {
     failures.push({
       field: "registry.rowCount",
-      expected: String(EXPECTED_REGISTRY_ROWS) + " (Revision D rows; the Base subset includes Base ETH as row 2)",
+      expected: String(EXPECTED_REGISTRY_ROWS) + " (Revision E rows; the Base subset includes Base ETH as row 2)",
       actual: String(resolved.rowCount) + " (source=" + resolved.filename + ")",
     });
   }
@@ -227,7 +231,7 @@ function verifyCeremonyManifest(opts = {}) {
         actual: String(a.revisionLabel),
       });
     }
-    if (/^assetRegistry\.rev[BCD]\.json$/.test(a.filename) && a.rowCount !== PINNED_REGISTRY_ROWS[a.filename]) {
+    if (/^assetRegistry\.rev[BCDE]\.json$/.test(a.filename) && a.rowCount !== PINNED_REGISTRY_ROWS[a.filename]) {
       failures.push({
         field: "artifact." + a.filename + ".rowCount",
         expected: String(PINNED_REGISTRY_ROWS[a.filename]),
@@ -367,7 +371,7 @@ function writeAtomic(dest, contents) {
 async function buildCeremonyArtifacts(opts = {}) {
   // Verify first. Write nothing on failure (no ceremony-data.json, no HTML).
   const { manifest, resolved } = verifyCeremonyManifest();
-  // Base subset of Revision D, derived here. Revision D itself is not changed.
+  // Base subset of Revision E, derived here. Revision E itself is not changed.
   const entries = resolved.entries.filter((e) => e.environmentId === "Base");
   const row2 = resolved.baseEth;
 
@@ -376,24 +380,25 @@ async function buildCeremonyArtifacts(opts = {}) {
   const base = rep.rows.find((r) => r.environment === "Base");
   if (!base || !base.devFund) { console.error("Base Dev Fund missing"); process.exit(1); }
 
-  let priceUsd18 = null;
+  // VF-ORC-016: the ceremony's Base ETH price is USD per whole ETH with 30 decimals.
+  let priceUsd30 = null;
   let priceSource = null;
   if (opts.keepPrice) {
     // Operator rule t364u: the ETH price snapshot in the committed build is
-    // kept as-is. Reuse priceUsd18 and priceSource from the committed
+    // kept as-is. Reuse priceUsd30 and priceSource from the committed
     // ceremony-data.json byte for byte; no network call. Refuse if absent.
     const prev = JSON.parse(fs.readFileSync(path.join(pages, "ceremony-data.json"), "utf8"));
-    if (typeof prev.priceUsd18 !== "string" || !/^[0-9]+$/.test(prev.priceUsd18) || typeof prev.priceSource !== "string") {
-      throw refused([{ field: "keepPrice", expected: "committed ceremony-data.json with priceUsd18 and priceSource", actual: String(prev.priceUsd18) + " / " + String(prev.priceSource) }]);
+    if (typeof prev.priceUsd30 !== "string" || !/^[0-9]+$/.test(prev.priceUsd30) || typeof prev.priceSource !== "string") {
+      throw refused([{ field: "keepPrice", expected: "committed ceremony-data.json with priceUsd30 and priceSource", actual: String(prev.priceUsd30) + " / " + String(prev.priceSource) }]);
     }
-    priceUsd18 = prev.priceUsd18;
+    priceUsd30 = prev.priceUsd30;
     priceSource = prev.priceSource;
   } else try {
     const resp = await get("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
     if (resp.status === 200) {
       const usd = JSON.parse(resp.body).ethereum && JSON.parse(resp.body).ethereum.usd;
       if (typeof usd === "number" && usd >= 0.95) {
-        priceUsd18 = BigInt(Math.round(usd * 1e8)) * 10n ** 10n + "";
+        priceUsd30 = BigInt(Math.round(usd * 1e8)) * 10n ** 22n + "";
         priceSource = "cascade-tier-1";
       }
     }
@@ -410,7 +415,7 @@ async function buildCeremonyArtifacts(opts = {}) {
       "0x5AB40cdD51036EA88889c26E182b2936Ddf76a8A",
     ],
     readers: { base: { env: "Base", contract: "BaseLockRecordVerifier" } },
-    // Token address index of the ceremony registry (Revision D), Base only.
+    // Token address index of the ceremony registry (Revision E), Base only.
     tokenAddresses: require("./buildTokenAddressIndex.cjs").buildTokenAddressIndex(resolved.written).entries
       .filter((t) => t.environmentId === "Base")
       .map((t) => ({ environmentId: t.environmentId, token: t.token, canonicalAssetId: t.canonicalAssetId })),
@@ -430,7 +435,7 @@ async function buildCeremonyArtifacts(opts = {}) {
     registryRevisionLabel: manifest.revisionLabel,
     deployOrderKeys: manifest.deployOrderKeys,
     feeLanguage: manifest.feeLanguageDetail,
-    priceUsd18,
+    priceUsd30,
     priceSource
   };
 
@@ -438,7 +443,7 @@ async function buildCeremonyArtifacts(opts = {}) {
   if (data.registryRows !== EXPECTED_REGISTRY_ROWS) {
     throw refused([{
       field: "ceremony-data.registryRows",
-      expected: String(EXPECTED_REGISTRY_ROWS) + " (Revision D source)",
+      expected: String(EXPECTED_REGISTRY_ROWS) + " (Revision E source)",
       actual: "registryRows=" + data.registryRows + " source=" + resolved.filename,
     }]);
   }
@@ -467,11 +472,11 @@ async function buildCeremonyArtifacts(opts = {}) {
   // Base-only: base.html is the only page (maintained by hand). Re-check.
   verifyCeremonyManifest();
 
-  if (!priceUsd18) {
+  if (!priceUsd30) {
     console.error("REFUSAL: scheduled ETH price miss. ceremony-data.json written with no price. The page will not send.");
     process.exit(0);
   }
-  console.log("wrote ceremony data (Base only)", data.entries.length, "Base rows of", data.registryRows, "Revision D rows,",
+  console.log("wrote ceremony data (Base only)", data.entries.length, "Base rows of", data.registryRows, "Revision E rows,",
     data.tokenAddresses.length, "token addresses,", data.assetRowAliases.length, "aliases, price source", priceSource + (opts.keepPrice ? " (kept from the committed build)" : ""),
     "registry", resolved.filename, "sha256", resolved.sha256, "manifest", EXPECTED_MANIFEST_SHA256.slice(0, 12) + "...");
 }
