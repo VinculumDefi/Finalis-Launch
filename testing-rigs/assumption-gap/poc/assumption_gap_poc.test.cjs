@@ -8,6 +8,8 @@
 const path = require("path");
 const crypto = require("crypto");
 const { createRequire } = require("module");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const BC = path.resolve(__dirname, "../../../base-contracts");
 const req = createRequire(path.join(BC, "package.json"));
 const { expect } = req("chai");
@@ -54,8 +56,8 @@ async function deploySystem({ ethDevFundOnVerifier, ethReaderContract = "SimpleE
   await verifier.configureDevFund("Ethereum", (ethDevFundOnVerifier || devFund).address);
   await verifier.setScheduledPricePoster(deployer.address);
   await verifier.applyScheduledPriceRun(1n, [
-    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
-    { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
+    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
+    { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
   ]);
   await verifier.finalize();
   return { deployer, recipient, other, dest, devFund, stranger, vclm, chonx, verifier, stake, baseLock, ethLock, ethReader };
@@ -219,7 +221,7 @@ describe("assumption-gap: every gap is closed (safe behavior, fix 2026-10-23)", 
   run("AG-05: valuationTimestamp = 0 is refused; the proven creation time sets the decayed rate", async () => {
     const c = await deploySystem();
     await advance(400n * DAY);
-    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true }]);
+    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true }]);
     const honest = await baseLockPkg(c);
     const cheat = await baseLockPkg(c);
     const r = c.recipient.address;
@@ -236,7 +238,7 @@ describe("assumption-gap: every gap is closed (safe behavior, fix 2026-10-23)", 
   run("AG-06: a later price run does not reprice an older lock (price in effect at creation)", async () => {
     const c = await deploySystem();
     const p = await baseLockPkg(c); // created while ETH = $2,392
-    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE * 10n, success: true }]);
+    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE * 10n), success: true }]);
     await c.verifier.recordFeeAndRac(p);
     await c.verifier.verifyAndMint(p, 0);
     const got = await c.vclm.balanceOf(c.recipient.address);
@@ -250,9 +252,9 @@ describe("assumption-gap: every gap is closed (safe behavior, fix 2026-10-23)", 
 
   run("AG-07: run ids are sequential, so runId = 2^64-1 cannot freeze future runs", async () => {
     const c = await deploySystem();
-    await expect(c.verifier.applyScheduledPriceRun(2n ** 64n - 1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE * 1000n, success: true }]))
+    await expect(c.verifier.applyScheduledPriceRun(2n ** 64n - 1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE * 1000n), success: true }]))
       .to.be.revertedWith("VF-ORC-001: run id must be the next in sequence");
-    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true }]);
+    await c.verifier.applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true }]);
     expect(await c.verifier.lastScheduledRunId()).to.equal(2n);
     await c.verifier.applyScheduledPriceRun(3n, []);
     expect(await c.verifier.lastScheduledRunId()).to.equal(3n);
