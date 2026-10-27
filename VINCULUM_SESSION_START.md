@@ -1,8 +1,8 @@
 # Vinculum session start
 
-Revision 9, current as of Tuesday 2026-10-27 (ET). Read this first in every
-new session. It says what is live, what governs, and the rules. It replaces
-Revision 8 of 2026-10-25 (see History at the end).
+Revision 10, 2026-10-27 (ET). Read this first in every new session. It says
+what governs, what the launch scope is, and the rules. It replaces Revision 9
+of 2026-10-27 (see History at the end).
 
 The operator is not a programmer. One step at a time. Plain English. Do not
 build, commit, change, deploy or send anything until the operator asks.
@@ -10,9 +10,10 @@ build, commit, change, deploy or send anything until the operator asks.
 ## Repository
 https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
-Revision 19 of the Master Specification is the governing edition (adopted 2026-10-27).
-Registry Revision C was added to main at 90ac322. This session start
-is Revision 9. Check `git log -1 origin/main` for the newest commit.
+Revision 19 of the Master Specification (2026-10-27) is the governing edition.
+The active asset registry is Revision E (2,893 Base entries), recorded in
+`DOCUMENT_REGISTER.md`. This session start is Revision 10. Check
+`git log -1 origin/main` for the newest commit.
 
 Start with these files:
 1. `DOCUMENT_REGISTER.md` (every controlled document, its current revision,
@@ -20,10 +21,13 @@ Start with these files:
    governs)
 2. `docs/Vinculum_Finalis_Master_Specification_Revision_19_2026-10-27.md`
    (Revision 19, the current governing specification)
-3. `deployment/BASE44_LIVE_CONFIG_2026-10-22.md` (the live Base set)
-4. `testing-rigs/MASTER_FINDINGS.md` and `testing-rigs/FIX_LOG_2026-10-23.md`
+3. `base-contracts/deployment/assetRegistry.revE.json` (the active registry,
+   Revision E, 2,893 Base entries; its SHA-256 is in `DOCUMENT_REGISTER.md`)
+4. `deployment/BASE44_LIVE_CONFIG_2026-10-22.md` (record of the earlier Base
+   deployments, which are retired; see "Retired locks: release only")
+5. `testing-rigs/MASTER_FINDINGS.md` and `testing-rigs/FIX_LOG_2026-10-23.md`
    (open findings and recorded operator decisions)
-5. `src/lib/vfLiveRules.js` (the contract values the app uses)
+6. `src/lib/vfLiveRules.js` (the contract values the app uses)
 
 If a file is missing, list the folder. Do not invent the file.
 
@@ -54,38 +58,38 @@ If a file is missing, list the folder. Do not invent the file.
   table.
 
 ## Launch scope
-- This launch is seven chains at once, in one ceremony: Ethereum, Base,
-  Arbitrum, BNB Smart Chain, Polygon, Avalanche C-Chain and Optimism.
-- One ITS token set: one VCLM, one CHONX and one SYNTH. Each has a copy on all
-  seven chains, linked through Axelar ITS. Moving a token between chains burns
-  it on one side and mints it on the other, so the worldwide supply never
-  changes.
-- One worldwide supply for each token.
-- The global ledger on Base authorizes every mint.
-- No per-chain allocations.
-- The launch is final. After finalize there are no controls.
+- The launch scope is Base only: this release mints on Base and locks on Base
+  (Revision 19, Sections 3.1 and 11.1). Every approved asset is a Base entry in
+  Appendix C: 2,893 entries (registry Revision E).
+- Base is the canonical issuance and accounting blockchain for VCLM, CHONX and
+  SYNTH. They are ordinary Base-native tokens, with one supply each, issued on
+  Base (Sections 11.4 and 13.4). Axelar ITS is not part of this launch.
+- No independent or separately issued VCLM, CHONX or SYNTH supply may be
+  created on another blockchain (VF-XCH-019).
+- Base verification authorizes every mint (Section 3.2).
+- The launch is final. After finalize there are no controls (Section 2,
+  VF-IMM-001 to VF-IMM-004).
 - Readers are required. They must not be disabled.
-- Nothing is signed or deployed.
 
 ## Governing rules
 - The Handshake is one hour. Its fee is 5%, the same uniform 5% on every
   chain and every duration. It is worth $0.01 to $0.02. There is no
-  allowance limit. (Adopted in Revision 12, stated in Revision 18.)
-- Revision 18 VF-COM-003 also sets coin-unit bands for Bitcoin, Bitcoin Cash
+  allowance limit. (Revision 19, VF-COM-003, VF-COM-004 and VF-COM-006.)
+- Revision 19 VF-COM-003 also sets coin-unit bands for Bitcoin, Bitcoin Cash
   and Litecoin native Handshakes. Those chains are not in this launch.
-- Every other duration needs at least $0.01 (the contract minimum). Revision
-  18 VF-COM-009 says $10.00. This difference is pending (Revision 18,
-  Appendix E, item E-8).
+- Every other duration needs at least $0.01 (Revision 19, VF-COM-009).
 - Only the sixteen durations are permitted. Ten years is 8.0x.
-- The 120-day stake multiplier is 2.1x (`docs/TRS_CORRECTION_2026-10-17.md`).
+- The 120-day stake multiplier is 2.1x (Revision 19, Section 10.1).
 - A lock issues one token, VCLM or activated CHONX, to its Base recipient after
   Base verification. Maturity returns the principal only.
-- A lock's price is fixed the first time its fee is recorded. With no usable
-  scheduled price the Verifier refuses (fail closed). No substitute price.
-- The last successful scheduled price stays usable until the next successful
-  run.
-- `CHONX.initialize(Verifier, 0)` is the start state. CHONX output activates at
-  10,000,000 lifetime VCLM.
+- A lock keeps the reference price that applied when it was created
+  (VF-ORC-009). With no usable scheduled price there is no valuation (fail
+  closed). No hardcoded or substitute price (VF-ORC-004, VF-ORC-005).
+- A successful scheduled price stays in effect until the next scheduled run.
+  A scheduled run that produces no valid price makes that asset unavailable
+  until a later successful run (VF-ORC-008).
+- CHONX output activates when cumulative lifetime VCLM issuance reaches
+  10,000,000 (VF-TOK-002).
 - Cosmos is dropped. It is not an environment, not a registry row in use, and
   not in the app.
 
@@ -132,19 +136,21 @@ of the specification and ask the operator before building or assuming a
 rule. Do not invent new rules that contradict or extend settled policy
 without explicit operator approval.
 
-## Settled architecture decisions (2026-10-25)
-Seven chains: Ethereum, Base, Arbitrum, BNB Smart Chain, Polygon, Avalanche
-C-Chain, and Optimism. One worldwide lifetime supply for each Vinculum token.
-No permanent or temporary supply allocations to individual chains. One global
-issuance authorization ledger on Base. Locally independent commitment vault
-locks and principal releases. SYNTH forging on all seven chains. One Base44
-application supporting all seven environments. Current Base token contracts
-will not be reused in the new seven-chain token system.
+## Settled architecture decisions (Revision 19)
+Base only. Base is the canonical issuance and accounting blockchain. VCLM,
+CHONX and SYNTH are ordinary Base-native tokens with one supply each, issued on
+Base. Axelar ITS is not part of this launch. Commitment Vault principal stays
+on its source blockchain, and its release at maturity does not depend on Base
+issuance. One verified Commitment Vault Lock authorizes one selected output
+token, VCLM or activated CHONX. The registry is the 2,893-entry Base list in
+Appendix C. After finalization there is no governance, upgrade, pause or
+discretionary control.
 
 ## History
 | Revision | Date | Change | Archived copy |
 |---|---|---|---|
-| 9 | 2026-10-27 | Revision 19 governs, named by number and SHA-256. Only the governing-specification reference changed. | This file (current) |
+| 10 | 2026-10-27 | Launch scope, governing rules and settled decisions rewritten to match Revision 19 (Base only, Revision E registry of 2,893 entries, minimum $0.01, no Axelar ITS). Standing operator rules, Echo rule and Gap-escalation rule unchanged. | This file (current) |
+| 9 | 2026-10-27 | Revision 19 governs, named by number and SHA-256. Only the governing-specification reference changed. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_9_2026-10-27.md` |
 | 8 | 2026-10-25 | Launch scope rewritten for the seven-chain simultaneous launch (operator t418u). | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_8_2026-10-25.md` |
 | 7 | 2026-10-25 | Base-only launch scope line and future-work line removed. Live deployment section removed. Echo rule, Gap-escalation rule and Settled architecture decisions (2026-10-25) added. Revision 3 history wording updated. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_7_2026-10-25.md` |
 | 6 | 2026-10-24 | Revision 18 governs, named by number and SHA-256. Registry Revision C identifier and pin added. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_6_2026-10-24.md` |
