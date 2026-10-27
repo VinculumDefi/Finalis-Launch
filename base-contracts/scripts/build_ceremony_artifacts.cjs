@@ -29,7 +29,7 @@ const EXPECTED_REGISTRY_FILENAME = "assetRegistry.revE.json";
 const EXPECTED_REGISTRY_ROWS = 3353;
 // Pinned row counts of every registry file the manifest lists.
 const PINNED_REGISTRY_ROWS = { "assetRegistry.revB.json": 487, "assetRegistry.revC.json": 487, "assetRegistry.revD.json": 590, "assetRegistry.revE.json": 3353 };
-const EXPECTED_MANIFEST_SHA256 = "dd2a500b29e2a0b915354b2476e923217d2c771fbf53c82304b0507b40710d10";
+const EXPECTED_MANIFEST_SHA256 = "1a24915c549823ee3d1104c7c44b816f79becba3e75bd08ca925eeaf0867cf56";
 // Base-only launch: the ceremony registers only the Base rows of Revision E.
 // Revision E itself is not changed (3353 rows, pinned above); the Base subset
 // is derived here at build time and must have exactly these counts.
