@@ -220,7 +220,7 @@ async function runCeremony(hre) {
   for (const a of ASSET_ROW_ALIASES) await (await verifier.registerAssetRowAlias(a.environmentId, a.canonicalAssetId, a.rowEnvironmentId)).wait();
 
   await (await verifier.connect(poster).applyScheduledPriceRun(1n, [
-    { environmentId: "Base", canonicalAssetId: baseEth.canonicalAssetId, priceUsd18: TEST_ETH_PRICE_USD18, success: true },
+    { environmentId: "Base", canonicalAssetId: baseEth.canonicalAssetId, priceUsd30: TEST_ETH_PRICE_USD18 * 10n ** 12n, success: true },
   ])).wait();
 
   return { deployer, poster, vclm, chonx, verifier, forge, stake, locks, readers, devFundScripts, ledgerDevFunds, tokenAddresses, written, baseEth, all, registryGas };
