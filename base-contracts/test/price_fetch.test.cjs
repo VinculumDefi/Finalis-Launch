@@ -3,9 +3,9 @@
 // impersonation (no key). HTTP is mocked here; nothing is fetched or posted live.
 // The fixture test/fixtures/price_fetch_sample.json is a slice of one real
 // read-only fetch (t209u item 2).
-// Base-only launch: the ceremony registers only the 130 Base rows of registry
-// Revision D, so the fetcher and price run default to those rows. The
-// fetcher's chain logic is still exercised offline on all 590 Revision D rows
+// Base-only launch: the ceremony registers only the 2893 Base rows of registry
+// Revision E (t448u, proposed), so the fetcher and price run default to those
+// rows. The fetcher's chain logic is still exercised offline on all 3353 Revision E rows
 // (baseOnly: false).
 // Operator t430u item 1 (2026-10-26): the $10,000 pool minimum and its
 // screening are removed. The rule tested here is the scheduled cascade of
@@ -58,9 +58,9 @@ describe("Price fetcher -> price run (test chain)", function () {
   const tel = baseRows.find((r) => r.row === 1082);
   const noId = baseRows.find((r) => r.kind === "token" && !r.pricingIdentifier && !ogAddrs.has(lc(r.identifier)));
 
-  it("reads the 590 Revision D rows; the default is the 130 Base rows the ceremony registers", () => {
-    expect(rows.length).to.equal(590);
-    expect(baseRows.length).to.equal(130);
+  it("reads the 3353 Revision E rows; the default is the 2893 Base rows the ceremony registers", () => {
+    expect(rows.length).to.equal(3353);
+    expect(baseRows.length).to.equal(2893);
     expect(baseRows.every((r) => r.environmentId === "Base")).to.equal(true);
     expect(baseRows.filter((r) => r.row === 2).length).to.equal(1);
     expect(baseRows.map((r) => r.environmentId + "|" + lc(r.canonicalAssetId)).sort())
@@ -185,7 +185,7 @@ describe("Price fetcher -> price run (test chain)", function () {
     });
   });
 
-  describe("on the test chain (Base-only ceremony: 130 Base rows, poster = live poster)", function () {
+  describe("on the test chain (Base-only ceremony: 2893 Base rows, poster = live poster)", function () {
     let v;
     before(async () => {
       const [signer] = await ethers.getSigners();
@@ -199,7 +199,7 @@ describe("Price fetcher -> price run (test chain)", function () {
       const inRevB = new Set(baseRows.map((x) => x.environmentId + "|" + x.canonicalAssetId.toLowerCase()));
       const isIn = (f) => inRevB.has(f.environmentId + "|" + f.canonicalAssetId.toLowerCase());
       const r = buildPriceRun(SAMPLE, await nextRunId(v));
-      // Fixture rows not in Revision D (Solana SOL, sUSD, ggAVAX, SWEAT, GT, IPOR)
+      // Fixture rows not in Revision E (Solana SOL, sUSD, ggAVAX, SWEAT, GT, IPOR)
       // and every non-Base row (not registered on the Base-only launch) are skipped, never posted.
       expect(r.skipped.map((x) => x.symbol).sort()).to.deep.equal(SAMPLE.filter((f) => !isIn(f)).map((f) => f.symbol).sort());
       expect(r.updates.length).to.be.gte(1);
@@ -209,11 +209,11 @@ describe("Price fetcher -> price run (test chain)", function () {
       for (const f of SAMPLE) {
         const sp = await v.scheduledPrices(key(f.environmentId, f.canonicalAssetId));
         expect(sp.usable, f.symbol).to.equal(isIn(f) && f.usd != null);
-        if (isIn(f) && f.usd != null) expect(sp.priceUsd18).to.equal(r.updates.find((u) => u.canonicalAssetId === f.canonicalAssetId && u.environmentId === f.environmentId).priceUsd18);
+        if (isIn(f) && f.usd != null) expect(sp.priceUsd30).to.equal(r.updates.find((u) => u.canonicalAssetId === f.canonicalAssetId && u.environmentId === f.environmentId).priceUsd30);
       }
     });
 
-    it("a full Base-row fetch (mocked HTTP, 130 rows) builds runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
+    it("a full Base-row fetch (mocked HTTP, 2893 rows) builds runs of <= 140 lines, each under the 2^24 gas cap, that the Verifier accepts", async () => {
       const failIds = new Set(baseRows.filter((r, i) => i % 7 === 0 && r.pricingIdentifier).map((r) => r.pricingIdentifier));
       const m = mock([
         [/coingecko/, (u) => Object.fromEntries(cgIds(u).filter((id) => !failIds.has(id)).map((id, j) => [id, { usd: (j + 1) / 8, last_updated_at: NOW }]))],
@@ -225,19 +225,19 @@ describe("Price fetcher -> price run (test chain)", function () {
           priceUsd: "0.5", priceNative: "1", liquidity: { usd: 900 } }]; }],
       ]);
       const res = await fetchPrices({ rows: baseRows, get: m.get, pause: NOPAUSE });
-      expect(res.length).to.equal(130);
+      expect(res.length).to.equal(2893);
       const c = summarize(res);
       const failNatives = baseRows.filter((r) => r.kind === "native" && failIds.has(r.pricingIdentifier)).length;
       const dsTokens = baseRows.filter((r) => r.kind === "token" && !ogAddrs.has(lc(r.identifier)) && (!r.pricingIdentifier || failIds.has(r.pricingIdentifier))).length;
-      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(130);
+      expect(c.CoinGecko + c.DexScreener + c.fail).to.equal(2893);
       expect(c.fail).to.equal(failNatives + 1);      // natives with no CoinGecko price, and the founder override row
       expect(c.DexScreener).to.equal(dsTokens);      // a token with no CoinGecko price uses its own-chain pool, whatever its size
       expect(c.DexScreener).to.be.gt(0);
       for (const f of res.filter((x) => x.usd == null)) expect(f.reason).to.equal("no_price");
       const first = await nextRunId(v);
       const runs = buildPriceRuns(res, first);
-      expect(runs.length).to.equal(Math.ceil(130 / MAX_LINES_PER_RUN));
-      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(130);
+      expect(runs.length).to.equal(Math.ceil(2893 / MAX_LINES_PER_RUN));
+      expect(runs.reduce((n, r) => n + r.updates.length, 0)).to.equal(2893);
       expect(runs.map((r) => r.runId)).to.deep.equal(runs.map((_, i) => first + BigInt(i)));
       for (const r of runs) {
         const rc = await postOnTestChain(hre, v, r);
