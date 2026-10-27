@@ -247,7 +247,21 @@ contract VinculumFinalisVerifier {
     // price below $0.95 makes the asset unavailable for every new valuation,
     // at every duration, until a later run is >= $0.95. Exactly $0.95 is
     // allowed. A lock already bound keeps its creation price.
-    uint256 public constant USD_STABLE_MIN_PRICE = 0.95e18;
+    uint256 public constant USD_STABLE_MIN_PRICE = 0.95e30;
+
+    // VF-ORC-016 (t448u price precision): every scheduled price is USD per
+    // whole token with 30 decimals (priceUsd30), stored in a uint128. The
+    // smallest representable price is 1e-30 USD per whole token, so a token
+    // priced below 1e-18 USD (for example TigerOG near 7.4e-19) keeps its real
+    // value instead of rounding to 0 or 1e-18. The largest storable price is
+    // type(uint128).max / 1e30, about 340,282,366 USD per whole token; a
+    // larger price is refused (fail closed). Valuation is
+    //   usd18 = floor(gross * priceUsd30 / 10**(decimals + 12))
+    // computed in full 512-bit precision with one floor rounding, so a
+    // valuation is never rounded up and never overflows silently.
+    uint256 public constant PRICE_SCALE = 1e30;
+    uint256 public constant PRICE_TO_USD18_DIVISOR = 1e12;
+    uint8 public constant MAX_VALUATION_DECIMALS = 65;
 
     // VF-COM-019: decay
     uint256 public constant DECAY_SURVIVAL_FP = 983330000000000000; // 0.98333
@@ -322,7 +336,7 @@ contract VinculumFinalisVerifier {
     // keccak256(environmentId, canonicalAssetId) => last scheduled-run result.
     // usable=false means no new Commitment Vault valuation until a later success.
     struct ScheduledPriceEntry {
-        uint256 priceUsd18;
+        uint256 priceUsd30;
         bool usable;
     }
     mapping(bytes32 => ScheduledPriceEntry) public scheduledPrices;
@@ -331,11 +345,11 @@ contract VinculumFinalisVerifier {
     // per asset key, in posting order, with the Base block timestamp of the
     // run. The price for a lock is the record in effect when the lock was
     // created: the last record posted strictly before the proven creation
-    // time. priceUsd18 == 0 marks a failed run (asset unavailable). Records
+    // time. priceUsd30 == 0 marks a failed run (asset unavailable). Records
     // are append-only and postedAt never decreases, so the price for a lock
     // does not depend on when or by whom the lock is submitted.
     struct PricePoint {
-        uint128 priceUsd18;
+        uint128 priceUsd30;
         uint64 postedAt;
         uint64 runId;
     }
@@ -344,7 +358,7 @@ contract VinculumFinalisVerifier {
     // VF-ORC-009/010: lock-creation reference price retained per lock.
     // keccak256(env, lockId) => bound price (bound=true after first valuation).
     struct LockPriceBinding {
-        uint256 priceUsd18;
+        uint256 priceUsd30;
         bool bound;
     }
     mapping(bytes32 => LockPriceBinding) public lockReferencePrices;
@@ -406,7 +420,7 @@ contract VinculumFinalisVerifier {
         bytes32 indexed assetKey,
         string environmentId,
         bytes32 canonicalAssetId,
-        uint256 priceUsd18,
+        uint256 priceUsd30,
         bool usable,
         uint64 runId
     );
@@ -648,7 +662,7 @@ contract VinculumFinalisVerifier {
         require(devFundDestinations["Base"] != address(0), "VF-DEP-012: Base Dev Fund not set");
         require(scheduledPricePoster != address(0), "VF-DEP-013: price poster not set");
         ScheduledPriceEntry memory sp = scheduledPrices[baseEthKey];
-        require(sp.usable && sp.priceUsd18 > 0, "VF-DEP-014: Base ETH price not usable");
+        require(sp.usable && sp.priceUsd30 > 0, "VF-DEP-014: Base ETH price not usable");
         configurationFinalized = true;
         if (protocolLaunchTimestamp == 0) {
             protocolLaunchTimestamp = block.timestamp;
@@ -667,7 +681,7 @@ contract VinculumFinalisVerifier {
     struct ScheduledPriceUpdate {
         string environmentId;
         bytes32 canonicalAssetId;
-        uint256 priceUsd18;
+        uint256 priceUsd30;
         bool success;
     }
 
@@ -689,26 +703,26 @@ contract VinculumFinalisVerifier {
             AssetPrecisionEntry memory entry = assetPrecisionTable[key];
             require(entry.canonicalAssetId != bytes32(0), "VF-REG-001: asset not in registry");
             if (u.success) {
-                require(u.priceUsd18 > 0, "VF-ORC-004: zero price");
-                require(u.priceUsd18 <= type(uint128).max, "VF-ORC-004: price out of range");
+                require(u.priceUsd30 > 0, "VF-ORC-004: zero price");
+                require(u.priceUsd30 <= type(uint128).max, "VF-ORC-004: price out of range");
                 scheduledPrices[key] = ScheduledPriceEntry({
-                    priceUsd18: u.priceUsd18,
+                    priceUsd30: u.priceUsd30,
                     usable: true
                 });
                 _priceHistory[key].push(PricePoint({
-                    priceUsd18: uint128(u.priceUsd18),
+                    priceUsd30: uint128(u.priceUsd30),
                     postedAt: uint64(block.timestamp),
                     runId: runId
                 }));
-                emit ScheduledPriceUpdated(key, u.environmentId, u.canonicalAssetId, u.priceUsd18, true, runId);
+                emit ScheduledPriceUpdated(key, u.environmentId, u.canonicalAssetId, u.priceUsd30, true, runId);
             } else {
                 // VF-ORC-005/008: no usable valuation until a later successful run.
                 scheduledPrices[key] = ScheduledPriceEntry({
-                    priceUsd18: 0,
+                    priceUsd30: 0,
                     usable: false
                 });
                 _priceHistory[key].push(PricePoint({
-                    priceUsd18: 0,
+                    priceUsd30: 0,
                     postedAt: uint64(block.timestamp),
                     runId: runId
                 }));
@@ -1064,29 +1078,29 @@ contract VinculumFinalisVerifier {
             abi.encodePacked(pkg.sourceEnvironmentId, pkg.commitmentVaultLockId)
         );
         LockPriceBinding storage binding = lockReferencePrices[lockIdHash];
-        uint256 priceUsd18;
+        uint256 priceUsd30;
 
         if (binding.bound) {
             // VF-ORC-009/010: retain lock-creation reference; proof delay/retry does not reprice.
-            priceUsd18 = binding.priceUsd18;
+            priceUsd30 = binding.priceUsd30;
         } else {
             // Fix 2026-10-23 (AG-06, COMB-01/02/03): the record in effect at the
             // proven lock creation time, never the record current at
             // submission. No record, or a failed run in effect, refuses the
             // lock permanently (fail closed).
             bytes32 assetKey = _assetKey(pkg.sourceEnvironmentId, pkg.canonicalAssetId);
-            priceUsd18 = _priceInEffectAt(assetKey, createdAt);
-            require(priceUsd18 > 0, "VF-ORC-005: no usable scheduled price");
+            priceUsd30 = _priceInEffectAt(assetKey, createdAt);
+            require(priceUsd30 > 0, "VF-ORC-005: no usable scheduled price");
             // Verified USDC/USDT identity below $0.95 at lock creation:
             // unavailable. Fail closed; never substitute $1. The row is matched
             // by the exact (environment, contract) indexed to it, not by symbol.
             if (usdStableRow[keccak256(abi.encodePacked(pkg.sourceEnvironmentId, pkg.canonicalAssetId))]) {
                 require(
-                    priceUsd18 >= USD_STABLE_MIN_PRICE,
+                    priceUsd30 >= USD_STABLE_MIN_PRICE,
                     "VF-ORC-005: USDC/USDT scheduled price below $0.95"
                 );
             }
-            binding.priceUsd18 = priceUsd18;
+            binding.priceUsd30 = priceUsd30;
             binding.bound = true;
         }
 
@@ -1094,18 +1108,57 @@ contract VinculumFinalisVerifier {
         if (pkg.priceRecord.length > 0) {
             require(pkg.priceRecord.length == 32, "VF-ORC-007: price record length");
             uint256 recorded = abi.decode(pkg.priceRecord, (uint256));
-            require(recorded == priceUsd18, "VF-ORC-007: price record mismatch");
+            require(recorded == priceUsd30, "VF-ORC-007: price record mismatch");
         }
 
-        uint256 assetUnitsFp = (pkg.grossAmountSmallestUnits * SCALE) / (10 ** uint256(entry.decimals));
-        require(
-            assetUnitsFp == 0 || priceUsd18 <= type(uint256).max / assetUnitsFp,
-            "VF-ORC-004: valuation out of range"
-        );
-        return (assetUnitsFp * priceUsd18) / SCALE;
+        // VF-ORC-016: one floor rounding in full precision. 10**(decimals+12)
+        // fits in uint256 only up to decimals 65; larger is refused.
+        require(entry.decimals <= MAX_VALUATION_DECIMALS, "VF-ORC-004: decimals out of range");
+        uint256 denominator = (10 ** uint256(entry.decimals)) * PRICE_TO_USD18_DIVISOR;
+        return _mulDivFloor(pkg.grossAmountSmallestUnits, priceUsd30, denominator);
     }
 
-    /// @dev Price (18-decimal USD) of the last record posted strictly before
+    /// @dev floor(a * b / d) with a 512-bit intermediate product. Reverts with
+    ///      a coded error when the result does not fit in uint256 (fail
+    ///      closed). d is never 0 here (10**k * 1e12).
+    function _mulDivFloor(uint256 a, uint256 b, uint256 d) internal pure returns (uint256 result) {
+        uint256 prod0;
+        uint256 prod1;
+        assembly {
+            let mm := mulmod(a, b, not(0))
+            prod0 := mul(a, b)
+            prod1 := sub(sub(mm, prod0), lt(mm, prod0))
+        }
+        if (prod1 == 0) {
+            return prod0 / d;
+        }
+        require(d > prod1, "VF-ORC-004: valuation out of range");
+        unchecked {
+            uint256 remainder;
+            assembly {
+                remainder := mulmod(a, b, d)
+                prod1 := sub(prod1, gt(remainder, prod0))
+                prod0 := sub(prod0, remainder)
+            }
+            uint256 twos = d & (~d + 1);
+            assembly {
+                d := div(d, twos)
+                prod0 := div(prod0, twos)
+                twos := add(div(sub(0, twos), twos), 1)
+            }
+            prod0 |= prod1 * twos;
+            uint256 inverse = (3 * d) ^ 2;
+            inverse *= 2 - d * inverse;
+            inverse *= 2 - d * inverse;
+            inverse *= 2 - d * inverse;
+            inverse *= 2 - d * inverse;
+            inverse *= 2 - d * inverse;
+            inverse *= 2 - d * inverse;
+            result = prod0 * inverse;
+        }
+    }
+
+    /// @dev Price (30-decimal USD, VF-ORC-016) of the last record posted strictly before
     ///      `timestamp`; 0 when there is none or that record is a failed run.
     function _priceInEffectAt(bytes32 assetKey, uint256 timestamp) internal view returns (uint256) {
         PricePoint[] storage h = _priceHistory[assetKey];
@@ -1121,7 +1174,7 @@ contract VinculumFinalisVerifier {
             }
         }
         if (lo == 0) return 0;
-        return uint256(h[lo - 1].priceUsd18);
+        return uint256(h[lo - 1].priceUsd30);
     }
 
     /// @notice Scheduled price record in effect for a lock created at
@@ -1141,10 +1194,10 @@ contract VinculumFinalisVerifier {
     function priceHistoryAt(bytes32 assetKey, uint256 index)
         external
         view
-        returns (uint256 priceUsd18, uint64 postedAt, uint64 runId)
+        returns (uint256 priceUsd30, uint64 postedAt, uint64 runId)
     {
         PricePoint memory p = _priceHistory[assetKey][index];
-        return (uint256(p.priceUsd18), p.postedAt, p.runId);
+        return (uint256(p.priceUsd30), p.postedAt, p.runId);
     }
 
     /// @dev VF-ORC-011/013: days since launch from Valuation Timestamp (source block time).
