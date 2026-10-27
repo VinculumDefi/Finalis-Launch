@@ -42,10 +42,5 @@ export async function fetchAssetPrice({ symbol, environment, pricing_identifier,
 // This produces the USD value of the gross locked amount in 18-decimal
 // fixed-point, which is what the verifier's checkUsdBounds and
 // computeIssuanceFromUsd functions expect.
-export function computeVerifiedGrossUsdMicro(grossAmountStr, decimals, priceUsd, scale) {
-  const grossAmount = BigInt(grossAmountStr);
-  const priceScaled = BigInt(Math.round(priceUsd * 1e8));
-  const priceScale = 10n ** 8n;
-  const dec = BigInt(decimals);
-  return (grossAmount * priceScaled * scale) / (10n ** dec * priceScale);
-}
+// The functions live in vfPriceFormat.js (no app-client import there, so node tests can load them).
+export { computeVerifiedGrossUsdMicro, computeVerifiedGrossUsdFormatAware } from './vfPriceFormat.js';
