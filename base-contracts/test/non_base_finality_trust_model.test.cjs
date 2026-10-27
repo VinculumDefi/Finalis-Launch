@@ -11,6 +11,8 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { ethLockEvidence, encodeEvidence } = require("./lib/ethProof.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const SCALE = 10n ** 18n, DAY7 = 604800n;
 const ETH_ID = "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b";
 const coder = ethers.AbiCoder.defaultAbiCoder();
@@ -43,8 +45,8 @@ describe("non-Base finality trust model (t301u), fixed 2026-10-23", function () 
     await verifier.configureDevFund("Ethereum", devFund.address);
     await verifier.setScheduledPricePoster(deployer.address);
     await verifier.applyScheduledPriceRun(1n, [
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 2392n * SCALE, success: true },
-      { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: 2392n * SCALE, success: true },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(2392n * SCALE), success: true },
+      { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(2392n * SCALE), success: true },
     ]);
     await verifier.finalize();
     const lockId = ethers.hexlify(ethers.randomBytes(32));
