@@ -3,6 +3,8 @@
 // asset, and asserts the Verifier refuses the mint. No production Solidity edits.
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const PRICE = 1000n * SCALE;
@@ -49,8 +51,8 @@ async function deployBasePath() {
   await verifier.setScheduledPricePoster(deployer.address);
   await verifier.configureDevFund("Base", devFund.address);
   await verifier.applyScheduledPriceRun(1n, [
-    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: PRICE, success: true },
-    { environmentId: "Base", canonicalAssetId: USDC_ID, priceUsd18: SCALE, success: true },
+    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(PRICE), success: true },
+    { environmentId: "Base", canonicalAssetId: USDC_ID, priceUsd30: P30(SCALE), success: true },
   ]);
   await verifier.finalize();
   return { deployer, recipient, other, dest, devFund, vclm, chonx, forge, verifier, lock, reader, realUsdc };
