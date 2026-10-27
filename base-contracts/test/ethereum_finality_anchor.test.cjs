@@ -20,6 +20,8 @@ const { ethers, network } = require("hardhat");
 const { sparseTree } = require("./lib/beaconLc.cjs");
 const { beaconRoot } = require("./lib/execHeader.cjs");
 const F = require("./fixtures/ethereum_finality_anchor_mainnet.json");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const coder = ethers.AbiCoder.defaultAbiCoder();
 // SSZ uint64 leaf: little-endian, right-padded to 32 bytes.
@@ -223,11 +225,11 @@ async function verifierFor(s) {
   for (const env of ["Base", "Ethereum", "Optimism"]) await verifier.configureDevFund(env, s.devFund.address);
   await verifier.setScheduledPricePoster(deployer.address);
   await verifier.applyScheduledPriceRun(1n, [
-    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE, success: true },
-    { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE, success: true },
-    { environmentId: "Optimism", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE, success: true },
-    { environmentId: "Ethereum", canonicalAssetId: ETH_USDC.canonicalAssetId, priceUsd18: SCALE, success: true },
-    { environmentId: "Base", canonicalAssetId: BASE_AERO.canonicalAssetId, priceUsd18: SCALE, success: true },
+    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE), success: true },
+    { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE), success: true },
+    { environmentId: "Optimism", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE), success: true },
+    { environmentId: "Ethereum", canonicalAssetId: ETH_USDC.canonicalAssetId, priceUsd30: P30(SCALE), success: true },
+    { environmentId: "Base", canonicalAssetId: BASE_AERO.canonicalAssetId, priceUsd30: P30(SCALE), success: true },
   ]);
   await verifier.finalize();
   return Object.assign(s, { verifier, vclm, deployer });
@@ -520,8 +522,8 @@ describe("Ethereum finality anchor: EthereumStorageLockReader (local chain only)
       await verifier.configureDevFund("Ethereum", s.devFund.address);
       await verifier.setScheduledPricePoster(deployer.address);
       await verifier.applyScheduledPriceRun(1n, [
-        { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 2392n * SCALE, success: true },
-        { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: 2392n * SCALE, success: true },
+        { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(2392n * SCALE), success: true },
+        { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(2392n * SCALE), success: true },
       ]);
       await verifier.finalize();
       await createLocalRecord(s);
@@ -703,10 +705,10 @@ describe("Ethereum finality anchor: EthereumStorageLockReader (local chain only)
     it("correctly formatted price from an unauthorized source", async () => {
       const s = await verifiedSetup();
       await expect(s.verifier.connect(s.other).applyScheduledPriceRun(2n, [
-        { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE_LATER, success: true },
+        { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE_LATER), success: true },
       ])).to.be.revertedWith("VF-ORC-007: not price poster");
       await reanchor(s);
-      await expect(s.verifier.recordFeeAndRac(pkgFor(s, s.rec, { priceRecord: coder.encode(["uint256"], [ETH_PRICE_LATER]) })))
+      await expect(s.verifier.recordFeeAndRac(pkgFor(s, s.rec, { priceRecord: coder.encode(["uint256"], [P30(ETH_PRICE_LATER)]) })))
         .to.be.revertedWith("VF-ORC-007: price record mismatch");
     });
     it("legitimate receipt altered to name a different recipient", async () => {
@@ -756,12 +758,12 @@ describe("Ethereum finality anchor: EthereumStorageLockReader (local chain only)
     it("Section 4: the price used is the one in effect before lock creation, not a later run", async () => {
       const s = await verifiedSetup();
       await s.verifier.applyScheduledPriceRun(2n, [
-        { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE_LATER, success: true },
+        { environmentId: "Ethereum", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE_LATER), success: true },
       ]);
       await reanchor(s);
-      await expect(s.verifier.recordFeeAndRac(pkgFor(s, s.rec, { priceRecord: coder.encode(["uint256"], [ETH_PRICE_LATER]) })))
+      await expect(s.verifier.recordFeeAndRac(pkgFor(s, s.rec, { priceRecord: coder.encode(["uint256"], [P30(ETH_PRICE_LATER)]) })))
         .to.be.revertedWith("VF-ORC-007: price record mismatch");
-      await s.verifier.recordFeeAndRac(pkgFor(s, s.rec, { priceRecord: coder.encode(["uint256"], [ETH_PRICE]) }));
+      await s.verifier.recordFeeAndRac(pkgFor(s, s.rec, { priceRecord: coder.encode(["uint256"], [P30(ETH_PRICE)]) }));
     });
     it("Section 4: the lock address is pinned by the reader, not checked by the Verifier itself (documented gap)", async () => {
       // The Verifier has no per-environment lock address; it relies on the
