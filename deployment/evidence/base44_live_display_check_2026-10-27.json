@@ -1,0 +1,48 @@
+[
+ {
+  "verifier": "0xfA8A18e0ddE99a06C78231F82E26ec6160006328",
+  "format": {
+   "ok": true,
+   "decimals": 18,
+   "basis": "Base Verifier live since 2026-10-22 (18-decimal prices)"
+  },
+  "usdStableMin": "950000000000000000",
+  "appStableMin": "950000000000000000",
+  "priceScaleReverts": true,
+  "prices": {
+   "ETH": {
+    "raw": "2392220000000000000000",
+    "usable": true,
+    "shown": "2392.22"
+   },
+   "USDC_BASE": {
+    "raw": "0",
+    "usable": false,
+    "shown": "0"
+   }
+  }
+ },
+ {
+  "verifier": "0xb0670826b79e29cc6a1c216Eb396D383a54af47D",
+  "format": {
+   "ok": true,
+   "decimals": 18,
+   "basis": "Base Verifier of 2026-10-12 (18-decimal prices)"
+  },
+  "usdStableMin": "950000000000000000",
+  "appStableMin": "950000000000000000",
+  "priceScaleReverts": true,
+  "prices": {
+   "ETH": {
+    "raw": "2473320000000000000000",
+    "usable": true,
+    "shown": "2473.32"
+   },
+   "USDC_BASE": {
+    "raw": "0",
+    "usable": false,
+    "shown": "0"
+   }
+  }
+ }
+]
