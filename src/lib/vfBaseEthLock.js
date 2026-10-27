@@ -19,6 +19,7 @@
 import { keccak_256 } from '@noble/hashes/sha3';
 import { PERMITTED_DURATIONS, DURATION_HANDSHAKE, BASE_CHAIN, PENDING, isBaseLockDeployed } from './vfIntegrationConfig.js';
 import { resolveOfferable, NOT_ACTIVE_MESSAGE } from './vfActiveAssetAllowlist.js';
+import { parseDecimalToScaled, valueUsd18, isSupportedPriceDecimals } from './vfPriceFormat.js';
 
 export const FEE_BPS = 500n;               // CommitmentVaultLock.STANDARD_FEE_BPS, every duration
 export const BPS_DENOMINATOR = 10000n;
@@ -68,8 +69,11 @@ export function usdToUsd18(usd) {
 }
 
 // Same arithmetic as the 2026-10-12 saved app: gross (18 decimals) times price, 18-decimal USD.
-export function verifiedGrossUsd(grossWei, priceUsd18) {
-  return (BigInt(grossWei) * BigInt(priceUsd18)) / 10n ** 18n;
+// With priceDecimals 18 (the default, for the Verifiers deployed today) this is unchanged.
+// With 30 it is the Revision E Verifier formula floor(gross * price30 / 1e30) for an
+// 18-decimal asset (see vfPriceFormat.valueUsd18). Either way the result is 18-decimal USD.
+export function verifiedGrossUsd(grossWei, priceScaled, priceDecimals = 18) {
+  return valueUsd18(grossWei, 18, priceScaled, priceDecimals);
 }
 
 export function validateValueBounds(usd18, durationSecs) {
@@ -82,7 +86,8 @@ const hex32 = (n) => BigInt(n).toString(16).padStart(64, '0');
 const word = (h) => h.toLowerCase().replace(/^0x/, '').padStart(64, '0');
 const toHex = (bytes) => '0x' + Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
 
-// keccak256(abi.encode(uint256 priceUsd18)), as the saved app computes valuationReference.
+// keccak256(abi.encode(uint256 price)), as the saved app computes valuationReference. The price is
+// in the Verifier's own scale (18 or 30 decimals).
 export function valuationReferenceFor(priceUsd18) {
   const buf = new Uint8Array(32);
   const h = hex32(priceUsd18);
@@ -97,8 +102,11 @@ export function encodeCreateNativeLock(a) {
 }
 
 // Build the call. Every check refuses (fail closed); nothing here sends.
-export function buildCreateNativeLock({ lockId, baseRecipient, outputToken, releaseDestination, durationSecs, grossEth, priceUsd, chonxActivationReceipt }) {
+export function buildCreateNativeLock({ lockId, baseRecipient, outputToken, releaseDestination, durationSecs, grossEth, priceUsd, chonxActivationReceipt, priceDecimals }) {
   const errors = [];
+  // The price format is set by the Verifier the app points at (vfPriceFormat). No default here:
+  // an unknown format refuses the build.
+  if (!isSupportedPriceDecimals(priceDecimals)) return { ok: false, errors: ['price format unknown for this Verifier (expected 18 or 30 decimals); refused'] };
   const asset = resolvePageAsset();
   if (!asset.ok) return { ok: false, errors: [asset.reason] };
   if (!B32.test(String(lockId ?? ''))) errors.push('invalid lock id (expected 0x + 64 hex)');
@@ -109,13 +117,13 @@ export function buildCreateNativeLock({ lockId, baseRecipient, outputToken, rele
   if (!isPermittedDuration(durationSecs)) errors.push(`duration not permitted: ${durationSecs}`);
   const gross = ethToWei(grossEth);
   if (gross === null || gross === 0n) errors.push('invalid gross amount (ETH, up to 18 decimals, above zero)');
-  const price = usdToUsd18(priceUsd);
+  const price = parseDecimalToScaled(priceUsd, priceDecimals);
   if (price === null || price === 0n) errors.push('no usable scheduled price (VF-ORC-005): enter the Base ETH price read from the Verifier');
   if (errors.length) return { ok: false, errors };
 
   const q = computeFee(gross);
   if (q.fee === '0' || q.principal === '0') return { ok: false, errors: ['zero fee or principal (VF-COM-013)'] };
-  const usd = verifiedGrossUsd(gross, price);
+  const usd = verifiedGrossUsd(gross, price, Number(priceDecimals));
   if (!validateValueBounds(usd, durationSecs)) {
     return { ok: false, errors: [Number(durationSecs) === DURATION_HANDSHAKE
       ? 'Handshake value outside $0.01 to $0.02 (CommitmentVaultLock HANDSHAKE_USD_MIN/MAX)'
@@ -143,6 +151,7 @@ export function buildCreateNativeLock({ lockId, baseRecipient, outputToken, rele
     },
     quote: q,
     asset: asset.entry,
+    priceDecimals: Number(priceDecimals),
   };
 }
 
