@@ -1,82 +1,181 @@
-dry-run: local Base fork at block 52985059, block gas limit 400000000
-[step 0] inputs and artifacts
-  registry rows 487, token addresses 475, registry sha256 1bdcb8346ab9
+dry-run: local Base fork at block 53141217, block gas limit 400000000
+dry-run: SIMULATE mode, Base-only, local Base fork, local test signer
+[step 0] inputs and artifacts (Base subset: 2893 rows, 2892 token addresses, 0 aliases)
+  Base rows 2893 of 3353, token addresses 2892, aliases 0, registry sha256 af8a4fc62af5
 [step 1] fork is Base mainnet
-  forked Base block 52985059, block gas limit 400000000
-[step 2] six live non-Base locks (eth_getCode, slot 0, devFund, 5% fee) over public RPCs
-  live non-Base lock 0x115b...626E passes on all 6 chains
-[step 3] deploy VCLM, CHONX, Verifier, Forge, Stake
-  VCLM 0xa9E9...2079
-  CHONX 0xbBC1...80de
-  Verifier 0x489F...3650
-  Forge 0xa86F...744e
-  Stake 0x0134...E5E9
-[step 4] deploy Base lock
-[step 5] initialize VCLM and CHONX, deploy and register 15 readers
-  Base lock 0x2285...3513
-  reader Base 0xD9da...6517
-  reader Ethereum 0x51a3...E4c3
-  reader Arbitrum 0xa1c0...8CD6
-  reader Optimism 0x88B7...31BB
-  reader Polygon 0xCDfE...56C9
-  reader BNB Smart Chain 0xf92B...c9D1
-  reader Avalanche 0x420A...5E93
-  reader Bitcoin 0x4e5b...6f0F
-  reader Bitcoin Cash 0x9887...551a
-  reader Litecoin 0x73AC...067F
-  reader Dogecoin 0xA436...7211
-  reader DigiByte 0x122a...099d
-  reader Zcash 0x4C45...6b0B
-  reader Stellar 0x8d37...35bf
-  reader XRP Ledger 0xa91A...68EA
-[step 6] registry rows in batches of 50
-  registry 50/487
-  registry 100/487
-  registry 150/487
-  registry 200/487
-  registry 250/487
-  registry 300/487
-  registry 350/487
-  registry 400/487
-  registry 450/487
-  registry 487/487
-[step 7] token address index
-  token addresses 50/475
-  token addresses 100/475
-  token addresses 150/475
-  token addresses 200/475
-  token addresses 250/475
-  token addresses 300/475
-  token addresses 350/475
-  token addresses 400/475
-  token addresses 450/475
-[step 8] aliases, Dev Funds, price run 1, poster hand-over, finalize
-  token addresses 475/475
+  forked Base block 53141217, block gas limit 400000000
+[step 2] deploy VCLM, CHONX, Verifier, Forge, Stake
+  VCLM 0x0134...E5E9
+  CHONX 0x2285...3513
+  Verifier 0x5678...07D2
+  Forge 0x64FC...2D24
+  Stake 0xD9da...6517
+[step 3] deploy Base lock
+  Base lock 0x51a3...E4c3
+[step 4] initialize VCLM and CHONX, deploy and register the Base reader
+  reader Base 0xCDfE...56C9
+[step 5] registry rows (2893 Base rows)
+  registry 50/2893
+  registry 100/2893
+  registry 150/2893
+  registry 200/2893
+  registry 250/2893
+  registry 300/2893
+  registry 350/2893
+  registry 400/2893
+  registry 450/2893
+  registry 500/2893
+  registry 550/2893
+  registry 600/2893
+  registry 650/2893
+  registry 700/2893
+  registry 750/2893
+  registry 800/2893
+  registry 850/2893
+  registry 900/2893
+  registry 950/2893
+  registry 1000/2893
+  registry 1050/2893
+  registry 1100/2893
+  registry 1150/2893
+  registry 1200/2893
+  registry 1250/2893
+  registry 1300/2893
+  registry 1350/2893
+  registry 1400/2893
+  registry 1450/2893
+  registry 1500/2893
+  registry 1550/2893
+  registry 1600/2893
+  registry 1650/2893
+  registry 1700/2893
+  registry 1750/2893
+  registry 1800/2893
+  registry 1850/2893
+  registry 1900/2893
+  registry 1950/2893
+  registry 2000/2893
+  registry 2050/2893
+  registry 2100/2893
+  registry 2150/2893
+  registry 2200/2893
+  registry 2250/2893
+  registry 2300/2893
+  registry 2350/2893
+  registry 2400/2893
+  registry 2450/2893
+  registry 2500/2893
+  registry 2550/2893
+  registry 2600/2893
+  registry 2650/2893
+  registry 2700/2893
+  registry 2750/2893
+  registry 2800/2893
+  registry 2850/2893
+  registry 2893/2893
+[step 6] token address index (2892 Base token addresses)
+  token addresses 50/2892
+  token addresses 100/2892
+  token addresses 150/2892
+  token addresses 200/2892
+  token addresses 250/2892
+  token addresses 300/2892
+  token addresses 350/2892
+  token addresses 400/2892
+  token addresses 450/2892
+  token addresses 500/2892
+  token addresses 550/2892
+  token addresses 600/2892
+  token addresses 650/2892
+  token addresses 700/2892
+  token addresses 750/2892
+  token addresses 800/2892
+  token addresses 850/2892
+  token addresses 900/2892
+  token addresses 950/2892
+  token addresses 1000/2892
+  token addresses 1050/2892
+  token addresses 1100/2892
+  token addresses 1150/2892
+  token addresses 1200/2892
+  token addresses 1250/2892
+  token addresses 1300/2892
+  token addresses 1350/2892
+  token addresses 1400/2892
+  token addresses 1450/2892
+  token addresses 1500/2892
+  token addresses 1550/2892
+  token addresses 1600/2892
+  token addresses 1650/2892
+  token addresses 1700/2892
+  token addresses 1750/2892
+  token addresses 1800/2892
+  token addresses 1850/2892
+  token addresses 1900/2892
+  token addresses 1950/2892
+  token addresses 2000/2892
+  token addresses 2050/2892
+  token addresses 2100/2892
+  token addresses 2150/2892
+  token addresses 2200/2892
+  token addresses 2250/2892
+  token addresses 2300/2892
+  token addresses 2350/2892
+  token addresses 2400/2892
+  token addresses 2450/2892
+  token addresses 2500/2892
+  token addresses 2550/2892
+  token addresses 2600/2892
+  token addresses 2650/2892
+  token addresses 2700/2892
+  token addresses 2750/2892
+  token addresses 2800/2892
+  token addresses 2850/2892
+[step 7] Dev Fund, price run 1, poster hand-over, finalize
+  token addresses 2892/2892
   Finalized.
-[step 9] post-finalize state
-  finalized; launch 1792759706; live poster set; Solana not registered
-[step 10] Base reader with a real lock on the fork
-  0.5 ETH 7-day lock: fee 0.025 ETH, minted 15549.43 VCLM
-[step 11] EVM readers bound to the live locks and real slot 0
-  6 EVM readers: lock(), chainId() and environment word match the live locks' real slot 0
-[step 12] EVM readers on real mainnet receipts
-  6 EVM readers prove real mainnet receipts against real headers (headers confirmed on each live chain)
-[step 13] Ethereum reader on a real finalized header
-  Ethereum reader accepts real finalized block 26255345
-[step 14] UTXO, Stellar and XRPL reader wiring
-  6 UTXO readers, Stellar and XRPL carry the ceremony-data Dev Fund wiring
-[step 15] Rig 10 reconciliation: deployed set vs artifacts and ceremony-data
+[step 8] post-finalize state (one reader, no other environment wired)
+  finalized; launch 1793071912; live poster set; one reader (Base); 15 other environments have no reader and no Dev Fund destination
+[step 9] Base reader with a real lock on the fork
+  0.5 ETH 7-day lock: fee 0.025 ETH, minted 15074.735 VCLM
+[step 10] Rig 10 reconciliation: deployed set vs artifacts and ceremony-data
   section 1. ...
   section 1b. ...
   section 2. ...
   section 3. ...
   section 4. ...
   section 5. ...
+    multicall 40/2893 (0s)
+    multicall 440/2893 (0s)
+    multicall 840/2893 (1s)
+    multicall 1240/2893 (1s)
+    multicall 1640/2893 (1s)
+    multicall 2040/2893 (1s)
+    multicall 2440/2893 (1s)
+    multicall 2840/2893 (2s)
+    multicall 2893/2893 (2s)
+    multicall 40/2892 (0s)
+    multicall 440/2892 (0s)
+    multicall 840/2892 (0s)
+    multicall 1240/2892 (0s)
+    multicall 1640/2892 (1s)
+    multicall 2040/2892 (1s)
+    multicall 2440/2892 (1s)
+    multicall 2840/2892 (1s)
+    multicall 2892/2892 (1s)
+    multicall 40/460 (0s)
+    multicall 440/460 (0s)
+    multicall 460/460 (0s)
   section 5b. ...
   section 6. ...
-  reconciliation: {"PASS":349}
-  ceremony transactions 72, total gas used 109844802, largest gas limit 16777216 at step 3 (cap 16777216)
-  NOTE FINDING-HH-003: the Ethereum reader also accepts a made-up header at height 26255345 (hash 0xa5055b72) that is not Ethereum history
+  reconciliation: {"PASS":230}
+[step 11] Base USDC (row 454) is S1: registered class and a real USDC lock minted at 1.5x
+  Base USDC (row 454): registered custodyClass 1 (S1); 1000 USDC 7-day lock minted 15000.0 VCLM vs 10000.0 at S3 = 15000 bps (1.5x)
+[step 12] Revision E (t448u; t430u rules kept): TEL upgraded contract only, founder override TigerOG only (t431u), stablecoin flag by exact identity
+  Revision E: TEL row 1082 indexed at 0x7E13...0731 (old 0x09bE...aDB1 not indexed); founder override TigerOG row 138 0xCF7F...dbB5, LionOG row 999 not registered (t431u), FrogOG row 1000 not registered (t431u), added doginme row 1103 0x6921...b75b (t438u); $0.95 flag on USDC_BASE row 454, USDT row 1086 only
+  ceremony transactions 131, total gas used 310370237, largest gas limit 16777216 at step 2 (cap 16777216)
+mode: SIMULATE (Base-only, local Base fork, local test signer; nothing broadcast)
 ceremony would succeed
+Base USDC (row 454): registered custodyClass 1 (S1); 1000 USDC 7-day lock minted 15000.0 VCLM vs 10000.0 at S3 = 15000 bps (1.5x)
+Revision E: TEL row 1082 indexed at 0x7E13...0731 (old 0x09bE...aDB1 not indexed); founder override TigerOG row 138 0xCF7F...dbB5, LionOG row 999 not registered (t431u), FrogOG row 1000 not registered (t431u), added doginme row 1103 0x6921...b75b (t438u); $0.95 flag on USDC_BASE row 454, USDT row 1086 only
 reconciliation PASS
-EXIT 0
