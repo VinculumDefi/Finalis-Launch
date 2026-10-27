@@ -3,6 +3,8 @@
 // registry row, the Base Dev Fund, the price poster, and a usable Base ETH
 // price written as run 1. Tests that write their own runs start at run 2.
 const { ethers } = require("hardhat");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const BASE_ETH_ID = "0xde7085290190e1f2f7f2f83d26fa72e411f9d765ddd608a77e8a7c388113943b";
@@ -28,7 +30,7 @@ async function finalizeCeremony(verifier) {
   if (!sp.usable) {
     const run = (await verifier.lastScheduledRunId()) + 1n;
     await (await verifier.applyScheduledPriceRun(run, [
-      { environmentId: "Base", canonicalAssetId: BASE_ETH_ID, priceUsd18: BASE_ETH_PRICE, success: true },
+      { environmentId: "Base", canonicalAssetId: BASE_ETH_ID, priceUsd30: P30(BASE_ETH_PRICE), success: true },
     ])).wait();
   }
   await (await verifier.finalize()).wait();
