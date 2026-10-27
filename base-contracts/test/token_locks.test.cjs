@@ -10,6 +10,8 @@ const { ethers, network } = require("hardhat");
 const { ethLockEvidence, encodeEvidence } = require("./lib/ethProof.cjs");
 const { buildTokenAddressIndex } = require("../scripts/buildTokenAddressIndex.cjs");
 const { loadRegistry, loadHistoricalWritten } = require("../scripts/registryFile.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const REG = loadRegistry().written; // Revision B rows under their own environment (Base ETH excluded)
 const HIST_INDEX = buildTokenAddressIndex(loadHistoricalWritten()); // prior revision, 961 rows
 
@@ -52,9 +54,9 @@ async function setup({ polygon = false } = {}) {
   await verifier.configureDevFund("Base", devFund.address);
   await verifier.setScheduledPricePoster(deployer.address);
   await verifier.applyScheduledPriceRun(1n, [
-    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 1000n * SCALE, success: true },
-    { environmentId: "Base", canonicalAssetId: AERO.canonicalAssetId, priceUsd18: SCALE, success: true },
-    { environmentId: "Ethereum", canonicalAssetId: POL_ROW_ID, priceUsd18: SCALE, success: true },
+    { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(1000n * SCALE), success: true },
+    { environmentId: "Base", canonicalAssetId: AERO.canonicalAssetId, priceUsd30: P30(SCALE), success: true },
+    { environmentId: "Ethereum", canonicalAssetId: POL_ROW_ID, priceUsd30: P30(SCALE), success: true },
   ]);
   await verifier.finalize();
   return { deployer, recipient, other, dest, verifier, lock, reader, vclm, polyLock, polyReader };
