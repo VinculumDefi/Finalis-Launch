@@ -1,11 +1,11 @@
 // Ceremony dry-run, Base-only launch (founder directive t357u). Runs the
 // Base ceremony exactly as base.html does (baseCeremonyFlow.runBaseCeremony,
-// built ceremony.json artifacts, the Base subset of registry Revision D in
-// ceremony-data.json: 130 rows, 129 token addresses, 0 aliases, one reader)
+// built ceremony.json artifacts, the Base subset of registry Revision E (t448u, proposed) in
+// ceremony-data.json: 2893 rows, 2892 token addresses, 0 aliases, one reader)
 // against a LOCAL fork of Base mainnet, then reconciles the deployed set
 // (Rig 10), then checks Base USDC (row 454): registered as S1 and a real
 // USDC lock on the fork mints at 1.5x the S3 amount (operator decision
-// t367u; still S1 in Revision D). Then checks the t430u Revision D facts on the
+// t367u; still S1 in Revision E). Then checks the Revision D/E facts (t430u, t448u) on the
 // ceremony's own state: TEL indexed at the upgraded contract only, the three
 // founder-override rows registered and indexed, and the $0.95 stablecoin flag
 // set by exact identity (Base USDC and USDT) and on nothing else. Nothing is broadcast: the signer is a local Hardhat test account
@@ -25,6 +25,8 @@ const art = require(path.join(BC, "scripts/deploy-pages/ceremony.json"));
 const DATA = require(path.join(BC, "scripts/deploy-pages/ceremony-data.json"));
 const FLOW = require(path.join(BC, "scripts/deploy-pages/baseCeremonyFlow.js"));
 const RECON = require("../reconciliation/reconcile.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const TX_GAS_CAP = 16_777_216n; // Base Azul (May 28, 2026): EIP-7825 per-transaction gas maximum
 const MODE_LINE = "mode: SIMULATE (Base-only, local Base fork, local test signer; nothing broadcast)";
@@ -34,19 +36,19 @@ const err = (...a) => process.stderr.write(scrub(a.join(" ")) + "\n");
 const coder = ethers.AbiCoder.defaultAbiCoder();
 
 const STEPS = [
-  "inputs and artifacts (Base subset: 130 rows, 129 token addresses, 0 aliases)",
+  "inputs and artifacts (Base subset: 2893 rows, 2892 token addresses, 0 aliases)",
   "fork is Base mainnet",
   "deploy VCLM, CHONX, Verifier, Forge, Stake",
   "deploy Base lock",
   "initialize VCLM and CHONX, deploy and register the Base reader",
-  "registry rows (130 Base rows)",
-  "token address index (129 Base token addresses)",
+  "registry rows (2893 Base rows)",
+  "token address index (2892 Base token addresses)",
   "Dev Fund, price run 1, poster hand-over, finalize",
   "post-finalize state (one reader, no other environment wired)",
   "Base reader with a real lock on the fork",
   "Rig 10 reconciliation: deployed set vs artifacts and ceremony-data",
   "Base USDC (row 454) is S1: registered class and a real USDC lock minted at 1.5x",
-  "Revision D (t430u): TEL upgraded contract only, founder override TigerOG only (t431u), stablecoin flag by exact identity",
+  "Revision E (t448u; t430u rules kept): TEL upgraded contract only, founder override TigerOG only (t431u), stablecoin flag by exact identity",
 ];
 let step = 0;
 const gasRows = [];
@@ -63,9 +65,9 @@ async function main() {
   const extra = Object.keys(art).filter((n) => !["TokenVCLM", "TokenCHONX", "VinculumFinalisVerifier", "VinculumFinalisSynth", "VinculumFinalisStake", "BaseCommitmentVaultLock", "BaseLockRecordVerifier"].includes(n));
   if (extra.length) throw new Error(`ceremony.json carries non-Base contracts: ${extra.join(", ")}`);
   if (DATA.baseOnly !== true) throw new Error("ceremony-data is not marked baseOnly");
-  if (DATA.registryRows !== 590) throw new Error(`registry source has ${DATA.registryRows} rows, expected 590 (Revision D)`);
-  if (DATA.entries.length !== 130) throw new Error(`registry has ${DATA.entries.length} rows, expected 130 Base rows`);
-  if (DATA.tokenAddresses.length !== 129) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 129`);
+  if (DATA.registryRows !== 3353) throw new Error(`registry source has ${DATA.registryRows} rows, expected 3353 (Revision E)`);
+  if (DATA.entries.length !== 2893) throw new Error(`registry has ${DATA.entries.length} rows, expected 2893 Base rows`);
+  if (DATA.tokenAddresses.length !== 2892) throw new Error(`token index has ${DATA.tokenAddresses.length} rows, expected 2892`);
   if (DATA.assetRowAliases.length !== 0) throw new Error(`${DATA.assetRowAliases.length} aliases, expected 0`);
   if (!DATA.entries.every((e) => e.environmentId === "Base") || !DATA.tokenAddresses.every((t) => t.environmentId === "Base")) throw new Error("a non-Base row is in ceremony-data");
   if (JSON.stringify(Object.keys(DATA.readers)) !== JSON.stringify(["base"])) throw new Error("ceremony-data readers are not Base only");
@@ -98,8 +100,8 @@ async function main() {
         else if (/^reader Base/.test(line)) at(4);
         else if (/^registry /.test(line) && step < 5) at(5);
         else if (/^token addresses /.test(line) && step < 6) at(6);
-        if (/^token addresses 129\/129/.test(line)) at(7);
-        if (/^(registry|token addresses) /.test(line) && !/\/(130|129)$/.test(line)) continue;
+        if (/^token addresses 2892\/2892/.test(line)) at(7);
+        if (/^(registry|token addresses) /.test(line) && !/\/(2893|2892)$/.test(line)) continue;
         err("  " + line);
       }
     },
@@ -124,9 +126,9 @@ async function main() {
   at(9);
   // The Base lock's 5% fee on a real lock, then the Base reader verifies and mints.
   // Real native ETH lock on the new Base lock, valued with the ceremony's own
-  // price run 1 (ceremony-data priceUsd18). Local fork only.
+  // price run 1 (ceremony-data priceUsd30, 30 decimals). Local fork only.
   const ETH_ID = DATA.row2.canonicalAssetId;
-  const px = BigInt(DATA.priceUsd18);
+  const px = BigInt(DATA.priceUsd30) / 10n ** 12n; // 18-decimal USD for the lock's USD argument
   const S = (await ethers.getSigners())[1];
   const lockId = ethers.id("dryrun:" + Date.now());
   const wei = ethers.parseEther("0.5");
@@ -202,7 +204,7 @@ async function main() {
   await ethers.provider.send("hardhat_setBalance", [posterAddr, "0x56BC75E2D63100000"]);
   const P = await ethers.getSigner(posterAddr);
   const nextRun = (await V.lastScheduledRunId()) + 1n;
-  await (await V.connect(P).applyScheduledPriceRun(nextRun, [{ success: true, environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd18: 10n ** 18n }])).wait();
+  await (await V.connect(P).applyScheduledPriceRun(nextRun, [{ success: true, environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd30: P30(10n ** 18n) }])).wait();
   await ethers.provider.send("hardhat_stopImpersonatingAccount", [posterAddr]);
   // Fund the test account with real USDC on the fork: FiatToken keeps
   // balances in slot 9 (balanceAndBlacklistStates). Checked with balanceOf.
@@ -244,7 +246,7 @@ async function main() {
   err("  " + usdcLine);
 
   at(12);
-  // Revision D (t430u), read from the ceremony's own state on the fork.
+  // Revision E (t448u; TEL and override rules of t430u/t431u), read from the ceremony's own state on the fork.
   const tIdx = async (tok) => V.tokenAssetIndex(ethers.keccak256(coder.encode(["string", "address"], ["Base", tok])));
   const TEL_NEW = "0x7E13B43065380aCdeC1c2d138c579cbBbafA0731";
   const TEL_OLD = "0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1";
@@ -286,7 +288,7 @@ async function main() {
   const wantStable = DATA.tokenAddresses.filter((t) => ["0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"].includes(t.token.toLowerCase())).map((t) => t.canonicalAssetId).sort();
   const gotStable = stableFlagged.map((e) => e.canonicalAssetId).sort();
   if (JSON.stringify(gotStable) !== JSON.stringify(wantStable)) throw new Error(`stablecoin flag on ${stableFlagged.map((e) => e.symbol).join(",")}, expected Base USDC and USDT only`);
-  const revDLine = `Revision D: TEL row 1082 indexed at ${short(TEL_NEW)} (old ${short(TEL_OLD)} not indexed); founder override ${ogLines.join(", ")}; $0.95 flag on ${stableFlagged.map((e) => `${e.symbol} row ${e.row}`).join(", ")} only`;
+  const revDLine = `Revision E: TEL row 1082 indexed at ${short(TEL_NEW)} (old ${short(TEL_OLD)} not indexed); founder override ${ogLines.join(", ")}; $0.95 flag on ${stableFlagged.map((e) => `${e.symbol} row ${e.row}`).join(", ")} only`;
   err("  " + revDLine);
 
   const maxTx = gasRows.reduce((m, x) => (x.gasLimit > m.gasLimit ? x : m), gasRows[0]);
