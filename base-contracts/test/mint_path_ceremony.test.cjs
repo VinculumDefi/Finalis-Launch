@@ -1,5 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const HOUR = 3600n;
 const SCALE = 10n ** 18n;
@@ -30,7 +32,7 @@ async function deployCeremony() {
   await (await verifier.applyScheduledPriceRun(1n, [{
     environmentId: "Base",
     canonicalAssetId: ethId,
-    priceUsd18: 1000n * SCALE,
+    priceUsd30: P30(1000n * SCALE),
     success: true,
   }])).wait();
   await (await verifier.finalize()).wait();
