@@ -28,6 +28,8 @@
 const path = require("path");
 const fs = require("fs");
 const { createRequire } = require("module");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const BC = path.resolve(__dirname, "../../base-contracts");
 const req = createRequire(path.join(BC, "package.json"));
 const { ethers, network } = req("hardhat");
@@ -148,7 +150,7 @@ describe("COMBINATORIAL rig (active, fails on any deviation)", function () {
   async function priceRun(which) {
     const rows = [];
     for (const env of ["Base", "Ethereum"]) for (const a of ASSETS) if (a.cls !== "protocol")
-      rows.push({ environmentId: env, canonicalAssetId: S.ctx[env].assets[a.cls].id, priceUsd18: which === 1 ? a.p1 : a.p2, success: true });
+      rows.push({ environmentId: env, canonicalAssetId: S.ctx[env].assets[a.cls].id, priceUsd30: P30(which === 1 ? a.p1 : a.p2), success: true });
     await S.verifier.applyScheduledPriceRun(runId++, rows);
   }
 
