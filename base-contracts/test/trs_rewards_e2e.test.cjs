@@ -19,7 +19,7 @@ const SCALE = 10n ** 18n;
 const DAY7 = 604800n;
 const YEAR10 = 315360000n;
 const ETH_ID = DATA.row2.canonicalAssetId;
-const ETH_PRICE = BigInt(DATA.priceUsd18);
+const ETH_PRICE = BigInt(DATA.priceUsd30) / 10n ** 12n; // ceremony-data price is 30-decimal (VF-ORC-016)
 const idOf = (sym) => ethers.solidityPackedKeccak256(["string", "string"], ["Base", sym]);
 const VCLM_ID = idOf("VCLM");
 const CHONX_ID = idOf("CHONX");
@@ -134,7 +134,7 @@ async function closeAndAllocate(h, upTo) {
   for (let n = 1n; n <= upTo; n++) if (!(await h.r.stake.epochs(n)).closed) await (await h.r.stake.closeEpoch(n)).wait();
 }
 
-describe("t262u TRS rewards on the real ceremony flow (Base-only, 130 Base rows, test chain)", function () {
+describe("t262u TRS rewards on the real ceremony flow (Base-only, 2893 Base rows, test chain)", function () {
   this.timeout(900000);
   const h = harness("none");
   let T0, s;
@@ -148,8 +148,8 @@ describe("t262u TRS rewards on the real ceremony flow (Base-only, 130 Base rows,
   it("ceremony order: tokens, Verifier, Forge, Stake before the Base lock; Base lock holds the three protocol token addresses; Stake T0 = Verifier launch", async () => {
     const order = h.logs.map((x) => x.split(" ")[0]);
     expect(order.indexOf("Forge")).to.be.lessThan(order.indexOf("Base"));
-    expect(h.logs).to.include("registry 130/130");
-    expect(h.logs).to.include("token addresses 129/129");
+    expect(h.logs).to.include("registry 2893/2893");
+    expect(h.logs).to.include("token addresses 2892/2892");
     expect(await h.r.lock.vclmToken()).to.equal(await h.r.vclm.getAddress());
     expect(await h.r.lock.chonxToken()).to.equal(await h.r.chonx.getAddress());
     expect(await h.r.lock.synthToken()).to.equal(await h.r.forge.getAddress());
