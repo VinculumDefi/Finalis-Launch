@@ -8,6 +8,8 @@
 //   NODE_PATH=$PWD/node_modules npx hardhat test ../testing-rigs/static-poc/verifier_input_gaps.test.cjs
 const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const DAY = 86400n;
@@ -35,7 +37,7 @@ async function deploy() {
   await (await verifier.registerAssetPrecision("Base", ETH_ID, "ETH", 18, 2, 0)).wait();
   await (await verifier.setScheduledPricePoster(deployer.address)).wait();
   await (await verifier.configureDevFund("Base", deployer.address)).wait();
-  await (await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 1000n * SCALE, success: true }])).wait();
+  await (await verifier.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(1000n * SCALE), success: true }])).wait();
   await (await verifier.finalize()).wait();
   return { deployer, user, lock, vclm, verifier, stake };
 }
@@ -102,11 +104,11 @@ describe("static rig: Verifier input gaps are closed (safe behavior, fix 2026-10
     const { deployer, user, lock, verifier } = await deploy();
     const a = await lock7d(lock, user, ethers.parseEther("0.01"));
     // A later scheduled run doubles the price before the user submits.
-    await (await verifier.connect(deployer).applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: 2000n * SCALE, success: true }])).wait();
+    await (await verifier.connect(deployer).applyScheduledPriceRun(2n, [{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(2000n * SCALE), success: true }])).wait();
     await (await verifier.recordFeeAndRac(pkg(a.lockId, a.rec, user.address, ethers.id("rac-p"), a.rec.createdAt))).wait();
     const lockIdHash = ethers.solidityPackedKeccak256(["string", "bytes32"], ["Base", a.lockId]);
     const bound = await verifier.lockReferencePrices(lockIdHash);
-    expect(bound.priceUsd18).to.equal(1000n * SCALE);
+    expect(bound.priceUsd30).to.equal(P30(1000n * SCALE));
   });
 
   it("STATIC-C01b (AG-04): Stake.allocateEpoch mints on one credit per lock", async function () {
