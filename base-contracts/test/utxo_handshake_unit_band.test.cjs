@@ -11,6 +11,8 @@ const { ethers } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 const { finalizeCeremony } = require("./lib/finalizeCeremony.cjs");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 
 const SCALE = 10n ** 18n;
 const HOUR = 3600n;
@@ -87,7 +89,7 @@ async function fixture() {
   await verifier.setScheduledPricePoster(deployer.address);
   await finalizeCeremony(verifier);
   await verifier.applyScheduledPriceRun(2n, Object.entries(CHAINS).map(([env, c]) => (
-    { environmentId: env, canonicalAssetId: c.id, priceUsd18: c.price, success: true })));
+    { environmentId: env, canonicalAssetId: c.id, priceUsd30: P30(c.price), success: true })));
   await markCreated();
   return { verifier, vclm, recipient };
 }
@@ -172,7 +174,7 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
         // Fresh verifier with a low price so the band minimum is under $0.02.
         const low = await fixture();
         const price = c.decimals === 8 ? (env === "Litecoin" ? SCALE / 100n : SCALE) : SCALE; // LTC $0.01, BTC/BCH $1
-        await low.verifier.applyScheduledPriceRun(3n, [{ environmentId: env, canonicalAssetId: c.id, priceUsd18: price, success: true }]);
+        await low.verifier.applyScheduledPriceRun(3n, [{ environmentId: env, canonicalAssetId: c.id, priceUsd30: P30(price), success: true }]);
         await markCreated();
         const saved = c.price; c.price = price;
         try {
@@ -198,7 +200,7 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
         let v = ctx.verifier;
         if (usdOf(c, 20n) >= 10n ** 16n) {
           v = (await fixture()).verifier;
-          await v.applyScheduledPriceRun(3n, [{ environmentId: env, canonicalAssetId: c.id, priceUsd18: SCALE, success: true }]);
+          await v.applyScheduledPriceRun(3n, [{ environmentId: env, canonicalAssetId: c.id, priceUsd30: P30(SCALE), success: true }]);
           await markCreated();
         }
         await expect(v.recordFeeAndRac(pkg(env, 20n, DAY7, ctx.recipient.address)))
@@ -256,7 +258,7 @@ describe("t238u: BTC/BCH/LTC Handshake unit band and $0.02 issuance cap", functi
     await v.configureDevFund("Bitcoin Cash", deployer.address);
     await v.setScheduledPricePoster(deployer.address);
     await finalizeCeremony(v);
-    await v.applyScheduledPriceRun(2n, [{ environmentId: "Bitcoin Cash", canonicalAssetId: otherId, priceUsd18: CHAINS["Bitcoin Cash"].price, success: true }]);
+    await v.applyScheduledPriceRun(2n, [{ environmentId: "Bitcoin Cash", canonicalAssetId: otherId, priceUsd30: P30(CHAINS["Bitcoin Cash"].price), success: true }]);
     await markCreated();
     const p = { ...pkg("Bitcoin Cash", 11_000n, HOUR, recipient.address) };
     const id = p.commitmentVaultLockId;
