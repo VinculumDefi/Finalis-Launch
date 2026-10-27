@@ -93,8 +93,16 @@ describe("Base44 app mint path against the Revision B contracts (section 6)", fu
     expect(price.usable).to.equal(true);
 
     // A Handshake at about $0.015 at the run 1 price, on the new 5% Base lock.
-    const gross = (15n * 10n ** 15n * 10n ** 18n) / price.priceUsd18 / 1000n * 1000n; // wei
-    const usd = (gross * price.priceUsd18) / 10n ** 18n;                               // app's scheduledGrossUsd
+    // The app's ABI names this output priceUsd18, but the Verifier now returns
+    // USD per whole token with 30 decimals (VF-ORC-016). The live app's
+    // lockMint.js treats it as 18 decimals, so its scheduledGrossUsd reads
+    // 1e12 times too high: a known app change (divide by 1e30), recorded in
+    // the t448u report. The package below uses the corrected 18-decimal value.
+    const priceUsd30 = price[0];
+    expect(price.priceUsd18).to.equal(priceUsd30); // same slot, app's field name
+    const priceUsd18 = priceUsd30 / 10n ** 12n;
+    const gross = (15n * 10n ** 15n * 10n ** 18n) / priceUsd18 / 1000n * 1000n; // wei
+    const usd = (gross * priceUsd18) / 10n ** 18n;                                    // app's scheduledGrossUsd
     const lockId = ethers.hexlify(ethers.randomBytes(32));
     const lockW = new ethers.Contract(C.lock, art.BaseCommitmentVaultLock.abi, user);
     const receipt = await (await lockW.createNativeLock(lockId, recipient.address, 0, ethId, ethers.ZeroHash, user.address, 3600, usd, { value: gross })).wait();
