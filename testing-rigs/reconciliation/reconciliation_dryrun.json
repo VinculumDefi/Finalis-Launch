@@ -21,7 +21,7 @@
    "area": "bytecode",
    "name": "verifier (VinculumFinalisVerifier) at 0x5678...07D2",
    "status": "PASS",
-   "detail": "runtime 21320 bytes, keccak 0x3ece4b0f6c, immutables and constructor args derived"
+   "detail": "runtime 21673 bytes, keccak 0x34cb94de59, immutables and constructor args derived"
   },
   {
    "area": "bytecode",
@@ -55,9 +55,9 @@
   },
   {
    "area": "bytecode",
-   "name": "ceremony-data is Base-only: 130 rows, 129 token addresses, 0 aliases, one reader, one Dev Fund",
+   "name": "ceremony-data is Base-only: 2893 rows, 2892 token addresses, 0 aliases, one reader, one Dev Fund",
    "status": "PASS",
-   "detail": "130 rows, 129 tokens, 0 aliases, source 590"
+   "detail": "2893 rows, 2892 tokens, 0 aliases, source 3353"
   },
   {
    "area": "creation",
@@ -255,7 +255,7 @@
    "area": "references",
    "name": "Verifier.protocolLaunchTimestamp set",
    "status": "PASS",
-   "detail": "launch 2026-10-26T18:53:33.000Z"
+   "detail": "launch 2026-10-27T03:31:52.000Z"
   },
   {
    "area": "references",
@@ -745,7 +745,7 @@
   },
   {
    "area": "references",
-   "name": "Verifier.USD_STABLE_MIN_PRICE = 950000000000000000",
+   "name": "Verifier.USD_STABLE_MIN_PRICE = 950000000000000000000000000000",
    "status": "PASS",
    "detail": ""
   },
@@ -943,13 +943,13 @@
   },
   {
    "area": "registry",
-   "name": "130 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
+   "name": "2893 registry rows match ceremony-data (id, symbol, decimals, custody class, custody path)",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "registry",
-   "name": "129 token addresses index to their intended row",
+   "name": "2892 token addresses index to their intended row",
    "status": "PASS",
    "detail": ""
   },
@@ -961,7 +961,7 @@
   },
   {
    "area": "registry",
-   "name": "130 Base rows resolve to the BaseLockRecordVerifier at 0xCDfE...56C9",
+   "name": "2893 Base rows resolve to the BaseLockRecordVerifier at 0xCDfE...56C9",
    "status": "PASS",
    "detail": ""
   },
@@ -973,21 +973,21 @@
   },
   {
    "area": "registry",
-   "name": "129 Base token addresses have contract code on Base",
+   "name": "2892 Base token addresses have contract code on Base",
    "status": "PASS",
    "detail": ""
   },
   {
    "area": "ceremony txs",
-   "name": "registry rows written = the 130 ceremony-data rows, no extras",
+   "name": "registry rows written = the 2893 ceremony-data rows, no extras",
    "status": "PASS",
-   "detail": "130 written, 0 single writes"
+   "detail": "2893 written, 0 single writes"
   },
   {
    "area": "ceremony txs",
-   "name": "token index writes = the 129 ceremony-data rows",
+   "name": "token index writes = the 2892 ceremony-data rows",
    "status": "PASS",
-   "detail": "129 written"
+   "detail": "2892 written"
   },
   {
    "area": "ceremony txs",
@@ -1015,9 +1015,9 @@
   },
   {
    "area": "ceremony txs",
-   "name": "one pre-finalize price run 1: Base ETH at ceremony-data priceUsd18",
+   "name": "one pre-finalize price run 1: Base ETH at ceremony-data priceUsd30",
    "status": "PASS",
-   "detail": "run 1: Base 2338.62 USD"
+   "detail": "run 1: Base 2319.19 USD"
   },
   {
    "area": "ceremony txs",
@@ -1041,7 +1041,7 @@
    "area": "ceremony txs",
    "name": "operator transaction list is complete (contiguous nonces from first create to finalize)",
    "status": "PASS",
-   "detail": "21 txs, local fork blocks 53125663..53125686"
+   "detail": "131 txs, local fork blocks 53141218..53141351"
   },
   {
    "area": "closed",
