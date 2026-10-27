@@ -56,7 +56,7 @@ describe("Base44 section 7: CHONX output from the app's own package (test chain)
     verifier = new ethers.Contract(C.verifier, APP_VERIFIER_ABI, user);
     lockRO = new ethers.Contract(C.lock, LOCK_RECORD_ABI, ethers.provider);
     ethId = data.row2.canonicalAssetId;
-    price = BigInt(data.priceUsd18);
+    price = BigInt(data.priceUsd30) / 10n ** 12n; // 30-decimal ceremony price (VF-ORC-016)
   });
 
   // createNativeLock as the app does it, then the app's package (lockMint.js, section 6 tuple).
