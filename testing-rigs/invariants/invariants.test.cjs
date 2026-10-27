@@ -1,6 +1,6 @@
 // Rig 4: invariants as property tests. Random call sequences (seeded PRNG,
 // RIG_SEED, default 20261023) run on the full stack deployed by the real
-// runBaseCeremony flow (ceremony.json + 590-row Revision D ceremony-data.json) in the
+// runBaseCeremony flow (ceremony.json + 3353-row Revision E ceremony-data.json) in the
 // in-process Hardhat chain. Nothing is broadcast. No key is used.
 //
 // Invariants:
@@ -21,6 +21,8 @@
 const path = require("path");
 const C = require("../lib/common.cjs");
 const { expect } = require(path.join(C.BC, "node_modules/chai"));
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const { ethers, network, art, DATA, SCALE, DAY7, YEAR10, ETH_ID, ETH_PRICE, short, fmt, reason } = C;
 
 const SEED = BigInt(process.env.RIG_SEED || "20261023");
@@ -57,9 +59,9 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
     ethRow = C.entry("Ethereum", "ETH");
     for (const a of actors) await (await usdc.mint(a.address, 10_000_000n * 10n ** 6n)).wait();
     await S.postPrices([
-      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE },
-      { environmentId: "Ethereum", canonicalAssetId: ethRow.canonicalAssetId, priceUsd18: ETH_PRICE },
-      { environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd18: SCALE },
+      { environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE) },
+      { environmentId: "Ethereum", canonicalAssetId: ethRow.canonicalAssetId, priceUsd30: P30(ETH_PRICE) },
+      { environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd30: P30(SCALE) },
     ]);
     ethLock = S.nonBase.Ethereum;
     ethReaderChain = (await ethers.provider.getNetwork()).chainId;
@@ -302,13 +304,13 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
   it("INV-7: $0.95 USDC rule. Below 0.95 refused for a new valuation at every duration; 0.95 accepted; never $1 substituted", async () => {
     const a = actors[0];
     for (const px of [949_999_999_999_999_999n, 900_000_000_000_000_000n]) {
-      await S.postPrices([{ environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd18: px }]);
+      await S.postPrices([{ environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd30: P30(px) }]);
       for (const d of DURATIONS) {
         const o = await baseLock(a, "USDC", d, 0);
         await expect(S.verifier.recordFeeAndRac(o.p)).to.be.revertedWith("VF-ORC-005: USDC/USDT scheduled price below $0.95");
       }
     }
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd18: 95n * 10n ** 16n }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd30: P30(95n * 10n ** 16n) }]);
     const o = await baseLock(a, "USDC", 604800n, 0);
     const v0 = await S.vclm.balanceOf(recipient.address);
     expect(await settle(o)).to.equal("minted");
@@ -316,7 +318,7 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
     const usd = (o.rec.gross * 95n * 10n ** 16n) / 10n ** 6n; // valued at 0.95, not 1.00
     console.log(`      USDC_BASE ${fmt(o.rec.gross, 6)} at $0.95 minted ${fmt(minted)} VCLM (USD basis ${fmt(usd)})`);
     expect(minted).to.be.gt(0n);
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd18: SCALE }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: usdcRow.canonicalAssetId, priceUsd30: P30(SCALE) }]);
   });
 
   it("INV-3: replay across the same lock, chains and readers is refused (Base lock as Ethereum, Ethereum lock as Base)", async () => {
@@ -416,15 +418,15 @@ describe("Rig 4: invariants on the real ceremony stack (property tests)", functi
 
   it("HH-004 SAFE: price binds at lock creation; a later price run and a stranger's first RAC do not change it", async () => {
     const a = actors[3];
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE) }]);
     const lockId = ethers.hexlify(ethers.randomBytes(32));
     await (await S.lock.connect(a).createNativeLock(lockId, recipient.address, 0, ETH_ID, ethers.ZeroHash, dest.address, DAY7, ETH_PRICE, { value: SCALE })).wait();
     const rec = await S.lock.lockRecord(lockId);
     // Price run after creation: half the price. It must not apply to this lock.
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE / 2n }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE / 2n) }]);
     const p = C.basePkg(lockId, rec, ETH_ID, 2, 18);
     await (await S.verifier.connect(other).recordFeeAndRac(p)).wait(); // a stranger records it
-    await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd18: ETH_PRICE }]);
+    await S.postPrices([{ environmentId: "Base", canonicalAssetId: ETH_ID, priceUsd30: P30(ETH_PRICE) }]);
     const credit = await S.verifier.racCredits(await S.verifier.racKey("Base", lockId));
     const expectAtCreation = ((rec.gross * ETH_PRICE) / SCALE * rec.fee / rec.gross * 6000n) / 10000n;
     console.log(`      RAC credit ${fmt(credit)} USD vs ${fmt(expectAtCreation)} at the creation-time price`);
