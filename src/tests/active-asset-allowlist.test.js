@@ -1,4 +1,4 @@
-// App-side hiding: only the Base rows of Revision D that passed the on-chain read
+// App-side hiding: only the Base rows of Revision E (t448u, proposed) that passed the on-chain read
 // (and the founder override rows) are offered. Base only (operator decision t430u item 2).
 // Run: node --test src/tests/active-asset-allowlist.test.js
 import { test } from 'node:test';
@@ -20,8 +20,8 @@ import { isInThisDeployment, ACTIVE_ENVIRONMENTS, XRPL_LOCKS_ENABLED, SOLANA_LOC
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEP = path.join(ROOT, 'base-contracts', 'deployment');
-const REVD = JSON.parse(readFileSync(path.join(DEP, 'assetRegistry.revD.json'), 'utf8'));
-const BASE = REVD.entries.filter((e) => e.environmentId === 'Base');
+const REVE = JSON.parse(readFileSync(path.join(DEP, 'assetRegistry.revE.json'), 'utf8'));
+const BASE = REVE.entries.filter((e) => e.environmentId === 'Base');
 const HIST = JSON.parse(readFileSync(path.join(DEP, 'assetRegistry.resolved.json'), 'utf8')).entries;
 const recD = (row) => {
   const e = BASE.find((x) => x.row === row);
@@ -45,12 +45,12 @@ test('this deployment is Base only', () => {
   assert.equal(SOLANA_LOCKS_ENABLED, false);
 });
 
-test('allowlist equals the Base rows of Revision D exactly (130 entries: 129 tokens + Base ETH, no native links, nothing excluded)', () => {
+test('allowlist equals the Base rows of Revision E exactly (2893 entries: 2892 tokens + Base ETH, no native links, nothing excluded)', () => {
   const key = (e) => `${e.environmentId}|${e.row}|${e.canonicalAssetId}`;
-  assert.equal(REVD.revision, 'D');
-  assert.equal(REVD.entries.length, 590);
-  assert.equal(BASE.length, 130);
-  assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 130, tokens: 129, natives: 1, nativeLinks: 0, excluded: 0, founderOverride: 1, notOffered: 460 });
+  assert.equal(REVE.revision, 'E');
+  assert.equal(REVE.entries.length, 3353);
+  assert.equal(BASE.length, 2893);
+  assert.deepEqual(ACTIVE_ALLOWLIST.counts, { entries: 2893, tokens: 2892, natives: 1, nativeLinks: 0, excluded: 0, founderOverride: 1, notOffered: 460 });
   assert.deepEqual(new Set(ACTIVE_ALLOWLIST.entries.map(key)), new Set(BASE.map(key)));
   for (const e of BASE) {
     const a = ACTIVE_ALLOWLIST.entries.find((x) => key(x) === key(e));
@@ -64,7 +64,7 @@ test('allowlist equals the Base rows of Revision D exactly (130 entries: 129 tok
   assert.equal(ACTIVE_ALLOWLIST.entries.find((x) => x.row === 454).custodyClass, 1);
 });
 
-test('the committed allowlist is exactly what the builder produces from revD.json + the 2026-10-26 on-chain read', () => {
+test('the committed allowlist is exactly what the builder produces from revE.json + the 2026-10-26 on-chain read', () => {
   const out = execFileSync('node', [path.join(ROOT, 'base-contracts', 'scripts', 'buildAppAllowlist.cjs'), '--check'], { encoding: 'utf8' });
   assert.match(out, /is current/);
 });
