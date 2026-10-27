@@ -11,6 +11,8 @@ const { ethers } = hre;
 const BC = path.resolve(__dirname, "..");
 const ROOT = path.resolve(BC, "..");
 const LIVE = require("../deployment/liveConfig.json");
+// VF-ORC-016: posted prices are USD per whole token with 30 decimals.
+const P30 = (usd18) => BigInt(usd18) * 10n ** 12n;
 const EXPECTED_POSTER = "0x60013cD1aF9e81B083aa13eCDe5F491771db0DB4";
 const lc = (a) => a.toLowerCase();
 
@@ -71,7 +73,7 @@ describe("Live configuration: price poster", function () {
     await v.registerAssetPrecisionBatch([["Base", r2.canonicalAssetId, r2.symbol, r2.decimals, r2.custodyClass, r2.custodyPath]]);
     await v.configureDevFund("Base", ceremonyData.devFund);
     await v.setScheduledPricePoster(deployer.address);
-    await v.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: r2.canonicalAssetId, priceUsd18: 2500n * 10n ** 18n, success: true }]);
+    await v.applyScheduledPriceRun(1n, [{ environmentId: "Base", canonicalAssetId: r2.canonicalAssetId, priceUsd30: P30(2500n * 10n ** 18n), success: true }]);
     await v.setScheduledPricePoster(LIVE.scheduledPricePoster);
     expect(await v.scheduledPricePoster()).to.equal(EXPECTED_POSTER);
     await expect(v.applyScheduledPriceRun(2n, [])).to.be.revertedWith("VF-ORC-007: not price poster");
