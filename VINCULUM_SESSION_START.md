@@ -1,7 +1,7 @@
 # Vinculum session start
 
-Revision 10, 2026-10-27 (ET). Read this first in every new session. It says
-what governs, what the launch scope is, and the rules. It replaces Revision 9
+Revision 11, 2026-10-27 (ET). Read this first in every new session. It says
+what governs, what the launch scope is, and the rules. It replaces Revision 10
 of 2026-10-27 (see History at the end).
 
 The operator is not a programmer. One step at a time. Plain English. Do not
@@ -12,7 +12,7 @@ https://github.com/VinculumDefi/Finalis-Launch, branch main.
 
 Revision 19 of the Master Specification (2026-10-27) is the governing edition.
 The active asset registry is Revision E (2,893 Base entries), recorded in
-`DOCUMENT_REGISTER.md`. This session start is Revision 10. Check
+`DOCUMENT_REGISTER.md`. This session start is Revision 11. Check
 `git log -1 origin/main` for the newest commit.
 
 Start with these files:
@@ -129,6 +129,16 @@ Every new session must open by quoting the standing rules and the governing
 rules from this document verbatim before any other work. If the session
 cannot quote them, it must stop and ask.
 
+Minimum list (operator wording, verbatim):
+
+(1) master spec is the sole governing document — check it before proposing anything new;
+(2) no status updates in the spec, only requirements;
+(3) freshness is Revision 7 Section 7 only — no new freshness policies;
+(4) no deploy, broadcast, register, or finalize without explicit operator go-ahead;
+(5) the operator is not a programmer — one step at a time, plain English, whole files not line edits.
+
+Do not reopen settled decisions. Do not invent new rules that contradict the master spec.
+
 ## Gap-escalation rule
 When the governing specification does not explicitly cover a proposed action
 or design choice, raise the gap against the spirit and existing requirements
@@ -149,7 +159,8 @@ discretionary control.
 ## History
 | Revision | Date | Change | Archived copy |
 |---|---|---|---|
-| 10 | 2026-10-27 | Launch scope, governing rules and settled decisions rewritten to match Revision 19 (Base only, Revision E registry of 2,893 entries, minimum $0.01, no Axelar ITS). Standing operator rules, Echo rule and Gap-escalation rule unchanged. | This file (current) |
+| 11 | 2026-10-27 | Operator minimum list and the instruction not to reopen settled decisions added verbatim (operator t470u, wording from t407u). Nothing else changed. | This file (current) |
+| 10 | 2026-10-27 | Launch scope, governing rules and settled decisions rewritten to match Revision 19 (Base only, Revision E registry of 2,893 entries, minimum $0.01, no Axelar ITS). Standing operator rules, Echo rule and Gap-escalation rule unchanged. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_10_2026-10-27.md` |
 | 9 | 2026-10-27 | Revision 19 governs, named by number and SHA-256. Only the governing-specification reference changed. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_9_2026-10-27.md` |
 | 8 | 2026-10-25 | Launch scope rewritten for the seven-chain simultaneous launch (operator t418u). | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_8_2026-10-25.md` |
 | 7 | 2026-10-25 | Base-only launch scope line and future-work line removed. Live deployment section removed. Echo rule, Gap-escalation rule and Settled architecture decisions (2026-10-25) added. Revision 3 history wording updated. | `archive/specifications/session-start/VINCULUM_SESSION_START_Revision_7_2026-10-25.md` |
